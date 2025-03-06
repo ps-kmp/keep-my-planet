@@ -22,7 +22,7 @@
 - Contribui para a preservação dos espaços urbanos e qualidade de vida
 - Oferece uma solução tecnológica sustentável e inovadora
 - Garante eficiência multiplataforma com KMP
-- Estimula a colaboração cidadã na gestão ambiental
+- Promove consciência ambiental, incentivando a ação comunitária
 
 ### Scope
 
@@ -68,8 +68,8 @@
 ### Resources
 
 - Experiência em Kotlin Multiplatform e desenvolvimento web/mobile
-- Ferramentas e frameworks específicos para desenvolvimento e testes
-- Acesso a serviços de mapas e geolocalização
+- Bibliotecas, ferramentas e frameworks específicos para desenvolvimento e testes
+- Acesso a serviços de mapas e geolocalização, com uso de APIs
 
 ### Risks
 
