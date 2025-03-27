@@ -9,8 +9,8 @@ abordando um problema real cada vez mais relevante e emergente.
 
 ### Autores
 
-*   Diogo Ribeiro 47207 
-*   Rafael Pegacho 49423
+- [Diogo Ribeiro 47207](https://github.com/DiogoRibeiro47207)
+- [Rafael Pegacho 49423](https://github.com/rafaeldeez)
 
 #### Orientador
 *   Eng. Pedro Pereira
