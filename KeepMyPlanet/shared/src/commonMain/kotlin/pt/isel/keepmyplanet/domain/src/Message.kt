@@ -1,9 +1,11 @@
 package pt.isel.keepmyplanet.domain.src
 
+import kotlinx.datetime.LocalDateTime
+
 data class Message(
-    //val id: Long,
+    val id: Id,
     val content: MessageContent,
-    val timestamp: DateTime,
-    //val sender: User,
-    //val event: Event? = null
+    val timestamp: LocalDateTime,
+    val sender: User,
+    val event: Event,
 )

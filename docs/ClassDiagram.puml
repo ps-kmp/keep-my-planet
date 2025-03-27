@@ -1,27 +1,18 @@
 @startuml
 
-' enumerações
 enum EventStatus {
-  'evento planeado e agendado, mas que ainda não aconteceu'
   PLANNED
-  'evento que está a acontecer.'
   IN_PROGRESS
-  'evento concluido'
   COMPLETED
-  'evento que foi cancelado por algum motivo'
   CANCELLED
 }
 
 enum ZoneStatus {
-  'zona que foi reportada por um utilizador, mas ainda não foi limpa'
   REPORTED
-  'uma zona para a qual já foi agendado um evento de limpeza, mas que ainda não foi limpa'
   CLEANING_SCHEDULED
-  'zona que passou por um evento de limpeza e foi considerada limpa'
   CLEANED
 }
 
-' classes
 class User {
   name: Name
   email: Email <<unique>>
@@ -49,7 +40,6 @@ class Message {
   timestamp: DateTime
 }
 
-' relações
 User <- Event : organizer
 User <- Zone : reporter
 User <- Message : sender

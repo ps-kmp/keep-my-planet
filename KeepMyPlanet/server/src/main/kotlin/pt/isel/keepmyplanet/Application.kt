@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.keepmyplanet
 
 import io.ktor.server.application.*

@@ -1,14 +1,16 @@
 package pt.isel.keepmyplanet.domain.src
 
+import kotlinx.datetime.LocalDateTime
+
 data class Zone(
-    //val id: Long,
+    val id: Id,
     val address: Address,
     val description: Description,
     val area: Location,
-    val reported: Date,
+    val reported: LocalDateTime,
     val photos: List<Photo>,
     val critical: Boolean,
-    //val status: ZoneStatus,
-    //val reporter: User,
-    //val events: MutableList<Event> = mutableListOf()
+    val reporter: User,
+    val status: ZoneStatus,
+    val events: List<Event>,
 )

@@ -1,0 +1,87 @@
+@startuml
+
+left to right direction
+
+skinparam usecase {
+  BackgroundColor LightBlue
+  BorderColor Blue
+  ArrowColor Blue
+  ActorBorderColor Blue
+  FontColor Navy
+  FontSize 14
+  BorderThickness 2
+}
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam rectangle {
+  BorderThickness 2
+  BorderColor Blue
+  BackgroundColor WhiteSmoke
+  FontSize 16
+  FontColor Navy
+  Shadowing true
+  RoundCorner 5
+}
+
+skinparam nodesep 60
+skinparam ranksep 50
+
+:Guest: as guest #LightYellow
+:User: as user #LightBlue
+:Organizer: as organizer #LightGreen
+:Admin: as admin #LightPink
+
+guest -[hidden]r-> admin
+user -[hidden]r-> organizer
+
+guest <|-u- user
+user <.r. organizer : <<becomes>>
+
+rectangle "Guest Access" as GA {
+  usecase "Register/Login" as UC1
+  usecase "View Interactive Map" as UC3
+  usecase "Find Events" as UC12
+
+  UC1 -[hidden]d- UC3
+  UC3 -[hidden]d- UC12
+}
+rectangle "User Functions" as UF {
+  usecase "Create Event" as UC4 #LightBlue
+  usecase "Mark Areas" as UC2
+  usecase "Manage Attendance" as UC5
+  usecase "Track Participation" as UC9
+  usecase "Report Issues" as UC11
+  usecase "Fetch Updates" as UC10
+
+  UC5 -[hidden]d- UC10
+  UC10 -[hidden]d- UC4
+  UC5 -[hidden]d- UC9
+  UC10 -[hidden]d- UC4
+  UC9 -[hidden]d- UC2
+  UC9 -[hidden]d- UC5
+
+}
+rectangle "Organizer Functions" as OF {
+  usecase "Manage Event" as UC8
+  usecase "Validate Actions" as UC7
+  usecase "Send Updates" as UC16
+
+  UC8 -[hidden]d- UC7
+  UC7 -[hidden]d- UC16
+}
+rectangle "Admin Functions" as AF {
+  usecase "Control Events" as UC17
+  usecase "Manage System" as UC18
+
+  UC17 -[hidden]d- UC18
+}
+
+guest -d-> GA
+user -d-> UF
+organizer -d-> OF
+admin -d-> AF
+
+UC4 -[#blue,bold]r-> organizer : <<transforms role>>
+UC8 ..> UC10 : triggers
+@enduml
