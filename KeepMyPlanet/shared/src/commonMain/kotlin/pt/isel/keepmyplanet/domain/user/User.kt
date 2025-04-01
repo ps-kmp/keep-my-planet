@@ -1,0 +1,14 @@
+package pt.isel.keepmyplanet.domain.user
+
+import kotlinx.datetime.LocalDateTime
+import pt.isel.keepmyplanet.domain.common.Id
+
+data class User(
+    val id: Id,
+    val name: Name,
+    val email: Email, // unique
+    val passwordInfo: PasswordInfo,
+    val profilePictureId: Id? = null,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime,
+)

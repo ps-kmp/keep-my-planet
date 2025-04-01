@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.domain.src
+package pt.isel.keepmyplanet.domain.zone
 
 data class Address(
     val street: String,

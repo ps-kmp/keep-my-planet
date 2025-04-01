@@ -1,13 +1,12 @@
-package pt.isel.keepmyplanet.domain.src
+package pt.isel.keepmyplanet.domain.message
 
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class MessageContent(
-    private val text: String,
-) {
+value class MessageContent(val value: String) {
     init {
-        require(text.isNotEmpty()) { "text length must be greater than 0." }
+        require(value.isNotBlank()) { "Message content cannot be blank." }
+        require(value.length <= 1000) { "Message content cannot exceed 1000 characters." }
     }
 }
 

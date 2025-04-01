@@ -1,8 +1,8 @@
-package pt.isel.keepmyplanet.domain.src
+package pt.isel.keepmyplanet.domain.event
 
 enum class EventStatus {
     PLANNED,
     IN_PROGRESS,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
 }
