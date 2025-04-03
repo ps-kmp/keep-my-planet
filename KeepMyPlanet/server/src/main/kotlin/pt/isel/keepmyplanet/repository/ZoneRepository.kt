@@ -15,9 +15,15 @@ interface ZoneRepository : Repository<Zone, Id> {
 
     fun findBySeverity(severity: Severity): Flow<List<Zone>>
 
-    suspend fun addPhoto(zoneId: Id, photoId: Id): Zone
+    suspend fun addPhoto(
+        zoneId: Id,
+        photoId: Id,
+    ): Zone
 
-    suspend fun removePhoto(zoneId: Id, photoId: Id): Zone
+    suspend fun removePhoto(
+        zoneId: Id,
+        photoId: Id,
+    ): Zone
 
     fun findZones(
         center: Location? = null,

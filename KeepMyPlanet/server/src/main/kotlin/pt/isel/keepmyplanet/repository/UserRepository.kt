@@ -7,5 +7,8 @@ import pt.isel.keepmyplanet.domain.user.User
 interface UserRepository : Repository<User, Id> {
     suspend fun findByEmail(email: Email): User?
 
-    suspend fun updateProfilePicture(userId: Id, profilePictureId: Id?): User
+    suspend fun updateProfilePicture(
+        userId: Id,
+        profilePictureId: Id?,
+    ): User
 }

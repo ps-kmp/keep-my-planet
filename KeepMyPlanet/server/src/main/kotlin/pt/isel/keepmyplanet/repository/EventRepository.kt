@@ -14,9 +14,15 @@ interface EventRepository : Repository<Event, Id> {
 
     fun findByParticipantId(participantId: Id): Flow<List<Event>>
 
-    suspend fun addParticipant(eventId: Id, participantId: Id): Event
+    suspend fun addParticipant(
+        eventId: Id,
+        participantId: Id,
+    ): Event
 
-    suspend fun removeParticipant(eventId: Id, participantId: Id): Event
+    suspend fun removeParticipant(
+        eventId: Id,
+        participantId: Id,
+    ): Event
 
     fun findEvents(
         center: Location? = null,
@@ -26,5 +32,8 @@ interface EventRepository : Repository<Event, Id> {
         statuses: List<EventStatus>? = null,
     ): Flow<List<Event>>
 
-    suspend fun isUserRegistered(eventId: Id, userId: Id): Boolean
+    suspend fun isUserRegistered(
+        eventId: Id,
+        userId: Id,
+    ): Boolean
 }
