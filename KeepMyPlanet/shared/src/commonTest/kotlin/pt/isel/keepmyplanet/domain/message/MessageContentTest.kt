@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class MessageContentTest {
-
     @Test
     fun `valid MessageContent should be created`() {
         MessageContent("Hello")

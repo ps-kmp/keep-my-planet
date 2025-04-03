@@ -6,7 +6,6 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ZoneTest {
@@ -40,7 +39,7 @@ class ZoneTest {
                 updatedAt = validDateTime,
             )
         assertEquals(ZoneStatus.REPORTED, zone.status)
-        assertNull(zone.severity)
+        assertEquals(Severity.UNKNOWN, zone.severity)
         assertTrue(zone.photosIds.isEmpty())
     }
 

@@ -4,7 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class EventStatusTest {
-
     @Test
     fun `should have correct enum values in order`() {
         val values = EventStatus.entries.toTypedArray()

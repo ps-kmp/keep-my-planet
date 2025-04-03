@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class LocationTest {
-
     @Test
     fun `valid Location should be created`() {
         Location(-90.0, -180.0)

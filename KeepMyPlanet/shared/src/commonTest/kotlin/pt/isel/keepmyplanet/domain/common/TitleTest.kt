@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class TitleTest {
-
     @Test
     fun `valid Title should be created`() {
         Title("Valid Title")

@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class IdTest {
-
     @Test
     fun `valid Id should be created`() {
         Id(1u)

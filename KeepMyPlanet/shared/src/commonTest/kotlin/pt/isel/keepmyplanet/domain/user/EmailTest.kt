@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class EmailTest {
-
     @Test
     fun `valid emails should be created`() {
         Email("user@example.com")

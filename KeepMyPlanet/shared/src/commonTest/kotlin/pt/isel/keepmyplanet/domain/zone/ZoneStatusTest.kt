@@ -4,7 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ZoneStatusTest {
-
     @Test
     fun `should contain exactly three expected enum values`() {
         val values = ZoneStatus.entries.toTypedArray()

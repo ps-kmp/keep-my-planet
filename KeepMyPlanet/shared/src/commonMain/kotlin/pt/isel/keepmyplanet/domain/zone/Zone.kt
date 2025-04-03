@@ -8,11 +8,10 @@ import pt.isel.keepmyplanet.domain.common.Location
 data class Zone(
     val id: Id,
     val location: Location,
-    // val address: Address,
     val description: Description,
     val reporterId: Id,
     val status: ZoneStatus = ZoneStatus.REPORTED,
-    val severity: Severity? = null,
+    val severity: Severity = Severity.UNKNOWN,
     val photosIds: Set<Id> = emptySet(),
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,

@@ -3,7 +3,9 @@ package pt.isel.keepmyplanet.domain.user
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class PasswordInfo(val value: String) {
+value class PasswordInfo(
+    val value: String,
+) {
     init {
         require(value.length >= 8) { "Password must be at least 8 characters long" }
         require(value.any { it.isDigit() }) { "Password must contain at least one digit" }

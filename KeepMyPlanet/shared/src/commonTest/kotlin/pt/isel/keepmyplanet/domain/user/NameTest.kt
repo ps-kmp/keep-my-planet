@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class NameTest {
-
     @Test
     fun `valid names should be created`() {
         Name("John Doe")
