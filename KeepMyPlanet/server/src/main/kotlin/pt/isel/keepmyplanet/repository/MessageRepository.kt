@@ -9,6 +9,4 @@ interface MessageRepository : Repository<Message, Id> {
     fun findBySenderId(senderId: Id): List<Message>
 
     suspend fun deleteAllByEventId(eventId: Id): Int
-
-    suspend fun addMessage(message: Message): Boolean
 }

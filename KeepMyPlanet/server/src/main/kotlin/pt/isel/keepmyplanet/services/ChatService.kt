@@ -26,7 +26,7 @@ class ChatService(
                 content = content,
                 timestamp = Clock.System.now().toLocalDateTime(TimeZone.UTC),
             )
-        messageRepository.addMessage(newMessage)
+        messageRepository.create(newMessage)
         return newMessage
     }
 }
