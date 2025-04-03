@@ -7,9 +7,9 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import pt.isel.keepmyplanet.api.chatRoutes
+import pt.isel.keepmyplanet.api.messageWebApi
 import pt.isel.keepmyplanet.repository.mem.InMemMessageRepository
-import pt.isel.keepmyplanet.services.ChatService
+import pt.isel.keepmyplanet.services.MessageService
 
 fun main() {
     embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = { module() })
@@ -18,12 +18,12 @@ fun main() {
 
 fun Application.module() {
     val messageRepository = InMemMessageRepository()
-    val chatService = ChatService(messageRepository)
+    val messageService = MessageService(messageRepository)
 
     routing {
         get("/") {
             call.respondText("Ktor: ${Greeting().greet()}")
         }
-        chatRoutes(chatService)
+        messageWebApi(messageService)
     }
 }

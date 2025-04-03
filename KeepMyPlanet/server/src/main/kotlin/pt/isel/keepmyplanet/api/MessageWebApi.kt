@@ -8,15 +8,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.MessageContent
-import pt.isel.keepmyplanet.services.ChatService
+import pt.isel.keepmyplanet.services.MessageService
 
-fun Route.chatRoutes(chatService: ChatService) {
+fun Route.messageWebApi(messageService: MessageService) {
     route("/chat/{eventId}") {
         // Get event messages
         get {
             val eventId = call.parameters["eventId"]?.toUIntOrNull()
             if (eventId != null) {
-                val messages = chatService.getMessages(Id(eventId))
+                val messages = messageService.getMessages(Id(eventId))
                 call.respond(messages)
             } else {
                 call.respondText("Invalid event ID", status = HttpStatusCode.BadRequest)
@@ -30,7 +30,7 @@ fun Route.chatRoutes(chatService: ChatService) {
             val content = call.receive<String>()
 
             if (eventId != null) {
-                val newMessage = chatService.addMessage(Id(eventId), senderId, MessageContent(content))
+                val newMessage = messageService.addMessage(Id(eventId), senderId, MessageContent(content))
                 call.respond(newMessage)
             } else {
                 call.respondText("Invalid event ID", status = HttpStatusCode.BadRequest)

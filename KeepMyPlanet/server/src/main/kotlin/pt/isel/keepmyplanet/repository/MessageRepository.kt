@@ -4,9 +4,9 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
 
 interface MessageRepository : Repository<Message, Id> {
-    fun findByEventId(eventId: Id): List<Message>
+    suspend fun findByEventId(eventId: Id): List<Message>
 
-    fun findBySenderId(senderId: Id): List<Message>
+    suspend fun findBySenderId(senderId: Id): List<Message>
 
     suspend fun deleteAllByEventId(eventId: Id): Int
 }

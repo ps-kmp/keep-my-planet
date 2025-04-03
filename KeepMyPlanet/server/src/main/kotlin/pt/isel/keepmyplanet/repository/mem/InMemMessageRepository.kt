@@ -7,11 +7,11 @@ import pt.isel.keepmyplanet.repository.MessageRepository
 class InMemMessageRepository : MessageRepository {
     private val messages = mutableListOf<Message>()
 
-    override fun findByEventId(eventId: Id): List<Message> = messages.filter { it.eventId == eventId }
+    override suspend fun findByEventId(eventId: Id): List<Message> = messages.filter { it.eventId == eventId }
 
     override suspend fun getById(id: Id): Message? = messages.find { it.id == id }
 
-    override fun findBySenderId(senderId: Id): List<Message> = messages.filter { it.senderId == senderId }
+    override suspend fun findBySenderId(senderId: Id): List<Message> = messages.filter { it.senderId == senderId }
 
     override suspend fun deleteAllByEventId(eventId: Id): Int {
         val initialSize = messages.size
