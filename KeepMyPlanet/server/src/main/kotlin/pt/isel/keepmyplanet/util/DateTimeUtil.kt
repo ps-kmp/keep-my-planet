@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.utils
+package pt.isel.keepmyplanet.util
 
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime

@@ -1,71 +1,65 @@
 package pt.isel.keepmyplanet.repository.mem
 
 import kotlinx.datetime.LocalDateTime
+import pt.isel.keepmyplanet.core.DuplicateEmailException
+import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
+import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.repository.UserRepository
-import pt.isel.keepmyplanet.services.DuplicateEmailException
-import pt.isel.keepmyplanet.services.EmailConflictException
-import pt.isel.keepmyplanet.services.UserNotFoundException
-import pt.isel.keepmyplanet.utils.nowUTC
+import pt.isel.keepmyplanet.util.nowUTC
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryUserRepository : UserRepository {
-    private val usersById = ConcurrentHashMap<Id, User>()
-    private val idCounter = AtomicInteger(1)
+    private val users = ConcurrentHashMap<Id, User>()
+    private val nextId = AtomicInteger(1)
 
-    private fun generateNewId(): Id = Id(idCounter.getAndIncrement().toUInt())
+    private fun now(): LocalDateTime = LocalDateTime.nowUTC
 
     override suspend fun create(entity: User): User {
-        if (usersById.values.any { it.email == entity.email }) {
+        if (users.values.any { it.email == entity.email }) {
             throw DuplicateEmailException(entity.email)
         }
-        val now = LocalDateTime.nowUTC
-        val userToCreate = entity.copy(id = generateNewId(), createdAt = now, updatedAt = now)
-        usersById[userToCreate.id] = userToCreate
-        return userToCreate
+        val newId = Id(nextId.getAndIncrement().toUInt())
+        val currentTime = now()
+        val newUser = entity.copy(id = newId, createdAt = currentTime, updatedAt = currentTime)
+        users[newId] = newUser
+        return newUser
     }
 
-    override suspend fun getById(id: Id): User? = usersById[id]
+    override suspend fun getById(id: Id): User? = users[id]
 
-    override suspend fun findByEmail(email: Email): User? = usersById.values.find { it.email == email }
-
-    override suspend fun getAll(): List<User> = usersById.values.toList()
+    override suspend fun getAll(): List<User> =
+        users.values
+            .toList()
+            .sortedBy { it.id.value }
 
     override suspend fun update(entity: User): User {
-        val existingUser = usersById[entity.id] ?: throw UserNotFoundException(entity.id)
-        val newEmail = entity.email
-        if (newEmail != existingUser.email) {
-            if (usersById.values.find { it.email == newEmail && it.id != entity.id } != null) {
-                throw EmailConflictException(newEmail)
-            }
+        val existingUser = users[entity.id] ?: throw NotFoundException("User", entity.id)
+        if (entity.email != existingUser.email &&
+            users.values.any { it.id != entity.id && it.email == entity.email }
+        ) {
+            throw DuplicateEmailException(entity.email)
         }
-        val updatedUser =
-            entity.copy(createdAt = existingUser.createdAt, updatedAt = LocalDateTime.nowUTC)
-        usersById[updatedUser.id] = updatedUser
+        val updatedUser = entity.copy(createdAt = existingUser.createdAt, updatedAt = now())
+        users[entity.id] = updatedUser
         return updatedUser
     }
 
-    override suspend fun deleteById(id: Id): Boolean = usersById.remove(id) != null
+    override suspend fun deleteById(id: Id): Boolean = users.remove(id) != null
 
-    override suspend fun updateProfilePicture(
-        userId: Id,
-        profilePictureId: Id?,
-    ): User {
-        val existingUser = usersById[userId] ?: throw UserNotFoundException(userId)
-        val updatedUser =
-            existingUser.copy(
-                profilePictureId = profilePictureId,
-                updatedAt = LocalDateTime.nowUTC,
-            )
-        usersById[userId] = updatedUser
-        return updatedUser
-    }
+    override suspend fun findByEmail(email: Email): User? =
+        users.values
+            .find { it.email == email }
+
+    override suspend fun findByName(name: Name): User? =
+        users.values
+            .find { it.name == name }
 
     fun clear() {
-        usersById.clear()
-        idCounter.set(1)
+        users.clear()
+        nextId.set(1)
     }
 }

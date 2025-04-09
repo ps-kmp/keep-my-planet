@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.services
+package pt.isel.keepmyplanet.core
 
 sealed class Either<out L, out R> {
     data class Left<out L>(

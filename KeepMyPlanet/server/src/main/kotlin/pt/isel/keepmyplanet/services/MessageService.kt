@@ -3,6 +3,8 @@ package pt.isel.keepmyplanet.services
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import pt.isel.keepmyplanet.core.ChatError
+import pt.isel.keepmyplanet.core.Either
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent

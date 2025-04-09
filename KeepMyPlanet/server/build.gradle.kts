@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.ktor)
+    alias(libs.plugins.kotlinSerialization)
     application
 }
 
@@ -8,7 +9,8 @@ group = "pt.isel.keepmyplanet"
 version = "1.0.0"
 application {
     mainClass.set("pt.isel.keepmyplanet.ApplicationKt")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
+    applicationDefaultJvmArgs =
+        listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
 dependencies {
@@ -21,6 +23,7 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.status.pages.jvm)
     testImplementation(libs.ktor.server.test.host.jvm)
     testImplementation(libs.kotlin.test.junit)
 }

@@ -10,9 +10,10 @@ data class Zone(
     val location: Location,
     val description: Description,
     val reporterId: Id,
+    val eventId: Id? = null,
     val status: ZoneStatus = ZoneStatus.REPORTED,
     val severity: Severity = Severity.UNKNOWN,
-    val photosIds: Set<Id> = emptySet(),
+    val photosIds: Set<Id>,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 )

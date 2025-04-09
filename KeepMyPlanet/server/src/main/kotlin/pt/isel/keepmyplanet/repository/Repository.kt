@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.repository
 
-interface Repository<T, ID> {
+interface Repository<T : Any, ID : Any> {
     suspend fun create(entity: T): T
 
     suspend fun getById(id: ID): T?
