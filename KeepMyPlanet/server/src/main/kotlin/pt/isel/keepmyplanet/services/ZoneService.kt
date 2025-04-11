@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.services
 
-import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.core.PhotoNotFoundInZoneException
 import pt.isel.keepmyplanet.core.ZoneInvalidStateException
@@ -8,23 +7,21 @@ import pt.isel.keepmyplanet.core.ZoneUpdateException
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
-import pt.isel.keepmyplanet.domain.zone.Severity
 import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.repository.ZoneRepository
-import pt.isel.keepmyplanet.util.nowUTC
+import pt.isel.keepmyplanet.util.now
 
 class ZoneService(
     private val zoneRepository: ZoneRepository,
 ) {
-    private fun now(): LocalDateTime = LocalDateTime.nowUTC
-
     suspend fun reportZone(
         location: Location,
         description: Description,
         photosIds: Set<Id>,
         reporterId: Id,
-        severity: Severity = Severity.UNKNOWN,
+        zoneSeverity: ZoneSeverity = ZoneSeverity.UNKNOWN,
     ): Result<Zone> =
         runCatching {
             val currentTime = now()
@@ -35,7 +32,7 @@ class ZoneService(
                     description = description,
                     reporterId = reporterId,
                     photosIds = photosIds,
-                    severity = severity,
+                    zoneSeverity = zoneSeverity,
                     createdAt = currentTime,
                     updatedAt = currentTime,
                 )
@@ -79,11 +76,11 @@ class ZoneService(
 
     suspend fun updateZoneSeverity(
         zoneId: Id,
-        newSeverity: Severity,
+        newZoneSeverity: ZoneSeverity,
     ): Result<Zone> =
         runCatching {
             val zone = zoneRepository.getById(zoneId) ?: throw NotFoundException("Zone", zoneId)
-            val updatedZone = zone.copy(severity = newSeverity, updatedAt = now())
+            val updatedZone = zone.copy(zoneSeverity = newZoneSeverity, updatedAt = now())
             zoneRepository.update(updatedZone)
         }
 

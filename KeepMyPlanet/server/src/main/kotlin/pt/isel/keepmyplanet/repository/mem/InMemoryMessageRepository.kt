@@ -4,54 +4,61 @@ import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.repository.MessageRepository
+import pt.isel.keepmyplanet.util.now
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryMessageRepository : MessageRepository {
-    private val messages = ConcurrentHashMap<Id, Message>()
-    private val nextId = AtomicInteger(1)
+    private val messagesByEvent = ConcurrentHashMap<Id, MutableList<Message>>() // eventId -> List of messages
 
     override suspend fun create(entity: Message): Message {
-        val newId = Id(nextId.getAndIncrement().toUInt())
-        val newMessage = entity.copy(id = newId)
-        messages[newId] = newMessage
+        val messages = messagesByEvent.computeIfAbsent(entity.eventId) { mutableListOf() }
+        val nextPosition = messages.size
+        val newMessage = entity.copy(chatPosition = nextPosition)
+        messages.add(newMessage)
         return newMessage
     }
 
-    override suspend fun getById(id: Id): Message? = messages[id]
+    override suspend fun getById(id: Id): Message? =
+        messagesByEvent.values
+            .flatten()
+            .firstOrNull { it.chatPosition == id.value.toInt() }
 
     override suspend fun getAll(): List<Message> =
-        messages.values
-            .toList()
-            .sortedBy { it.timestamp }
+        messagesByEvent.values
+            .flatten()
+            .sortedWith(compareBy({ it.eventId.value }, { it.chatPosition }))
 
     override suspend fun update(entity: Message): Message {
-        if (!messages.containsKey(entity.id)) throw NotFoundException("Message", entity.id)
-        messages[entity.id] = entity
-        return entity
+        val messages =
+            messagesByEvent[entity.eventId]
+                ?: throw NotFoundException("Message list for event", entity.eventId)
+
+        val index = messages.indexOfFirst { it.chatPosition == entity.chatPosition }
+        if (index == -1) throw NotFoundException("Message", Id(entity.chatPosition.toUInt()))
+
+        val updatedMessage = entity.copy(timestamp = now())
+        messages[index] = updatedMessage
+        return updatedMessage
     }
 
-    override suspend fun deleteById(id: Id): Boolean = messages.remove(id) != null
+    override suspend fun deleteById(id: Id): Boolean {
+        val chatPos = id.value.toInt()
+        messagesByEvent.forEach { (_, messages) ->
+            val removed = messages.removeIf { it.chatPosition == chatPos }
+            if (removed) return true
+        }
+        return false
+    }
 
-    override suspend fun findByEventId(eventId: Id): List<Message> =
-        messages.values
-            .filter { it.eventId == eventId }
-            .sortedBy { it.timestamp }
+    override suspend fun findByEventId(eventId: Id): List<Message> = messagesByEvent[eventId]?.sortedBy { it.chatPosition } ?: emptyList()
 
     override suspend fun findBySenderId(senderId: Id): List<Message> =
-        messages.values
+        messagesByEvent.values
+            .flatten()
             .filter { it.senderId == senderId }
-            .sortedBy { it.timestamp }
+            .sortedWith(compareBy({ it.eventId.value }, { it.chatPosition }))
 
-    override suspend fun deleteAllByEventId(eventId: Id): Int {
-        val idsToRemove = messages.entries.filter { it.value.eventId == eventId }.map { it.key }
-        var deletedCount = 0
-        idsToRemove.forEach { if (messages.remove(it) != null) deletedCount++ }
-        return deletedCount
-    }
+    override suspend fun deleteAllByEventId(eventId: Id): Int = messagesByEvent.remove(eventId)?.size ?: 0
 
-    fun clear() {
-        messages.clear()
-        nextId.set(1)
-    }
+    fun clear() = messagesByEvent.clear()
 }

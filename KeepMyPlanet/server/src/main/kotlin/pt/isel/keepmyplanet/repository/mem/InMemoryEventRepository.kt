@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.repository.mem
 
-import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
@@ -9,7 +8,7 @@ import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.util.calculateDistanceKm
-import pt.isel.keepmyplanet.util.nowUTC
+import pt.isel.keepmyplanet.util.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -18,8 +17,6 @@ class InMemoryEventRepository(
 ) : EventRepository {
     private val events = ConcurrentHashMap<Id, Event>()
     private val nextId = AtomicInteger(1)
-
-    private fun now(): LocalDateTime = LocalDateTime.nowUTC
 
     override suspend fun create(entity: Event): Event {
         val newId = Id(nextId.getAndIncrement().toUInt())

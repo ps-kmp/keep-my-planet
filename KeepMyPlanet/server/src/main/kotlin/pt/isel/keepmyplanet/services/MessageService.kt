@@ -1,45 +1,61 @@
 package pt.isel.keepmyplanet.services
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import pt.isel.keepmyplanet.core.ChatError
-import pt.isel.keepmyplanet.core.Either
+import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
+import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.MessageRepository
+import pt.isel.keepmyplanet.util.now
 
 class MessageService(
     private val messageRepository: MessageRepository,
+    private val eventRepository: EventRepository,
 ) {
-    suspend fun getMessages(eventId: Id): Either<ChatError, List<Message>> =
-        if (eventId.value == 0u) {
-            Either.Left(ChatError.EventNotFound)
-        } else {
-            Either.Right(messageRepository.findByEventId(eventId))
+    suspend fun getMessages(eventId: Id): Result<List<Message>> =
+        runCatching {
+            eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
+            messageRepository.findByEventId(eventId)
+        }
+
+    suspend fun getSingleMessage(
+        eventId: Id,
+        messageNum: Int,
+    ): Result<Message> =
+        runCatching {
+            eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
+            val messages = messageRepository.findByEventId(eventId)
+            messages.find { it.chatPosition == messageNum }
+                ?: throw NotFoundException("Message with position $messageNum in event", eventId)
         }
 
     suspend fun addMessage(
         eventId: Id,
-        senderId: String,
-        content: MessageContent,
-    ): Either<ChatError, Message> =
-        when {
-            eventId.value == 0u -> Either.Left(ChatError.EventNotFound)
-            senderId.isBlank() -> Either.Left(ChatError.UserNotFound)
-            content.value.isBlank() -> Either.Left(ChatError.InvalidMessageContent)
-            else -> {
-                val newMessage =
-                    Message(
-                        id = Id((messageRepository.findByEventId(eventId).size + 1).toUInt()),
-                        eventId = eventId,
-                        senderId = Id(senderId.toUInt()),
-                        content = content,
-                        timestamp = Clock.System.now().toLocalDateTime(TimeZone.UTC),
-                    )
-                messageRepository.create(newMessage)
-                Either.Right(newMessage)
+        senderId: Id,
+        content: String,
+    ): Result<Message> =
+        runCatching {
+            val event =
+                eventRepository.getById(eventId)
+                    ?: throw NotFoundException("Event", eventId)
+
+            if (event.status == EventStatus.CANCELLED || event.status == EventStatus.COMPLETED) {
+                throw IllegalStateException("Cannot add messages to a ${event.status} event")
             }
+
+            if (senderId != event.organizerId && senderId !in event.participantsIds) {
+                throw IllegalArgumentException("User $senderId is not a participant in this event")
+            }
+            val newMessage =
+                Message(
+                    chatPosition = 0,
+                    eventId = eventId,
+                    senderId = senderId,
+                    content = MessageContent(content),
+                    timestamp = now(),
+                )
+
+            messageRepository.create(newMessage)
         }
 }

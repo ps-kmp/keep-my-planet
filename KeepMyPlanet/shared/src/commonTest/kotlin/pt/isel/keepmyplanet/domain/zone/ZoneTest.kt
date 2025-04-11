@@ -39,7 +39,7 @@ class ZoneTest {
                 updatedAt = validDateTime,
             )
         assertEquals(ZoneStatus.REPORTED, zone.status)
-        assertEquals(Severity.UNKNOWN, zone.severity)
+        assertEquals(ZoneSeverity.UNKNOWN, zone.zoneSeverity)
         assertTrue(zone.photosIds.isEmpty())
     }
 
@@ -53,13 +53,13 @@ class ZoneTest {
                 description = validDescription,
                 reporterId = validReporterId,
                 status = ZoneStatus.CLEANING_SCHEDULED,
-                severity = Severity.HIGH,
+                zoneSeverity = ZoneSeverity.HIGH,
                 photosIds = photos,
                 createdAt = validDateTime,
                 updatedAt = validDateTime,
             )
         assertEquals(ZoneStatus.CLEANING_SCHEDULED, zone.status)
-        assertEquals(Severity.HIGH, zone.severity)
+        assertEquals(ZoneSeverity.HIGH, zone.zoneSeverity)
         assertEquals(photos, zone.photosIds)
     }
 
@@ -73,7 +73,7 @@ class ZoneTest {
                 description = validDescription,
                 reporterId = validReporterId,
                 status = ZoneStatus.CLEANED,
-                severity = Severity.MEDIUM,
+                zoneSeverity = ZoneSeverity.MEDIUM,
                 photosIds = photos,
                 createdAt = validDateTime,
                 updatedAt = validDateTime,
@@ -83,7 +83,7 @@ class ZoneTest {
         assertEquals(validDescription, zone.description)
         assertEquals(validReporterId, zone.reporterId)
         assertEquals(ZoneStatus.CLEANED, zone.status)
-        assertEquals(Severity.MEDIUM, zone.severity)
+        assertEquals(ZoneSeverity.MEDIUM, zone.zoneSeverity)
         assertEquals(photos, zone.photosIds)
         assertEquals(validDateTime, zone.createdAt)
         assertEquals(validDateTime, zone.updatedAt)

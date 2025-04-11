@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.repository.mem
 
-import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.core.DuplicateEmailException
 import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
@@ -8,15 +7,13 @@ import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.repository.UserRepository
-import pt.isel.keepmyplanet.util.nowUTC
+import pt.isel.keepmyplanet.util.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryUserRepository : UserRepository {
     private val users = ConcurrentHashMap<Id, User>()
     private val nextId = AtomicInteger(1)
-
-    private fun now(): LocalDateTime = LocalDateTime.nowUTC
 
     override suspend fun create(entity: User): User {
         if (users.values.any { it.email == entity.email }) {

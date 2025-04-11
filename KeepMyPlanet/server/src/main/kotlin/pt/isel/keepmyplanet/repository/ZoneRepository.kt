@@ -2,8 +2,8 @@ package pt.isel.keepmyplanet.repository
 
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
-import pt.isel.keepmyplanet.domain.zone.Severity
 import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 
 interface ZoneRepository : Repository<Zone, Id> {
@@ -11,7 +11,7 @@ interface ZoneRepository : Repository<Zone, Id> {
 
     suspend fun findByReporterId(reporterId: Id): List<Zone>
 
-    suspend fun findBySeverity(severity: Severity): List<Zone>
+    suspend fun findBySeverity(zoneSeverity: ZoneSeverity): List<Zone>
 
     suspend fun findByStatus(status: ZoneStatus): List<Zone>
 

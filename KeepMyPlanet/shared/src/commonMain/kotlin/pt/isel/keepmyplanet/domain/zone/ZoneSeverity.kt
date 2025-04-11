@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.domain.zone
 
-enum class Severity {
+enum class ZoneSeverity {
     UNKNOWN,
     LOW,
     MEDIUM,

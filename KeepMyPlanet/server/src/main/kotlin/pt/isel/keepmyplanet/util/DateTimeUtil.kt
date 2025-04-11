@@ -7,3 +7,5 @@ import kotlinx.datetime.toLocalDateTime
 
 val LocalDateTime.Companion.nowUTC: LocalDateTime
     get() = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+
+fun now(): LocalDateTime = LocalDateTime.nowUTC

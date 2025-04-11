@@ -13,6 +13,13 @@ enum ZoneStatus {
   CLEANED
 }
 
+enum ZoneSeverity {
+    UNKNOWN
+    LOW
+    MEDIUM
+    HIGH
+}
+
 class User {
   name: Name
   email: Email <<unique>>
@@ -20,22 +27,20 @@ class User {
 }
 
 class Zone {
-  address: Address
   description: Description
   area: Location
   reported: Date
   photos: List<Photo>
-  critical: Boolean
 }
 
 class Event {
   title: Title
   description: Description
-  start: DateTime
   period: Duration
 }
 
 class Message {
+  chatPosition: Int
   content: MessageContent
   timestamp: DateTime
 }
@@ -45,12 +50,13 @@ User <- Zone : reporter
 User <- Message : sender
 User "*" -- "*" Event : participants <
 
-Event --* Zone : events
+Event "*" --* Zone : events
 Event *-- "*" Message : messages
 Event -> EventStatus : status
 
 Zone -up-> ZoneStatus : status
-
+Zone -left-> ZoneSeverity : severity
+Zone -right-> Message : messages
 hide empty members
 
 @enduml

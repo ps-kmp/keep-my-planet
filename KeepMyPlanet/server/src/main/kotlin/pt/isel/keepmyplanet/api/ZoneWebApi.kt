@@ -14,8 +14,8 @@ import io.ktor.server.routing.route
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
-import pt.isel.keepmyplanet.domain.zone.Severity
 import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
@@ -34,11 +34,11 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             val reporterId = getCurrentUserId(call)
             val location = Location(request.latitude, request.longitude)
             val description = Description(request.description)
-            val severity = safeValueOf<Severity>(request.severity) ?: Severity.UNKNOWN
+            val zoneSeverity = safeValueOf<ZoneSeverity>(request.severity) ?: ZoneSeverity.UNKNOWN
             val photoIds = request.photoIds.map { Id(it) }.toSet()
 
             zoneService
-                .reportZone(location, description, photoIds, reporterId, severity)
+                .reportZone(location, description, photoIds, reporterId, zoneSeverity)
                 .onSuccess { call.respond(HttpStatusCode.Created, it.toResponse()) }
                 .onFailure { throw it }
         }
@@ -113,12 +113,12 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             patch("/severity") {
                 val zoneId = call.getZoneIdFromPath()
                 val request = call.receive<UpdateSeverityRequest>()
-                val newSeverity =
-                    safeValueOf<Severity>(request.severity)
+                val newZoneSeverity =
+                    safeValueOf<ZoneSeverity>(request.severity)
                         ?: throw IllegalArgumentException("Invalid severity value: ${request.severity}")
 
                 zoneService
-                    .updateZoneSeverity(zoneId, newSeverity)
+                    .updateZoneSeverity(zoneId, newZoneSeverity)
                     .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                     .onFailure { throw it }
             }

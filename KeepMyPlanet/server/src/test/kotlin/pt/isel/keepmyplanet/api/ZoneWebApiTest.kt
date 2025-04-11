@@ -16,14 +16,13 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeEach
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
-import pt.isel.keepmyplanet.domain.zone.Severity
 import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
@@ -33,7 +32,7 @@ import pt.isel.keepmyplanet.dto.zone.ZoneResponse
 import pt.isel.keepmyplanet.plugins.configureStatusPages
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.services.ZoneService
-import pt.isel.keepmyplanet.util.nowUTC
+import pt.isel.keepmyplanet.util.now
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -48,26 +47,24 @@ class ZoneWebApiTest {
     private suspend fun createTestZone(
         reporter: Id = testUserId,
         status: ZoneStatus = ZoneStatus.REPORTED,
-        severity: Severity = Severity.MEDIUM,
+        zoneSeverity: ZoneSeverity = ZoneSeverity.MEDIUM,
         photos: Set<Id> = setOf(Id(1u)),
         location: Location = Location(10.0, 20.0),
         description: String = "Test Zone",
-    ): Zone {
-        val now = LocalDateTime.nowUTC
-        return fakeZoneRepository.create(
+    ): Zone =
+        fakeZoneRepository.create(
             Zone(
                 id = Id(999u),
                 location = location,
                 description = Description(description),
                 reporterId = reporter,
                 status = status,
-                severity = severity,
+                zoneSeverity = zoneSeverity,
                 photosIds = photos,
-                createdAt = now,
-                updatedAt = now,
+                createdAt = now(),
+                updatedAt = now(),
             ),
         )
-    }
 
     @BeforeEach
     fun setup() {
@@ -116,7 +113,7 @@ class ZoneWebApiTest {
             val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
             assertEquals(requestBody.latitude, responseBody.latitude)
             assertEquals(requestBody.description, responseBody.description)
-            assertEquals(Severity.HIGH.name, responseBody.severity)
+            assertEquals(ZoneSeverity.HIGH.name, responseBody.severity)
             assertEquals(listOf(10u, 11u), responseBody.photosIds.sorted())
             assertEquals(1u, responseBody.id)
         }
@@ -343,7 +340,7 @@ class ZoneWebApiTest {
     @Test
     fun `PATCH zone severity - should update severity successfully`() =
         testApp {
-            val zone = createTestZone(severity = Severity.LOW)
+            val zone = createTestZone(zoneSeverity = ZoneSeverity.LOW)
             val requestBody = UpdateSeverityRequest(severity = "HIGH")
 
             val response =
@@ -354,8 +351,8 @@ class ZoneWebApiTest {
 
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
-            assertEquals(Severity.HIGH.name, responseBody.severity)
-            assertEquals(Severity.HIGH, fakeZoneRepository.getById(zone.id)?.severity)
+            assertEquals(ZoneSeverity.HIGH.name, responseBody.severity)
+            assertEquals(ZoneSeverity.HIGH, fakeZoneRepository.getById(zone.id)?.zoneSeverity)
         }
 
     @Test

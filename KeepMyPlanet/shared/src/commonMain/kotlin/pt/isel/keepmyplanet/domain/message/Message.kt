@@ -4,7 +4,7 @@ import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Id
 
 data class Message(
-    val id: Id,
+    val chatPosition: Int,
     val eventId: Id,
     val senderId: Id,
     val content: MessageContent,
