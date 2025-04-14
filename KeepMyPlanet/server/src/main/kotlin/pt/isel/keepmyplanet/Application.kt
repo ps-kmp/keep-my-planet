@@ -11,6 +11,7 @@ import io.ktor.server.routing.routing
 import pt.isel.keepmyplanet.api.messageWebApi
 import pt.isel.keepmyplanet.api.zoneWebApi
 import pt.isel.keepmyplanet.plugins.configureStatusPages
+import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.services.MessageService
@@ -24,8 +25,9 @@ fun main() {
 fun Application.module() {
     val zoneRepository = InMemoryZoneRepository()
     val zoneService = ZoneService(zoneRepository)
+    val eventRepository = InMemoryEventRepository(zoneRepository)
     val messageRepository = InMemoryMessageRepository()
-    val messageService = MessageService(messageRepository)
+    val messageService = MessageService(messageRepository, eventRepository)
 
     configureStatusPages()
     routing {

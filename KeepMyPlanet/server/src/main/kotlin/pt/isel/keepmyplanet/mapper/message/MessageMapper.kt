@@ -5,9 +5,10 @@ import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 fun Message.toResponse(): MessageResponse =
     MessageResponse(
-        chatPosition = chatPosition,
+        id = id.value,
         eventId = eventId.value,
         senderId = senderId.value,
         content = content.value,
         timestamp = timestamp.toString(),
+        chatPosition = chatPosition,
     )

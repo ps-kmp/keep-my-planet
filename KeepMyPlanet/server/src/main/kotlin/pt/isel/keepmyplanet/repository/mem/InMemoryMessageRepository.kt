@@ -6,59 +6,66 @@ import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.repository.MessageRepository
 import pt.isel.keepmyplanet.util.now
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryMessageRepository : MessageRepository {
-    private val messagesByEvent = ConcurrentHashMap<Id, MutableList<Message>>() // eventId -> List of messages
+    private val messages = ConcurrentHashMap<Id, Message>()
+    private val nextId = AtomicInteger(1)
 
     override suspend fun create(entity: Message): Message {
-        val messages = messagesByEvent.computeIfAbsent(entity.eventId) { mutableListOf() }
-        val nextPosition = messages.size
-        val newMessage = entity.copy(chatPosition = nextPosition)
-        messages.add(newMessage)
+        val eventMessages = messages.values.filter { it.eventId == entity.eventId }
+        val nextChatPosition = (eventMessages.maxOfOrNull { it.chatPosition } ?: -1) + 1
+        val newMessage =
+            entity.copy(
+                id = Id(nextId.getAndIncrement().toUInt()),
+                chatPosition = nextChatPosition,
+                timestamp = now(),
+            )
+        messages[newMessage.id] = newMessage
         return newMessage
     }
 
-    override suspend fun getById(id: Id): Message? =
-        messagesByEvent.values
-            .flatten()
-            .firstOrNull { it.chatPosition == id.value.toInt() }
+    override suspend fun getById(id: Id): Message? = messages[id]
 
     override suspend fun getAll(): List<Message> =
-        messagesByEvent.values
-            .flatten()
+        messages.values
             .sortedWith(compareBy({ it.eventId.value }, { it.chatPosition }))
 
     override suspend fun update(entity: Message): Message {
-        val messages =
-            messagesByEvent[entity.eventId]
-                ?: throw NotFoundException("Message list for event", entity.eventId)
-
-        val index = messages.indexOfFirst { it.chatPosition == entity.chatPosition }
-        if (index == -1) throw NotFoundException("Message", Id(entity.chatPosition.toUInt()))
-
+        messages[entity.id] ?: throw NotFoundException("Message", entity.id)
         val updatedMessage = entity.copy(timestamp = now())
-        messages[index] = updatedMessage
+        messages[updatedMessage.id] = updatedMessage
         return updatedMessage
     }
 
-    override suspend fun deleteById(id: Id): Boolean {
-        val chatPos = id.value.toInt()
-        messagesByEvent.forEach { (_, messages) ->
-            val removed = messages.removeIf { it.chatPosition == chatPos }
-            if (removed) return true
-        }
-        return false
-    }
+    override suspend fun deleteById(id: Id): Boolean = messages.remove(id) != null
 
-    override suspend fun findByEventId(eventId: Id): List<Message> = messagesByEvent[eventId]?.sortedBy { it.chatPosition } ?: emptyList()
+    override suspend fun findByEventId(eventId: Id): List<Message> =
+        messages.values
+            .filter { it.eventId == eventId }
+            .sortedBy { it.chatPosition }
+
+    override suspend fun findByEventIdAndSequenceNum(
+        eventId: Id,
+        sequenceNum: Int,
+    ): Message? =
+        messages.values
+            .find { it.eventId == eventId && it.chatPosition == sequenceNum }
 
     override suspend fun findBySenderId(senderId: Id): List<Message> =
-        messagesByEvent.values
-            .flatten()
+        messages.values
             .filter { it.senderId == senderId }
             .sortedWith(compareBy({ it.eventId.value }, { it.chatPosition }))
 
-    override suspend fun deleteAllByEventId(eventId: Id): Int = messagesByEvent.remove(eventId)?.size ?: 0
+    override suspend fun deleteAllByEventId(eventId: Id): Int {
+        var count = 0
+        val keysToRemove = messages.entries.filter { it.value.eventId == eventId }.map { it.key }
+        keysToRemove.forEach { if (messages.remove(it) != null) count++ }
+        return count
+    }
 
-    fun clear() = messagesByEvent.clear()
+    fun clear() {
+        messages.clear()
+        nextId.set(1)
+    }
 }

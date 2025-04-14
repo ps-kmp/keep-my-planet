@@ -8,5 +8,10 @@ interface MessageRepository : Repository<Message, Id> {
 
     suspend fun findBySenderId(senderId: Id): List<Message>
 
+    suspend fun findByEventIdAndSequenceNum(
+        eventId: Id,
+        sequenceNum: Int,
+    ): Message?
+
     suspend fun deleteAllByEventId(eventId: Id): Int
 }

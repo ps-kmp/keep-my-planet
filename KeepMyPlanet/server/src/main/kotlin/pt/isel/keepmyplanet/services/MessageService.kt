@@ -13,21 +13,23 @@ class MessageService(
     private val messageRepository: MessageRepository,
     private val eventRepository: EventRepository,
 ) {
-    suspend fun getMessages(eventId: Id): Result<List<Message>> =
+    suspend fun getMessagesForEvent(eventId: Id): Result<List<Message>> =
         runCatching {
             eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
             messageRepository.findByEventId(eventId)
         }
 
-    suspend fun getSingleMessage(
+    suspend fun getSingleMessageBySequence(
         eventId: Id,
-        messageNum: Int,
+        sequenceNum: Int,
     ): Result<Message> =
         runCatching {
             eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
-            val messages = messageRepository.findByEventId(eventId)
-            messages.find { it.chatPosition == messageNum }
-                ?: throw NotFoundException("Message with position $messageNum in event", eventId)
+            messageRepository.findByEventIdAndSequenceNum(eventId, sequenceNum)
+                ?: throw NotFoundException(
+                    "Message with sequence number $sequenceNum in event",
+                    eventId,
+                )
         }
 
     suspend fun addMessage(
@@ -37,8 +39,7 @@ class MessageService(
     ): Result<Message> =
         runCatching {
             val event =
-                eventRepository.getById(eventId)
-                    ?: throw NotFoundException("Event", eventId)
+                eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
 
             if (event.status == EventStatus.CANCELLED || event.status == EventStatus.COMPLETED) {
                 throw IllegalStateException("Cannot add messages to a ${event.status} event")
@@ -47,15 +48,46 @@ class MessageService(
             if (senderId != event.organizerId && senderId !in event.participantsIds) {
                 throw IllegalArgumentException("User $senderId is not a participant in this event")
             }
+
             val newMessage =
                 Message(
-                    chatPosition = 0,
+                    id = Id(1U),
                     eventId = eventId,
                     senderId = senderId,
                     content = MessageContent(content),
                     timestamp = now(),
+                    chatPosition = -1,
                 )
 
             messageRepository.create(newMessage)
+        }
+
+    suspend fun deleteMessage(
+        eventId: Id,
+        sequenceNum: Int,
+        requestingUserId: Id,
+    ): Result<Unit> =
+        runCatching {
+            val event =
+                eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
+            val message =
+                messageRepository.findByEventIdAndSequenceNum(eventId, sequenceNum)
+                    ?: throw NotFoundException(
+                        "Message with sequence number $sequenceNum in event",
+                        eventId,
+                    )
+
+            if (message.senderId != requestingUserId && event.organizerId != requestingUserId) {
+                throw SecurityException(
+                    "User $requestingUserId cannot delete message ${message.id.value}",
+                )
+            }
+
+            val deleted = messageRepository.deleteById(message.id)
+            if (!deleted) {
+                throw IllegalStateException(
+                    "Failed to delete message with sequence number $sequenceNum in event $eventId.",
+                )
+            }
         }
 }
