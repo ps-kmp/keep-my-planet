@@ -2,12 +2,15 @@
 
 package pt.isel.keepmyplanet
 
-import io.ktor.server.application.Application
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.api.messageWebApi
 import pt.isel.keepmyplanet.api.zoneWebApi
 import pt.isel.keepmyplanet.plugins.configureStatusPages
@@ -28,6 +31,16 @@ fun Application.module() {
     val eventRepository = InMemoryEventRepository(zoneRepository)
     val messageRepository = InMemoryMessageRepository()
     val messageService = MessageService(messageRepository, eventRepository)
+
+    install(ContentNegotiation) {
+        json(
+            Json {
+                prettyPrint = true
+                isLenient = true
+                ignoreUnknownKeys = true
+            },
+        )
+    }
 
     configureStatusPages()
     routing {

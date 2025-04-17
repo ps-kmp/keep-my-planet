@@ -1,22 +1,66 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.keepmyplanet
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import pt.isel.keepmyplanet.data.api.MessageClient
+import pt.isel.keepmyplanet.data.api.createHttpClient
+import pt.isel.keepmyplanet.data.model.UserSession
+import pt.isel.keepmyplanet.data.service.ChatService
+import pt.isel.keepmyplanet.ui.screens.chat.ChatScreen
+import pt.isel.keepmyplanet.ui.screens.chat.ChatViewModel
+import pt.isel.keepmyplanet.ui.screens.login.LoginScreen
+import pt.isel.keepmyplanet.ui.screens.login.LoginViewModel
 
-import keepmyplanet.composeapp.generated.resources.Res
-import keepmyplanet.composeapp.generated.resources.compose_multiplatform
-
+@Suppress("ktlint:standard:function-naming")
 @Composable
+fun App() {
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
+    var userSession by remember { mutableStateOf<UserSession?>(null) }
+
+    val httpClient = remember { createHttpClient() }
+    val messageClient = remember { MessageClient(httpClient) }
+    val chatService = remember { ChatService(messageClient) }
+
+    when (val screen = currentScreen) {
+        is Screen.Login -> {
+            val loginViewModel = remember { LoginViewModel(chatService) }
+
+            LoginScreen(
+                viewModel = loginViewModel,
+                onNavigateToChat = { session ->
+                    userSession = session
+                    currentScreen = Screen.Chat
+                },
+            )
+        }
+        is Screen.Chat -> {
+            val session = userSession
+
+            if (session != null) {
+                val chatViewModel = remember { ChatViewModel(chatService) }
+
+                ChatScreen(
+                    viewModel = chatViewModel,
+                    userSession = session,
+                    onNavigateBack = {
+                        currentScreen = Screen.Login
+                    },
+                )
+            } else {
+                // Se por algum motivo a sessão for nula, voltar para tela de login
+                currentScreen = Screen.Login
+            }
+        }
+    }
+}
+
+sealed class Screen {
+    object Login : Screen()
+
+    object Chat : Screen()
+}
+/*@Composable
 @Preview
 fun App() {
     MaterialTheme {
@@ -34,4 +78,4 @@ fun App() {
             }
         }
     }
-}
+}*/

@@ -1,10 +1,18 @@
 package pt.isel.keepmyplanet.repository.mem
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import pt.isel.keepmyplanet.core.NotFoundException
+import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
+import pt.isel.keepmyplanet.domain.common.Title
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.util.calculateDistanceKm
@@ -17,6 +25,28 @@ class InMemoryEventRepository(
 ) : EventRepository {
     private val events = ConcurrentHashMap<Id, Event>()
     private val nextId = AtomicInteger(1)
+
+    init {
+        val testEvent =
+            Event(
+                id = Id(1U),
+                title = Title("Limpeza Praia"),
+                description = Description("Limpeza da Praia da Rocha"),
+                period =
+                    Period(
+                        now(),
+                        Clock.System
+                            .now()
+                            .plus(5, DateTimeUnit.HOUR)
+                            .toLocalDateTime(TimeZone.UTC),
+                    ),
+                zoneId = Id(1U),
+                organizerId = Id(1U),
+                status = EventStatus.IN_PROGRESS,
+                createdAt = now(),
+            )
+        events[testEvent.id] = testEvent
+    }
 
     override suspend fun create(entity: Event): Event {
         val newId = Id(nextId.getAndIncrement().toUInt())

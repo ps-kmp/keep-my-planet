@@ -16,7 +16,7 @@ data class Event(
     val maxParticipants: Int? = null, // null means no limit
     val participantsIds: Set<Id> = emptySet(),
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    val updatedAt: LocalDateTime? = null,
 ) {
     init {
         maxParticipants?.let {

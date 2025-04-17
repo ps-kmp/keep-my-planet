@@ -4,11 +4,11 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
 
 interface MessageRepository : Repository<Message, Id> {
-    suspend fun findByEventId(eventId: Id): List<Message>
+    suspend fun getAllByEventId(eventId: Id): List<Message>
 
-    suspend fun findBySenderId(senderId: Id): List<Message>
+    suspend fun getAllBySenderId(senderId: Id): List<Message>
 
-    suspend fun findByEventIdAndSequenceNum(
+    suspend fun getSingleByEventIdAndSeqNum(
         eventId: Id,
         sequenceNum: Int,
     ): Message?

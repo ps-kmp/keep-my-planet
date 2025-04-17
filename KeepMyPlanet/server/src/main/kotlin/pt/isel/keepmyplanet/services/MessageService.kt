@@ -13,10 +13,10 @@ class MessageService(
     private val messageRepository: MessageRepository,
     private val eventRepository: EventRepository,
 ) {
-    suspend fun getMessagesForEvent(eventId: Id): Result<List<Message>> =
+    suspend fun getAllMessagesFromEvent(eventId: Id): Result<List<Message>> =
         runCatching {
             eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
-            messageRepository.findByEventId(eventId)
+            messageRepository.getAllByEventId(eventId)
         }
 
     suspend fun getSingleMessageBySequence(
@@ -25,7 +25,7 @@ class MessageService(
     ): Result<Message> =
         runCatching {
             eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
-            messageRepository.findByEventIdAndSequenceNum(eventId, sequenceNum)
+            messageRepository.getSingleByEventIdAndSeqNum(eventId, sequenceNum)
                 ?: throw NotFoundException(
                     "Message with sequence number $sequenceNum in event",
                     eventId,
@@ -71,7 +71,7 @@ class MessageService(
             val event =
                 eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
             val message =
-                messageRepository.findByEventIdAndSequenceNum(eventId, sequenceNum)
+                messageRepository.getSingleByEventIdAndSeqNum(eventId, sequenceNum)
                     ?: throw NotFoundException(
                         "Message with sequence number $sequenceNum in event",
                         eventId,

@@ -13,11 +13,12 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.dto.message.AddMessageRequest
+import pt.isel.keepmyplanet.domain.message.Message
+import pt.isel.keepmyplanet.dtos.message.AddMessageRequest
 import pt.isel.keepmyplanet.mapper.message.toResponse
 import pt.isel.keepmyplanet.services.MessageService
 
-fun ApplicationCall.getCurrentUserId() = Id(1U)
+fun getCurrentUserId() = Id(1U)
 
 fun Route.messageWebApi(messageService: MessageService) {
     route("/event/{eventId}/chat") {
@@ -42,9 +43,10 @@ fun Route.messageWebApi(messageService: MessageService) {
             return seqNum
         }
 
+        // Add message to chat
         post {
             val eventId = call.getEventIdFromPath()
-            val senderId = call.getCurrentUserId()
+            val senderId = getCurrentUserId()
             val request = call.receive<AddMessageRequest>()
 
             messageService
@@ -53,16 +55,20 @@ fun Route.messageWebApi(messageService: MessageService) {
                 .onFailure { throw it }
         }
 
+        // Get all messages from chat
         get {
             val eventId = call.getEventIdFromPath()
 
             messageService
-                .getMessagesForEvent(eventId)
-                .onSuccess { msg -> call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }) }
-                .onFailure { throw it }
+                .getAllMessagesFromEvent(eventId)
+                // .onSuccess { msg -> call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList() as List<MessageResponse>) }
+                .onSuccess { msg: List<Message> ->
+                    call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList())
+                }.onFailure { throw it }
         }
 
         route("/{seq}") {
+            // Get a single message from chat
             get {
                 val eventId = call.getEventIdFromPath()
                 val sequenceNum = call.getSequenceNumFromPath()
@@ -73,10 +79,11 @@ fun Route.messageWebApi(messageService: MessageService) {
                     .onFailure { throw it }
             }
 
+            // Delete a single message from chat
             delete {
                 val eventId = call.getEventIdFromPath()
                 val sequenceNum = call.getSequenceNumFromPath()
-                val requestingUserId = call.getCurrentUserId()
+                val requestingUserId = getCurrentUserId()
 
                 messageService
                     .deleteMessage(eventId, sequenceNum, requestingUserId)

@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.mapper.message
 
 import pt.isel.keepmyplanet.domain.message.Message
-import pt.isel.keepmyplanet.dto.message.MessageResponse
+import pt.isel.keepmyplanet.dtos.message.MessageResponse
 
 fun Message.toResponse(): MessageResponse =
     MessageResponse(
