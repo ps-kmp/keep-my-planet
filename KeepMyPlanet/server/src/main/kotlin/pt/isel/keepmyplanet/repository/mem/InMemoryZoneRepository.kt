@@ -1,11 +1,11 @@
 package pt.isel.keepmyplanet.repository.mem
 
-import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.util.calculateDistanceKm
 import pt.isel.keepmyplanet.util.now
@@ -32,7 +32,8 @@ class InMemoryZoneRepository : ZoneRepository {
             .sortedBy { it.id.value }
 
     override suspend fun update(entity: Zone): Zone {
-        val existingZone = zones[entity.id] ?: throw NotFoundException("Zone", entity.id)
+        val existingZone =
+            zones[entity.id] ?: throw NotFoundException("Zone '${entity.id}' not found.")
         val updatedZone = entity.copy(createdAt = existingZone.createdAt, updatedAt = now())
         zones[entity.id] = updatedZone
         return updatedZone
@@ -40,7 +41,9 @@ class InMemoryZoneRepository : ZoneRepository {
 
     override suspend fun deleteById(id: Id): Boolean = zones.remove(id) != null
 
-    override suspend fun findByEventId(eventId: Id): Zone? = zones[eventId]
+    override suspend fun findByEventId(eventId: Id): Zone? =
+        zones.values
+            .find { it.id == eventId }
 
     override suspend fun findByReporterId(reporterId: Id): List<Zone> =
         zones.values

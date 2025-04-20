@@ -5,14 +5,14 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
-import pt.isel.keepmyplanet.domain.common.Title
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
+import pt.isel.keepmyplanet.domain.event.Title
+import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.util.calculateDistanceKm
@@ -64,7 +64,8 @@ class InMemoryEventRepository(
             .sortedBy { it.id.value }
 
     override suspend fun update(entity: Event): Event {
-        val existingEvent = events[entity.id] ?: throw NotFoundException("Event", entity.id)
+        val existingEvent =
+            events[entity.id] ?: throw NotFoundException("Event '${entity.id}' not found.")
         val updatedEvent =
             entity.copy(
                 participantsIds = existingEvent.participantsIds,

@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.domain.common
 
+import pt.isel.keepmyplanet.domain.event.Title
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

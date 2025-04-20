@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.service.ChatService
-import pt.isel.keepmyplanet.dtos.message.MessageResponse
+import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 data class ChatState(
     val messages: List<MessageResponse> = emptyList(),

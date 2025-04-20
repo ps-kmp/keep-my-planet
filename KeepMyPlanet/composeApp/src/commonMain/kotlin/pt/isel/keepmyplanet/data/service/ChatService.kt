@@ -10,8 +10,8 @@ import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.MessageClient
 import pt.isel.keepmyplanet.data.api.createHttpClient
 import pt.isel.keepmyplanet.data.model.UserSession
-import pt.isel.keepmyplanet.dtos.message.AddMessageRequest
-import pt.isel.keepmyplanet.dtos.message.MessageResponse
+import pt.isel.keepmyplanet.dto.message.AddMessageRequest
+import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 class ChatService(
     private val api: MessageClient = MessageClient(createHttpClient()),

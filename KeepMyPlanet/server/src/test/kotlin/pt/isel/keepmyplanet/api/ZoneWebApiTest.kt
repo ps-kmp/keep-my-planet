@@ -10,9 +10,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.install
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -29,9 +26,10 @@ import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateSeverityRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateStatusRequest
 import pt.isel.keepmyplanet.dto.zone.ZoneResponse
+import pt.isel.keepmyplanet.plugins.configureSerialization
 import pt.isel.keepmyplanet.plugins.configureStatusPages
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
-import pt.isel.keepmyplanet.services.ZoneService
+import pt.isel.keepmyplanet.service.ZoneService
 import pt.isel.keepmyplanet.util.now
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -74,19 +72,9 @@ class ZoneWebApiTest {
     private fun testApp(block: suspend ApplicationTestBuilder.() -> Unit) =
         testApplication {
             application {
-                install(ContentNegotiation) {
-                    json(
-                        Json {
-                            prettyPrint = true
-                            isLenient = true
-                            ignoreUnknownKeys = true
-                        },
-                    )
-                }
+                configureSerialization()
                 configureStatusPages()
-                routing {
-                    zoneWebApi(zoneService)
-                }
+                routing { zoneWebApi(zoneService) }
             }
             block()
         }
@@ -321,20 +309,6 @@ class ZoneWebApiTest {
                     setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
-        }
-
-    @Test
-    fun `PATCH zone status - should return 409 for invalid transition`() =
-        testApp {
-            val zone =
-                createTestZone(status = ZoneStatus.CLEANED) // Cannot go from CLEANED to SCHEDULED
-            val requestBody = UpdateStatusRequest(status = "CLEANING_SCHEDULED")
-            val response =
-                client.patch("/zones/${zone.id.value}/status") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                }
-            assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
     @Test

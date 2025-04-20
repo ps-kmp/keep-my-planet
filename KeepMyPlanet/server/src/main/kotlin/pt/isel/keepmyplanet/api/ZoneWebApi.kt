@@ -2,7 +2,6 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -18,11 +17,13 @@ import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
+import pt.isel.keepmyplanet.dto.zone.LocationQueryParams
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateSeverityRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateStatusRequest
+import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.zone.toResponse
-import pt.isel.keepmyplanet.services.ZoneService
+import pt.isel.keepmyplanet.service.ZoneService
 import pt.isel.keepmyplanet.util.safeValueOf
 
 fun getCurrentUserId(call: ApplicationCall): Id = Id(1U)
@@ -44,27 +45,14 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
         }
 
         get {
-            val lat = call.request.queryParameters["lat"]?.toDoubleOrNull()
-            val lon = call.request.queryParameters["lon"]?.toDoubleOrNull()
-            val radius = call.request.queryParameters["radius"]?.toDoubleOrNull()
+            val params =
+                LocationQueryParams(
+                    lat = call.request.queryParameters["lat"]?.toDoubleOrNull(),
+                    lon = call.request.queryParameters["lon"]?.toDoubleOrNull(),
+                    radius = call.request.queryParameters["radius"]?.toDoubleOrNull(),
+                )
 
-            val zonesResult: Result<List<Zone>> =
-                when {
-                    lat != null && lon != null && radius != null -> {
-                        if (radius <= 0) throw BadRequestException("Radius must be positive")
-                        zoneService.findZones(Location(lat, lon), radius)
-                    }
-
-                    lat != null || lon != null || radius != null -> {
-                        throw BadRequestException(
-                            "All location parameters must be provided together",
-                        )
-                    }
-
-                    else -> zoneService.findAll()
-                }
-
-            zonesResult
+            determineZoneResult(params, zoneService)
                 .onSuccess { z -> call.respond(HttpStatusCode.OK, z.map { it.toResponse() }) }
                 .onFailure { throw it }
         }
@@ -73,12 +61,8 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             fun ApplicationCall.getZoneIdFromPath(): Id {
                 val idValue =
                     parameters["id"]?.toUIntOrNull()
-                        ?: throw NumberFormatException("Zone ID must be a positive integer.")
-                try {
-                    return Id(idValue)
-                } catch (e: IllegalArgumentException) {
-                    throw BadRequestException(e.message ?: "Invalid Zone ID format.")
-                }
+                        ?: throw ValidationException("Zone ID must be a positive integer.")
+                return Id(idValue)
             }
 
             get {
@@ -124,6 +108,13 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             }
 
             route("/photos") {
+                fun ApplicationCall.getPhotoIdFromPath(): Id {
+                    val idValue =
+                        parameters["photoId"]?.toUIntOrNull()
+                            ?: throw ValidationException("Photo ID must be a positive integer.")
+                    return Id(idValue)
+                }
+
                 post {
                     val zoneId = call.getZoneIdFromPath()
                     val request = call.receive<AddPhotoRequest>()
@@ -137,10 +128,7 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
 
                 delete("/{photoId}") {
                     val zoneId = call.getZoneIdFromPath()
-                    val photoIdValue =
-                        call.parameters["photoId"]?.toUIntOrNull()
-                            ?: throw NumberFormatException("Photo ID must be a positive integer.")
-                    val photoId = Id(photoIdValue)
+                    val photoId = call.getPhotoIdFromPath()
 
                     zoneService
                         .removePhotoFromZone(zoneId, photoId)
@@ -149,5 +137,29 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                 }
             }
         }
+    }
+}
+
+private suspend fun determineZoneResult(
+    params: LocationQueryParams,
+    zoneService: ZoneService,
+): Result<List<Zone>> {
+    val lat = params.lat
+    val lon = params.lon
+    val radius = params.radius
+
+    return when {
+        lat != null && lon != null && radius != null -> {
+            if (radius <= 0) {
+                throw ValidationException("Query parameter 'radius' must be a positive number.")
+            }
+            zoneService.findZones(Location(lat, lon), radius)
+        }
+
+        lat == null && lon == null && radius == null -> {
+            zoneService.findAll()
+        }
+
+        else -> throw ValidationException("If providing location, all parameters must be present.")
     }
 }

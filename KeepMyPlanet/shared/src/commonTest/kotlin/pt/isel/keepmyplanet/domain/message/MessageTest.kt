@@ -11,15 +11,17 @@ class MessageTest {
     private val validSenderId = Id(3u)
     private val validContent = MessageContent("Hello everyone!")
     private val validTimestamp = LocalDateTime(2000, 1, 1, 1, 1)
+    private val chatPosition = 1
 
     @Test
     fun `valid Message should be created with all required fields`() {
         Message(
-            chatPosition = validId,
+            id = validId,
             eventId = validEventId,
             senderId = validSenderId,
             content = validContent,
             timestamp = validTimestamp,
+            chatPosition = chatPosition,
         )
     }
 
@@ -27,16 +29,18 @@ class MessageTest {
     fun `properties should return correct values`() {
         val message =
             Message(
-                chatPosition = validId,
+                id = validId,
                 eventId = validEventId,
                 senderId = validSenderId,
                 content = validContent,
                 timestamp = validTimestamp,
+                chatPosition = chatPosition,
             )
-        assertEquals(validId, message.chatPosition)
+        assertEquals(validId, message.id)
         assertEquals(validEventId, message.eventId)
         assertEquals(validSenderId, message.senderId)
         assertEquals(validContent, message.content)
         assertEquals(validTimestamp, message.timestamp)
+        assertEquals(chatPosition, message.chatPosition)
     }
 }

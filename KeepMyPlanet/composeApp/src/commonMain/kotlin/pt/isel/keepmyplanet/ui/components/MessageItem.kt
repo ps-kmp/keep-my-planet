@@ -6,7 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.dtos.message.MessageResponse
+import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 @Suppress("ktlint:standard:function-naming")
 @Composable

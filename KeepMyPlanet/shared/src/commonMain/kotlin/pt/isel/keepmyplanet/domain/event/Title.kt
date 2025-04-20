@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.domain.common
+package pt.isel.keepmyplanet.domain.event
 
 import kotlin.jvm.JvmInline
 

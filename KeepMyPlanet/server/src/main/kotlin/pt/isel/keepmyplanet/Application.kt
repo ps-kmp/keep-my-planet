@@ -1,24 +1,12 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
-
 package pt.isel.keepmyplanet
 
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
+import io.ktor.server.application.Application
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
-import kotlinx.serialization.json.Json
-import pt.isel.keepmyplanet.api.messageWebApi
-import pt.isel.keepmyplanet.api.zoneWebApi
+import pt.isel.keepmyplanet.plugins.configureLogging
+import pt.isel.keepmyplanet.plugins.configureRouting
+import pt.isel.keepmyplanet.plugins.configureSerialization
 import pt.isel.keepmyplanet.plugins.configureStatusPages
-import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
-import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
-import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
-import pt.isel.keepmyplanet.services.MessageService
-import pt.isel.keepmyplanet.services.ZoneService
 
 fun main() {
     embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = { module() })
@@ -26,28 +14,9 @@ fun main() {
 }
 
 fun Application.module() {
-    val zoneRepository = InMemoryZoneRepository()
-    val zoneService = ZoneService(zoneRepository)
-    val eventRepository = InMemoryEventRepository(zoneRepository)
-    val messageRepository = InMemoryMessageRepository()
-    val messageService = MessageService(messageRepository, eventRepository)
-
-    install(ContentNegotiation) {
-        json(
-            Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true
-            },
-        )
-    }
-
+    configureSerialization()
+    configureLogging()
+    // configureAuth()
     configureStatusPages()
-    routing {
-        get("/") {
-            call.respondText("Ktor: ${Greeting().greet()}")
-        }
-        zoneWebApi(zoneService)
-        messageWebApi(messageService)
-    }
+    configureRouting()
 }

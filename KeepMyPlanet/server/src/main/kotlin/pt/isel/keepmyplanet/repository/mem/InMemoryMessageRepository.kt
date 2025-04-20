@@ -1,8 +1,8 @@
 package pt.isel.keepmyplanet.repository.mem
 
-import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
+import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.MessageRepository
 import pt.isel.keepmyplanet.util.now
 import java.util.concurrent.ConcurrentHashMap
@@ -50,7 +50,7 @@ class InMemoryMessageRepository : MessageRepository {
             .sortedWith(compareBy({ it.eventId.value }, { it.chatPosition }))
 
     override suspend fun update(entity: Message): Message {
-        messages[entity.id] ?: throw NotFoundException("Message", entity.id)
+        messages[entity.id] ?: throw NotFoundException("Message '${entity.id} not found.")
         val updatedMessage = entity.copy(timestamp = now())
         messages[updatedMessage.id] = updatedMessage
         return updatedMessage

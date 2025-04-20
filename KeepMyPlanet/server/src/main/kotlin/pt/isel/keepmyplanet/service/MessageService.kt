@@ -1,10 +1,14 @@
-package pt.isel.keepmyplanet.services
+package pt.isel.keepmyplanet.service
 
-import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
+import pt.isel.keepmyplanet.errors.AuthorizationException
+import pt.isel.keepmyplanet.errors.ConflictException
+import pt.isel.keepmyplanet.errors.InternalServerException
+import pt.isel.keepmyplanet.errors.NotFoundException
+import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.MessageRepository
 import pt.isel.keepmyplanet.util.now
@@ -15,7 +19,8 @@ class MessageService(
 ) {
     suspend fun getAllMessagesFromEvent(eventId: Id): Result<List<Message>> =
         runCatching {
-            eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
+            eventRepository.getById(eventId)
+                ?: throw NotFoundException("Event '$eventId' not found.")
             messageRepository.getAllByEventId(eventId)
         }
 
@@ -24,12 +29,14 @@ class MessageService(
         sequenceNum: Int,
     ): Result<Message> =
         runCatching {
-            eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
+            if (sequenceNum < 0) throw ValidationException("Invalid sequence number.")
+
+            eventRepository.getById(eventId)
+                ?: throw NotFoundException("Event '$eventId' not found.")
+            eventRepository.getById(eventId)
+                ?: throw NotFoundException("Event '$eventId' not found.")
             messageRepository.getSingleByEventIdAndSeqNum(eventId, sequenceNum)
-                ?: throw NotFoundException(
-                    "Message with sequence number $sequenceNum in event",
-                    eventId,
-                )
+                ?: throw NotFoundException("Message $sequenceNum in event '$eventId' not found.")
         }
 
     suspend fun addMessage(
@@ -39,22 +46,26 @@ class MessageService(
     ): Result<Message> =
         runCatching {
             val event =
-                eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
+                eventRepository.getById(eventId)
+                    ?: throw NotFoundException("Event '$eventId' not found.")
 
             if (event.status == EventStatus.CANCELLED || event.status == EventStatus.COMPLETED) {
-                throw IllegalStateException("Cannot add messages to a ${event.status} event")
+                throw ConflictException("Cannot add messages to a ${event.status} event")
             }
 
             if (senderId != event.organizerId && senderId !in event.participantsIds) {
-                throw IllegalArgumentException("User $senderId is not a participant in this event")
+                throw AuthorizationException(
+                    "User '$senderId' must be the organizer or a participant to send messages.",
+                )
             }
 
+            val messageContent = MessageContent(content)
             val newMessage =
                 Message(
                     id = Id(1U),
                     eventId = eventId,
                     senderId = senderId,
-                    content = MessageContent(content),
+                    content = messageContent,
                     timestamp = now(),
                     chatPosition = -1,
                 )
@@ -68,24 +79,24 @@ class MessageService(
         requestingUserId: Id,
     ): Result<Unit> =
         runCatching {
+            if (sequenceNum < 0) throw ValidationException("Invalid sequence number.")
+
             val event =
-                eventRepository.getById(eventId) ?: throw NotFoundException("Event", eventId)
+                eventRepository.getById(eventId)
+                    ?: throw NotFoundException("Event '$eventId' not found.")
             val message =
                 messageRepository.getSingleByEventIdAndSeqNum(eventId, sequenceNum)
-                    ?: throw NotFoundException(
-                        "Message with sequence number $sequenceNum in event",
-                        eventId,
-                    )
+                    ?: throw NotFoundException("Message $sequenceNum in event '$eventId' not found.")
 
             if (message.senderId != requestingUserId && event.organizerId != requestingUserId) {
-                throw SecurityException(
-                    "User $requestingUserId cannot delete message ${message.id.value}",
+                throw AuthorizationException(
+                    "User $requestingUserId cannot delete message '${message.id.value}'",
                 )
             }
 
             val deleted = messageRepository.deleteById(message.id)
             if (!deleted) {
-                throw IllegalStateException(
+                throw InternalServerException(
                     "Failed to delete message with sequence number $sequenceNum in event $eventId.",
                 )
             }

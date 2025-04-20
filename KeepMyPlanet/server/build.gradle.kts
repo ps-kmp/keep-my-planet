@@ -1,12 +1,16 @@
 plugins {
+    // core
     alias(libs.plugins.kotlinJvm)
+    application
+
+    // feature
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlinSerialization)
-    application
 }
 
 group = "pt.isel.keepmyplanet"
 version = "1.0.0"
+
 application {
     mainClass.set("pt.isel.keepmyplanet.ApplicationKt")
     applicationDefaultJvmArgs =
@@ -14,16 +18,28 @@ application {
 }
 
 dependencies {
+    // project dependencies
     implementation(projects.shared)
-    implementation(libs.logback)
+
+    // ktor core
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.config.yaml)
+
+    // ktor features
+    implementation(libs.ktor.server.call.logging.jvm)
+    implementation(libs.ktor.server.status.pages.jvm)
+    implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
-    implementation(libs.ktor.server.content.negotiation)
+
+    // serialization
     implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.server.status.pages.jvm)
+
+    // logging
+    implementation(libs.logback)
+
+    // testing
     testImplementation(libs.ktor.server.test.host.jvm)
     testImplementation(libs.kotlin.test.junit)
 }

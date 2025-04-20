@@ -1,11 +1,8 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
-
 package pt.isel.keepmyplanet.api
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.*
-import io.ktor.server.request.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
@@ -13,10 +10,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.message.Message
-import pt.isel.keepmyplanet.dtos.message.AddMessageRequest
+import pt.isel.keepmyplanet.dto.message.AddMessageRequest
+import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.message.toResponse
-import pt.isel.keepmyplanet.services.MessageService
+import pt.isel.keepmyplanet.service.MessageService
 
 fun getCurrentUserId() = Id(1U)
 
@@ -25,20 +22,16 @@ fun Route.messageWebApi(messageService: MessageService) {
         fun ApplicationCall.getEventIdFromPath(): Id {
             val idValue =
                 parameters["eventId"]?.toUIntOrNull()
-                    ?: throw BadRequestException("Event ID must be a positive integer.")
-            try {
-                return Id(idValue)
-            } catch (e: IllegalArgumentException) {
-                throw BadRequestException(e.message ?: "Invalid Event ID format.")
-            }
+                    ?: throw ValidationException("Event ID must be a positive integer.")
+            return Id(idValue)
         }
 
         fun ApplicationCall.getSequenceNumFromPath(): Int {
             val seqNum =
                 parameters["seq"]?.toIntOrNull()
-                    ?: throw BadRequestException("Message sequence number must be a valid integer.")
+                    ?: throw ValidationException("Message sequence number must be a valid integer.")
             if (seqNum < 0) {
-                throw BadRequestException("Message sequence number must be non-negative.")
+                throw ValidationException("Message sequence number must be positive.")
             }
             return seqNum
         }
@@ -61,8 +54,7 @@ fun Route.messageWebApi(messageService: MessageService) {
 
             messageService
                 .getAllMessagesFromEvent(eventId)
-                // .onSuccess { msg -> call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList() as List<MessageResponse>) }
-                .onSuccess { msg: List<Message> ->
+                .onSuccess { msg ->
                     call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList())
                 }.onFailure { throw it }
         }

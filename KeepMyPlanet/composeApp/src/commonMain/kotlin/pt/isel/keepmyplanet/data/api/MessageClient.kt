@@ -8,8 +8,8 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import pt.isel.keepmyplanet.SERVER_PORT
 import pt.isel.keepmyplanet.data.model.UserSession
-import pt.isel.keepmyplanet.dtos.message.AddMessageRequest
-import pt.isel.keepmyplanet.dtos.message.MessageResponse
+import pt.isel.keepmyplanet.dto.message.AddMessageRequest
+import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 class MessageClient(
     private val client: HttpClient,

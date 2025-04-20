@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.dtos.message
+package pt.isel.keepmyplanet.dto.message
 
 import kotlinx.serialization.Serializable
 

@@ -7,7 +7,7 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
-import io.ktor.server.response.respondText
+import io.ktor.server.response.respond
 import java.util.concurrent.TimeUnit
 
 private const val JWT_AUTH_PROVIDER_NAME = "auth-jwt"
@@ -28,7 +28,7 @@ fun Application.configureAuthentication() {
             verifier(jwkProvider, jwtIssuer) { acceptLeeway(3) }
 
             validate { credential ->
-                if (credential.payload.getClaim("username").asString() != "") {
+                if (credential.payload.getClaim("userId").asString() != "") {
                     JWTPrincipal(credential.payload)
                 } else {
                     null
@@ -36,9 +36,9 @@ fun Application.configureAuthentication() {
             }
 
             challenge { _, _ ->
-                call.respondText(
-                    text = "Token is not valid or has expired",
-                    status = HttpStatusCode.Unauthorized,
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    "Token is not valid or has expired",
                 )
             }
         }

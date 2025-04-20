@@ -1,11 +1,11 @@
 package pt.isel.keepmyplanet.repository.mem
 
-import pt.isel.keepmyplanet.core.DuplicateEmailException
-import pt.isel.keepmyplanet.core.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.User
+import pt.isel.keepmyplanet.errors.ConflictException
+import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.util.now
 import java.util.concurrent.ConcurrentHashMap
@@ -17,7 +17,7 @@ class InMemoryUserRepository : UserRepository {
 
     override suspend fun create(entity: User): User {
         if (users.values.any { it.email == entity.email }) {
-            throw DuplicateEmailException(entity.email)
+            throw ConflictException("User with email '${entity.email}' already exists.")
         }
         val newId = Id(nextId.getAndIncrement().toUInt())
         val currentTime = now()
@@ -34,11 +34,12 @@ class InMemoryUserRepository : UserRepository {
             .sortedBy { it.id.value }
 
     override suspend fun update(entity: User): User {
-        val existingUser = users[entity.id] ?: throw NotFoundException("User", entity.id)
+        val existingUser =
+            users[entity.id] ?: throw NotFoundException("User '${entity.id}' not found.")
         if (entity.email != existingUser.email &&
             users.values.any { it.id != entity.id && it.email == entity.email }
         ) {
-            throw DuplicateEmailException(entity.email)
+            throw ConflictException("Email '${entity.email}' is already used.")
         }
         val updatedUser = entity.copy(createdAt = existingUser.createdAt, updatedAt = now())
         users[entity.id] = updatedUser

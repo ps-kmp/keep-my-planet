@@ -6,7 +6,6 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ZoneTest {
     private val validId = Id(1u)
@@ -14,6 +13,7 @@ class ZoneTest {
     private val validDescription = Description("Public park area")
     private val validReporterId = Id(2u)
     private val validDateTime = LocalDateTime(2000, 1, 1, 1, 1)
+    private val validPhotosIds = setOf(Id(1u), Id(2u))
 
     @Test
     fun `valid Zone should be created with required fields`() {
@@ -22,6 +22,7 @@ class ZoneTest {
             location = validLocation,
             description = validDescription,
             reporterId = validReporterId,
+            photosIds = validPhotosIds,
             createdAt = validDateTime,
             updatedAt = validDateTime,
         )
@@ -35,12 +36,12 @@ class ZoneTest {
                 location = validLocation,
                 description = validDescription,
                 reporterId = validReporterId,
+                photosIds = validPhotosIds,
                 createdAt = validDateTime,
                 updatedAt = validDateTime,
             )
         assertEquals(ZoneStatus.REPORTED, zone.status)
         assertEquals(ZoneSeverity.UNKNOWN, zone.zoneSeverity)
-        assertTrue(zone.photosIds.isEmpty())
     }
 
     @Test
