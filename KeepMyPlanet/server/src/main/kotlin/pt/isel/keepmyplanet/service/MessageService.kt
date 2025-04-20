@@ -16,6 +16,7 @@ import pt.isel.keepmyplanet.util.now
 class MessageService(
     private val messageRepository: MessageRepository,
     private val eventRepository: EventRepository,
+    private val chatSseService: ChatSseService,
 ) {
     suspend fun getAllMessagesFromEvent(eventId: Id): Result<List<Message>> =
         runCatching {
@@ -31,8 +32,6 @@ class MessageService(
         runCatching {
             if (sequenceNum < 0) throw ValidationException("Invalid sequence number.")
 
-            eventRepository.getById(eventId)
-                ?: throw NotFoundException("Event '$eventId' not found.")
             eventRepository.getById(eventId)
                 ?: throw NotFoundException("Event '$eventId' not found.")
             messageRepository.getSingleByEventIdAndSeqNum(eventId, sequenceNum)
@@ -70,7 +69,9 @@ class MessageService(
                     chatPosition = -1,
                 )
 
-            messageRepository.create(newMessage)
+            val createdMessage = messageRepository.create(newMessage)
+            chatSseService.publish(createdMessage)
+            createdMessage
         }
 
     suspend fun deleteMessage(

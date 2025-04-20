@@ -1,11 +1,10 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
-
 package pt.isel.keepmyplanet.data.api
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 actual fun createHttpClient(): HttpClient =
@@ -19,4 +18,5 @@ actual fun createHttpClient(): HttpClient =
                 },
             )
         }
+        install(SSE)
     }

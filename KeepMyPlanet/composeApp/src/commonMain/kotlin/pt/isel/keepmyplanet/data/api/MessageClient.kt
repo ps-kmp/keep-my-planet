@@ -1,11 +1,21 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
-
 package pt.isel.keepmyplanet.data.api
 
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.get
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.sse.ServerSentEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.SERVER_PORT
 import pt.isel.keepmyplanet.data.model.UserSession
 import pt.isel.keepmyplanet.dto.message.AddMessageRequest
@@ -19,7 +29,7 @@ class MessageClient(
         eventId: UInt,
         message: AddMessageRequest,
     ): Result<MessageResponse> =
-        try {
+        runCatching {
             val response =
                 client.post("$baseUrl/event/$eventId/chat") {
                     contentType(ContentType.Application.Json)
@@ -31,25 +41,21 @@ class MessageClient(
                 }
 
             if (response.status.isSuccess()) {
-                Result.success(response.body())
+                response.body()
             } else {
-                Result.failure(Exception("Erro ao enviar mensagem: ${response.status}"))
+                throw Exception("Failed to send message: ${response.status}")
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
 
     suspend fun getEventMessages(eventId: UInt): Result<List<MessageResponse>> =
-        try {
+        runCatching {
             val response = client.get("$baseUrl/event/$eventId/chat")
 
             if (response.status.isSuccess()) {
-                Result.success(response.body())
+                response.body()
             } else {
-                Result.failure(Exception("Erro ao obter mensagens: ${response.status}"))
+                throw Exception("Failed to retrieve messages: ${response.status}")
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
 
     // Simular entrada num evento (nao sera assim quando entidade Evento estiver implementada no servidor)
@@ -66,4 +72,27 @@ class MessageClient(
             ),
         )
     }
+
+    fun startSse(
+        eventId: UInt,
+        scope: CoroutineScope,
+        onMessage: (MessageResponse) -> Unit,
+    ): Job =
+        scope.launch {
+            client.sse("$baseUrl/event/$eventId/chat/stream") {
+                incoming
+                    .filterIsInstance<ServerSentEvent>()
+                    .collect { event ->
+                        event.data?.let { json ->
+                            runCatching {
+                                Json.decodeFromString<MessageResponse>(json)
+                            }.onSuccess { msg ->
+                                onMessage(msg)
+                            }.onFailure {
+                                println("Failed to parse message: ${it.message}")
+                            }
+                        }
+                    }
+            }
+        }
 }

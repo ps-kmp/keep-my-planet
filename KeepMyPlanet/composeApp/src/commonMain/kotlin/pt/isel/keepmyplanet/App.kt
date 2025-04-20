@@ -1,8 +1,10 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
-
 package pt.isel.keepmyplanet
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import pt.isel.keepmyplanet.data.api.MessageClient
 import pt.isel.keepmyplanet.data.api.createHttpClient
 import pt.isel.keepmyplanet.data.model.UserSession
@@ -34,6 +36,7 @@ fun App() {
                 },
             )
         }
+
         is Screen.Chat -> {
             val session = userSession
 
@@ -48,7 +51,7 @@ fun App() {
                     },
                 )
             } else {
-                // Se por algum motivo a sessão for nula, voltar para tela de login
+                // fallback safety
                 currentScreen = Screen.Login
             }
         }

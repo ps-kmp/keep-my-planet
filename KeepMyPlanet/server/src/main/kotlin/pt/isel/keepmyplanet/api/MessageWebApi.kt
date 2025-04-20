@@ -9,15 +9,23 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import io.ktor.server.sse.sse
+import io.ktor.sse.ServerSentEvent
+import kotlinx.coroutines.flow.filter
+import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.message.AddMessageRequest
 import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.message.toResponse
+import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
 
 fun getCurrentUserId() = Id(1U)
 
-fun Route.messageWebApi(messageService: MessageService) {
+fun Route.messageWebApi(
+    messageService: MessageService,
+    chatSseService: ChatSseService,
+) {
     route("/event/{eventId}/chat") {
         fun ApplicationCall.getEventIdFromPath(): Id {
             val idValue =
@@ -57,6 +65,24 @@ fun Route.messageWebApi(messageService: MessageService) {
                 .onSuccess { msg ->
                     call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList())
                 }.onFailure { throw it }
+        }
+
+        route("/stream") {
+            sse {
+                val eventId = call.getEventIdFromPath()
+
+                chatSseService.messages
+                    .filter { it.eventId == eventId }
+                    .collect { message ->
+                        send(
+                            ServerSentEvent(
+                                data = Json.encodeToString(message.toResponse()),
+                                id = message.chatPosition.toString(),
+                                event = "new-message",
+                            ),
+                        )
+                    }
+            }
         }
 
         route("/{seq}") {

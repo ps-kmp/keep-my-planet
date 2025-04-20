@@ -64,6 +64,6 @@ class ChatViewModel(
     }
 
     fun disconnect() {
-        chatService.stopPolling()
+        chatService.stopSse()
     }
 }
