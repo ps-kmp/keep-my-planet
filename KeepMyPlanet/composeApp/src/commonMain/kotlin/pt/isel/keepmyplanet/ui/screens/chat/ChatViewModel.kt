@@ -1,26 +1,30 @@
 package pt.isel.keepmyplanet.ui.screens.chat
 
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import pt.isel.keepmyplanet.data.service.ChatService
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 data class ChatState(
     val messages: List<MessageResponse> = emptyList(),
     val currentMessage: String = "",
-    val isLoading: Boolean = false,
+    val isSending: Boolean = false,
     val error: String? = null,
+    val isConnected: Boolean = true,
 )
 
 class ChatViewModel(
     private val chatService: ChatService,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Main),
-) {
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.Main,
+) : ViewModel() {
     private val _state = MutableStateFlow(ChatState())
     val state: StateFlow<ChatState> = _state.asStateFlow()
 
@@ -29,33 +33,43 @@ class ChatViewModel(
     }
 
     private fun observeMessages() {
-        coroutineScope.launch {
-            chatService.messages.collect { messages ->
-                _state.update { it.copy(messages = messages) }
+        viewModelScope.launch {
+            try {
+                chatService.messages
+                    .collect { messages ->
+                        _state.update { it.copy(messages = messages) }
+                    }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(error = "Connection error: ${e.message ?: "Unknown issue"}")
+                }
             }
         }
     }
 
     fun updateCurrentMessage(message: String) {
-        _state.update { it.copy(currentMessage = message) }
+        _state.update { it.copy(currentMessage = message, error = null) }
     }
 
     fun sendMessage() {
-        val message = state.value.currentMessage.trim()
-        if (message.isBlank()) return
+        val messageToSend = state.value.currentMessage.trim()
+        if (messageToSend.isBlank() || state.value.isSending) return
 
-        coroutineScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+        viewModelScope.launch {
+            _state.update { it.copy(isSending = true, error = null) }
 
-            chatService.sendMessage(message).fold(
-                onSuccess = {
-                    _state.update { it.copy(isLoading = false, currentMessage = "") }
-                },
+            val result =
+                withContext(ioDispatcher) {
+                    chatService.sendMessage(messageToSend)
+                }
+
+            result.fold(
+                onSuccess = { _state.update { it.copy(isSending = false, currentMessage = "") } },
                 onFailure = { error ->
                     _state.update {
                         it.copy(
-                            isLoading = false,
-                            error = error.message ?: "Erro ao enviar mensagem",
+                            isSending = false,
+                            error = error.message ?: "Failed to send message",
                         )
                     }
                 },
@@ -63,7 +77,8 @@ class ChatViewModel(
         }
     }
 
-    fun disconnect() {
-        chatService.stopSse()
+    override fun onCleared() {
+        super.onCleared()
+        chatService.leaveChat()
     }
 }

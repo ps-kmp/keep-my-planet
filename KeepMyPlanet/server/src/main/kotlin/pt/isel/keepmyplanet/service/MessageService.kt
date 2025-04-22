@@ -1,6 +1,7 @@
 package pt.isel.keepmyplanet.service
 
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
@@ -20,8 +21,7 @@ class MessageService(
 ) {
     suspend fun getAllMessagesFromEvent(eventId: Id): Result<List<Message>> =
         runCatching {
-            eventRepository.getById(eventId)
-                ?: throw NotFoundException("Event '$eventId' not found.")
+            findEventOrFail(eventId)
             messageRepository.getAllByEventId(eventId)
         }
 
@@ -32,8 +32,7 @@ class MessageService(
         runCatching {
             if (sequenceNum < 0) throw ValidationException("Invalid sequence number.")
 
-            eventRepository.getById(eventId)
-                ?: throw NotFoundException("Event '$eventId' not found.")
+            findEventOrFail(eventId)
             messageRepository.getSingleByEventIdAndSeqNum(eventId, sequenceNum)
                 ?: throw NotFoundException("Message $sequenceNum in event '$eventId' not found.")
         }
@@ -44,9 +43,7 @@ class MessageService(
         content: String,
     ): Result<Message> =
         runCatching {
-            val event =
-                eventRepository.getById(eventId)
-                    ?: throw NotFoundException("Event '$eventId' not found.")
+            val event = findEventOrFail(eventId)
 
             if (event.status == EventStatus.CANCELLED || event.status == EventStatus.COMPLETED) {
                 throw ConflictException("Cannot add messages to a ${event.status} event")
@@ -82,9 +79,7 @@ class MessageService(
         runCatching {
             if (sequenceNum < 0) throw ValidationException("Invalid sequence number.")
 
-            val event =
-                eventRepository.getById(eventId)
-                    ?: throw NotFoundException("Event '$eventId' not found.")
+            val event = findEventOrFail(eventId)
             val message =
                 messageRepository.getSingleByEventIdAndSeqNum(eventId, sequenceNum)
                     ?: throw NotFoundException("Message $sequenceNum in event '$eventId' not found.")
@@ -102,4 +97,8 @@ class MessageService(
                 )
             }
         }
+
+    private suspend fun findEventOrFail(eventId: Id): Event =
+        eventRepository.getById(eventId)
+            ?: throw NotFoundException("Event '$eventId' not found.")
 }

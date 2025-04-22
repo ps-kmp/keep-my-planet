@@ -17,13 +17,14 @@ import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
-import pt.isel.keepmyplanet.dto.zone.LocationQueryParams
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateSeverityRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateStatusRequest
 import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.zone.toResponse
 import pt.isel.keepmyplanet.service.ZoneService
+import pt.isel.keepmyplanet.util.getPathUIntId
+import pt.isel.keepmyplanet.util.getQueryDoubleParameter
 import pt.isel.keepmyplanet.util.safeValueOf
 
 fun getCurrentUserId(call: ApplicationCall): Id = Id(1U)
@@ -45,28 +46,20 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
         }
 
         get {
-            val params =
-                LocationQueryParams(
-                    lat = call.request.queryParameters["lat"]?.toDoubleOrNull(),
-                    lon = call.request.queryParameters["lon"]?.toDoubleOrNull(),
-                    radius = call.request.queryParameters["radius"]?.toDoubleOrNull(),
-                )
+            val lat = call.getQueryDoubleParameter("lat")
+            val lon = call.getQueryDoubleParameter("lon")
+            val radius = call.getQueryDoubleParameter("radius")
 
-            determineZoneResult(params, zoneService)
+            determineZoneResult(lat, lon, radius, zoneService)
                 .onSuccess { z -> call.respond(HttpStatusCode.OK, z.map { it.toResponse() }) }
                 .onFailure { throw it }
         }
 
         route("/{id}") {
-            fun ApplicationCall.getZoneIdFromPath(): Id {
-                val idValue =
-                    parameters["id"]?.toUIntOrNull()
-                        ?: throw ValidationException("Zone ID must be a positive integer.")
-                return Id(idValue)
-            }
+            fun ApplicationCall.getZoneId(): Id = getPathUIntId("id", "Zone ID")
 
             get {
-                val zoneId = call.getZoneIdFromPath()
+                val zoneId = call.getZoneId()
                 zoneService
                     .getZoneDetails(zoneId)
                     .onSuccess { zone -> call.respond(HttpStatusCode.OK, zone.toResponse()) }
@@ -74,7 +67,7 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             }
 
             delete {
-                val zoneId = call.getZoneIdFromPath()
+                val zoneId = call.getZoneId()
                 zoneService
                     .deleteZone(zoneId)
                     .onSuccess { call.respond(HttpStatusCode.NoContent) }
@@ -82,7 +75,7 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             }
 
             patch("/status") {
-                val zoneId = call.getZoneIdFromPath()
+                val zoneId = call.getZoneId()
                 val request = call.receive<UpdateStatusRequest>()
                 val newStatus =
                     safeValueOf<ZoneStatus>(request.status)
@@ -95,7 +88,7 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             }
 
             patch("/severity") {
-                val zoneId = call.getZoneIdFromPath()
+                val zoneId = call.getZoneId()
                 val request = call.receive<UpdateSeverityRequest>()
                 val newZoneSeverity =
                     safeValueOf<ZoneSeverity>(request.severity)
@@ -108,15 +101,8 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             }
 
             route("/photos") {
-                fun ApplicationCall.getPhotoIdFromPath(): Id {
-                    val idValue =
-                        parameters["photoId"]?.toUIntOrNull()
-                            ?: throw ValidationException("Photo ID must be a positive integer.")
-                    return Id(idValue)
-                }
-
                 post {
-                    val zoneId = call.getZoneIdFromPath()
+                    val zoneId = call.getZoneId()
                     val request = call.receive<AddPhotoRequest>()
                     val photoId = Id(request.photoId)
 
@@ -127,8 +113,9 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                 }
 
                 delete("/{photoId}") {
-                    val zoneId = call.getZoneIdFromPath()
-                    val photoId = call.getPhotoIdFromPath()
+                    fun ApplicationCall.getPhotoId(): Id = getPathUIntId("photoId", "Photo ID")
+                    val zoneId = call.getZoneId()
+                    val photoId = call.getPhotoId()
 
                     zoneService
                         .removePhotoFromZone(zoneId, photoId)
@@ -141,25 +128,23 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
 }
 
 private suspend fun determineZoneResult(
-    params: LocationQueryParams,
+    lat: Double?,
+    lon: Double?,
+    radius: Double?,
     zoneService: ZoneService,
-): Result<List<Zone>> {
-    val lat = params.lat
-    val lon = params.lon
-    val radius = params.radius
-
-    return when {
-        lat != null && lon != null && radius != null -> {
-            if (radius <= 0) {
-                throw ValidationException("Query parameter 'radius' must be a positive number.")
-            }
+): Result<List<Zone>> =
+    if (lat != null && lon != null && radius != null) {
+        if (radius <= 0) {
+            Result.failure(ValidationException("Query parameter 'radius' must be positive."))
+        } else {
             zoneService.findZones(Location(lat, lon), radius)
         }
-
-        lat == null && lon == null && radius == null -> {
-            zoneService.findAll()
-        }
-
-        else -> throw ValidationException("If providing location, all parameters must be present.")
+    } else if (lat == null && lon == null && radius == null) {
+        zoneService.findAll()
+    } else {
+        Result.failure(
+            ValidationException(
+                "Query parameters 'lat', 'lon', and 'radius' must all be provided together for location filtering.",
+            ),
+        )
     }
-}

@@ -9,7 +9,9 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.server.application.install
 import io.ktor.server.routing.routing
+import io.ktor.server.sse.SSE
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.datetime.LocalDateTime
@@ -30,6 +32,7 @@ import pt.isel.keepmyplanet.plugins.configureStatusPages
 import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
+import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.util.now
 import kotlin.test.Test
@@ -39,7 +42,9 @@ class MessageWebApiTest {
     private val fakeMessageRepository = InMemoryMessageRepository()
     private val fakeZoneRepository = InMemoryZoneRepository()
     private val fakeEventRepository = InMemoryEventRepository(fakeZoneRepository)
-    private val messageService = MessageService(fakeMessageRepository, fakeEventRepository)
+    private val chatSseService = ChatSseService()
+    private val messageService =
+        MessageService(fakeMessageRepository, fakeEventRepository, chatSseService)
     private val testOrganizerId = Id(2u)
     private val testParticipantId = Id(3u)
     private val nonParticipantId = Id(4u)
@@ -99,7 +104,8 @@ class MessageWebApiTest {
             application {
                 configureSerialization()
                 configureStatusPages()
-                routing { messageWebApi(messageService) }
+                install(SSE)
+                routing { messageWebApi(messageService, chatSseService) }
             }
             block()
         }

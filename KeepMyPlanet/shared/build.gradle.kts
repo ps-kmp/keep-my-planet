@@ -39,6 +39,11 @@ kotlin {
                             }
                     }
             }
+            testTask {
+                useKarma {
+                    useFirefox()
+                }
+            }
         }
     }
 

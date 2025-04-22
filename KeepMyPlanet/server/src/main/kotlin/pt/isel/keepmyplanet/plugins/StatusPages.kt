@@ -21,7 +21,7 @@ fun Application.configureStatusPages() {
 
         /** 400 Bad Request */
         exception<IllegalArgumentException> { call, cause ->
-            log.warn("Illegal argument: ${cause.message}", cause)
+            log.warn("Illegal argument: ${cause.message}")
             val status = HttpStatusCode.BadRequest
             call.respond(
                 status,

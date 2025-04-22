@@ -20,6 +20,7 @@ import pt.isel.keepmyplanet.SERVER_PORT
 import pt.isel.keepmyplanet.data.model.UserSession
 import pt.isel.keepmyplanet.dto.message.AddMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
+import pt.isel.keepmyplanet.errors.InternalServerException
 
 class MessageClient(
     private val client: HttpClient,
@@ -27,6 +28,7 @@ class MessageClient(
 ) {
     suspend fun sendMessage(
         eventId: UInt,
+        userId: UInt,
         message: AddMessageRequest,
     ): Result<MessageResponse> =
         runCatching {
@@ -35,26 +37,31 @@ class MessageClient(
                     contentType(ContentType.Application.Json)
                     setBody(message)
                     headers {
-                        // append("User-Id", userId.toString())
+                        append("User-Id", userId.toString())
                         append("Accept", "application/json")
                     }
                 }
 
             if (response.status.isSuccess()) {
-                response.body()
+                response.body<MessageResponse>()
             } else {
-                throw Exception("Failed to send message: ${response.status}")
+                throw InternalServerException("Failed to send message: ${response.status}")
             }
         }
 
     suspend fun getEventMessages(eventId: UInt): Result<List<MessageResponse>> =
         runCatching {
-            val response = client.get("$baseUrl/event/$eventId/chat")
+            val response =
+                client.get("$baseUrl/event/$eventId/chat") {
+                    headers {
+                        append("Accept", "application/json")
+                    }
+                }
 
             if (response.status.isSuccess()) {
-                response.body()
+                response.body<List<MessageResponse>>()
             } else {
-                throw Exception("Failed to retrieve messages: ${response.status}")
+                throw InternalServerException("Failed to retrieve messages: ${response.status}")
             }
         }
 
@@ -62,15 +69,10 @@ class MessageClient(
     suspend fun joinEvent(
         username: String,
         eventName: String,
-    ): Result<UserSession> {
+    ): Result<Pair<UserSession, UInt>> {
         // comunicar com servidor para autenticar o user
         // e obter o eventId correto
-        return Result.success(
-            UserSession(
-                username = username,
-                eventId = 1u, // hardcoded
-            ),
-        )
+        return Result.success(UserSession(userId = 1U, username = username) to 1U)
     }
 
     fun startSse(
@@ -86,10 +88,8 @@ class MessageClient(
                         event.data?.let { json ->
                             runCatching {
                                 Json.decodeFromString<MessageResponse>(json)
-                            }.onSuccess { msg ->
-                                onMessage(msg)
-                            }.onFailure {
-                                println("Failed to parse message: ${it.message}")
+                            }.onSuccess {
+                                onMessage(it)
                             }
                         }
                     }

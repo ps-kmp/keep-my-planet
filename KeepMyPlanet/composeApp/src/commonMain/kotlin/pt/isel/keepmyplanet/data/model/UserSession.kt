@@ -1,7 +1,9 @@
 package pt.isel.keepmyplanet.data.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class UserSession(
+    val userId: UInt,
     val username: String,
-    // val userId: UInt, // valor será obtido do servidor após o login
-    val eventId: UInt, // valor será obtido do servidor após entrar num evento
 )

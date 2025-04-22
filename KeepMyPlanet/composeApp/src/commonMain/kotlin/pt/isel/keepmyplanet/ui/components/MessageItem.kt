@@ -19,10 +19,7 @@ fun MessageItem(
     isFromCurrentUser: Boolean,
 ) {
     Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalAlignment = if (isFromCurrentUser) Alignment.End else Alignment.Start,
     ) {
         Card(
@@ -40,9 +37,7 @@ fun MessageItem(
                 },
             elevation = 2.dp,
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp),
-            ) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = "User ${message.senderId}",
                     style = MaterialTheme.typography.caption,

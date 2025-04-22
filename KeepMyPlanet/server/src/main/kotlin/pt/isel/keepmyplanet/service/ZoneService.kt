@@ -40,7 +40,7 @@ class ZoneService(
 
     suspend fun getZoneDetails(zoneId: Id): Result<Zone> =
         runCatching {
-            zoneRepository.getById(zoneId) ?: throw NotFoundException("Zone '$zoneId' not found.")
+            findZoneOrFail(zoneId)
         }
 
     suspend fun findAll(): Result<List<Zone>> =
@@ -61,9 +61,8 @@ class ZoneService(
         newStatus: ZoneStatus,
     ): Result<Zone> =
         runCatching {
-            val zone =
-                zoneRepository.getById(zoneId)
-                    ?: throw NotFoundException("Zone '$zoneId' not found.")
+            val zone = findZoneOrFail(zoneId)
+            if (zone.status == newStatus) return@runCatching zone
             val updatedZone = zone.copy(status = newStatus, updatedAt = now())
             zoneRepository.update(updatedZone)
         }
@@ -73,9 +72,8 @@ class ZoneService(
         newZoneSeverity: ZoneSeverity,
     ): Result<Zone> =
         runCatching {
-            val zone =
-                zoneRepository.getById(zoneId)
-                    ?: throw NotFoundException("Zone '$zoneId' not found.")
+            val zone = findZoneOrFail(zoneId)
+            if (zone.zoneSeverity == newZoneSeverity) return@runCatching zone
             val updatedZone = zone.copy(zoneSeverity = newZoneSeverity, updatedAt = now())
             zoneRepository.update(updatedZone)
         }
@@ -85,16 +83,9 @@ class ZoneService(
         photoId: Id,
     ): Result<Zone> =
         runCatching {
-            val zone =
-                zoneRepository.getById(zoneId)
-                    ?: throw NotFoundException("Zone '$zoneId' not found.")
-
-            val updatedPhotosIds = zone.photosIds + photoId
-            if (updatedPhotosIds.size == zone.photosIds.size && photoId in zone.photosIds) {
-                return@runCatching zone
-            }
-
-            val updatedZone = zone.copy(photosIds = updatedPhotosIds, updatedAt = now())
+            val zone = findZoneOrFail(zoneId)
+            if (photoId in zone.photosIds) return@runCatching zone
+            val updatedZone = zone.copy(photosIds = zone.photosIds + photoId, updatedAt = now())
             zoneRepository.update(updatedZone)
         }
 
@@ -103,32 +94,31 @@ class ZoneService(
         photoId: Id,
     ): Result<Zone> =
         runCatching {
-            val zone =
-                zoneRepository.getById(zoneId)
-                    ?: throw NotFoundException("Zone '$zoneId' not found.")
+            val zone = findZoneOrFail(zoneId)
 
             if (photoId !in zone.photosIds) {
                 throw NotFoundException("Photo '$photoId' not found in zone '$zoneId'.")
             }
 
-            val updatedPhotosIds = zone.photosIds - photoId
-            val updatedZone = zone.copy(photosIds = updatedPhotosIds, updatedAt = now())
+            val updatedZone = zone.copy(photosIds = zone.photosIds - photoId, updatedAt = now())
             zoneRepository.update(updatedZone)
         }
 
     suspend fun deleteZone(zoneId: Id): Result<Unit> =
         runCatching {
-            val zone =
-                zoneRepository.getById(zoneId)
-                    ?: throw NotFoundException("Zone '$zoneId' not found.")
+            val zone = findZoneOrFail(zoneId)
 
             if (zone.eventId != null && zone.status == ZoneStatus.CLEANING_SCHEDULED) {
                 throw ConflictException(
-                    "Cannot delete zone '$zoneId' linked to an active event.",
+                    "Cannot delete zone '$zoneId' linked to a scheduled event.",
                 )
             }
 
             val deleted = zoneRepository.deleteById(zoneId)
             if (!deleted) throw InternalServerException("Failed to delete zone $zoneId.")
         }
+
+    private suspend fun findZoneOrFail(zoneId: Id): Zone =
+        zoneRepository.getById(zoneId)
+            ?: throw NotFoundException("Zone '$zoneId' not found.")
 }

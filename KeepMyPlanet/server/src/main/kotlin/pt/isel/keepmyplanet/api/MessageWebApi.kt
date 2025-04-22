@@ -15,10 +15,11 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.message.AddMessageRequest
-import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.message.toResponse
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
+import pt.isel.keepmyplanet.util.getPathIntParameter
+import pt.isel.keepmyplanet.util.getPathUIntId
 
 fun getCurrentUserId() = Id(1U)
 
@@ -27,26 +28,11 @@ fun Route.messageWebApi(
     chatSseService: ChatSseService,
 ) {
     route("/event/{eventId}/chat") {
-        fun ApplicationCall.getEventIdFromPath(): Id {
-            val idValue =
-                parameters["eventId"]?.toUIntOrNull()
-                    ?: throw ValidationException("Event ID must be a positive integer.")
-            return Id(idValue)
-        }
-
-        fun ApplicationCall.getSequenceNumFromPath(): Int {
-            val seqNum =
-                parameters["seq"]?.toIntOrNull()
-                    ?: throw ValidationException("Message sequence number must be a valid integer.")
-            if (seqNum < 0) {
-                throw ValidationException("Message sequence number must be positive.")
-            }
-            return seqNum
-        }
+        fun ApplicationCall.getEventId(): Id = getPathUIntId("eventId", "Event ID")
 
         // Add message to chat
         post {
-            val eventId = call.getEventIdFromPath()
+            val eventId = call.getEventId()
             val senderId = getCurrentUserId()
             val request = call.receive<AddMessageRequest>()
 
@@ -58,7 +44,7 @@ fun Route.messageWebApi(
 
         // Get all messages from chat
         get {
-            val eventId = call.getEventIdFromPath()
+            val eventId = call.getEventId()
 
             messageService
                 .getAllMessagesFromEvent(eventId)
@@ -69,7 +55,7 @@ fun Route.messageWebApi(
 
         route("/stream") {
             sse {
-                val eventId = call.getEventIdFromPath()
+                val eventId = call.getEventId()
 
                 chatSseService.messages
                     .filter { it.eventId == eventId }
@@ -86,10 +72,16 @@ fun Route.messageWebApi(
         }
 
         route("/{seq}") {
+            fun ApplicationCall.getSequenceNum(): Int =
+                getPathIntParameter(
+                    paramName = "seq",
+                    description = "Message sequence number",
+                )
+
             // Get a single message from chat
             get {
-                val eventId = call.getEventIdFromPath()
-                val sequenceNum = call.getSequenceNumFromPath()
+                val eventId = call.getEventId()
+                val sequenceNum = call.getSequenceNum()
 
                 messageService
                     .getSingleMessageBySequence(eventId, sequenceNum)
@@ -99,8 +91,8 @@ fun Route.messageWebApi(
 
             // Delete a single message from chat
             delete {
-                val eventId = call.getEventIdFromPath()
-                val sequenceNum = call.getSequenceNumFromPath()
+                val eventId = call.getEventId()
+                val sequenceNum = call.getSequenceNum()
                 val requestingUserId = getCurrentUserId()
 
                 messageService

@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -22,9 +24,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -35,20 +37,16 @@ import pt.isel.keepmyplanet.data.model.UserSession
 fun ChatScreen(
     viewModel: ChatViewModel,
     userSession: UserSession,
+    eventId: UInt,
     onNavigateBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
-
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.disconnect()
-        }
-    }
+    val messagesToShow = remember(state.messages) { state.messages.reversed() }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat: ${userSession.eventId}") },
+                title = { Text("Chat: $eventId") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
@@ -57,61 +55,57 @@ fun ChatScreen(
             )
         },
     ) { paddingValues ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-        ) {
-            // Chat messages
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(bottom = 8.dp)) {
             LazyColumn(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp),
                 reverseLayout = true,
             ) {
-                items(state.messages.reversed()) { message ->
+                items(messagesToShow, key = { it.id }) { message ->
                     MessageItem(
                         message = message,
-                        isFromCurrentUser = true, // hardcoded
+                        isFromCurrentUser = message.senderId == userSession.userId,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
             // Error message
-            state.error?.let {
+            if (state.error != null) {
                 Text(
-                    text = it,
+                    text = state.error!!,
                     color = MaterialTheme.colors.error,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.caption,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).fillMaxWidth(),
                 )
             }
 
             // Message input
             Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 OutlinedTextField(
                     value = state.currentMessage,
                     onValueChange = { viewModel.updateCurrentMessage(it) },
-                    placeholder = { Text("Digite sua mensagem...") },
+                    placeholder = { Text("Digite a sua mensagem...") },
                     modifier = Modifier.weight(1f),
+                    isError = state.error != null,
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 IconButton(
                     onClick = { viewModel.sendMessage() },
-                    enabled = !state.isLoading && state.currentMessage.isNotBlank(),
+                    enabled = !state.isSending && state.currentMessage.isNotBlank(),
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar")
+                    if (state.isSending) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar")
+                    }
                 }
             }
         }

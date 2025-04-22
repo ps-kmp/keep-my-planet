@@ -1,6 +1,7 @@
 package pt.isel.keepmyplanet
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,19 +20,21 @@ import pt.isel.keepmyplanet.ui.screens.login.LoginViewModel
 fun App() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
     var userSession by remember { mutableStateOf<UserSession?>(null) }
+    var currentEventId by remember { mutableStateOf<UInt?>(null) }
 
     val httpClient = remember { createHttpClient() }
     val messageClient = remember { MessageClient(httpClient) }
     val chatService = remember { ChatService(messageClient) }
 
-    when (val screen = currentScreen) {
+    when (currentScreen) {
         is Screen.Login -> {
             val loginViewModel = remember { LoginViewModel(chatService) }
 
             LoginScreen(
                 viewModel = loginViewModel,
-                onNavigateToChat = { session ->
+                onNavigateToChat = { session, eventId ->
                     userSession = session
+                    currentEventId = eventId
                     currentScreen = Screen.Chat
                 },
             )
@@ -39,29 +42,39 @@ fun App() {
 
         is Screen.Chat -> {
             val session = userSession
+            val eventId = currentEventId
 
-            if (session != null) {
+            if (session != null && eventId != null) {
                 val chatViewModel = remember { ChatViewModel(chatService) }
 
                 ChatScreen(
                     viewModel = chatViewModel,
                     userSession = session,
+                    eventId = eventId,
                     onNavigateBack = {
+                        chatService.leaveChat()
+                        userSession = null
+                        currentEventId = null
                         currentScreen = Screen.Login
                     },
                 )
             } else {
                 // fallback safety
-                currentScreen = Screen.Login
+                LaunchedEffect(Unit) {
+                    chatService.leaveChat()
+                    userSession = null
+                    currentEventId = null
+                    currentScreen = Screen.Login
+                }
             }
         }
     }
 }
 
 sealed class Screen {
-    object Login : Screen()
+    data object Login : Screen()
 
-    object Chat : Screen()
+    data object Chat : Screen()
 }
 /*@Composable
 @Preview
