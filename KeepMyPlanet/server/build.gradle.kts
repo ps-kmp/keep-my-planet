@@ -22,9 +22,8 @@ dependencies {
     implementation(projects.shared)
 
     // ktor core
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.server.config.yaml)
+    implementation(libs.ktor.server.core.jvm)
+    implementation(libs.ktor.server.netty.jvm)
 
     // ktor features
     implementation(libs.ktor.server.call.logging.jvm)
@@ -32,13 +31,13 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
-    implementation(libs.ktor.ktor.server.sse)
+    implementation(libs.ktor.server.sse)
 
     // serialization
     implementation(libs.ktor.serialization.kotlinx.json)
 
     // logging
-    implementation(libs.logback)
+    implementation(libs.logback.classic)
 
     // testing
     testImplementation(libs.ktor.server.test.host.jvm)

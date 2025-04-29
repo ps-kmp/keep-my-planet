@@ -2,97 +2,53 @@ package pt.isel.keepmyplanet.ui.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import pt.isel.keepmyplanet.data.model.UserSession
-import pt.isel.keepmyplanet.data.service.ChatService
-
-data class LoginState(
-    val username: String = "",
-    val eventName: String = "",
-    val isLoading: Boolean = false,
-    val error: String? = null,
-)
-
-sealed interface LoginEvent {
-    data class LoginSuccess(
-        val session: UserSession,
-        val eventId: UInt,
-    ) : LoginEvent
-
-    data class LoginFailure(
-        val message: String,
-    ) : LoginEvent
-}
+import pt.isel.keepmyplanet.data.service.AuthService
 
 class LoginViewModel(
-    private val chatService: ChatService,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private val authService: AuthService,
 ) : ViewModel() {
-    private val _state = MutableStateFlow(LoginState())
-    val state: StateFlow<LoginState> = _state.asStateFlow()
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private val _loginEvent = MutableSharedFlow<LoginEvent>()
-    val loginEvent: SharedFlow<LoginEvent> = _loginEvent.asSharedFlow()
+    private val _events = Channel<LoginEvent>(Channel.BUFFERED)
+    val events: Flow<LoginEvent> = _events.receiveAsFlow()
 
-    fun updateUsername(username: String) {
-        _state.update { it.copy(username = username.trimStart(), error = null) }
+    fun onUsernameChanged(username: String) {
+        _uiState.update { it.copy(username = username.trimStart()) }
     }
 
-    fun updateEventName(eventName: String) {
-        _state.update { it.copy(eventName = eventName.trimStart(), error = null) }
+    fun onPasswordChanged(password: String) {
+        _uiState.update { it.copy(password = password) }
     }
 
-    fun login() {
-        val currentState = state.value
+    fun onLoginClicked() {
+        val currentState = _uiState.value
+        if (!currentState.isLoginEnabled) return
+
         val username = currentState.username.trim()
-        val eventName = currentState.eventName.trim()
+        val password = currentState.password
 
-        if (username.isBlank() || eventName.isBlank()) {
-            _state.update {
-                it.copy(
-                    username = username,
-                    eventName = eventName,
-                    error = "Username and event name cannot be empty.",
-                )
-            }
-        }
-
-        _state.update {
-            it.copy(
-                username = username,
-                eventName = eventName,
-                isLoading = true,
-                error = null,
-            )
-        }
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            val result =
-                withContext(ioDispatcher) {
-                    chatService.joinEvent(username, eventName)
-                }
+            val result = authService.login(username, password)
 
-            result.fold(
-                onSuccess = { (session, eventId) ->
-                    _loginEvent.emit(LoginEvent.LoginSuccess(session, eventId))
-                    _state.update { it.copy(isLoading = false) }
-                },
-                onFailure = { error ->
-                    val errorMessage = error.message ?: "An unknown error occurred during login"
-                    _state.update { it.copy(isLoading = false, error = errorMessage) }
-                    _loginEvent.emit(LoginEvent.LoginFailure(errorMessage))
-                },
-            )
+            result
+                .onSuccess { userSession ->
+                    _events.send(LoginEvent.NavigateToHome(userSession))
+                    _uiState.update { it.copy(isLoading = false) }
+                }.onFailure { exception ->
+                    val errorMessage = exception.message ?: "An unknown error occurred"
+                    _uiState.update { it.copy(isLoading = false, errorMessage = errorMessage) }
+                }
         }
     }
 }

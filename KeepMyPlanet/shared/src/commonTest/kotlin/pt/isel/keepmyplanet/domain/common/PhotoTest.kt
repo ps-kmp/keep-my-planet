@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.domain.common
 
-import io.ktor.http.Url
 import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,7 +9,6 @@ class PhotoTest {
     private val validId = Id(1u)
     private val validHttpUrl = Url("http://example.com")
     private val validHttpsUrl = Url("https://example.com")
-    private val invalidProtocolUrl = Url("ftp://example.com")
     private val validDescription = Description("A valid description")
     private val validDateTime = LocalDateTime(2000, 1, 1, 1, 1)
 
@@ -27,11 +25,11 @@ class PhotoTest {
     }
 
     @Test
-    fun `Photo with non-HTTP(S) URL should throw exception`() {
+    fun `Photo with non-HTTP URL should throw exception`() {
         assertFailsWith<IllegalArgumentException> {
             Photo(
                 id = validId,
-                url = invalidProtocolUrl,
+                url = Url("ftp://example.com"),
                 uploaderId = validId,
                 uploadedAt = validDateTime,
             )

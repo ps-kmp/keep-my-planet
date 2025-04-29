@@ -1,102 +1,66 @@
 package pt.isel.keepmyplanet.data.service
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.api.MessageClient
-import pt.isel.keepmyplanet.data.model.UserSession
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.dto.message.AddMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
-import pt.isel.keepmyplanet.errors.AuthenticationException
 
 class ChatService(
-    private val api: MessageClient,
-    private val externalScope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
+    private val httpClient: HttpClient,
 ) {
-    private val _messages = MutableStateFlow<List<MessageResponse>>(emptyList())
-    val messages: StateFlow<List<MessageResponse>> = _messages.asStateFlow()
+    private object Endpoints {
+        fun messages(eventId: UInt) = "event/$eventId/chat"
 
-    private val _serviceErrors = MutableSharedFlow<Throwable>()
-    val serviceErrors: SharedFlow<Throwable> = _serviceErrors.asSharedFlow()
-
-    private var userSession: UserSession? = null
-    private var currentEventId: UInt? = null
-    private var sseJob: Job? = null
-
-    suspend fun joinEvent(
-        username: String,
-        eventName: String,
-    ): Result<Pair<UserSession, UInt>> {
-        stopSseInternal()
-        _messages.value = emptyList()
-        return api
-            .joinEvent(username, eventName)
-            .onSuccess { (session, eventId) ->
-                userSession = session
-                currentEventId = eventId
-                externalScope.launch { fetchInitialMessages(eventId) }
-                startSse(eventId)
-            }.onFailure {
-                currentEventId = null
-            }
+        fun messagesSse(eventId: UInt) = "event/$eventId/chat/stream"
     }
 
-    suspend fun sendMessage(content: String): Result<MessageResponse> {
-        val session = userSession
-        val eventId = currentEventId
-
-        if (session == null || eventId == null) {
-            return Result.failure(AuthenticationException("User not in any event."))
+    suspend fun getMessages(eventId: UInt): Result<List<MessageResponse>> =
+        runCatching {
+            httpClient.get(Endpoints.messages(eventId)).body<List<MessageResponse>>()
         }
 
-        return api.sendMessage(eventId, session.userId, AddMessageRequest(content))
-    }
-
-    private fun startSse(eventId: UInt) {
-        if (sseJob?.isActive == true && currentEventId == eventId) return
-
-        stopSseInternal()
-        currentEventId = eventId
-
-        sseJob =
-            api.startSse(
-                eventId = eventId,
-                scope = externalScope,
-                onMessage = { msg ->
-                    _messages.update { list ->
-                        if (list.any { it.id == msg.id }) list else list + msg
-                    }
-                },
-            )
-    }
-
-    private suspend fun fetchInitialMessages(eventId: UInt) {
-        api
-            .getEventMessages(eventId)
-            .onSuccess { initialMessages ->
-                _messages.update { currentList ->
-                    (initialMessages + currentList).distinctBy { it.id }
+    suspend fun sendMessage(
+        eventId: UInt,
+        userId: UInt,
+        content: String,
+    ): Result<Unit> =
+        runCatching {
+            httpClient
+                .post(Endpoints.messages(eventId)) {
+                    contentType(ContentType.Application.Json)
+                    setBody(AddMessageRequest(content))
+                    header("X-Mock-User-ID", userId.toString())
                 }
+            Unit
+        }
+
+    fun listenToMessages(eventId: UInt): Flow<Result<MessageResponse>> =
+        flow {
+            try {
+                httpClient.sse(Endpoints.messagesSse(eventId)) {
+                    incoming.collect { event ->
+                        val jsonString = event.data
+                        if (!jsonString.isNullOrBlank()) {
+                            val parseResult =
+                                runCatching {
+                                    Json.decodeFromString<MessageResponse>(jsonString)
+                                }
+                            emit(parseResult)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                emit(Result.failure(e))
             }
-    }
-
-    private fun stopSseInternal() {
-        if (sseJob?.isActive == true) sseJob?.cancel()
-        sseJob = null
-    }
-
-    fun leaveChat() {
-        stopSseInternal()
-        userSession = null
-        currentEventId = null
-    }
+        }
 }
