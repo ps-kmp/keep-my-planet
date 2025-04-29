@@ -3,17 +3,23 @@ package pt.isel.keepmyplanet.service
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
+import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.errors.AuthorizationException
 import pt.isel.keepmyplanet.errors.ConflictException
 import pt.isel.keepmyplanet.errors.InternalServerException
 import pt.isel.keepmyplanet.errors.NotFoundException
+import pt.isel.keepmyplanet.repository.EventRepository
+import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.util.now
 
 class ZoneService(
     private val zoneRepository: ZoneRepository,
+    private val userRepository: UserRepository,
+    private val eventRepository: EventRepository,
 ) {
     suspend fun reportZone(
         location: Location,
@@ -23,6 +29,7 @@ class ZoneService(
         zoneSeverity: ZoneSeverity = ZoneSeverity.UNKNOWN,
     ): Result<Zone> =
         runCatching {
+            findUserOrFail(reporterId)
             val currentTime = now()
             val newZone =
                 Zone(
@@ -58,10 +65,13 @@ class ZoneService(
 
     suspend fun updateZoneStatus(
         zoneId: Id,
+        userId: Id,
         newStatus: ZoneStatus,
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
+            hasPermissionsOrFail(zone, userId)
+
             if (zone.status == newStatus) return@runCatching zone
             val updatedZone = zone.copy(status = newStatus, updatedAt = now())
             zoneRepository.update(updatedZone)
@@ -69,10 +79,13 @@ class ZoneService(
 
     suspend fun updateZoneSeverity(
         zoneId: Id,
+        userId: Id,
         newZoneSeverity: ZoneSeverity,
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
+            hasPermissionsOrFail(zone, userId)
+
             if (zone.zoneSeverity == newZoneSeverity) return@runCatching zone
             val updatedZone = zone.copy(zoneSeverity = newZoneSeverity, updatedAt = now())
             zoneRepository.update(updatedZone)
@@ -80,10 +93,13 @@ class ZoneService(
 
     suspend fun addPhotoToZone(
         zoneId: Id,
+        userId: Id,
         photoId: Id,
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
+            hasPermissionsOrFail(zone, userId)
+
             if (photoId in zone.photosIds) return@runCatching zone
             val updatedZone = zone.copy(photosIds = zone.photosIds + photoId, updatedAt = now())
             zoneRepository.update(updatedZone)
@@ -91,10 +107,12 @@ class ZoneService(
 
     suspend fun removePhotoFromZone(
         zoneId: Id,
+        userId: Id,
         photoId: Id,
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
+            hasPermissionsOrFail(zone, userId)
 
             if (photoId !in zone.photosIds) {
                 throw NotFoundException("Photo '$photoId' not found in zone '$zoneId'.")
@@ -104,9 +122,13 @@ class ZoneService(
             zoneRepository.update(updatedZone)
         }
 
-    suspend fun deleteZone(zoneId: Id): Result<Unit> =
+    suspend fun deleteZone(
+        zoneId: Id,
+        userId: Id,
+    ): Result<Unit> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
+            hasPermissionsOrFail(zone, userId)
 
             if (zone.eventId != null && zone.status == ZoneStatus.CLEANING_SCHEDULED) {
                 throw ConflictException(
@@ -121,4 +143,30 @@ class ZoneService(
     private suspend fun findZoneOrFail(zoneId: Id): Zone =
         zoneRepository.getById(zoneId)
             ?: throw NotFoundException("Zone '$zoneId' not found.")
+
+    private suspend fun findUserOrFail(userId: Id): User =
+        userRepository.getById(userId)
+            ?: throw NotFoundException("User '$userId' not found.")
+
+    private suspend fun hasPermissionsOrFail(
+        zone: Zone,
+        userId: Id,
+    ) {
+        findUserOrFail(userId)
+        when (val eventId = zone.eventId) {
+            null ->
+                if (userId != zone.reporterId) {
+                    throw AuthorizationException("User '$userId' is not reporter.")
+                }
+
+            else -> {
+                val event =
+                    eventRepository.getById(eventId)
+                        ?: throw NotFoundException("Event '$eventId' not found.")
+                if (userId != event.organizerId) {
+                    throw AuthorizationException("User '$userId' is not event organizer.")
+                }
+            }
+        }
+    }
 }

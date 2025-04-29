@@ -59,7 +59,7 @@ class MessageService(
 
             val senderName =
                 userRepository.getById(senderId)
-                    ?: throw InternalServerException("Could not find user details for sender '${senderId.value}'.")
+                    ?: throw NotFoundException("Could not find user details for sender '${senderId.value}'.")
 
             val messageContent = MessageContent(content)
             val newMessage =

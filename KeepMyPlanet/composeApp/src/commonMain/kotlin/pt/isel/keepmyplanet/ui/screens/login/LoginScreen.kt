@@ -42,7 +42,10 @@ fun LoginScreen(
     LaunchedEffect(viewModel, snackbarHostState) {
         viewModel.events.collect { event ->
             when (event) {
-                is LoginEvent.NavigateToHome -> onNavigateHome(event.userSession)
+                is LoginEvent.NavigateToHome -> {
+                    onNavigateHome(event.userSession)
+                }
+
                 is LoginEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         message = event.message,
@@ -88,15 +91,6 @@ private fun LoginContent(
             style = MaterialTheme.typography.h4,
         )
 
-        uiState.errorMessage?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.caption,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-        }
-
         OutlinedTextField(
             value = uiState.username,
             onValueChange = onUsernameChanged,
@@ -118,7 +112,7 @@ private fun LoginContent(
 
         Button(
             onClick = onLoginClicked,
-            enabled = uiState.isLoginEnabled && !uiState.isLoading,
+            enabled = uiState.isLoginEnabled,
             modifier = Modifier.fillMaxWidth().height(48.dp),
         ) {
             if (uiState.isLoading) {

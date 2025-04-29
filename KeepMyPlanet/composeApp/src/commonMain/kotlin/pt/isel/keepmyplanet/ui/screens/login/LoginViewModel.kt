@@ -36,7 +36,7 @@ class LoginViewModel(
         val username = currentState.username.trim()
         val password = currentState.password
 
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        _uiState.update { it.copy(isLoading = true) }
 
         viewModelScope.launch {
             val result = authService.login(username, password)
@@ -47,7 +47,8 @@ class LoginViewModel(
                     _uiState.update { it.copy(isLoading = false) }
                 }.onFailure { exception ->
                     val errorMessage = exception.message ?: "An unknown error occurred"
-                    _uiState.update { it.copy(isLoading = false, errorMessage = errorMessage) }
+                    _events.send(LoginEvent.ShowSnackbar(errorMessage))
+                    _uiState.update { it.copy(isLoading = false) }
                 }
         }
     }

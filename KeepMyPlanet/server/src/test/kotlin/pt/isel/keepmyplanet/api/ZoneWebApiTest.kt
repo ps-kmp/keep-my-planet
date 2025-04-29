@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -13,11 +14,20 @@ import io.ktor.http.contentType
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeEach
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
+import pt.isel.keepmyplanet.domain.event.Event
+import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.event.Period
+import pt.isel.keepmyplanet.domain.event.Title
+import pt.isel.keepmyplanet.domain.user.Email
+import pt.isel.keepmyplanet.domain.user.Name
+import pt.isel.keepmyplanet.domain.user.PasswordInfo
+import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -28,9 +38,12 @@ import pt.isel.keepmyplanet.dto.zone.UpdateStatusRequest
 import pt.isel.keepmyplanet.dto.zone.ZoneResponse
 import pt.isel.keepmyplanet.plugins.configureSerialization
 import pt.isel.keepmyplanet.plugins.configureStatusPages
+import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
+import pt.isel.keepmyplanet.repository.mem.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.service.ZoneService
 import pt.isel.keepmyplanet.util.now
+import pt.isel.keepmyplanet.util.nowUTC
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -39,7 +52,9 @@ import kotlin.test.assertTrue
 
 class ZoneWebApiTest {
     private val fakeZoneRepository = InMemoryZoneRepository()
-    private val zoneService = ZoneService(fakeZoneRepository)
+    private val fakeEventRepository = InMemoryEventRepository(fakeZoneRepository)
+    private val fakeUserRepository = InMemoryUserRepository()
+    private val zoneService = ZoneService(fakeZoneRepository, fakeUserRepository, fakeEventRepository)
     private val testUserId = Id(100u)
 
     private suspend fun createTestZone(
@@ -64,8 +79,53 @@ class ZoneWebApiTest {
             ),
         )
 
+    private suspend fun createTestUser(
+        name: Name = Name("user"),
+        email: Email = Email("test@example.com"),
+        passwordInfo: PasswordInfo = PasswordInfo("Password1!"),
+    ): User =
+        fakeUserRepository.create(
+            User(
+                Id(999u),
+                name = name,
+                email = email,
+                passwordInfo = passwordInfo,
+                createdAt = now(),
+                updatedAt = now(),
+            ),
+        )
+
+    private suspend fun createTestEvent(
+        title: Title = Title("test"),
+        description: Description = Description("test"),
+        period: Period = Period(LocalDateTime.nowUTC, LocalDateTime.nowUTC),
+        zoneId: Id = Id(1u),
+        organizerId: Id = Id(1u),
+        status: EventStatus = EventStatus.PLANNED,
+        maxParticipants: Int = 100,
+        participantsIds: Set<Id> = setOf(Id(1U)),
+        createdAt: LocalDateTime = now(),
+        updatedAt: LocalDateTime = now(),
+    ): Event =
+        fakeEventRepository.create(
+            Event(
+                Id(999u),
+                title = title,
+                description = description,
+                period = period,
+                zoneId = zoneId,
+                organizerId = organizerId,
+                status = status,
+                maxParticipants = maxParticipants,
+                participantsIds = participantsIds,
+                createdAt = createdAt,
+                updatedAt = updatedAt,
+            ),
+        )
+
     @BeforeEach
     fun setup() {
+        fakeUserRepository.clear()
         fakeZoneRepository.clear()
     }
 
@@ -242,9 +302,13 @@ class ZoneWebApiTest {
     @Test
     fun `DELETE zones by ID - should return 204 when successful`() =
         testApp {
-            val zone = createTestZone()
+            val user = createTestUser()
+            val zone = createTestZone(reporter = user.id)
 
-            val response = client.delete("/zones/${zone.id.value}")
+            val response =
+                client.delete("/zones/${zone.id.value}") {
+                    header("X-Mock-User-ID", user.id.toString())
+                }
 
             assertEquals(HttpStatusCode.NoContent, response.status)
             assertNull(fakeZoneRepository.getById(zone.id))
@@ -261,24 +325,32 @@ class ZoneWebApiTest {
     @Test
     fun `DELETE zones by ID - should return 409 when deletion is forbidden`() =
         testApp {
-            val zone = createTestZone(status = ZoneStatus.CLEANING_SCHEDULED)
-            val nonDeletableZone = zone.copy(eventId = Id(50u))
+            val user = createTestUser()
+            val user2 = createTestUser(email = Email("test2@example.com"))
+            val zone = createTestZone(reporter = user.id, status = ZoneStatus.CLEANING_SCHEDULED)
+            val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val nonDeletableZone = zone.copy(eventId = event.id)
             fakeZoneRepository.update(nonDeletableZone)
 
-            val response = client.delete("/zones/${zone.id.value}")
+            val response =
+                client.delete("/zones/${zone.id.value}") {
+                    header("X-Mock-User-ID", user2.id.toString())
+                }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
     @Test
     fun `PATCH zone status - should update status successfully`() =
         testApp {
-            val zone = createTestZone(status = ZoneStatus.REPORTED)
+            val user = createTestUser()
+            val zone = createTestZone(reporter = user.id, status = ZoneStatus.REPORTED)
             val requestBody = UpdateStatusRequest(status = "CLEANING_SCHEDULED")
 
             val response =
                 client.patch("/zones/${zone.id.value}/status") {
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
+                    header("X-Mock-User-ID", user.id.toString())
                 }
 
             assertEquals(HttpStatusCode.OK, response.status)
@@ -314,13 +386,15 @@ class ZoneWebApiTest {
     @Test
     fun `PATCH zone severity - should update severity successfully`() =
         testApp {
-            val zone = createTestZone(zoneSeverity = ZoneSeverity.LOW)
+            val user = createTestUser()
+            val zone = createTestZone(reporter = user.id, zoneSeverity = ZoneSeverity.LOW)
             val requestBody = UpdateSeverityRequest(severity = "HIGH")
 
             val response =
                 client.patch("/zones/${zone.id.value}/severity") {
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
+                    header("X-Mock-User-ID", user.id.toString())
                 }
 
             assertEquals(HttpStatusCode.OK, response.status)
@@ -346,7 +420,8 @@ class ZoneWebApiTest {
     fun `POST zone photos - should add photo successfully`() =
         testApp {
             val initialPhotos = setOf(Id(1u))
-            val zone = createTestZone(photos = initialPhotos)
+            val user = createTestUser()
+            val zone = createTestZone(reporter = user.id, photos = initialPhotos)
             val newPhotoId = Id(2u)
             val requestBody = AddPhotoRequest(photoId = newPhotoId.value)
 
@@ -354,6 +429,7 @@ class ZoneWebApiTest {
                 client.post("/zones/${zone.id.value}/photos") {
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
+                    header("X-Mock-User-ID", user.id.toString())
                 }
 
             assertEquals(HttpStatusCode.OK, response.status)
@@ -382,9 +458,13 @@ class ZoneWebApiTest {
         testApp {
             val photoToRemove = Id(2u)
             val initialPhotos = setOf(Id(1u), photoToRemove)
-            val zone = createTestZone(photos = initialPhotos)
+            val user = createTestUser()
+            val zone = createTestZone(reporter = user.id, photos = initialPhotos)
 
-            val response = client.delete("/zones/${zone.id.value}/photos/${photoToRemove.value}")
+            val response =
+                client.delete("/zones/${zone.id.value}/photos/${photoToRemove.value}") {
+                    header("X-Mock-User-ID", user.id.toString())
+                }
 
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
@@ -406,8 +486,12 @@ class ZoneWebApiTest {
     @Test
     fun `DELETE zone photo - should return 404 if photo not found in zone`() =
         testApp {
-            val zone = createTestZone(photos = setOf(Id(1u))) // Photo ID 2 does not exist
-            val response = client.delete("/zones/${zone.id.value}/photos/2")
+            val user = createTestUser()
+            val zone = createTestZone(reporter = user.id, photos = setOf(Id(1u))) // Photo ID 2 does not exist
+            val response =
+                client.delete("/zones/${zone.id.value}/photos/2") {
+                    header("X-Mock-User-ID", user.id.toString())
+                }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
 

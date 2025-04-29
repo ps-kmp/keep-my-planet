@@ -17,10 +17,10 @@ import pt.isel.keepmyplanet.service.ZoneService
 
 fun Application.configureRouting() {
     val zoneRepository = InMemoryZoneRepository()
-    val zoneService = ZoneService(zoneRepository)
+    val userRepository = InMemoryUserRepository()
     val eventRepository = InMemoryEventRepository(zoneRepository)
     val messageRepository = InMemoryMessageRepository()
-    val userRepository = InMemoryUserRepository()
+    val zoneService = ZoneService(zoneRepository, userRepository, eventRepository)
     val chatSseService = ChatSseService()
     val messageService = MessageService(messageRepository, eventRepository, userRepository, chatSseService)
 
