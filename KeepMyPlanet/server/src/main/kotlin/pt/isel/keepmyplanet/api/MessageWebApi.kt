@@ -15,7 +15,7 @@ import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.flow.filter
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.dto.message.AddMessageRequest
+import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.mapper.message.toResponse
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
@@ -49,7 +49,7 @@ fun Route.messageWebApi(
         post {
             val eventId = call.getEventId()
             val senderId = call.getCurrentUserId()
-            val request = call.receive<AddMessageRequest>()
+            val request = call.receive<CreateMessageRequest>()
 
             messageService
                 .addMessage(eventId, senderId, request.content)

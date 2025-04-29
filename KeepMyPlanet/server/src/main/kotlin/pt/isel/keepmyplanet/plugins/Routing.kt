@@ -9,6 +9,7 @@ import pt.isel.keepmyplanet.api.messageWebApi
 import pt.isel.keepmyplanet.api.zoneWebApi
 import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
+import pt.isel.keepmyplanet.repository.mem.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
@@ -19,8 +20,9 @@ fun Application.configureRouting() {
     val zoneService = ZoneService(zoneRepository)
     val eventRepository = InMemoryEventRepository(zoneRepository)
     val messageRepository = InMemoryMessageRepository()
+    val userRepository = InMemoryUserRepository()
     val chatSseService = ChatSseService()
-    val messageService = MessageService(messageRepository, eventRepository, chatSseService)
+    val messageService = MessageService(messageRepository, eventRepository, userRepository, chatSseService)
 
     routing {
         get("/") {

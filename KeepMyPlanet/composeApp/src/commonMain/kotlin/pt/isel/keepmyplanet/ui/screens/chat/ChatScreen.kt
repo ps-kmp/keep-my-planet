@@ -59,6 +59,7 @@ fun ChatScreen(
         viewModel.events.collectLatest { event ->
             when (event) {
                 is ChatEvent.ShowSnackbar -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
                     snackbarHostState.showSnackbar(
                         message = event.message,
                         duration = SnackbarDuration.Short,
@@ -107,18 +108,9 @@ fun ChatScreen(
                     items(reversedMessages, key = { it.id }) { message ->
                         MessageItem(
                             message = message,
+                            currentUserId = uiState.user.id,
                         )
                     }
-                }
-
-                uiState.errorMessage?.let {
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colors.error,
-                        style = MaterialTheme.typography.caption,
-                        modifier =
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                    )
                 }
 
                 MessageInput(

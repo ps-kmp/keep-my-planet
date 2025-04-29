@@ -25,12 +25,14 @@ import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
-import pt.isel.keepmyplanet.dto.message.AddMessageRequest
+import pt.isel.keepmyplanet.domain.user.Name
+import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 import pt.isel.keepmyplanet.plugins.configureSerialization
 import pt.isel.keepmyplanet.plugins.configureStatusPages
 import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
+import pt.isel.keepmyplanet.repository.mem.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
@@ -42,11 +44,13 @@ class MessageWebApiTest {
     private val fakeMessageRepository = InMemoryMessageRepository()
     private val fakeZoneRepository = InMemoryZoneRepository()
     private val fakeEventRepository = InMemoryEventRepository(fakeZoneRepository)
+    private val fakeUserRepository = InMemoryUserRepository()
     private val chatSseService = ChatSseService()
     private val messageService =
-        MessageService(fakeMessageRepository, fakeEventRepository, chatSseService)
+        MessageService(fakeMessageRepository, fakeEventRepository, fakeUserRepository, chatSseService)
     private val testOrganizerId = Id(2u)
     private val testParticipantId = Id(3u)
+    private val testParticipantName = Name("user")
     private val nonParticipantId = Id(4u)
 
     private suspend fun createTestEvent(
@@ -80,6 +84,7 @@ class MessageWebApiTest {
     private suspend fun createTestMessage(
         eventId: Id,
         senderId: Id,
+        senderName: Name,
         content: String = "Test message content",
     ): Message =
         fakeMessageRepository.create(
@@ -87,6 +92,7 @@ class MessageWebApiTest {
                 id = Id(999u),
                 eventId = eventId,
                 senderId = senderId,
+                senderName = senderName,
                 content = MessageContent(content),
                 timestamp = now(),
                 chatPosition = -1,
@@ -193,7 +199,7 @@ class MessageWebApiTest {
     fun `POST message - should fail with 404 if event not found`() =
         testApp {
             val nonExistentEventId = 999u
-            val requestBody = AddMessageRequest(content = "Doesn't matter")
+            val requestBody = CreateMessageRequest(content = "Doesn't matter")
 
             val response =
                 client.post("/event/$nonExistentEventId/chat") {
@@ -233,7 +239,7 @@ class MessageWebApiTest {
     fun `POST message - should fail with 409 if event is COMPLETED`() =
         testApp {
             val event = createTestEvent(status = EventStatus.COMPLETED)
-            val requestBody = AddMessageRequest(content = "Too late")
+            val requestBody = CreateMessageRequest(content = "Too late")
 
             val response =
                 client.post("/event/${event.id.value}/chat") {
@@ -249,7 +255,7 @@ class MessageWebApiTest {
     fun `POST message - should fail with 409 if event is CANCELLED`() =
         testApp {
             val event = createTestEvent(status = EventStatus.CANCELLED)
-            val requestBody = AddMessageRequest(content = "Event cancelled")
+            val requestBody = CreateMessageRequest(content = "Event cancelled")
 
             val response =
                 client.post("/event/${event.id.value}/chat") {
@@ -264,7 +270,7 @@ class MessageWebApiTest {
     @Test
     fun `POST message - should fail with 400 for invalid event ID format`() =
         testApp {
-            val requestBody = AddMessageRequest(content = "Valid content")
+            val requestBody = CreateMessageRequest(content = "Valid content")
             val response =
                 client.post("/event/abc/chat") {
                     header("X-Test-User-Id", testOrganizerId.value.toString())
@@ -304,9 +310,9 @@ class MessageWebApiTest {
     fun `GET messages - should return list of messages sorted by sequence number`() =
         testApp {
             val event = createTestEvent()
-            val msg1 = createTestMessage(event.id, testOrganizerId, "First message")
-            val msg2 = createTestMessage(event.id, testParticipantId, "Second message")
-            val msg3 = createTestMessage(event.id, testOrganizerId, "Third message")
+            val msg1 = createTestMessage(event.id, testOrganizerId, testParticipantName, "First message")
+            val msg2 = createTestMessage(event.id, testParticipantId, testParticipantName, "Second message")
+            val msg3 = createTestMessage(event.id, testOrganizerId, testParticipantName, "Third message")
 
             val response = client.get("/event/${event.id.value}/chat")
 
@@ -349,7 +355,7 @@ class MessageWebApiTest {
     fun `GET single message - should fail with 404 if sequence number not found`() =
         testApp {
             val event = createTestEvent()
-            createTestMessage(event.id, testOrganizerId) // Creates message with seq 0
+            createTestMessage(event.id, testOrganizerId, testParticipantName) // Creates message with seq 0
 
             val response =
                 client.get("/event/${event.id.value}/chat/5") // Sequence 5 does not exist
@@ -463,7 +469,7 @@ class MessageWebApiTest {
     fun `DELETE message - should fail with 404 if sequence number not found`() =
         testApp {
             val event = createTestEvent()
-            createTestMessage(event.id, testOrganizerId) // Creates message with seq 0
+            createTestMessage(event.id, testOrganizerId, testParticipantName) // Creates message with seq 0
 
             val response =
                 client.delete("/event/${event.id.value}/chat/5") {

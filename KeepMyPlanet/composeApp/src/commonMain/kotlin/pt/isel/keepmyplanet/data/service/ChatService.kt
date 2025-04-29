@@ -12,7 +12,7 @@ import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
-import pt.isel.keepmyplanet.dto.message.AddMessageRequest
+import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 class ChatService(
@@ -38,7 +38,7 @@ class ChatService(
             httpClient
                 .post(Endpoints.messages(eventId)) {
                     contentType(ContentType.Application.Json)
-                    setBody(AddMessageRequest(content))
+                    setBody(CreateMessageRequest(content))
                     header("X-Mock-User-ID", userId.toString())
                 }
             Unit

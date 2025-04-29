@@ -32,28 +32,14 @@ class ChatViewModel(
         startListeningToMessages()
     }
 
-    private fun mapToChatMessageUi(response: MessageResponse): ChatMessageUi =
-        ChatMessageUi(
-            id = response.id,
-            senderId = response.senderId,
-            content = response.content,
-            timestamp = response.timestamp,
-            isCurrentUser = response.senderId == user.id,
-        )
-
     fun loadInitialMessages() {
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             val result = chatService.getMessages(event.id)
 
             result
                 .onSuccess { messages ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            messages = messages.map { message -> mapToChatMessageUi(message) },
-                        )
-                    }
+                    _uiState.update { it.copy(isLoading = false, messages = messages) }
                     if (messages.isNotEmpty()) _events.send(ChatEvent.ScrollToBottom)
                 }.onFailure { exception ->
                     handleError("Failed to load messages", exception)
@@ -70,8 +56,10 @@ class ChatViewModel(
                 }.collect { messageResult ->
                     messageResult
                         .onSuccess { newMessage ->
-                            addNewMessage(mapToChatMessageUi(newMessage))
-                            _events.send(ChatEvent.ScrollToBottom)
+                            addNewMessage(newMessage)
+                            if (_uiState.value.messages.lastOrNull() == newMessage) {
+                                _events.send(ChatEvent.ScrollToBottom)
+                            }
                         }.onFailure { exception ->
                             handleError("Error processing incoming message", exception, showSnackbar = true)
                         }
@@ -79,7 +67,7 @@ class ChatViewModel(
         }
     }
 
-    private fun addNewMessage(newMessage: ChatMessageUi) {
+    private fun addNewMessage(newMessage: MessageResponse) {
         _uiState.update { currentState ->
             if (currentState.messages.any { it.id == newMessage.id }) {
                 currentState
@@ -119,7 +107,7 @@ class ChatViewModel(
         showSnackbar: Boolean = false,
     ) {
         val errorMsg = "$prefix: ${exception.message ?: "Unknown error"}"
-        _uiState.update { it.copy(isLoading = false, isSending = false, errorMessage = errorMsg) }
+        _uiState.update { it.copy(isLoading = false, isSending = false) }
         if (showSnackbar) _events.send(ChatEvent.ShowSnackbar(errorMsg))
     }
 }

@@ -12,11 +12,13 @@ import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.MessageRepository
+import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.util.now
 
 class MessageService(
     private val messageRepository: MessageRepository,
     private val eventRepository: EventRepository,
+    private val userRepository: UserRepository,
     private val chatSseService: ChatSseService,
 ) {
     suspend fun getAllMessagesFromEvent(eventId: Id): Result<List<Message>> =
@@ -55,12 +57,17 @@ class MessageService(
                 )
             }
 
+            val senderName =
+                userRepository.getById(senderId)
+                    ?: throw InternalServerException("Could not find user details for sender '${senderId.value}'.")
+
             val messageContent = MessageContent(content)
             val newMessage =
                 Message(
                     id = Id(1U),
                     eventId = eventId,
                     senderId = senderId,
+                    senderName = senderName.name,
                     content = messageContent,
                     timestamp = now(),
                     chatPosition = -1,

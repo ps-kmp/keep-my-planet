@@ -14,18 +14,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.screens.chat.ChatMessageUi
+import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun MessageItem(message: ChatMessageUi) {
-    val alignment = if (message.isCurrentUser) Alignment.CenterEnd else Alignment.CenterStart
-    val backgroundColor =
-        if (message.isCurrentUser) MaterialTheme.colors.primary else MaterialTheme.colors.surface
-    val textColor =
-        if (message.isCurrentUser) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface
-    val startPadding = if (message.isCurrentUser) 48.dp else 8.dp
-    val endPadding = if (message.isCurrentUser) 8.dp else 48.dp
+fun MessageItem(
+    message: MessageResponse,
+    currentUserId: UInt,
+) {
+    val isCurrentUser = message.senderId == currentUserId
+
+    val alignment = if (isCurrentUser) Alignment.CenterEnd else Alignment.CenterStart
+    val backgroundColor = if (isCurrentUser) MaterialTheme.colors.primary else MaterialTheme.colors.surface
+    val textColor = if (isCurrentUser) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface
+    val startPadding = if (isCurrentUser) 48.dp else 8.dp
+    val endPadding = if (isCurrentUser) 8.dp else 48.dp
 
     Box(modifier = Modifier.fillMaxWidth().padding(start = startPadding, end = endPadding)) {
         Surface(
@@ -35,9 +38,9 @@ fun MessageItem(message: ChatMessageUi) {
             elevation = 1.dp,
         ) {
             Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                if (!message.isCurrentUser) {
+                if (!isCurrentUser) {
                     Text(
-                        text = "Sender: ${message.senderId}",
+                        text = message.senderName.ifBlank { "Unknown User" },
                         style = MaterialTheme.typography.caption,
                         fontWeight = FontWeight.Bold,
                         color = textColor.copy(alpha = 0.8f),
@@ -51,7 +54,7 @@ fun MessageItem(message: ChatMessageUi) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = message.timestamp,
+                    text = formatTimestamp(message.timestamp),
                     style = MaterialTheme.typography.caption,
                     modifier = Modifier.align(Alignment.End),
                     color = textColor.copy(alpha = 0.7f),
@@ -60,3 +63,15 @@ fun MessageItem(message: ChatMessageUi) {
         }
     }
 }
+
+@Composable
+fun formatTimestamp(isoTimestamp: String): String =
+    try {
+        isoTimestamp
+            .substringAfter('T', "")
+            .substringBefore('.', "")
+            .take(5)
+            .ifBlank { isoTimestamp }
+    } catch (e: Exception) {
+        isoTimestamp
+    }

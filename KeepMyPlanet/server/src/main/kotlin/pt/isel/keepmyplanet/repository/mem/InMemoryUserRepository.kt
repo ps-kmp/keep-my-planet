@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.repository.mem
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
+import pt.isel.keepmyplanet.domain.user.PasswordInfo
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.errors.ConflictException
 import pt.isel.keepmyplanet.errors.NotFoundException
@@ -14,6 +15,40 @@ import java.util.concurrent.atomic.AtomicInteger
 class InMemoryUserRepository : UserRepository {
     private val users = ConcurrentHashMap<Id, User>()
     private val nextId = AtomicInteger(1)
+
+    init {
+        val now = now()
+        val testUser1 =
+            User(
+                id = Id(1U),
+                name = Name("rafael"),
+                email = Email("rafael@example.com"),
+                passwordInfo = PasswordInfo("Password1!"),
+                createdAt = now,
+                updatedAt = now,
+            )
+        val testUser2 =
+            User(
+                id = Id(2U),
+                name = Name("diogo"),
+                email = Email("diogo@example.com"),
+                passwordInfo = PasswordInfo("Password1!"),
+                createdAt = now,
+                updatedAt = now,
+            )
+        val testUser3 =
+            User(
+                id = Id(3U),
+                name = Name("user"),
+                email = Email("user@example.com"),
+                passwordInfo = PasswordInfo("Password1!"),
+                createdAt = now,
+                updatedAt = now,
+            )
+        users[testUser1.id] = testUser1
+        users[testUser2.id] = testUser2
+        users[testUser3.id] = testUser3
+    }
 
     override suspend fun create(entity: User): User {
         if (users.values.any { it.email == entity.email }) {
