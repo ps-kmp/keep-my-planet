@@ -39,7 +39,7 @@ class ChatService(
                 .post(Endpoints.messages(eventId)) {
                     contentType(ContentType.Application.Json)
                     setBody(CreateMessageRequest(content))
-                    header("X-Mock-User-ID", userId.toString())
+                    header("X-Mock-User-Id", userId.toString())
                 }
             Unit
         }

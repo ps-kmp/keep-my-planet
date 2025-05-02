@@ -32,10 +32,10 @@ fun ApplicationCall.getCurrentUserId(): Id {
 //    }
 //
 //    return Id(userIdClaim.asLong().toUInt())
-    val mockUserIdHeader = request.header("X-Mock-User-ID")
+    val mockUserIdHeader = request.header("X-Mock-User-Id")
     val requestedUserId = mockUserIdHeader?.toUIntOrNull()
 
-    return if (requestedUserId != null) Id(requestedUserId) else Id(1U)
+    return if (requestedUserId != null) Id(requestedUserId) else Id(UInt.MAX_VALUE)
 }
 
 fun Route.messageWebApi(
