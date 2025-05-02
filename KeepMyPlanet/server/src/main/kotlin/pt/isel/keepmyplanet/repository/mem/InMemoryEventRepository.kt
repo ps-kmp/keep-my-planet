@@ -42,7 +42,7 @@ class InMemoryEventRepository(
                 description = Description("d1"),
                 period = period,
                 zoneId = Id(1U),
-                organizerId = Id(1U),
+                organizerId = Id(2U),
                 participantsIds = setOf(Id(1U), Id(2U), Id(3U)),
                 createdAt = now(),
             )

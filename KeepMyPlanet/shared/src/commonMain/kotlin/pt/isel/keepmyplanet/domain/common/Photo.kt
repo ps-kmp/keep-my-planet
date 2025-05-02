@@ -9,4 +9,3 @@ data class Photo(
     val uploaderId: Id,
     val uploadedAt: LocalDateTime,
 )
-

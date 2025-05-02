@@ -559,8 +559,7 @@ class ZoneWebApiTest : BaseWebApiTest() {
             val reporter = createTestUser()
             val otherUser = createTestUser(email = Email("other@test.com"))
             val photoToRemove = Id(2u)
-            val zone =
-                createTestZone(reporterId = reporter.id, photosIds = setOf(Id(1u), photoToRemove))
+            val zone = createTestZone(reporter.id, photosIds = setOf(Id(1u), photoToRemove))
 
             val response =
                 client.delete("/zones/${zone.id.value}/photos/${photoToRemove.value}") {

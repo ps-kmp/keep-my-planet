@@ -4,7 +4,7 @@ import pt.isel.keepmyplanet.data.model.EventInfo
 import pt.isel.keepmyplanet.data.model.UserInfo
 
 sealed class AppRoute {
-    object Login : AppRoute()
+    data object Login : AppRoute()
 
     data class Home(
         val user: UserInfo,

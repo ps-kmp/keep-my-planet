@@ -61,7 +61,7 @@ class ChatViewModel(
                                 _events.send(ChatEvent.ScrollToBottom)
                             }
                         }.onFailure { exception ->
-                            handleError("Error processing incoming message", exception, showSnackbar = true)
+                            handleError("Error processing incoming message", exception, true)
                         }
                 }
         }

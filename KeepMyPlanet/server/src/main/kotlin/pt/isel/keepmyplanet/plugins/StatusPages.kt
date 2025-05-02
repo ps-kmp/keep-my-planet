@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.plugins
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import org.slf4j.LoggerFactory
@@ -41,6 +42,18 @@ fun Application.configureStatusPages() {
                     status = status.value,
                     error = "Invalid Input Data",
                     message = cause.message ?: "The provided data failed validation.",
+                ),
+            )
+        }
+        exception<BadRequestException> { call, cause ->
+            log.warn("Bad Request: ${cause.message}")
+            val status = HttpStatusCode.BadRequest
+            call.respond(
+                status,
+                ErrorResponse(
+                    status = status.value,
+                    error = "Bad Request",
+                    message = cause.message ?: "The request format was invalid.",
                 ),
             )
         }

@@ -9,7 +9,6 @@ import io.ktor.server.sse.SSE
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.datetime.LocalDateTime
-import org.junit.jupiter.api.BeforeEach
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
@@ -21,7 +20,7 @@ import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
-import pt.isel.keepmyplanet.domain.user.PasswordInfo
+import pt.isel.keepmyplanet.domain.user.PasswordHash
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
@@ -34,7 +33,9 @@ import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.service.ChatSseService
+import pt.isel.keepmyplanet.util.PasswordHasher
 import pt.isel.keepmyplanet.util.now
+import kotlin.test.BeforeTest
 
 abstract class BaseWebApiTest {
     protected val fakeUserRepository = InMemoryUserRepository()
@@ -42,8 +43,9 @@ abstract class BaseWebApiTest {
     protected val fakeEventRepository = InMemoryEventRepository(fakeZoneRepository)
     protected val fakeMessageRepository = InMemoryMessageRepository()
     protected val chatSseService = ChatSseService()
+    protected val passwordHasher = PasswordHasher()
 
-    @BeforeEach
+    @BeforeTest
     fun setup() {
         fakeUserRepository.clear()
         fakeZoneRepository.clear()
@@ -54,7 +56,7 @@ abstract class BaseWebApiTest {
     protected suspend fun createTestUser(
         name: Name = Name("user"),
         email: Email = Email("test@example.com"),
-        passwordInfo: PasswordInfo = PasswordInfo("Password1!"),
+        passwordHash: PasswordHash = PasswordHash("Password1!"),
         profilePictureId: Id? = null,
     ): User =
         fakeUserRepository.create(
@@ -62,7 +64,7 @@ abstract class BaseWebApiTest {
                 id = Id(1U),
                 name = name,
                 email = email,
-                passwordInfo = passwordInfo,
+                passwordHash = passwordHash,
                 profilePictureId = profilePictureId,
                 createdAt = now(),
                 updatedAt = now(),

@@ -3,7 +3,9 @@ package pt.isel.keepmyplanet.domain.common
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class Url(val value: String) {
+value class Url(
+    val value: String,
+) {
     init {
         require(value.isNotBlank()) { "URL string cannot be blank." }
         require(!value.contains(Regex("\\s"))) {

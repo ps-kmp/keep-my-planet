@@ -10,7 +10,7 @@ class UserTest {
     private val validId = Id(1u)
     private val validName = Name("John Doe")
     private val validEmail = Email("john@example.com")
-    private val validPasswordInfo = PasswordInfo("Password1!")
+    private val validPasswordHash = PasswordHash("Password1!")
     private val validDateTime = LocalDateTime(2000, 1, 1, 1, 1)
 
     @Test
@@ -19,7 +19,7 @@ class UserTest {
             id = validId,
             name = validName,
             email = validEmail,
-            passwordInfo = validPasswordInfo,
+            passwordHash = validPasswordHash,
             createdAt = validDateTime,
             updatedAt = validDateTime,
         )
@@ -32,7 +32,7 @@ class UserTest {
                 id = validId,
                 name = validName,
                 email = validEmail,
-                passwordInfo = validPasswordInfo,
+                passwordHash = validPasswordHash,
                 profilePictureId = Id(2u),
                 createdAt = validDateTime,
                 updatedAt = validDateTime,
@@ -47,7 +47,7 @@ class UserTest {
                 id = validId,
                 name = validName,
                 email = validEmail,
-                passwordInfo = validPasswordInfo,
+                passwordHash = validPasswordHash,
                 createdAt = validDateTime,
                 updatedAt = validDateTime,
             )
@@ -61,7 +61,7 @@ class UserTest {
                 id = validId,
                 name = validName,
                 email = validEmail,
-                passwordInfo = validPasswordInfo,
+                passwordHash = validPasswordHash,
                 profilePictureId = Id(3u),
                 createdAt = validDateTime,
                 updatedAt = validDateTime,
@@ -69,7 +69,7 @@ class UserTest {
         assertEquals(validId, user.id)
         assertEquals(validName, user.name)
         assertEquals(validEmail, user.email)
-        assertEquals(validPasswordInfo, user.passwordInfo)
+        assertEquals(validPasswordHash, user.passwordHash)
         assertEquals(Id(3u), user.profilePictureId)
         assertEquals(validDateTime, user.createdAt)
         assertEquals(validDateTime, user.updatedAt)

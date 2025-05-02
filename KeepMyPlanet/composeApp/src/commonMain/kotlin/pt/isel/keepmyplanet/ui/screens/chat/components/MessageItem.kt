@@ -22,13 +22,13 @@ fun MessageItem(
     message: MessageResponse,
     currentUserId: UInt,
 ) {
-    val isCurrentUser = message.senderId == currentUserId
+    val isCurr = message.senderId == currentUserId
 
-    val alignment = if (isCurrentUser) Alignment.CenterEnd else Alignment.CenterStart
-    val backgroundColor = if (isCurrentUser) MaterialTheme.colors.primary else MaterialTheme.colors.surface
-    val textColor = if (isCurrentUser) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface
-    val startPadding = if (isCurrentUser) 48.dp else 8.dp
-    val endPadding = if (isCurrentUser) 8.dp else 48.dp
+    val alignment = if (isCurr) Alignment.CenterEnd else Alignment.CenterStart
+    val backgroundColor = if (isCurr) MaterialTheme.colors.primary else MaterialTheme.colors.surface
+    val textColor = if (isCurr) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface
+    val startPadding = if (isCurr) 48.dp else 8.dp
+    val endPadding = if (isCurr) 8.dp else 48.dp
 
     Box(modifier = Modifier.fillMaxWidth().padding(start = startPadding, end = endPadding)) {
         Surface(
@@ -38,7 +38,7 @@ fun MessageItem(
             elevation = 1.dp,
         ) {
             Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                if (!isCurrentUser) {
+                if (!isCurr) {
                     Text(
                         text = message.senderName.ifBlank { "Unknown User" },
                         style = MaterialTheme.typography.caption,
