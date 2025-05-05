@@ -1,6 +1,7 @@
 package pt.isel.keepmyplanet.plugins
 
-import com.auth0.jwk.JwkProviderBuilder
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -8,31 +9,32 @@ import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.response.respond
-import java.util.concurrent.TimeUnit
-
-private const val JWT_AUTH_PROVIDER_NAME = "auth-jwt"
 
 fun Application.configureAuthentication() {
-    val jwtIssuer = environment.config.property("jwt.issuer").getString()
-    val jwtRealm = environment.config.property("jwt.realm").getString()
-    val jwkProvider =
-        JwkProviderBuilder(jwtIssuer)
-            .cached(10, 24, TimeUnit.HOURS)
-            .rateLimited(10, 1, TimeUnit.MINUTES)
-            .build()
+    val jwtSecret = environment.config.property("ktor.jwt.secret").getString()
+    val jwtIssuer = environment.config.property("ktor.jwt.issuer").getString()
+    val jwtAudience = environment.config.property("ktor.jwt.audience").getString()
+    val jwtRealm = environment.config.property("ktor.jwt.realm").getString()
 
     install(Authentication) {
-        jwt(JWT_AUTH_PROVIDER_NAME) {
+        jwt("auth-jwt") {
             realm = jwtRealm
 
-            verifier(jwkProvider, jwtIssuer) { acceptLeeway(3) }
+            verifier(
+                JWT
+                    .require(Algorithm.HMAC256(jwtSecret))
+                    .withAudience(jwtAudience)
+                    .withIssuer(jwtIssuer)
+                    .build(),
+            )
 
             validate { credential ->
-                if (credential.payload.getClaim("userId").asString() != "") {
-                    JWTPrincipal(credential.payload)
-                } else {
-                    null
-                }
+                credential.payload
+                    .getClaim("userId")
+                    .asString()
+                    ?.toUIntOrNull()
+                    ?.takeIf { it > 0u }
+                    ?.let { JWTPrincipal(credential.payload) }
             }
 
             challenge { _, _ ->

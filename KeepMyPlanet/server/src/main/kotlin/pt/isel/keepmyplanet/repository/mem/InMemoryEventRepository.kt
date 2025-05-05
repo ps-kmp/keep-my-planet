@@ -25,25 +25,50 @@ class InMemoryEventRepository(
     private val nextId = AtomicInteger(1)
 
     init {
-        val testEvent =
+        val period =
+            Period(
+                now(),
+                Clock.System
+                    .now()
+                    .plus(5, DateTimeUnit.HOUR)
+                    .toLocalDateTime(TimeZone.UTC),
+            )
+        val testEvent1 =
             Event(
                 id = Id(1U),
-                title = Title("Limpeza Praia"),
-                description = Description("Limpeza da Praia da Rocha"),
-                period =
-                    Period(
-                        now(),
-                        Clock.System
-                            .now()
-                            .plus(5, DateTimeUnit.HOUR)
-                            .toLocalDateTime(TimeZone.UTC),
-                    ),
+                title = Title("e1"),
+                description = Description("d1"),
+                period = period,
                 zoneId = Id(1U),
-                organizerId = Id(1U),
-                status = EventStatus.IN_PROGRESS,
+                organizerId = Id(2U),
+                participantsIds = setOf(Id(1U), Id(2U), Id(3U)),
                 createdAt = now(),
             )
-        events[testEvent.id] = testEvent
+        val testEvent2 =
+            Event(
+                id = Id(2U),
+                title = Title("e2"),
+                description = Description("d2"),
+                period = period,
+                zoneId = Id(2U),
+                organizerId = Id(2U),
+                participantsIds = setOf(Id(1U), Id(2U), Id(3U)),
+                createdAt = now(),
+            )
+        val testEvent3 =
+            Event(
+                id = Id(3U),
+                title = Title("e3"),
+                description = Description("d3"),
+                period = period,
+                zoneId = Id(3U),
+                organizerId = Id(3U),
+                participantsIds = setOf(Id(1U), Id(2U), Id(3U)),
+                createdAt = now(),
+            )
+        events[testEvent1.id] = testEvent1
+        events[testEvent2.id] = testEvent2
+        events[testEvent3.id] = testEvent3
     }
 
     override suspend fun save(event: Event): Event = if (events.containsKey(event.id)) update(event) else create(event)

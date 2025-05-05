@@ -8,6 +8,7 @@ fun Message.toResponse(): MessageResponse =
         id = id.value,
         eventId = eventId.value,
         senderId = senderId.value,
+        senderName = senderName.value,
         content = content.value,
         timestamp = timestamp.toString(),
         chatPosition = chatPosition,

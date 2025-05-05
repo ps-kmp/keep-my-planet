@@ -49,7 +49,6 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.ktor.http)
             api(libs.kotlinx.datetime)
             implementation(libs.ktor.serialization.kotlinx.json)
         }

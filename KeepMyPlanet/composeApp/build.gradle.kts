@@ -56,46 +56,45 @@ kotlin {
     }
 
     sourceSets {
-        val commonMain by getting
-        val androidMain by getting
-        val desktopMain by getting
+        val commonMain by getting {
+            dependencies {
+                // compose core
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material)
+                implementation(compose.ui)
 
-        commonMain.dependencies {
-            // compose core
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material)
-            implementation(compose.ui)
+                // compose utilities
+                implementation(compose.components.resources)
+                implementation(compose.components.uiToolingPreview)
 
-            // compose utilities
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+                // lifecycle / viewmodel
+                implementation(libs.androidx.lifecycle.viewmodel)
 
-            // lifecycle / viewmodel
-            implementation(libs.androidx.lifecycle.viewmodel)
+                // projects
+                implementation(projects.shared)
 
-            // projects
-            implementation(projects.shared)
-
-            // ktor
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-
-            // coroutines
-            runtimeOnly(libs.kotlinx.coroutines.core)
-            runtimeOnly(libs.kotlinx.coroutines.android)
+                // ktor
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.ktor.client.auth)
+                implementation(libs.ktor.server.sse)
+            }
         }
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(libs.ktor.client.cio)
+        val androidMain by getting {
+            dependencies {
+                implementation(compose.preview)
+                implementation(libs.androidx.activity.compose)
+                implementation(libs.ktor.client.okhttp)
+            }
         }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.cio)
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.kotlinx.coroutines.swing)
+                implementation(libs.ktor.client.cio)
+            }
         }
     }
 }

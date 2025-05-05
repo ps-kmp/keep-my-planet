@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.header
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -14,14 +15,28 @@ import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.flow.filter
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.dto.message.AddMessageRequest
+import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.mapper.message.toResponse
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.util.getPathIntParameter
 import pt.isel.keepmyplanet.util.getPathUIntId
 
-fun getCurrentUserId() = Id(1U)
+fun ApplicationCall.getCurrentUserId(): Id {
+//    val principal = principal<JWTPrincipal>()
+//    if (principal == null) throw AuthenticationException("Authentication required.")
+//
+//    val userIdClaim = principal.payload.getClaim("userId")
+//    if (userIdClaim.isNull) {
+//        NotFoundException("Required JWT claim 'userId' is missing in the token payload")
+//    }
+//
+//    return Id(userIdClaim.asLong().toUInt())
+    val mockUserIdHeader = request.header("X-Mock-User-Id")
+    val requestedUserId = mockUserIdHeader?.toUIntOrNull()
+
+    return if (requestedUserId != null) Id(requestedUserId) else Id(UInt.MAX_VALUE)
+}
 
 fun Route.messageWebApi(
     messageService: MessageService,
@@ -33,8 +48,8 @@ fun Route.messageWebApi(
         // Add message to chat
         post {
             val eventId = call.getEventId()
-            val senderId = getCurrentUserId()
-            val request = call.receive<AddMessageRequest>()
+            val senderId = call.getCurrentUserId()
+            val request = call.receive<CreateMessageRequest>()
 
             messageService
                 .addMessage(eventId, senderId, request.content)
@@ -93,7 +108,7 @@ fun Route.messageWebApi(
             delete {
                 val eventId = call.getEventId()
                 val sequenceNum = call.getSequenceNum()
-                val requestingUserId = getCurrentUserId()
+                val requestingUserId = call.getCurrentUserId()
 
                 messageService
                     .deleteMessage(eventId, sequenceNum, requestingUserId)

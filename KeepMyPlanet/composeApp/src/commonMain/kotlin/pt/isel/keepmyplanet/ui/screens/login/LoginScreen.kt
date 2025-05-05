@@ -1,8 +1,8 @@
 package pt.isel.keepmyplanet.ui.screens.login
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,90 +12,117 @@ import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.data.model.UserSession
+import pt.isel.keepmyplanet.data.service.AuthService
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel,
-    onNavigateToChat: (session: UserSession, eventId: UInt) -> Unit,
+    authService: AuthService,
+    onNavigateHome: (UserSession) -> Unit,
 ) {
-    val state by viewModel.state.collectAsState()
+    val viewModel = remember { LoginViewModel(authService) }
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) {
-        viewModel.loginEvent.collect { event ->
+    LaunchedEffect(viewModel, snackbarHostState) {
+        viewModel.events.collect { event ->
             when (event) {
-                is LoginEvent.LoginSuccess -> onNavigateToChat(event.session, event.eventId)
-                is LoginEvent.LoginFailure -> println("Login failed: ${event.message}")
+                is LoginEvent.NavigateToHome -> {
+                    onNavigateHome(event.userSession)
+                }
+
+                is LoginEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = SnackbarDuration.Short,
+                    )
+                }
             }
         }
     }
 
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier.padding(paddingValues).fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            LoginContent(
+                uiState = uiState,
+                onUsernameChanged = viewModel::onUsernameChanged,
+                onPasswordChanged = viewModel::onPasswordChanged,
+                onLoginClicked = viewModel::onLoginClicked,
+            )
+        }
+    }
+}
+
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun LoginContent(
+    uiState: LoginUiState,
+    onUsernameChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onLoginClicked: () -> Unit,
+) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = "Entrar no Chat",
-            style = MaterialTheme.typography.h5,
+            text = "Login",
+            style = MaterialTheme.typography.h4,
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
         OutlinedTextField(
-            value = state.username,
-            onValueChange = { viewModel.updateUsername(it) },
+            value = uiState.username,
+            onValueChange = onUsernameChanged,
             label = { Text("Username") },
+            singleLine = true,
+            enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth(),
-            isError = state.error != null,
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = state.eventName,
-            onValueChange = { viewModel.updateEventName(it) },
-            label = { Text("Nome do Evento") },
+            value = uiState.password,
+            onValueChange = onPasswordChanged,
+            label = { Text("Password") },
+            singleLine = true,
+            enabled = !uiState.isLoading,
+            visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
-            isError = state.error != null,
         )
-
-        if (state.error != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = state.error!!,
-                color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.caption,
-                modifier = Modifier.padding(horizontal = 8.dp),
-            )
-        } else {
-            Spacer(modifier = Modifier.height(8.dp + 16.dp))
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { viewModel.login() },
-            enabled = !state.isLoading,
+            onClick = onLoginClicked,
+            enabled = uiState.isLoginEnabled,
             modifier = Modifier.fillMaxWidth().height(48.dp),
         ) {
-            if (state.isLoading) {
+            if (uiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     color = MaterialTheme.colors.onPrimary,
-                    strokeWidth = 3.dp,
+                    strokeWidth = 2.dp,
                 )
             } else {
-                Text("Entrar")
+                Text("Login")
             }
         }
     }
