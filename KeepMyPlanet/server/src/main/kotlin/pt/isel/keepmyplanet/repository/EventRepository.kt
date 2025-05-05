@@ -1,13 +1,10 @@
 package pt.isel.keepmyplanet.repository
 
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.event.Event
-import pt.isel.keepmyplanet.domain.event.EventStatus
 
 interface EventRepository : Repository<Event, Id> {
-    suspend fun findByZoneId(zoneId: Id): List<Event>
-
+/*
     suspend fun findByOrganizerId(organizerId: Id): List<Event>
 
     suspend fun findByParticipantId(participantId: Id): List<Event>
@@ -17,5 +14,16 @@ interface EventRepository : Repository<Event, Id> {
     suspend fun findNearLocation(
         center: Location,
         radiusKm: Double,
+    ): List<Event>*/
+
+    suspend fun save(event: Event): Event
+
+    suspend fun findByName(name: String): List<Event>
+
+    suspend fun findByZoneId(zoneId: Id): List<Event>
+
+    suspend fun findByZoneAndName(
+        zoneId: Id,
+        name: String,
     ): List<Event>
 }

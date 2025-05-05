@@ -22,13 +22,13 @@ enum ZoneSeverity {
 
 class User {
   name: Name
-  email: Email <<unique>>
+  email: Email
   password: Password
 }
 
 class Zone {
   description: Description
-  area: Location
+  'area: Location
   reported: Date
   photos: List<Photo>
 }
@@ -36,13 +36,27 @@ class Zone {
 class Event {
   title: Title
   description: Description
-  period: Duration
+  'period: Period
 }
 
 class Message {
   chatPosition: Int
   content: MessageContent
   timestamp: DateTime
+}
+
+class EventStateChange {
+  changeTime: DateTime
+}
+
+class Location {
+  latitude: Double
+  longitude: Double
+}
+
+class Period {
+  start: DateTime
+  end: DateTime
 }
 
 User <- Event : organizer
@@ -54,9 +68,15 @@ Event "*" --* Zone : events
 Event *-- "*" Message : messages
 Event -> EventStatus : status
 
+EventStateChange --* Event : statusHistory
+EventStateChange --> EventStatus : new
+EventStateChange --> User : changedBy
+
 Zone -up-> ZoneStatus : status
 Zone -left-> ZoneSeverity : severity
-Zone -right-> Message : messages
+Zone -right[hidden]-> Message : "                         "
+Event --> Period : period
+Zone --> Location : area
 hide empty members
 
 @enduml

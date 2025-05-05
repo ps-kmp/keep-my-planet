@@ -7,7 +7,6 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
@@ -15,7 +14,6 @@ import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
-import pt.isel.keepmyplanet.util.calculateDistanceKm
 import pt.isel.keepmyplanet.util.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class InMemoryEventRepository(
     private val zoneRepository: ZoneRepository,
 ) : EventRepository {
-    private val events = ConcurrentHashMap<Id, Event>()
+    private val events = ConcurrentHashMap<Id, Event>() // Id of the event - Event
     private val nextId = AtomicInteger(1)
 
     init {
@@ -48,6 +46,25 @@ class InMemoryEventRepository(
         events[testEvent.id] = testEvent
     }
 
+    override suspend fun save(event: Event): Event = if (events.containsKey(event.id)) update(event) else create(event)
+
+    // Get all events from the system (search by name)
+    override suspend fun findByName(name: String): List<Event> =
+        events.values
+            .filter {
+                it.title.value.contains(name, ignoreCase = true)
+            }.sortedBy { it.period.start }
+
+    override suspend fun findByZoneId(zoneId: Id): List<Event> = events.values.filter { it.zoneId == zoneId }
+
+    override suspend fun findByZoneAndName(
+        zoneId: Id,
+        name: String,
+    ): List<Event> =
+        events.values
+            .filter { it.zoneId == zoneId && it.title.value.contains(name, ignoreCase = true) }
+            .sortedBy { it.period.start }
+
     override suspend fun create(entity: Event): Event {
         val newId = Id(nextId.getAndIncrement().toUInt())
         val currentTime = now()
@@ -58,6 +75,7 @@ class InMemoryEventRepository(
 
     override suspend fun getById(id: Id): Event? = events[id]
 
+    // Get all events from the system
     override suspend fun getAll(): List<Event> =
         events.values
             .toList()
@@ -78,7 +96,7 @@ class InMemoryEventRepository(
 
     override suspend fun deleteById(id: Id): Boolean = events.remove(id) != null
 
-    override suspend fun findByZoneId(zoneId: Id): List<Event> =
+    /*override suspend fun findByZoneId(zoneId: Id): List<Event> =
         events.values
             .filter { it.zoneId == zoneId }
             .sortedBy { it.period.start }
@@ -113,7 +131,7 @@ class InMemoryEventRepository(
         return eventsWithDistance
             .sortedBy { it.second }
             .map { it.first }
-    }
+    }*/
 
     fun clear() {
         events.clear()
