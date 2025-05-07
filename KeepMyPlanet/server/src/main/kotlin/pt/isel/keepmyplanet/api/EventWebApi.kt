@@ -1,95 +1,183 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
-
 package pt.isel.keepmyplanet.api
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import kotlinx.datetime.LocalDateTime
+import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.Period
+import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
+import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
+import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.event.toResponse
+import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
 import pt.isel.keepmyplanet.util.getPathUIntId
+import pt.isel.keepmyplanet.util.getQueryStringParameter
 
 fun Route.eventWebApi(
     eventService: EventService,
     eventStateChangeService: EventStateChangeService,
 ) {
-    get("/event") {
-        val query = call.request.queryParameters["name"]
-
-        eventService
-            .searchAllEvents(query)
-            .onSuccess { events -> call.respond(events.map { it.toResponse() }) }
-            .onFailure { throw it }
-    }
-
-    route("/zone/{zoneId}/event") {
-        // Create Event
-        post {
-            val zoneId = call.getPathUIntId("zoneId", "Zone ID")
-            val organizerId = getCurrentUserId() // hardcoded
-            val request = call.receive<CreateEventRequest>()
-            val periodStart = LocalDateTime.parse(request.periodStart)
-            val periodEnd = LocalDateTime.parse(request.periodEnd)
-
-            eventService
-                .createEvent(
-                    zoneId,
-                    organizerId,
-                    request.title,
-                    request.description,
-                    periodStart,
-                    periodEnd,
-                    request.maxParticipants,
-                ).onSuccess { call.respond(HttpStatusCode.Created, it.toResponse()) }
-                .onFailure { throw it }
-        }
-
-        // Search Events (Optional - by name)
+    route("/events") {
         get {
-            val zoneId = call.getPathUIntId("zoneId", "Zone ID")
-            val query = call.request.queryParameters["name"]
+            val query = call.getQueryStringParameter("name")
 
             eventService
-                .searchZoneEvents(zoneId, query)
-                .onSuccess { events -> call.respond(events.map { it.toResponse() }) }
+                .searchAllEvents(query)
+                .onSuccess { events ->
+                    call.respond(HttpStatusCode.OK, events.map { it.toResponse() })
+                }.onFailure { throw it }
+        }
+
+        post {
+            val request = call.receive<CreateEventRequest>()
+            val organizerId = call.getCurrentUserId()
+
+            val title = Title(request.title)
+            val description = Description(request.description)
+            val period =
+                Period(LocalDateTime.parse(request.startDate), LocalDateTime.parse(request.endDate))
+            val zoneId = Id(request.zoneId)
+            val maxParticipants = request.maxParticipants
+
+            eventService
+                .createEvent(title, description, period, zoneId, organizerId, maxParticipants)
+                .onSuccess { event -> call.respond(HttpStatusCode.Created, event.toResponse()) }
                 .onFailure { throw it }
         }
 
-        route("/{eventId}") {
-            fun ApplicationCall.getEventId(): Id = getPathUIntId("eventId", "Event ID")
+        /*
+        route("/zone/{zoneId}/event") {
+            // Search Events (Optional - by name)
+            get {
+                val zoneId = call.getPathUIntId("zoneId", "Zone ID")
+                val query = call.getQueryStringParameter("name")
 
-            // Event Details
+                eventService
+                    .searchZoneEvents(zoneId, query)
+                    .onSuccess { events ->
+                        call.respond(HttpStatusCode.OK, events.map { it.toResponse() })
+                    }.onFailure { throw it }
+            }
+         */
+
+        route("/{id}") {
+            fun ApplicationCall.getEventId(): Id = getPathUIntId("id", "Event ID")
+
             get {
                 val eventId = call.getEventId()
 
                 eventService
                     .getEventDetails(eventId)
-                    .onSuccess { call.respond(it.toResponse()) }
+                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
                     .onFailure { throw it }
             }
 
-            // Join Event
+            patch {
+                val eventId = call.getEventId()
+                val userId = call.getCurrentUserId()
+                val request = call.receive<UpdateEventRequest>()
+
+                val title = request.title?.let { Title(it) }
+                val description = request.description?.let { Description(it) }
+                val period =
+                    if (request.startDate != null && request.endDate != null) {
+                        Period(
+                            LocalDateTime.parse(request.startDate!!),
+                            LocalDateTime.parse(request.endDate!!),
+                        )
+                    } else if (request.startDate != null || request.endDate != null) {
+                        throw ValidationException(
+                            "Both startDate and endDate must be provided if one is present.",
+                        )
+                    } else {
+                        null
+                    }
+                val max = request.maxParticipants
+
+                eventService
+                    .updateEventDetails(eventId, userId, title, description, period, max)
+                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                    .onFailure { throw it }
+            }
+
+            delete {
+                val eventId = call.getEventId()
+                val userId = call.getCurrentUserId()
+
+                eventService
+                    .deleteEvent(eventId, userId)
+                    .onSuccess { call.respond(HttpStatusCode.NoContent) }
+                    .onFailure { throw it }
+            }
+
+            post("/cancel") {
+                val eventId = call.getEventId()
+                val userId = call.getCurrentUserId()
+
+                eventService
+                    .cancelEvent(eventId, userId)
+                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                    .onFailure { throw it }
+            }
+
+            post("/complete") {
+                val eventId = call.getEventId()
+                val userId = call.getCurrentUserId()
+
+                eventService
+                    .completeEvent(eventId, userId)
+                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                    .onFailure { throw it }
+            }
+
             post("/join") {
                 val eventId = call.getEventId()
-                val userId = getCurrentUserId()
+                val userId = call.getCurrentUserId()
 
                 eventService
                     .joinEvent(eventId, userId)
-                    .onSuccess { call.respond(HttpStatusCode.OK) }
+                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
                     .onFailure { throw it }
+            }
+
+            post("/leave") {
+                val eventId = call.getEventId()
+                val userId = call.getCurrentUserId()
+
+                eventService
+                    .leaveEvent(eventId, userId)
+                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                    .onFailure { throw it }
+            }
+
+            get("/participants") {
+                val eventId = call.getEventId()
+
+                eventService
+                    .getEventParticipants(eventId)
+                    .onSuccess { users ->
+                        call.respond(HttpStatusCode.OK, users.map { it.toResponse() })
+                    }.onFailure { throw it }
             }
 
             // Change Event Status
             put("/status") {
                 val eventId = call.getEventId()
-                val userId = getCurrentUserId()
+                val userId = call.getCurrentUserId()
                 val request = call.receive<ChangeEventStatusRequest>()
 
                 eventStateChangeService
@@ -101,14 +189,12 @@ fun Route.eventWebApi(
             // Show Event Status History
             get("/status/history") {
                 val eventId = call.getEventId()
-                println("Ver histórico para eventId = $eventId")
+
                 eventStateChangeService
                     .getEventStateChanges(eventId)
-                    .onSuccess { changes -> call.respond(changes.map { it.toResponse() }) }
-                    .onFailure {
-                        println("Erro ao obter histórico de eventos: ${it.message}")
-                        throw it
-                    }
+                    .onSuccess { changes ->
+                        call.respond(HttpStatusCode.OK, changes.map { it.toResponse() })
+                    }.onFailure { throw it }
             }
         }
     }

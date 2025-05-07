@@ -13,6 +13,7 @@ import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.event.Event
+import pt.isel.keepmyplanet.domain.event.EventStateChange
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
@@ -29,6 +30,7 @@ import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.plugins.configureSerialization
 import pt.isel.keepmyplanet.plugins.configureStatusPages
 import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
+import pt.isel.keepmyplanet.repository.mem.InMemoryEventStateChangeRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
@@ -41,6 +43,7 @@ abstract class BaseWebApiTest {
     protected val fakeUserRepository = InMemoryUserRepository()
     protected val fakeZoneRepository = InMemoryZoneRepository()
     protected val fakeEventRepository = InMemoryEventRepository(fakeZoneRepository)
+    protected val fakeEventStateChangeRepository = InMemoryEventStateChangeRepository()
     protected val fakeMessageRepository = InMemoryMessageRepository()
     protected val chatSseService = ChatSseService()
     protected val passwordHasher = PasswordHasher()
@@ -118,6 +121,21 @@ abstract class BaseWebApiTest {
                 maxParticipants = maxParticipants,
                 createdAt = now(),
                 updatedAt = now(),
+            ),
+        )
+
+    protected suspend fun createTestEventStateChange(
+        eventId: Id = Id(1U),
+        newStatus: EventStatus = EventStatus.PLANNED,
+        changedBy: Id = Id(1U),
+    ): EventStateChange =
+        fakeEventStateChangeRepository.create(
+            EventStateChange(
+                id = Id(1U),
+                eventId = eventId,
+                newStatus = newStatus,
+                changedBy = changedBy,
+                changeTime = now(),
             ),
         )
 

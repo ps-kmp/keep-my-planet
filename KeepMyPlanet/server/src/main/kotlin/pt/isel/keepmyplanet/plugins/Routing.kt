@@ -23,29 +23,37 @@ import pt.isel.keepmyplanet.service.ZoneService
 import pt.isel.keepmyplanet.util.PasswordHasher
 
 fun Application.configureRouting() {
-    val zoneRepository = InMemoryZoneRepository()
+    // Data Access Layer
     val userRepository = InMemoryUserRepository()
+    val zoneRepository = InMemoryZoneRepository()
     val eventRepository = InMemoryEventRepository(zoneRepository)
-    val messageRepository = InMemoryMessageRepository()
     val eventStateChangeRepository = InMemoryEventStateChangeRepository()
+    val messageRepository = InMemoryMessageRepository()
 
-    val zoneService = ZoneService(zoneRepository, userRepository, eventRepository)
-    val chatSseService = ChatSseService()
-    val messageService = MessageService(messageRepository, eventRepository, userRepository, chatSseService)
-    val eventService = EventService(eventRepository, zoneRepository)
-    val eventStateChangeService = EventStateChangeService(eventRepository, eventStateChangeRepository)
-
+    // Components
     val passwordHasher = PasswordHasher()
-    val userService = UserService(userRepository, eventRepository, passwordHasher)
+    val chatSseService = ChatSseService()
 
+    // Service Layer
+    val userService = UserService(userRepository, eventRepository, passwordHasher)
+    val zoneService = ZoneService(zoneRepository, userRepository, eventRepository)
+    val eventService =
+        EventService(eventRepository, zoneRepository, userRepository, messageRepository)
+    val eventStateChangeService =
+        EventStateChangeService(eventRepository, eventStateChangeRepository)
+    val messageService =
+        MessageService(messageRepository, eventRepository, userRepository, chatSseService)
+
+    // Presentation Layer
     routing {
         get("/") {
             call.respondText("Ktor: ${Greeting().greet()}")
         }
 
-        zoneWebApi(zoneService)
-        messageWebApi(messageService, chatSseService)
+        // API Routes
         userWebApi(userService)
+        zoneWebApi(zoneService)
         eventWebApi(eventService, eventStateChangeService)
+        messageWebApi(messageService, chatSseService)
     }
 }

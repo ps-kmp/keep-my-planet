@@ -36,3 +36,7 @@ fun ApplicationCall.getPathIntParameter(
 fun ApplicationCall.getQueryDoubleParameter(paramName: String): Double? =
     request.queryParameters[paramName]
         ?.toDoubleOrNull()
+
+fun ApplicationCall.getQueryStringParameter(paramName: String): String? =
+    request
+        .queryParameters[paramName]

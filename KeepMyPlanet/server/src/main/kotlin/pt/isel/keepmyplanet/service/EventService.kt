@@ -1,60 +1,77 @@
 package pt.isel.keepmyplanet.service
 
-import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
+import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.errors.AuthorizationException
 import pt.isel.keepmyplanet.errors.ConflictException
+import pt.isel.keepmyplanet.errors.InternalServerException
 import pt.isel.keepmyplanet.errors.NotFoundException
+import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
+import pt.isel.keepmyplanet.repository.MessageRepository
+import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.util.now
 
 class EventService(
     private val eventRepository: EventRepository,
     private val zoneRepository: ZoneRepository,
+    private val userRepository: UserRepository,
+    private val messageRepository: MessageRepository,
 ) {
     suspend fun createEvent(
+        title: Title,
+        description: Description,
+        period: Period,
         zoneId: Id,
         organizerId: Id,
-        title: String,
-        description: String,
-        periodStart: LocalDateTime,
-        periodEnd: LocalDateTime,
         maxParticipants: Int?,
     ): Result<Event> =
         runCatching {
+            findUserOrFail(organizerId)
             val zone = findZoneOrFail(zoneId)
+
+            // ver melhor logica
+            if (zone.eventId != null) {
+                throw ConflictException("Zone '$zoneId' is already associated with an event.")
+            }
+
+            if (period.start < now()) {
+                throw ValidationException("Event start date must be in the future.")
+            }
+
+            val currentTime = now()
             val event =
                 Event(
-                    id = Id(0u),
-                    zoneId = zone.id,
-                    title = Title(title),
-                    description = Description(description),
+                    id = Id(1u),
+                    title = title,
+                    description = description,
+                    period = period,
+                    zoneId = zoneId,
                     organizerId = organizerId,
-                    period = Period(start = periodStart, end = periodEnd),
                     maxParticipants = maxParticipants,
-                    status = EventStatus.PLANNED,
-                    createdAt = now(),
+                    createdAt = currentTime,
+                    updatedAt = currentTime,
                 )
+            val createdEvent = eventRepository.create(event)
 
-            eventRepository.create(event)
+            val updatedZone =
+                zone.copy(eventId = createdEvent.id, status = ZoneStatus.CLEANING_SCHEDULED)
+            zoneRepository.update(updatedZone)
+
+            createdEvent
         }
 
-    suspend fun searchZoneEvents(
-        zoneId: Id,
-        name: String?,
-    ): Result<List<Event>> =
+    suspend fun getEventDetails(eventId: Id): Result<Event> =
         runCatching {
-            if (name.isNullOrBlank()) {
-                eventRepository.findByZoneId(zoneId)
-            } else {
-                eventRepository.findByZoneAndName(zoneId, name)
-            }
+            findEventOrFail(eventId)
         }
 
     suspend fun searchAllEvents(name: String?): Result<List<Event>> =
@@ -66,40 +83,176 @@ class EventService(
             }
         }
 
-    suspend fun getEventDetails(eventId: Id): Result<Event> =
+    suspend fun updateEventDetails(
+        eventId: Id,
+        userId: Id,
+        title: Title?,
+        description: Description?,
+        period: Period?,
+        maxParticipants: Int?,
+    ): Result<Event> =
         runCatching {
-            findEventOrFail(eventId)
+            val event = findEventOrFail(eventId)
+            ensureOrganizerOrFail(event, userId)
+
+            if (event.status == EventStatus.COMPLETED || event.status == EventStatus.CANCELLED) {
+                throw ConflictException("Cannot modify an event that is ${event.status}.")
+            }
+
+            if (period != null && period.start < now()) {
+                throw ValidationException("New event start date must be in the future.")
+            }
+
+            if (maxParticipants != null && maxParticipants < event.participantsIds.size) {
+                throw ValidationException("Max participants exceeded.")
+            }
+
+            val updatedEvent =
+                event.copy(
+                    title = title ?: event.title,
+                    description = description ?: event.description,
+                    period = period ?: event.period,
+                    maxParticipants = maxParticipants ?: event.maxParticipants,
+                )
+            if (updatedEvent != event) eventRepository.update(updatedEvent) else event
         }
 
+    suspend fun cancelEvent(
+        eventId: Id,
+        userId: Id,
+    ): Result<Event> =
+        runCatching {
+            val event = findEventOrFail(eventId)
+            ensureOrganizerOrFail(event, userId)
+
+            if (event.status == EventStatus.CANCELLED || event.status == EventStatus.COMPLETED) {
+                throw ConflictException("Event is already ${event.status}.")
+            }
+
+            val cancelledEvent = event.copy(status = EventStatus.CANCELLED)
+            val updatedEvent = eventRepository.update(cancelledEvent)
+
+            val zone = findZoneOrFail(event.zoneId)
+            if (zone.eventId == event.id) {
+                val updatedZone = zone.copy(eventId = null, status = ZoneStatus.REPORTED)
+                zoneRepository.update(updatedZone)
+            }
+            updatedEvent
+        }
+
+    suspend fun completeEvent(
+        eventId: Id,
+        actingUserId: Id,
+    ): Result<Event> =
+        runCatching {
+            val event = findEventOrFail(eventId)
+            ensureOrganizerOrFail(event, actingUserId)
+
+            if (event.status != EventStatus.IN_PROGRESS && event.status != EventStatus.PLANNED) {
+                throw ConflictException("Event must be PLANNED or IN_PROGRESS to be completed.")
+            }
+
+            val completedEvent = event.copy(status = EventStatus.COMPLETED)
+            val updatedEvent = eventRepository.update(completedEvent)
+
+            val zone = findZoneOrFail(event.zoneId)
+            if (zone.eventId == event.id) {
+                val updatedZone = zone.copy(eventId = null, status = ZoneStatus.CLEANED)
+                zoneRepository.update(updatedZone)
+            }
+            updatedEvent
+        }
+
+//    suspend fun searchZoneEvents(
+//        zoneId: Id,
+//        name: String?,
+//    ): Result<List<Event>> =
+//        runCatching {
+//            if (name.isNullOrBlank()) {
+//                eventRepository.findByZoneId(zoneId)
+//            } else {
+//                eventRepository.findByZoneAndName(zoneId, name)
+//            }
+//        }
+
     suspend fun joinEvent(
+        eventId: Id,
+        userId: Id,
+    ): Result<Event> =
+        runCatching {
+            val event = findEventOrFail(eventId)
+            findUserOrFail(userId)
+
+            if (event.status != EventStatus.PLANNED) {
+                throw ConflictException("Cannot join an event that is '${event.status}'.")
+            }
+            if (userId == event.organizerId) {
+                throw ConflictException("Organizer cannot join as a participant.")
+            }
+            if (userId in event.participantsIds) {
+                throw ConflictException("User '$userId' is already a participant in event.")
+            }
+            if (event.isFull) {
+                throw ConflictException("Event '$eventId' is full.")
+            }
+
+            val updatedEvent = event.copy(participantsIds = event.participantsIds + userId)
+            eventRepository.save(updatedEvent)
+        }
+
+    suspend fun leaveEvent(
+        eventId: Id,
+        userId: Id,
+    ): Result<Event> =
+        runCatching {
+            val event = findEventOrFail(eventId)
+            findUserOrFail(userId)
+
+            if (event.status != EventStatus.PLANNED) {
+                throw ConflictException("Cannot leave an event that is ${event.status}.")
+            }
+            if (userId !in event.participantsIds) {
+                throw NotFoundException("User '$userId' is not a participant in event '$eventId'.")
+            }
+
+            val updatedEvent = event.copy(participantsIds = event.participantsIds - userId)
+            eventRepository.update(updatedEvent)
+        }
+
+    suspend fun getEventParticipants(eventId: Id): Result<List<User>> =
+        runCatching {
+            val event = findEventOrFail(eventId)
+            event.participantsIds.mapNotNull { userRepository.getById(it) }
+        }
+
+    suspend fun deleteEvent(
         eventId: Id,
         userId: Id,
     ): Result<Unit> =
         runCatching {
             val event = findEventOrFail(eventId)
+            ensureOrganizerOrFail(event, userId)
 
-            if (event.status != EventStatus.PLANNED) {
-                throw ConflictException("Cannot join event with status '${event.status}'.")
+            if (event.status != EventStatus.PLANNED && event.status != EventStatus.CANCELLED) {
+                throw ConflictException("Cannot delete event with status ${event.status}.")
             }
 
-            if (event.maxParticipants != null &&
-                event.participantsIds.size >= event.maxParticipants!!
-            ) {
-                throw ConflictException("Maximum number of participants reached.")
+            val zone = findZoneOrFail(event.zoneId)
+            if (zone.eventId == event.id) {
+                val updatedZone = zone.copy(eventId = null, status = ZoneStatus.REPORTED)
+                zoneRepository.update(updatedZone)
             }
 
-            if (userId == event.organizerId || userId in event.participantsIds) {
-                throw ConflictException("User is already in the event.")
-            }
+            messageRepository.deleteAllByEventId(eventId)
 
-            val updatedEvent =
-                event.copy(
-                    participantsIds = event.participantsIds + userId,
-                    updatedAt = now(),
-                )
-
-            eventRepository.save(updatedEvent)
+            val deleted = eventRepository.deleteById(eventId)
+            if (!deleted) throw InternalServerException("Failed to delete event '$eventId'.")
+            Unit
         }
+
+    private suspend fun findUserOrFail(userId: Id): User =
+        userRepository.getById(userId)
+            ?: throw NotFoundException("User '$userId' not found.")
 
     private suspend fun findEventOrFail(eventId: Id): Event =
         eventRepository.getById(eventId)
@@ -108,4 +261,15 @@ class EventService(
     private suspend fun findZoneOrFail(zoneId: Id): Zone =
         zoneRepository.getById(zoneId)
             ?: throw NotFoundException("Zone '$zoneId' not found.")
+
+    private fun ensureOrganizerOrFail(
+        event: Event,
+        userId: Id,
+    ) {
+        if (event.organizerId != userId) {
+            throw AuthorizationException(
+                "User '$userId' is not authorized. Must be organizer ('${event.organizerId}').",
+            )
+        }
+    }
 }
