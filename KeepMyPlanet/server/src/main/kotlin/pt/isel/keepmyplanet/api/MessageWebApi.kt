@@ -42,7 +42,7 @@ fun Route.messageWebApi(
     messageService: MessageService,
     chatSseService: ChatSseService,
 ) {
-    route("/event/{eventId}/chat") {
+    route("/events/{eventId}/chat") {
         fun ApplicationCall.getEventId(): Id = getPathUIntId("eventId", "Event ID")
 
         // Add message to chat

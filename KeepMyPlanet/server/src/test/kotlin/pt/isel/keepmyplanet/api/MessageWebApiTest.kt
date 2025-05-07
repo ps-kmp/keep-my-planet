@@ -38,7 +38,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody = CreateMessageRequest(content = "Hello from organizer!")
 
             val response =
-                client.post("/event/${event.id.value}/chat") {
+                client.post("/events/${event.id.value}/chat") {
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
                     mockUser(organizer.id)
@@ -70,7 +70,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody = CreateMessageRequest(content = "Hi from participant!")
 
             val response =
-                client.post("/event/${event.id.value}/chat") {
+                client.post("/events/${event.id.value}/chat") {
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
                     mockUser(participant.id)
@@ -101,7 +101,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody2 = CreateMessageRequest(content = "Second")
 
             val response1 =
-                client.post("/event/${event.id.value}/chat") {
+                client.post("/events/${event.id.value}/chat") {
                     mockUser(user1.id)
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody1))
@@ -112,7 +112,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             assertEquals(0, responseBody1.chatPosition)
 
             val response2 =
-                client.post("/event/${event.id.value}/chat") {
+                client.post("/events/${event.id.value}/chat") {
                     mockUser(user2.id)
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody2))
@@ -141,7 +141,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody = CreateMessageRequest(content = "Doesn't matter")
 
             val response =
-                client.post("/event/$nonExistentEventId/chat") {
+                client.post("/events/$nonExistentEventId/chat") {
                     mockUser(user.id)
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
@@ -160,7 +160,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody = CreateMessageRequest(content = "Intruder message")
 
             val response =
-                client.post("/event/${event.id.value}/chat") {
+                client.post("/events/${event.id.value}/chat") {
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
                     mockUser(nonParticipant.id)
@@ -177,7 +177,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody = CreateMessageRequest(content = "Too late")
 
             val response =
-                client.post("/event/${event.id.value}/chat") {
+                client.post("/events/${event.id.value}/chat") {
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
                     mockUser(user.id)
@@ -194,7 +194,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody = CreateMessageRequest(content = "Event cancelled")
 
             val response =
-                client.post("/event/${event.id.value}/chat") {
+                client.post("/events/${event.id.value}/chat") {
                     mockUser(user.id)
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
@@ -210,7 +210,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody = CreateMessageRequest(content = "Valid content")
 
             val response =
-                client.post("/event/abc/chat") {
+                client.post("/events/abc/chat") {
                     mockUser(user.id)
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
@@ -227,7 +227,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val requestBody = CreateMessageRequest(content = "")
 
             val response =
-                client.post("/event/${event.id.value}/chat") {
+                client.post("/events/${event.id.value}/chat") {
                     mockUser(user.id)
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
@@ -241,7 +241,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id)
 
-            val response = client.get("/event/${event.id.value}/chat")
+            val response = client.get("/events/${event.id.value}/chat")
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals("[]", response.bodyAsText())
         }
@@ -258,7 +258,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val msg2 = createTestMessage(event.id, user2.id, user2.name, "Second")
             val msg3 = createTestMessage(event.id, user1.id, user1.name, "Third")
 
-            val response = client.get("/event/${event.id.value}/chat")
+            val response = client.get("/events/${event.id.value}/chat")
             assertEquals(HttpStatusCode.OK, response.status)
 
             val responseList = Json.decodeFromString<List<MessageResponse>>(response.bodyAsText())
@@ -284,14 +284,14 @@ class MessageWebApiTest : BaseWebApiTest() {
     fun `GET messages - should fail with 404 if event not found`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
             val nonExistentEventId = 999u
-            val response = client.get("/event/$nonExistentEventId/chat")
+            val response = client.get("/events/$nonExistentEventId/chat")
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
 
     @Test
     fun `GET messages - should return 400 for invalid event ID`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
-            val response = client.get("/event/abc/chat")
+            val response = client.get("/events/abc/chat")
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
@@ -304,7 +304,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             createTestMessage(event.id, user.id, user.name, "Message Zero")
             val msg1 = createTestMessage(event.id, user.id, user.name, "Message One")
 
-            val response = client.get("/event/${event.id.value}/chat/${msg1.chatPosition}")
+            val response = client.get("/events/${event.id.value}/chat/${msg1.chatPosition}")
             assertEquals(HttpStatusCode.OK, response.status)
 
             val responseBody = Json.decodeFromString<MessageResponse>(response.bodyAsText())
@@ -319,7 +319,7 @@ class MessageWebApiTest : BaseWebApiTest() {
     fun `GET single message - should fail with 404 if event not found`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
             val nonExistentEventId = 999u
-            val response = client.get("/event/$nonExistentEventId/chat/0")
+            val response = client.get("/events/$nonExistentEventId/chat/0")
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
 
@@ -331,14 +331,14 @@ class MessageWebApiTest : BaseWebApiTest() {
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
             createTestMessage(event.id, user.id, user.name)
 
-            val response = client.get("/event/${event.id.value}/chat/5")
+            val response = client.get("/events/${event.id.value}/chat/5")
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
 
     @Test
     fun `GET single message - should fail with 400 for invalid event ID format`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
-            val response = client.get("/event/bad-id/chat/0")
+            val response = client.get("/events/bad-id/chat/0")
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
@@ -348,7 +348,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id)
 
-            val response = client.get("/event/${event.id.value}/chat/abc")
+            val response = client.get("/events/${event.id.value}/chat/abc")
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
@@ -358,7 +358,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id)
 
-            val response = client.get("/event/${event.id.value}/chat/-1")
+            val response = client.get("/events/${event.id.value}/chat/-1")
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
@@ -374,7 +374,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             )
 
             val response =
-                client.delete("/event/${event.id.value}/chat/${msg.chatPosition}") {
+                client.delete("/events/${event.id.value}/chat/${msg.chatPosition}") {
                     mockUser(participant.id)
                 }
             assertEquals(HttpStatusCode.NoContent, response.status)
@@ -396,7 +396,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             )
 
             val response =
-                client.delete("/event/${event.id.value}/chat/${msg.chatPosition}") {
+                client.delete("/events/${event.id.value}/chat/${msg.chatPosition}") {
                     mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.NoContent, response.status)
@@ -419,7 +419,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             )
 
             val response =
-                client.delete("/event/${event.id.value}/chat/${msg.chatPosition}") {
+                client.delete("/events/${event.id.value}/chat/${msg.chatPosition}") {
                     mockUser(outsider.id)
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
@@ -435,7 +435,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val nonExistentEventId = 999u
 
             val response =
-                client.delete("/event/$nonExistentEventId/chat/0") {
+                client.delete("/events/$nonExistentEventId/chat/0") {
                     mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
@@ -453,7 +453,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             )
 
             val response =
-                client.delete("/event/${event.id.value}/chat/5") {
+                client.delete("/events/${event.id.value}/chat/5") {
                     mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
@@ -467,7 +467,7 @@ class MessageWebApiTest : BaseWebApiTest() {
         testApp({ messageWebApi(messageService, chatSseService) }) {
             val user = createTestUser()
             val response =
-                client.delete("/event/bad-id/chat/0") {
+                client.delete("/events/bad-id/chat/0") {
                     mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -481,7 +481,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
 
             val response =
-                client.delete("/event/${event.id.value}/chat/abc") {
+                client.delete("/events/${event.id.value}/chat/abc") {
                     mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -495,7 +495,7 @@ class MessageWebApiTest : BaseWebApiTest() {
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
 
             val response =
-                client.delete("/event/${event.id.value}/chat/-1") {
+                client.delete("/events/${event.id.value}/chat/-1") {
                     mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
