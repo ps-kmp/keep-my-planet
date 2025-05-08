@@ -32,6 +32,7 @@ fun Route.eventWebApi(
     eventStateChangeService: EventStateChangeService,
 ) {
     route("/events") {
+        // Search System Events (Optional - by name)
         get {
             val query = call.getQueryStringParameter("name")
 
@@ -42,6 +43,7 @@ fun Route.eventWebApi(
                 }.onFailure { throw it }
         }
 
+        // Create Event
         post {
             val request = call.receive<CreateEventRequest>()
             val organizerId = call.getCurrentUserId()
@@ -77,6 +79,7 @@ fun Route.eventWebApi(
         route("/{id}") {
             fun ApplicationCall.getEventId(): Id = getPathUIntId("id", "Event ID")
 
+            // Get Event Details
             get {
                 val eventId = call.getEventId()
 
@@ -86,6 +89,7 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
+            // Update Event Details
             patch {
                 val eventId = call.getEventId()
                 val userId = call.getCurrentUserId()
@@ -114,6 +118,7 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
+            // Delete Event
             delete {
                 val eventId = call.getEventId()
                 val userId = call.getCurrentUserId()
@@ -124,6 +129,7 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
+            // Cancel Event
             post("/cancel") {
                 val eventId = call.getEventId()
                 val userId = call.getCurrentUserId()
@@ -134,6 +140,7 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
+            // Complete Event
             post("/complete") {
                 val eventId = call.getEventId()
                 val userId = call.getCurrentUserId()
@@ -144,6 +151,7 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
+            // Join Event
             post("/join") {
                 val eventId = call.getEventId()
                 val userId = call.getCurrentUserId()
@@ -154,6 +162,7 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
+            // Leave Event
             post("/leave") {
                 val eventId = call.getEventId()
                 val userId = call.getCurrentUserId()
@@ -164,6 +173,7 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
+            // Get Event Participants
             get("/participants") {
                 val eventId = call.getEventId()
 
