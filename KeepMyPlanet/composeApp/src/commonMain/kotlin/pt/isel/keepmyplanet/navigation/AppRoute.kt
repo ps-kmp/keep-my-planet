@@ -18,4 +18,8 @@ sealed class AppRoute {
         val user: UserInfo,
         val event: EventInfo,
     ) : AppRoute()
+
+    data class UserProfile(
+        val user: UserInfo,
+    ) : AppRoute()
 }

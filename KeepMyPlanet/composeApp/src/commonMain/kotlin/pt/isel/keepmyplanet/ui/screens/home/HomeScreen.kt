@@ -22,6 +22,7 @@ import pt.isel.keepmyplanet.data.model.UserInfo
 fun HomeScreen(
     user: UserInfo,
     onNavigateToEventList: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
 ) {
     Scaffold(
@@ -40,6 +41,12 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(20.dp))
+
+            Button(onClick = onNavigateToProfile) {
+                Text("View User")
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             Button(onClick = onNavigateToEventList) {
                 Text("View Events")

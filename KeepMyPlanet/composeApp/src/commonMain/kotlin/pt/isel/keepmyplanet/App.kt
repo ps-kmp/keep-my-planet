@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import pt.isel.keepmyplanet.data.api.createHttpClient
 import pt.isel.keepmyplanet.data.service.AuthService
 import pt.isel.keepmyplanet.data.service.ChatService
+import pt.isel.keepmyplanet.data.service.UserService
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -19,6 +19,7 @@ fun App() {
     val httpClient = createHttpClient(userSession?.token)
     val chatService = ChatService(httpClient)
     val authService = AuthService(httpClient)
+    val userService = UserService(httpClient)
 
     AppContent(
         route = currentRoute,
@@ -26,5 +27,6 @@ fun App() {
         updateSession = appViewModel::updateSession,
         authService = authService,
         chatService = chatService,
+        userService = userService,
     )
 }

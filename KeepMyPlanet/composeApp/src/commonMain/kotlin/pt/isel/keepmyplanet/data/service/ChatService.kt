@@ -19,9 +19,9 @@ class ChatService(
     private val httpClient: HttpClient,
 ) {
     private object Endpoints {
-        fun messages(eventId: UInt) = "event/$eventId/chat"
+        fun messages(eventId: UInt) = "events/$eventId/chat"
 
-        fun messagesSse(eventId: UInt) = "event/$eventId/chat/stream"
+        fun messagesSse(eventId: UInt) = "events/$eventId/chat/stream"
     }
 
     suspend fun getMessages(eventId: UInt): Result<List<MessageResponse>> =
