@@ -5,21 +5,32 @@ import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.request.header
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.BASE_URL
 
 expect fun httpClientEngine(): HttpClientEngineFactory<*>
 
-fun createHttpClient(token: String?): HttpClient =
+fun createHttpClient(tokenProvider: () -> String?): HttpClient =
     HttpClient(httpClientEngine()) {
         defaultRequest {
             url(BASE_URL)
-            // token?.let { header(HttpHeaders.Authorization, "Bearer $it") }
+            contentType(ContentType.Application.Json)
+            tokenProvider()?.let { header(HttpHeaders.Authorization, "Bearer $it") }
         }
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    prettyPrint = true
+                    isLenient = true
+                },
+            )
         }
         install(SSE)
-        // token?.let { install(Auth) { bearer { loadTokens { BearerTokens(accessToken = it, refreshToken = "") } } } }
+        // install(Auth) { bearer { loadTokens { val currentToken = tokenProvider(); if (currentToken != null) BearerTokens(accessToken = currentToken, refreshToken = "") else null } } }
     }

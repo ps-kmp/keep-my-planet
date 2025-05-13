@@ -1,32 +1,67 @@
+@file:Suppress("ktlint:standard:function-naming")
+
 package pt.isel.keepmyplanet
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import pt.isel.keepmyplanet.data.api.createHttpClient
-import pt.isel.keepmyplanet.data.service.AuthService
-import pt.isel.keepmyplanet.data.service.ChatService
-import pt.isel.keepmyplanet.data.service.UserService
+import pt.isel.keepmyplanet.navigation.AppRoute
+import pt.isel.keepmyplanet.ui.screens.chat.ChatScreen
+import pt.isel.keepmyplanet.ui.screens.event.EventListScreen
+import pt.isel.keepmyplanet.ui.screens.home.HomeScreen
+import pt.isel.keepmyplanet.ui.screens.login.LoginScreen
+import pt.isel.keepmyplanet.ui.screens.user.UserProfileScreen
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
-fun App() {
-    val appViewModel = remember { AppViewModel() }
-    val userSession by appViewModel.userSession.collectAsState()
+fun App(appViewModel: AppViewModel) {
     val currentRoute by appViewModel.currentRoute.collectAsState()
+    val userSession by appViewModel.userSession.collectAsState()
+    val currentUserInfo = userSession?.userInfo
 
-    val httpClient = createHttpClient(userSession?.token)
-    val chatService = ChatService(httpClient)
-    val authService = AuthService(httpClient)
-    val userService = UserService(httpClient)
+    when (currentRoute) {
+        is AppRoute.Login -> {
+            LoginScreen(
+                authService = appViewModel.authService,
+                onNavigateHome = { appViewModel.updateSession(it) },
+            )
+        }
 
-    AppContent(
-        route = currentRoute,
-        navigate = appViewModel::navigate,
-        updateSession = appViewModel::updateSession,
-        authService = authService,
-        chatService = chatService,
-        userService = userService,
-    )
+        is AppRoute.Home -> {
+            requireNotNull(currentUserInfo) { "User must be logged in for Home route" }
+            HomeScreen(
+                user = currentUserInfo,
+                onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
+                onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
+                onLogout = { appViewModel.logout() },
+            )
+        }
+
+        is AppRoute.EventList -> {
+            requireNotNull(currentUserInfo) { "User must be logged in for EventList route" }
+            EventListScreen(
+                onEventSelected = { appViewModel.navigate(AppRoute.Chat(it)) },
+                onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
+            )
+        }
+
+        is AppRoute.Chat -> {
+            requireNotNull(currentUserInfo) { "User must be logged in for Chat route" }
+            ChatScreen(
+                chatService = appViewModel.chatService,
+                user = currentUserInfo,
+                event = (currentRoute as AppRoute.Chat).event,
+                onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
+            )
+        }
+
+        is AppRoute.UserProfile -> {
+            requireNotNull(currentUserInfo) { "User must be logged in for UserProfile route" }
+            UserProfileScreen(
+                userService = appViewModel.userService,
+                user = currentUserInfo,
+                onNavigateToLogin = { appViewModel.logout() },
+                onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
+            )
+        }
+    }
 }

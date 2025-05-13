@@ -1,25 +1,17 @@
 package pt.isel.keepmyplanet.navigation
 
 import pt.isel.keepmyplanet.data.model.EventInfo
-import pt.isel.keepmyplanet.data.model.UserInfo
 
 sealed class AppRoute {
     data object Login : AppRoute()
 
-    data class Home(
-        val user: UserInfo,
-    ) : AppRoute()
+    data object Home : AppRoute()
 
-    data class EventList(
-        val user: UserInfo,
-    ) : AppRoute()
+    data object EventList : AppRoute()
 
     data class Chat(
-        val user: UserInfo,
         val event: EventInfo,
     ) : AppRoute()
 
-    data class UserProfile(
-        val user: UserInfo,
-    ) : AppRoute()
+    data object UserProfile : AppRoute()
 }
