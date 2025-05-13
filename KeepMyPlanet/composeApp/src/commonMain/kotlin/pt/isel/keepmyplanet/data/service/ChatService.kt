@@ -1,17 +1,16 @@
 package pt.isel.keepmyplanet.data.service
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
+import io.ktor.client.request.url
+import io.ktor.http.HttpMethod
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
+import pt.isel.keepmyplanet.data.api.executeRequest
+import pt.isel.keepmyplanet.data.api.executeRequestUnit
+import pt.isel.keepmyplanet.data.api.mockUser
 import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 
@@ -25,8 +24,9 @@ class ChatService(
     }
 
     suspend fun getMessages(eventId: UInt): Result<List<MessageResponse>> =
-        runCatching {
-            httpClient.get(Endpoints.messages(eventId)).body<List<MessageResponse>>()
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.messages(eventId))
         }
 
     suspend fun sendMessage(
@@ -34,14 +34,11 @@ class ChatService(
         userId: UInt,
         content: String,
     ): Result<Unit> =
-        runCatching {
-            httpClient
-                .post(Endpoints.messages(eventId)) {
-                    contentType(ContentType.Application.Json)
-                    setBody(CreateMessageRequest(content))
-                    header("X-Mock-User-Id", userId.toString())
-                }
-            Unit
+        httpClient.executeRequestUnit {
+            method = HttpMethod.Post
+            url(Endpoints.messages(eventId))
+            setBody(CreateMessageRequest(content))
+            mockUser(userId)
         }
 
     fun listenToMessages(eventId: UInt): Flow<Result<MessageResponse>> =

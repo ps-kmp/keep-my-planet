@@ -32,7 +32,7 @@ class ChatViewModel(
         startListeningToMessages()
     }
 
-    fun loadInitialMessages() {
+    private fun loadInitialMessages() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             val result = chatService.getMessages(event.id)
@@ -56,10 +56,8 @@ class ChatViewModel(
                 }.collect { messageResult ->
                     messageResult
                         .onSuccess { newMessage ->
-                            addNewMessage(newMessage)
-                            if (_uiState.value.messages.lastOrNull() == newMessage) {
-                                _events.send(ChatEvent.ScrollToBottom)
-                            }
+                            val messageAdded = addNewMessage(newMessage)
+                            if (messageAdded) _events.send(ChatEvent.ScrollToBottom)
                         }.onFailure { exception ->
                             handleError("Error processing incoming message", exception, true)
                         }
@@ -67,14 +65,17 @@ class ChatViewModel(
         }
     }
 
-    private fun addNewMessage(newMessage: MessageResponse) {
+    private fun addNewMessage(newMessage: MessageResponse): Boolean {
+        var wasAdded = false
         _uiState.update { currentState ->
             if (currentState.messages.any { it.id == newMessage.id }) {
                 currentState
             } else {
+                wasAdded = true
                 currentState.copy(messages = currentState.messages + newMessage)
             }
         }
+        return wasAdded
     }
 
     fun onMessageChanged(newMessage: String) {
@@ -95,8 +96,8 @@ class ChatViewModel(
                 .onSuccess {
                     _uiState.update { it.copy(isSending = false) }
                 }.onFailure { exception ->
-                    handleError("Failed to send message", exception, showSnackbar = true)
                     _uiState.update { it.copy(isSending = false, messageInput = messageContent) }
+                    handleError("Failed to send message", exception, showSnackbar = true)
                 }
         }
     }

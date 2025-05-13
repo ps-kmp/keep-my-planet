@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:function-naming")
+
 package pt.isel.keepmyplanet.ui.screens.login
 
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.data.model.UserSession
 import pt.isel.keepmyplanet.data.service.AuthService
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun LoginScreen(
     authService: AuthService,
@@ -73,7 +74,6 @@ fun LoginScreen(
     }
 }
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 private fun LoginContent(
     uiState: LoginUiState,

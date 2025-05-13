@@ -1,15 +1,12 @@
 package pt.isel.keepmyplanet.data.service
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.patch
-import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
+import io.ktor.client.request.url
+import io.ktor.http.HttpMethod
+import pt.isel.keepmyplanet.data.api.executeRequest
+import pt.isel.keepmyplanet.data.api.executeRequestUnit
+import pt.isel.keepmyplanet.data.api.mockUser
 import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.user.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
@@ -35,22 +32,22 @@ class UserService(
     }
 
     suspend fun registerUser(request: RegisterRequest): Result<UserResponse> =
-        runCatching {
-            httpClient
-                .post(Endpoints.registerUser()) {
-                    contentType(ContentType.Application.Json)
-                    setBody(request)
-                }.body<UserResponse>()
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.registerUser())
+            setBody(request)
         }
 
     suspend fun getAllUsers(): Result<List<UserResponse>> =
-        runCatching {
-            httpClient.get(Endpoints.getAllUsers()).body<List<UserResponse>>()
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.getAllUsers())
         }
 
     suspend fun getUserDetails(userId: UInt): Result<UserResponse> =
-        runCatching {
-            httpClient.get(Endpoints.userById(userId)).body<UserResponse>()
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.userById(userId))
         }
 
     suspend fun updateUserProfile(
@@ -58,24 +55,21 @@ class UserService(
         actingUserId: UInt,
         request: UpdateProfileRequest,
     ): Result<UserResponse> =
-        runCatching {
-            httpClient
-                .patch(Endpoints.updateUser(userIdToUpdate)) {
-                    contentType(ContentType.Application.Json)
-                    setBody(request)
-                    header("X-Mock-User-Id", actingUserId.toString())
-                }.body<UserResponse>()
+        httpClient.executeRequest {
+            method = HttpMethod.Patch
+            url(Endpoints.updateUser(userIdToUpdate))
+            setBody(request)
+            mockUser(actingUserId)
         }
 
     suspend fun deleteUser(
         userIdToDelete: UInt,
         actingUserId: UInt,
     ): Result<Unit> =
-        runCatching {
-            httpClient.delete(Endpoints.deleteUser(userIdToDelete)) {
-                header("X-Mock-User-Id", actingUserId.toString())
-            }
-            Unit
+        httpClient.executeRequestUnit {
+            method = HttpMethod.Delete
+            url(Endpoints.deleteUser(userIdToDelete))
+            mockUser(actingUserId)
         }
 
     suspend fun changePassword(
@@ -83,13 +77,10 @@ class UserService(
         actingUserId: UInt,
         request: ChangePasswordRequest,
     ): Result<Unit> =
-        runCatching {
-            httpClient
-                .patch(Endpoints.changePassword(userIdToUpdate)) {
-                    contentType(ContentType.Application.Json)
-                    setBody(request)
-                    header("X-Mock-User-Id", actingUserId.toString())
-                }
-            Unit
+        httpClient.executeRequestUnit {
+            method = HttpMethod.Patch
+            url(Endpoints.changePassword(userIdToUpdate))
+            setBody(request)
+            mockUser(actingUserId)
         }
 }

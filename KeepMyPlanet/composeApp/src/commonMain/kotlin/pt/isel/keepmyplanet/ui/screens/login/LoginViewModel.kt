@@ -22,7 +22,7 @@ class LoginViewModel(
     val events: Flow<LoginEvent> = _events.receiveAsFlow()
 
     fun onUsernameChanged(username: String) {
-        _uiState.update { it.copy(username = username.trimStart()) }
+        _uiState.update { it.copy(username = username) }
     }
 
     fun onPasswordChanged(password: String) {

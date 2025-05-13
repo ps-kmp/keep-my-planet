@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.model.UserInfo
+import pt.isel.keepmyplanet.data.model.toUserInfo
 import pt.isel.keepmyplanet.data.service.UserService
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
@@ -40,13 +41,7 @@ class UserProfileViewModel(
             val result = userService.getUserDetails(user.id)
             result
                 .onSuccess { userResponse ->
-                    val updatedUserInfo =
-                        UserInfo(
-                            id = userResponse.id,
-                            username = userResponse.name,
-                            email = userResponse.email,
-                            profilePictureId = userResponse.profilePictureId,
-                        )
+                    val updatedUserInfo = userResponse.toUserInfo()
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -57,7 +52,6 @@ class UserProfileViewModel(
                     }
                 }.onFailure { e ->
                     handleError("Failed to load profile", e, showSnackbar = true)
-                    _uiState.update { it.copy(isLoading = false) }
                 }
         }
     }
@@ -141,13 +135,7 @@ class UserProfileViewModel(
 
             result
                 .onSuccess { updatedUserResponse ->
-                    val updatedUserInfo =
-                        UserInfo(
-                            id = updatedUserResponse.id,
-                            username = updatedUserResponse.name,
-                            email = updatedUserResponse.email,
-                            profilePictureId = updatedUserResponse.profilePictureId,
-                        )
+                    val updatedUserInfo = updatedUserResponse.toUserInfo()
                     _uiState.update {
                         it.copy(
                             isUpdatingProfile = false,
@@ -160,7 +148,6 @@ class UserProfileViewModel(
                     _events.send(UserProfileEvent.ShowSnackbar("Profile updated successfully"))
                 }.onFailure { e ->
                     handleError("Failed to update profile", e, showSnackbar = true)
-                    _uiState.update { it.copy(isUpdatingProfile = false) }
                 }
         }
     }
@@ -237,7 +224,6 @@ class UserProfileViewModel(
                     _events.send(UserProfileEvent.ShowSnackbar("Password changed successfully"))
                 }.onFailure { e ->
                     handleError("Failed to change password", e, showSnackbar = true)
-                    _uiState.update { it.copy(isChangingPassword = false) }
                 }
         }
     }
@@ -257,7 +243,6 @@ class UserProfileViewModel(
                     _events.send(UserProfileEvent.NavigateToLogin)
                 }.onFailure { e ->
                     handleError("Failed to delete account", e, showSnackbar = true)
-                    _uiState.update { it.copy(isDeletingAccount = false) }
                 }
         }
     }
@@ -268,6 +253,14 @@ class UserProfileViewModel(
         showSnackbar: Boolean = false,
     ) {
         val errorMsg = "$prefix: ${exception.message ?: "Unknown error"}"
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                isUpdatingProfile = false,
+                isChangingPassword = false,
+                isDeletingAccount = false,
+            )
+        }
         if (showSnackbar) _events.send(UserProfileEvent.ShowSnackbar(errorMsg))
     }
 }
