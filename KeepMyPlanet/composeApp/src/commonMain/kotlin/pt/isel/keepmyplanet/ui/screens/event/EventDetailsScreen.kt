@@ -3,10 +3,12 @@ package pt.isel.keepmyplanet.ui.screens.event
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -32,6 +34,7 @@ fun EventDetailsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToChat: (EventInfo) -> Unit,
     onLoadEventDetails: (UInt) -> Unit,
+    onJoinEvent: (UInt) -> Unit,
 ) {
     val event = uiState.event
 
@@ -42,12 +45,12 @@ fun EventDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(event?.title ?: "Detalhes do Evento") },
+                title = { Text(event?.title ?: "Event Details") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = "Back",
                         )
                     }
                 },
@@ -72,33 +75,29 @@ fun EventDetailsScreen(
                             .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    // Título
                     Text(
                         text = event.title,
                         style = MaterialTheme.typography.h5,
                     )
 
-                    // Descrição
                     Text(
                         text = event.description,
                         style = MaterialTheme.typography.body1,
                     )
 
-                    // Datas
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            text = "Data de Início: ${event.startDate}",
+                            text = "Start Date: ${event.startDate}",
                             style = MaterialTheme.typography.body2,
                         )
                         Text(
-                            text = "Data de Fim: ${event.endDate}",
+                            text = "End Date: ${event.endDate}",
                             style = MaterialTheme.typography.body2,
                         )
                     }
 
-                    // Status e Participantes
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -109,45 +108,64 @@ fun EventDetailsScreen(
                         )
                         event.maxParticipants?.let {
                             Text(
-                                text = "Participantes: ${event.participantsIds.size}/$it",
+                                text = "Participants: ${event.participantsIds.size}/$it",
                                 style = MaterialTheme.typography.body2,
                             )
                         }
                     }
 
-                    // Datas de criação/atualização
                     Column(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
-                            text = "Criado em: ${event.createdAt}",
+                            text = "Created: ${event.createdAt}",
                             style = MaterialTheme.typography.caption,
                         )
                         Text(
-                            text = "Última atualização: ${event.updatedAt}",
+                            text = "Last update: ${event.updatedAt}",
                             style = MaterialTheme.typography.caption,
                         )
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Botão Chat
-                    Button(
-                        onClick = {
-                            onNavigateToChat(
-                                EventInfo(
-                                    id = event.id,
-                                    title = event.title,
-                                    description = event.description,
-                                    startDate = event.startDate,
-                                    endDate = event.endDate,
-                                    status = event.status,
-                                ),
-                            )
-                        },
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text("Entrar no Chat")
+                        Button(
+                            onClick = { onJoinEvent(eventId) },
+                            modifier = Modifier.weight(1f),
+                            enabled = !uiState.isJoining,
+                        ) {
+                            if (uiState.isJoining) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colors.onPrimary,
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Text("Join Event")
+                            }
+                        }
+
+                        Button(
+                            onClick = {
+                                onNavigateToChat(
+                                    EventInfo(
+                                        id = event.id,
+                                        title = event.title,
+                                        description = event.description,
+                                        startDate = event.startDate,
+                                        endDate = event.endDate,
+                                        status = event.status,
+                                    ),
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text("Chat")
+                        }
                     }
                 }
             }

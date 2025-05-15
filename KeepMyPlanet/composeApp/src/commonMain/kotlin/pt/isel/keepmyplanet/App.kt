@@ -64,6 +64,9 @@ fun App(appViewModel: AppViewModel) {
                 onLoadEventDetails = { id ->
                     eventViewModel.loadEventDetails(id)
                 },
+                onJoinEvent = { id ->
+                    eventViewModel.joinEvent(id)
+                },
             )
         }
 

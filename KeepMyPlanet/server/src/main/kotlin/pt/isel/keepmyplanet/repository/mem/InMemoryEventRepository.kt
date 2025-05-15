@@ -38,8 +38,8 @@ class InMemoryEventRepository(
         val testEvent1 =
             Event(
                 id = Id(1U),
-                title = Title("e1"),
-                description = Description("d1"),
+                title = Title("Beach Cleaning"),
+                description = Description("Join us for a beach cleaning event!"),
                 period = period,
                 zoneId = Id(1U),
                 organizerId = Id(2U),
@@ -50,8 +50,8 @@ class InMemoryEventRepository(
         val testEvent2 =
             Event(
                 id = Id(2U),
-                title = Title("e2"),
-                description = Description("d2"),
+                title = Title("Park Cleanup"),
+                description = Description("Help us clean up the park!"),
                 period = period,
                 zoneId = Id(2U),
                 organizerId = Id(2U),
@@ -62,8 +62,8 @@ class InMemoryEventRepository(
         val testEvent3 =
             Event(
                 id = Id(3U),
-                title = Title("e3"),
-                description = Description("d3"),
+                title = Title("City Cleanup"),
+                description = Description("Join us for a city cleanup event!"),
                 period = period,
                 zoneId = Id(3U),
                 organizerId = Id(3U),
