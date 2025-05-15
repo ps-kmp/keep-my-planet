@@ -79,7 +79,7 @@ fun ChatScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(uiState.event.name.ifBlank { "Chat" }) },
+                title = { Text(uiState.event.title.ifBlank { "Chat" }) },
                 backgroundColor = MaterialTheme.colors.primarySurface,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

@@ -7,6 +7,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.screens.chat.ChatScreen
+import pt.isel.keepmyplanet.ui.screens.event.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventListScreen
 import pt.isel.keepmyplanet.ui.screens.home.HomeScreen
 import pt.isel.keepmyplanet.ui.screens.login.LoginScreen
@@ -38,9 +39,31 @@ fun App(appViewModel: AppViewModel) {
 
         is AppRoute.EventList -> {
             requireNotNull(currentUserInfo) { "User must be logged in for EventList route" }
+            val listState by appViewModel.eventViewModel.listUiState.collectAsState()
             EventListScreen(
-                onEventSelected = { appViewModel.navigate(AppRoute.Chat(it)) },
+                events = listState.events,
+                isLoading = listState.isLoading,
+                error = listState.error,
+                onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
                 onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
+            )
+        }
+
+        is AppRoute.EventDetails -> {
+            requireNotNull(currentUserInfo) { "User must be logged in for EventDetails route" }
+            val eventViewModel = appViewModel.eventViewModel
+            val detailsState by eventViewModel.detailsUiState.collectAsState()
+
+            EventDetailsScreen(
+                eventId = (currentRoute as AppRoute.EventDetails).eventId,
+                uiState = detailsState,
+                onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
+                onNavigateToChat = { event ->
+                    appViewModel.navigate(AppRoute.Chat(event))
+                },
+                onLoadEventDetails = { id ->
+                    eventViewModel.loadEventDetails(id)
+                },
             )
         }
 

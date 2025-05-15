@@ -6,6 +6,7 @@ import androidx.compose.ui.window.application
 import pt.isel.keepmyplanet.data.api.createHttpClient
 import pt.isel.keepmyplanet.data.service.AuthService
 import pt.isel.keepmyplanet.data.service.ChatService
+import pt.isel.keepmyplanet.data.service.EventService
 import pt.isel.keepmyplanet.data.service.UserService
 
 fun main() =
@@ -17,6 +18,7 @@ fun main() =
                     AuthService(httpClient),
                     ChatService(httpClient),
                     UserService(httpClient),
+                    EventService(httpClient),
                 )
             }
         Window(
