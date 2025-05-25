@@ -1,0 +1,51 @@
+import kotlinx.datetime.LocalDateTime;
+import pt.isel.keepmyplanet.domain.common.Id;
+import pt.isel.keepmyplanet.domain.message.MessageContent;
+import pt.isel.keepmyplanet.domain.user.Name;
+
+CREATE TABLE messages (
+    id BIGINT AS Id PRIMARY KEY,
+    event_id BIGINT AS Id NOT NULL,
+    sender_id BIGINT AS Id NOT NULL,
+    sender_name TEXT AS Name NOT NULL,
+    content TEXT AS MessageContent NOT NULL,
+    "timestamp" TEXT AS LocalDateTime NOT NULL,
+    chat_position INTEGER NOT NULL,
+    UNIQUE(event_id, chat_position)
+);
+
+insert:
+INSERT INTO messages(event_id, sender_id, sender_name, content, "timestamp", chat_position)
+VALUES (:event_id, :sender_id, :sender_name, :content, CAST(:timestamp AS TIMESTAMP), :chat_position)
+RETURNING *;
+
+getById:
+SELECT * FROM messages WHERE id = :id;
+
+getAllByEventId:
+SELECT * FROM messages WHERE event_id = :eventId ORDER BY chat_position;
+
+getSingleByEventIdAndSeqNum:
+SELECT * FROM messages WHERE event_id = :eventId AND chat_position = :sequenceNum;
+
+deleteByIdReturningId:
+DELETE FROM messages WHERE id = :id RETURNING id;
+
+getAll:
+SELECT * FROM messages ORDER BY event_id, chat_position;
+
+updateMessage:
+UPDATE messages
+SET content = :content,
+    "timestamp" = CAST(:timestamp AS TIMESTAMP)
+WHERE id = :id
+RETURNING *;
+
+getAllBySenderId:
+SELECT * FROM messages WHERE sender_id = :senderId ORDER BY event_id, chat_position;
+
+deleteAllByEventIdReturningIds:
+DELETE FROM messages WHERE event_id = :eventId RETURNING id;
+
+getMaxChatPositionForEvent:
+SELECT MAX(chat_position) FROM messages WHERE event_id = :eventId;

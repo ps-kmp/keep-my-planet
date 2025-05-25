@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
@@ -19,6 +16,7 @@ import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,11 +28,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.data.model.UserSession
 import pt.isel.keepmyplanet.data.service.AuthService
+import pt.isel.keepmyplanet.ui.screens.common.LoadingButton
 
 @Composable
 fun LoginScreen(
     authService: AuthService,
     onNavigateHome: (UserSession) -> Unit,
+    onNavigateToRegister: () -> Unit,
 ) {
     val viewModel = remember { LoginViewModel(authService) }
     val uiState by viewModel.uiState.collectAsState()
@@ -69,6 +69,7 @@ fun LoginScreen(
                 onUsernameChanged = viewModel::onUsernameChanged,
                 onPasswordChanged = viewModel::onPasswordChanged,
                 onLoginClicked = viewModel::onLoginClicked,
+                onNavigateToRegister = onNavigateToRegister,
             )
         }
     }
@@ -80,6 +81,7 @@ private fun LoginContent(
     onUsernameChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
     onLoginClicked: () -> Unit,
+    onNavigateToRegister: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
@@ -110,20 +112,16 @@ private fun LoginContent(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Button(
+        LoadingButton(
             onClick = onLoginClicked,
             enabled = uiState.isLoginEnabled,
+            isLoading = uiState.isLoading,
+            text = "Login",
             modifier = Modifier.fillMaxWidth().height(48.dp),
-        ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colors.onPrimary,
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Text("Login")
-            }
+        )
+
+        TextButton(onClick = onNavigateToRegister) {
+            Text("Don't have an account? Register")
         }
     }
 }

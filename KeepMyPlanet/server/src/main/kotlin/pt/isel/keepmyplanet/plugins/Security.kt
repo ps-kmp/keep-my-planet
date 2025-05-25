@@ -11,10 +11,10 @@ import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.response.respond
 
 fun Application.configureAuthentication() {
-    val jwtSecret = environment.config.property("ktor.jwt.secret").getString()
-    val jwtIssuer = environment.config.property("ktor.jwt.issuer").getString()
-    val jwtAudience = environment.config.property("ktor.jwt.audience").getString()
-    val jwtRealm = environment.config.property("ktor.jwt.realm").getString()
+    val jwtSecret = environment.config.property("jwt.secret").getString()
+    val jwtIssuer = environment.config.property("jwt.issuer").getString()
+    val jwtAudience = environment.config.property("jwt.audience").getString()
+    val jwtRealm = environment.config.property("jwt.realm").getString()
 
     install(Authentication) {
         jwt("auth-jwt") {

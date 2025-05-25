@@ -29,7 +29,7 @@ class UserService(
         runCatching {
             ensureEmailIsAvailableOrFail(email)
 
-            val passwordHash = passwordHasher.hashPassword(password)
+            val passwordHash = passwordHasher.hash(password)
             val currentTime = now()
             val newUser =
                 User(
@@ -89,7 +89,7 @@ class UserService(
             val user = findUserOrFail(userId)
             ensureSelfActionOrFail(userId, actingUserId, "change password")
 
-            if (!passwordHasher.verifyPassword(oldPassword, user.passwordHash)) {
+            if (!passwordHasher.verify(oldPassword, user.passwordHash)) {
                 throw AuthorizationException("Password verification failed.")
             }
 
@@ -97,7 +97,7 @@ class UserService(
                 throw ValidationException("New password cannot be the same as the old password.")
             }
 
-            val newPasswordHash = passwordHasher.hashPassword(newPassword)
+            val newPasswordHash = passwordHasher.hash(newPassword)
             val updatedUser = user.copy(passwordHash = newPasswordHash)
             userRepository.update(updatedUser)
             Unit
@@ -111,9 +111,9 @@ class UserService(
             findUserOrFail(userId)
             ensureSelfActionOrFail(userId, actingUserId, "delete account")
 
-            val plannedOrInProgressStatuses = setOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
-            val createdEvents = eventRepository.findByOrganizerId(userId)
-            if (createdEvents.any { it.status in plannedOrInProgressStatuses }) {
+            val activeEventStatus = setOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
+            val organizedEvents = eventRepository.findByOrganizerId(userId)
+            if (organizedEvents.any { it.status in activeEventStatus }) {
                 throw ConflictException("Cannot delete user with unresolved reported zones.")
             }
 

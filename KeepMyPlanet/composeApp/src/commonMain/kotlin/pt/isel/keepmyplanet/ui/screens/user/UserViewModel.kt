@@ -131,7 +131,7 @@ class UserProfileViewModel(
         val request = UpdateProfileRequest(nameToUpdate, emailToUpdate, profilePictureId = null)
 
         viewModelScope.launch {
-            val result = userService.updateUserProfile(user.id, user.id, request)
+            val result = userService.updateUserProfile(user.id, request)
 
             result
                 .onSuccess { updatedUserResponse ->
@@ -208,7 +208,7 @@ class UserProfileViewModel(
             )
 
         viewModelScope.launch {
-            val result = userService.changePassword(user.id, user.id, request)
+            val result = userService.changePassword(user.id, request)
 
             result
                 .onSuccess {
@@ -235,7 +235,7 @@ class UserProfileViewModel(
         _uiState.update { it.copy(isDeletingAccount = true) }
 
         viewModelScope.launch {
-            val result = userService.deleteUser(user.id, user.id)
+            val result = userService.deleteUser(user.id)
 
             result
                 .onSuccess {

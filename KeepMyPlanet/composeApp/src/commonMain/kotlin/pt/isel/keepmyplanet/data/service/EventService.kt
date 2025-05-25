@@ -7,7 +7,6 @@ import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
 import pt.isel.keepmyplanet.data.api.executeRequest
 import pt.isel.keepmyplanet.data.api.executeRequestUnit
-import pt.isel.keepmyplanet.data.api.mockUser
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
@@ -47,15 +46,11 @@ class EventService(
             if (query != null) parameter("name", query)
         }
 
-    suspend fun createEvent(
-        request: CreateEventRequest,
-        organizerId: UInt,
-    ): Result<EventResponse> =
+    suspend fun createEvent(request: CreateEventRequest): Result<EventResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Post
             url(Endpoints.createEvent())
             setBody(request)
-            mockUser(organizerId)
         }
 
     suspend fun getEventDetails(eventId: UInt): Result<EventResponse> =
@@ -66,64 +61,42 @@ class EventService(
 
     suspend fun updateEventDetails(
         eventId: UInt,
-        userId: UInt,
         request: UpdateEventRequest,
     ): Result<EventResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Patch
             url(Endpoints.updateEvent(eventId))
             setBody(request)
-            mockUser(userId)
         }
 
-    suspend fun deleteEvent(
-        eventId: UInt,
-        userId: UInt,
-    ): Result<Unit> =
+    suspend fun deleteEvent(eventId: UInt): Result<Unit> =
         httpClient.executeRequestUnit {
             method = HttpMethod.Delete
             url(Endpoints.deleteEvent(eventId))
-            mockUser(userId)
         }
 
-    suspend fun cancelEvent(
-        eventId: UInt,
-        userId: UInt,
-    ): Result<EventResponse> =
+    suspend fun cancelEvent(eventId: UInt): Result<EventResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Post
             url(Endpoints.cancelEvent(eventId))
-            mockUser(userId)
         }
 
-    suspend fun completeEvent(
-        eventId: UInt,
-        userId: UInt,
-    ): Result<EventResponse> =
+    suspend fun completeEvent(eventId: UInt): Result<EventResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Post
             url(Endpoints.completeEvent(eventId))
-            mockUser(userId)
         }
 
-    suspend fun joinEvent(
-        eventId: UInt,
-        userId: UInt,
-    ): Result<EventResponse> =
+    suspend fun joinEvent(eventId: UInt): Result<EventResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Post
             url(Endpoints.joinEvent(eventId))
-            mockUser(userId)
         }
 
-    suspend fun leaveEvent(
-        eventId: UInt,
-        userId: UInt,
-    ): Result<EventResponse> =
+    suspend fun leaveEvent(eventId: UInt): Result<EventResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Post
             url(Endpoints.leaveEvent(eventId))
-            mockUser(userId)
         }
 
     suspend fun getEventParticipants(eventId: UInt): Result<List<UserResponse>> =

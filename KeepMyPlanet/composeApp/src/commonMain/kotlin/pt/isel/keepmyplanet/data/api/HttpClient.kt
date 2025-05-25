@@ -2,6 +2,9 @@ package pt.isel.keepmyplanet.data.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngineFactory
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BearerTokens
+import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.DEFAULT
@@ -9,9 +12,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.request.header
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
@@ -24,7 +25,6 @@ fun createHttpClient(tokenProvider: () -> String?): HttpClient =
         defaultRequest {
             url(BASE_URL)
             contentType(ContentType.Application.Json)
-            tokenProvider()?.let { header(HttpHeaders.Authorization, "Bearer $it") }
         }
         install(ContentNegotiation) {
             json(
@@ -41,5 +41,13 @@ fun createHttpClient(tokenProvider: () -> String?): HttpClient =
             logger = Logger.DEFAULT
             level = LogLevel.ALL
         }
-        // install(Auth) { bearer { loadTokens { val currentToken = tokenProvider(); if (currentToken != null) BearerTokens(accessToken = currentToken, refreshToken = "") else null } } }
+        install(Auth) {
+            bearer {
+                loadTokens {
+                    tokenProvider()?.let { access ->
+                        BearerTokens(accessToken = access, refreshToken = "")
+                    }
+                }
+            }
+        }
     }

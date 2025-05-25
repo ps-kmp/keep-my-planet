@@ -48,12 +48,33 @@ kotlin {
     }
 
     sourceSets {
-        commonMain.dependencies {
-            api(libs.kotlinx.datetime)
-            implementation(libs.ktor.serialization.kotlinx.json)
+        val commonMain by getting {
+            dependencies {
+                api(libs.kotlinx.datetime)
+                api(libs.cryptography.core)
+                implementation(libs.ktor.serialization.kotlinx.json)
+            }
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
+        val commonTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation(libs.cryptography.provider.jdk.jvm)
+            }
+        }
+        // val iosMain by getting { dependencies { implementation(libs.cryptography.provider.apple) } }
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.cryptography.provider.jdk.jvm)
+            }
+        }
+        val wasmJsMain by getting {
+            dependencies {
+                implementation(libs.cryptography.provider.webcrypto)
+            }
         }
     }
 }

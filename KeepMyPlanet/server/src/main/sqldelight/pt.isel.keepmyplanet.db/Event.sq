@@ -1,0 +1,111 @@
+import kotlinx.datetime.LocalDateTime;
+import pt.isel.keepmyplanet.domain.common.Description;
+import pt.isel.keepmyplanet.domain.common.Id;
+import pt.isel.keepmyplanet.domain.event.EventStatus;
+import pt.isel.keepmyplanet.domain.event.Title;
+
+CREATE TABLE events (
+    id BIGINT AS Id PRIMARY KEY,
+    title TEXT AS Title NOT NULL,
+    description TEXT AS Description NOT NULL,
+    start_datetime TEXT AS LocalDateTime NOT NULL,
+    end_datetime TEXT AS LocalDateTime NOT NULL,
+    zone_id BIGINT AS Id NOT NULL,
+    organizer_id BIGINT AS Id NOT NULL,
+    status TEXT AS EventStatus NOT NULL,
+    max_participants INTEGER,
+    created_at TEXT AS LocalDateTime NOT NULL,
+    updated_at TEXT AS LocalDateTime NOT NULL
+);
+
+CREATE TABLE event_participants (
+    event_id BIGINT AS Id NOT NULL,
+    user_id BIGINT AS Id NOT NULL,
+    PRIMARY KEY (event_id, user_id),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+insert:
+INSERT INTO events(title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, created_at, updated_at)
+VALUES (
+    :title, :description,
+    CAST(:start_datetime AS TIMESTAMP), CAST(:end_datetime AS TIMESTAMP),
+    :zone_id, :organizer_id, :status, :max_participants,
+    CAST(:created_at AS TIMESTAMP), CAST(:updated_at AS TIMESTAMP)
+)
+RETURNING *;
+
+getById:
+SELECT * FROM events WHERE id = :id;
+
+getAll:
+SELECT * FROM events ORDER BY id;
+
+updateEvent:
+UPDATE events
+SET title = :title,
+    description = :description,
+    start_datetime = CAST(:start_datetime AS TIMESTAMP),
+    end_datetime = CAST(:end_datetime AS TIMESTAMP),
+    zone_id = :zone_id,
+    organizer_id = :organizer_id,
+    status = :status,
+    max_participants = :max_participants,
+    updated_at = CAST(:updated_at AS TIMESTAMP)
+WHERE id = :id
+RETURNING *;
+
+deleteByIdReturningId:
+DELETE FROM events WHERE id = :id RETURNING id;
+
+findByName:
+SELECT * FROM events
+WHERE title LIKE ('%' || :name || '%')
+ORDER BY start_datetime;
+
+findByZoneAndName:
+SELECT * FROM events
+WHERE zone_id = :zoneId AND title LIKE ('%' || :name || '%')
+ORDER BY start_datetime;
+
+findByOrganizerId:
+SELECT * FROM events WHERE organizer_id = :organizerId ORDER BY start_datetime;
+
+findByZoneId:
+SELECT * FROM events WHERE zone_id = :zoneId ORDER BY start_datetime;
+
+findByStatus:
+SELECT * FROM events WHERE status = :status ORDER BY start_datetime;
+
+getParticipantIdsForEvent:
+SELECT user_id FROM event_participants WHERE event_id = :event_id;
+
+addParticipantToEvent:
+INSERT INTO event_participants(event_id, user_id)
+VALUES (:event_id, :user_id)
+ON CONFLICT (event_id, user_id) DO NOTHING;
+
+removeParticipantFromEvent:
+DELETE FROM event_participants WHERE event_id = :event_id AND user_id = :user_id;
+
+removeAllParticipantsFromEvent:
+DELETE FROM event_participants WHERE event_id = :event_id;
+
+findByParticipantId:
+SELECT e.*
+FROM events e
+JOIN event_participants ep ON e.id = ep.event_id
+WHERE ep.user_id = :participantId
+ORDER BY e.start_datetime;
+
+getEventsWithZoneLocation:
+SELECT
+    e.id AS event_id, e.title, e.description, e.start_datetime, e.end_datetime, e.zone_id,
+    e.organizer_id, e.status, e.max_participants, e.created_at, e.updated_at,
+    z.latitude AS zone_latitude, z.longitude AS zone_longitude
+FROM events e
+JOIN zones z ON e.zone_id = z.id;
+
+findEventsByZoneIds:
+SELECT * FROM events WHERE zone_id IN :zoneIdsList;

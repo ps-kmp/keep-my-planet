@@ -11,6 +11,7 @@ import pt.isel.keepmyplanet.errors.AuthorizationException
 import pt.isel.keepmyplanet.errors.ConflictException
 import pt.isel.keepmyplanet.errors.InternalServerException
 import pt.isel.keepmyplanet.errors.NotFoundException
+import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
@@ -30,10 +31,11 @@ class ZoneService(
     ): Result<Zone> =
         runCatching {
             findUserOrFail(reporterId)
+
             val currentTime = now()
             val newZone =
                 Zone(
-                    id = Id(1U),
+                    id = Id(0U),
                     location = location,
                     description = description,
                     reporterId = reporterId,
@@ -60,6 +62,7 @@ class ZoneService(
         radius: Double,
     ): Result<List<Zone>> =
         runCatching {
+            if (radius <= 0) throw ValidationException("Radius must be positive.")
             zoneRepository.findNearLocation(center, radius)
         }
 
@@ -73,7 +76,7 @@ class ZoneService(
             hasPermissionsOrFail(zone, userId)
 
             if (zone.status == newStatus) return@runCatching zone
-            val updatedZone = zone.copy(status = newStatus, updatedAt = now())
+            val updatedZone = zone.copy(status = newStatus)
             zoneRepository.update(updatedZone)
         }
 
@@ -87,7 +90,7 @@ class ZoneService(
             hasPermissionsOrFail(zone, userId)
 
             if (zone.zoneSeverity == newZoneSeverity) return@runCatching zone
-            val updatedZone = zone.copy(zoneSeverity = newZoneSeverity, updatedAt = now())
+            val updatedZone = zone.copy(zoneSeverity = newZoneSeverity)
             zoneRepository.update(updatedZone)
         }
 
@@ -101,7 +104,7 @@ class ZoneService(
             hasPermissionsOrFail(zone, userId)
 
             if (photoId in zone.photosIds) return@runCatching zone
-            val updatedZone = zone.copy(photosIds = zone.photosIds + photoId, updatedAt = now())
+            val updatedZone = zone.copy(photosIds = zone.photosIds + photoId)
             zoneRepository.update(updatedZone)
         }
 
@@ -118,7 +121,7 @@ class ZoneService(
                 throw NotFoundException("Photo '$photoId' not found in zone '$zoneId'.")
             }
 
-            val updatedZone = zone.copy(photosIds = zone.photosIds - photoId, updatedAt = now())
+            val updatedZone = zone.copy(photosIds = zone.photosIds - photoId)
             zoneRepository.update(updatedZone)
         }
 
@@ -138,6 +141,7 @@ class ZoneService(
 
             val deleted = zoneRepository.deleteById(zoneId)
             if (!deleted) throw InternalServerException("Failed to delete zone $zoneId.")
+            Unit
         }
 
     private suspend fun findZoneOrFail(zoneId: Id): Zone =

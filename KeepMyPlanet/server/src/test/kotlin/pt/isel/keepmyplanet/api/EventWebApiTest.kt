@@ -22,9 +22,9 @@ import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
-import pt.isel.keepmyplanet.util.add
 import pt.isel.keepmyplanet.util.minus
 import pt.isel.keepmyplanet.util.now
+import pt.isel.keepmyplanet.util.plus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -48,8 +48,8 @@ class EventWebApiTest : BaseWebApiTest() {
             eventStateChangeRepository = fakeEventStateChangeRepository,
         )
 
-    private val futureStart = now().add(7.days)
-    private val futureEnd = futureStart.add(3.hours)
+    private val futureStart = now().plus(7.days)
+    private val futureEnd = futureStart.plus(3.hours)
 
     @Test
     fun `POST events - should create event successfully`() =
@@ -248,8 +248,8 @@ class EventWebApiTest : BaseWebApiTest() {
                 CreateEventRequest(
                     title = "Another Event",
                     description = "Desc",
-                    startDate = futureStart.add(1.days).toString(),
-                    endDate = futureEnd.add(1.days).toString(),
+                    startDate = futureStart.plus(1.days).toString(),
+                    endDate = futureEnd.plus(1.days).toString(),
                     zoneId = zone.id.value,
                 )
             val response =
@@ -328,8 +328,8 @@ class EventWebApiTest : BaseWebApiTest() {
             val newTitle = "Updated Event Title"
             val newDescription = "Updated description."
             val newMaxParticipants = 100
-            val newStartDate = futureStart.add(1.days).toString()
-            val newEndDate = futureEnd.add(1.days).toString()
+            val newStartDate = futureStart.plus(1.days).toString()
+            val newEndDate = futureEnd.plus(1.days).toString()
 
             val requestBody =
                 UpdateEventRequest(

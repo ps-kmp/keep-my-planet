@@ -51,9 +51,7 @@ class UserWebApiTest : BaseWebApiTest() {
             val createdUser = fakeUserRepository.findByEmail(Email(request.email))
             assertNotNull(createdUser)
             assertEquals(request.name, createdUser.name.value)
-            assertTrue(
-                passwordHasher.verifyPassword(Password(request.password), createdUser.passwordHash),
-            )
+            assertTrue(passwordHasher.verify(Password(request.password), createdUser.passwordHash))
         }
 
     @Test
@@ -345,7 +343,7 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val newPassword = "NewPassword1!"
-            val oldPasswordHash = passwordHasher.hashPassword(Password(oldPassword))
+            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
             val user = createTestUser(passwordHash = oldPasswordHash)
             val request = ChangePasswordRequest(oldPassword, newPassword)
 
@@ -359,12 +357,8 @@ class UserWebApiTest : BaseWebApiTest() {
 
             val updatedUser = fakeUserRepository.getById(user.id)
             assertNotNull(updatedUser)
-            assertTrue(
-                passwordHasher.verifyPassword(Password(newPassword), updatedUser.passwordHash),
-            )
-            assertFalse(
-                passwordHasher.verifyPassword(Password(oldPassword), updatedUser.passwordHash),
-            )
+            assertTrue(passwordHasher.verify(Password(newPassword), updatedUser.passwordHash))
+            assertFalse(passwordHasher.verify(Password(oldPassword), updatedUser.passwordHash))
         }
 
     @Test
@@ -388,7 +382,7 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val newPassword = "NewPassword1!"
-            val oldPasswordHash = passwordHasher.hashPassword(Password(oldPassword))
+            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
             val userToUpdate = createTestUser(passwordHash = oldPasswordHash)
             val actingUser = createTestUser(email = Email("actor@pass.com"))
             val request = ChangePasswordRequest(oldPassword, newPassword)
@@ -411,7 +405,7 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val newPassword = "NewPassword1!"
-            val oldPasswordHash = passwordHasher.hashPassword(Password(oldPassword))
+            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
             val user = createTestUser(passwordHash = oldPasswordHash)
             val request = ChangePasswordRequest("WRONG_OLD_PASSWORDa1!", newPassword)
 
@@ -433,7 +427,7 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val newPassword = "NewPassword1!"
-            val oldPasswordHash = passwordHasher.hashPassword(Password(oldPassword))
+            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
             val user = createTestUser(passwordHash = oldPasswordHash)
             val request = ChangePasswordRequest(oldPassword, newPassword)
 
@@ -450,7 +444,7 @@ class UserWebApiTest : BaseWebApiTest() {
     fun `PATCH users password - should fail with 400 Bad Request when new password is same as old`() =
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
-            val oldPasswordHash = passwordHasher.hashPassword(Password(oldPassword))
+            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
             val user = createTestUser(passwordHash = oldPasswordHash)
             val request = ChangePasswordRequest(oldPassword, oldPassword)
 

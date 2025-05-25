@@ -11,6 +11,7 @@ import pt.isel.keepmyplanet.ui.screens.event.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventListScreen
 import pt.isel.keepmyplanet.ui.screens.home.HomeScreen
 import pt.isel.keepmyplanet.ui.screens.login.LoginScreen
+import pt.isel.keepmyplanet.ui.screens.register.RegisterScreen
 import pt.isel.keepmyplanet.ui.screens.user.UserProfileScreen
 
 @Composable
@@ -19,18 +20,25 @@ fun App(appViewModel: AppViewModel) {
     val userSession by appViewModel.userSession.collectAsState()
     val currentUserInfo = userSession?.userInfo
 
-    when (currentRoute) {
+    when (val route = currentRoute) {
         is AppRoute.Login -> {
             LoginScreen(
                 authService = appViewModel.authService,
                 onNavigateHome = { appViewModel.updateSession(it) },
+                onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
+            )
+        }
+
+        is AppRoute.Register -> {
+            RegisterScreen(
+                userService = appViewModel.userService,
+                onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
             )
         }
 
         is AppRoute.Home -> {
-            requireNotNull(currentUserInfo) { "User must be logged in for Home route" }
             HomeScreen(
-                user = currentUserInfo,
+                user = requireNotNull(currentUserInfo) { "User must be logged in for Home route" },
                 onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
                 onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
                 onLogout = { appViewModel.logout() },
@@ -55,7 +63,7 @@ fun App(appViewModel: AppViewModel) {
             val detailsState by eventViewModel.detailsUiState.collectAsState()
 
             EventDetailsScreen(
-                eventId = (currentRoute as AppRoute.EventDetails).eventId,
+                eventId = route.eventId,
                 uiState = detailsState,
                 onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
                 onNavigateToChat = { event ->
@@ -71,20 +79,18 @@ fun App(appViewModel: AppViewModel) {
         }
 
         is AppRoute.Chat -> {
-            requireNotNull(currentUserInfo) { "User must be logged in for Chat route" }
             ChatScreen(
                 chatService = appViewModel.chatService,
-                user = currentUserInfo,
-                event = (currentRoute as AppRoute.Chat).event,
+                user = requireNotNull(currentUserInfo) { "User must be logged in for Chat route" },
+                event = route.event,
                 onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
             )
         }
 
         is AppRoute.UserProfile -> {
-            requireNotNull(currentUserInfo) { "User must be logged in for UserProfile route" }
             UserProfileScreen(
                 userService = appViewModel.userService,
-                user = currentUserInfo,
+                user = requireNotNull(currentUserInfo) { "User must be logged in for User route" },
                 onNavigateToLogin = { appViewModel.logout() },
                 onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
             )

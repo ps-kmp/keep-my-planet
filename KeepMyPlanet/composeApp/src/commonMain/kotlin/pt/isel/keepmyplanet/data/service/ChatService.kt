@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.data.api.executeRequest
 import pt.isel.keepmyplanet.data.api.executeRequestUnit
-import pt.isel.keepmyplanet.data.api.mockUser
 import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 
@@ -31,14 +30,12 @@ class ChatService(
 
     suspend fun sendMessage(
         eventId: UInt,
-        userId: UInt,
         content: String,
     ): Result<Unit> =
         httpClient.executeRequestUnit {
             method = HttpMethod.Post
             url(Endpoints.messages(eventId))
             setBody(CreateMessageRequest(content))
-            mockUser(userId)
         }
 
     fun listenToMessages(eventId: UInt): Flow<Result<MessageResponse>> =

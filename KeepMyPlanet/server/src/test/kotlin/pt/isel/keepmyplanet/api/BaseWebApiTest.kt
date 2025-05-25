@@ -27,6 +27,7 @@ import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.errors.NotFoundException
+import pt.isel.keepmyplanet.plugins.configureAuthentication
 import pt.isel.keepmyplanet.plugins.configureSerialization
 import pt.isel.keepmyplanet.plugins.configureStatusPages
 import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
@@ -35,7 +36,7 @@ import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.service.ChatSseService
-import pt.isel.keepmyplanet.util.PasswordHasher
+import pt.isel.keepmyplanet.util.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.util.now
 import kotlin.test.BeforeTest
 
@@ -46,7 +47,7 @@ abstract class BaseWebApiTest {
     protected val fakeEventStateChangeRepository = InMemoryEventStateChangeRepository()
     protected val fakeMessageRepository = InMemoryMessageRepository()
     protected val chatSseService = ChatSseService()
-    protected val passwordHasher = PasswordHasher()
+    protected val passwordHasher = Pbkdf2PasswordHasher()
 
     @BeforeTest
     fun setup() {
@@ -177,6 +178,7 @@ abstract class BaseWebApiTest {
         block: suspend ApplicationTestBuilder.() -> Unit,
     ) = testApplication {
         application {
+            configureAuthentication()
             configureSerialization()
             configureStatusPages()
             install(SSE)

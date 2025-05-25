@@ -6,6 +6,7 @@ plugins {
     // feature
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.sqldelight)
 }
 
 group = "pt.isel.keepmyplanet"
@@ -33,6 +34,20 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.sse)
 
+    // exposed
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.kotlin.datetime)
+
+    // database
+    implementation(libs.sqldelight.runtime)
+    implementation(libs.jdbc.driver)
+    implementation(libs.postgresql)
+
+    // connection pool
+    implementation(libs.hikaricp)
+
     // serialization
     implementation(libs.ktor.serialization.kotlinx.json)
 
@@ -42,4 +57,13 @@ dependencies {
     // testing
     testImplementation(libs.ktor.server.test.host.jvm)
     testImplementation(libs.kotlin.test.junit)
+}
+
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("pt.isel.keepmyplanet.db")
+            dialect(libs.postgresql.dialect)
+        }
+    }
 }

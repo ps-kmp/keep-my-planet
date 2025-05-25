@@ -9,7 +9,7 @@ import kotlin.time.Duration
 
 fun now(): LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
-fun LocalDateTime.add(duration: Duration): LocalDateTime {
+fun LocalDateTime.plus(duration: Duration): LocalDateTime {
     val instant = this.toInstant(TimeZone.UTC)
     val newInstant = instant + duration
     return newInstant.toLocalDateTime(TimeZone.UTC)

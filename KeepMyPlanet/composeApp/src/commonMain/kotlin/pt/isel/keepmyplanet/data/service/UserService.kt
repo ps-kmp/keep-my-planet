@@ -6,7 +6,6 @@ import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
 import pt.isel.keepmyplanet.data.api.executeRequest
 import pt.isel.keepmyplanet.data.api.executeRequestUnit
-import pt.isel.keepmyplanet.data.api.mockUser
 import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.user.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
@@ -52,35 +51,27 @@ class UserService(
 
     suspend fun updateUserProfile(
         userIdToUpdate: UInt,
-        actingUserId: UInt,
         request: UpdateProfileRequest,
     ): Result<UserResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Patch
             url(Endpoints.updateUser(userIdToUpdate))
             setBody(request)
-            mockUser(actingUserId)
         }
 
-    suspend fun deleteUser(
-        userIdToDelete: UInt,
-        actingUserId: UInt,
-    ): Result<Unit> =
+    suspend fun deleteUser(userIdToDelete: UInt): Result<Unit> =
         httpClient.executeRequestUnit {
             method = HttpMethod.Delete
             url(Endpoints.deleteUser(userIdToDelete))
-            mockUser(actingUserId)
         }
 
     suspend fun changePassword(
         userIdToUpdate: UInt,
-        actingUserId: UInt,
         request: ChangePasswordRequest,
     ): Result<Unit> =
         httpClient.executeRequestUnit {
             method = HttpMethod.Patch
             url(Endpoints.changePassword(userIdToUpdate))
             setBody(request)
-            mockUser(actingUserId)
         }
 }

@@ -79,7 +79,7 @@ class EventViewModel(
         viewModelScope.launch {
             _listUiState.value = _listUiState.value.copy(isLoading = true)
             eventService
-                .createEvent(request, user.id)
+                .createEvent(request)
                 .onSuccess {
                     loadEvents()
                     _events.send(EventScreenEvent.ShowSnackbar("Evento criado com sucesso"))
@@ -119,7 +119,7 @@ class EventViewModel(
         viewModelScope.launch {
             _detailsUiState.value = _detailsUiState.value.copy(isJoining = true)
             eventService
-                .joinEvent(eventId, user.id)
+                .joinEvent(eventId)
                 .onSuccess {
                     loadEventDetails(eventId)
                     _events.send(EventScreenEvent.ShowSnackbar("Aderiu ao evento com sucesso"))
@@ -140,7 +140,7 @@ class EventViewModel(
         viewModelScope.launch {
             _detailsUiState.value = _detailsUiState.value.copy(isEditing = true)
             eventService
-                .updateEventDetails(eventId, user.id, request)
+                .updateEventDetails(eventId, request)
                 .onSuccess {
                     loadEventDetails(eventId)
                     _events.send(EventScreenEvent.ShowSnackbar("Evento atualizado com sucesso"))
@@ -158,7 +158,7 @@ class EventViewModel(
         viewModelScope.launch {
             _detailsUiState.value = _detailsUiState.value.copy(isLeaving = true)
             eventService
-                .leaveEvent(eventId, user.id)
+                .leaveEvent(eventId)
                 .onSuccess {
                     loadEventDetails(eventId)
                     _events.send(EventScreenEvent.ShowSnackbar("Saiu do evento com sucesso"))

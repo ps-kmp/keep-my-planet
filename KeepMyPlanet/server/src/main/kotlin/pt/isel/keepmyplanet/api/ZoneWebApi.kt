@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -23,24 +24,28 @@ import pt.isel.keepmyplanet.dto.zone.UpdateStatusRequest
 import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.zone.toResponse
 import pt.isel.keepmyplanet.service.ZoneService
+import pt.isel.keepmyplanet.util.getCurrentUserId
 import pt.isel.keepmyplanet.util.getPathUIntId
 import pt.isel.keepmyplanet.util.getQueryDoubleParameter
 import pt.isel.keepmyplanet.util.safeValueOf
 
 fun Route.zoneWebApi(zoneService: ZoneService) {
     route("/zones") {
-        post {
-            val request = call.receive<ReportZoneRequest>()
-            val reporterId = call.getCurrentUserId()
-            val location = Location(request.latitude, request.longitude)
-            val description = Description(request.description)
-            val zoneSeverity = safeValueOf<ZoneSeverity>(request.severity) ?: ZoneSeverity.UNKNOWN
-            val photoIds = request.photoIds.map { Id(it) }.toSet()
+        authenticate("auth-jwt") {
+            post {
+                val request = call.receive<ReportZoneRequest>()
+                val reporterId = call.getCurrentUserId()
+                val location = Location(request.latitude, request.longitude)
+                val description = Description(request.description)
+                val zoneSeverity =
+                    safeValueOf<ZoneSeverity>(request.severity) ?: ZoneSeverity.UNKNOWN
+                val photoIds = request.photoIds.map { Id(it) }.toSet()
 
-            zoneService
-                .reportZone(location, description, photoIds, reporterId, zoneSeverity)
-                .onSuccess { call.respond(HttpStatusCode.Created, it.toResponse()) }
-                .onFailure { throw it }
+                zoneService
+                    .reportZone(location, description, photoIds, reporterId, zoneSeverity)
+                    .onSuccess { call.respond(HttpStatusCode.Created, it.toResponse()) }
+                    .onFailure { throw it }
+            }
         }
 
         get {
@@ -64,66 +69,68 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                     .onFailure { throw it }
             }
 
-            delete {
-                val zoneId = call.getZoneId()
-                val userId = call.getCurrentUserId()
-                zoneService
-                    .deleteZone(zoneId, userId)
-                    .onSuccess { call.respond(HttpStatusCode.NoContent) }
-                    .onFailure { throw it }
-            }
-
-            patch("/status") {
-                val zoneId = call.getZoneId()
-                val userId = call.getCurrentUserId()
-                val request = call.receive<UpdateStatusRequest>()
-                val newStatus =
-                    safeValueOf<ZoneStatus>(request.status)
-                        ?: throw IllegalArgumentException("Invalid status value: ${request.status}")
-
-                zoneService
-                    .updateZoneStatus(zoneId, userId, newStatus)
-                    .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
-                    .onFailure { throw it }
-            }
-
-            patch("/severity") {
-                val zoneId = call.getZoneId()
-                val userId = call.getCurrentUserId()
-                val request = call.receive<UpdateSeverityRequest>()
-                val newZoneSeverity =
-                    safeValueOf<ZoneSeverity>(request.severity)
-                        ?: throw IllegalArgumentException("Invalid severity value: ${request.severity}")
-
-                zoneService
-                    .updateZoneSeverity(zoneId, userId, newZoneSeverity)
-                    .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
-                    .onFailure { throw it }
-            }
-
-            route("/photos") {
-                post {
+            authenticate("auth-jwt") {
+                delete {
                     val zoneId = call.getZoneId()
                     val userId = call.getCurrentUserId()
-                    val request = call.receive<AddPhotoRequest>()
-                    val photoId = Id(request.photoId)
+                    zoneService
+                        .deleteZone(zoneId, userId)
+                        .onSuccess { call.respond(HttpStatusCode.NoContent) }
+                        .onFailure { throw it }
+                }
+
+                patch("/status") {
+                    val zoneId = call.getZoneId()
+                    val userId = call.getCurrentUserId()
+                    val request = call.receive<UpdateStatusRequest>()
+                    val newStatus =
+                        safeValueOf<ZoneStatus>(request.status)
+                            ?: throw IllegalArgumentException("Invalid status value: ${request.status}")
 
                     zoneService
-                        .addPhotoToZone(zoneId, userId, photoId)
+                        .updateZoneStatus(zoneId, userId, newStatus)
                         .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }
 
-                delete("/{photoId}") {
-                    fun ApplicationCall.getPhotoId(): Id = getPathUIntId("photoId", "Photo ID")
+                patch("/severity") {
                     val zoneId = call.getZoneId()
                     val userId = call.getCurrentUserId()
-                    val photoId = call.getPhotoId()
+                    val request = call.receive<UpdateSeverityRequest>()
+                    val newZoneSeverity =
+                        safeValueOf<ZoneSeverity>(request.severity)
+                            ?: throw IllegalArgumentException("Invalid severity value: ${request.severity}")
 
                     zoneService
-                        .removePhotoFromZone(zoneId, userId, photoId)
+                        .updateZoneSeverity(zoneId, userId, newZoneSeverity)
                         .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
+                }
+
+                route("/photos") {
+                    post {
+                        val zoneId = call.getZoneId()
+                        val userId = call.getCurrentUserId()
+                        val request = call.receive<AddPhotoRequest>()
+                        val photoId = Id(request.photoId)
+
+                        zoneService
+                            .addPhotoToZone(zoneId, userId, photoId)
+                            .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
+                            .onFailure { throw it }
+                    }
+
+                    delete("/{photoId}") {
+                        fun ApplicationCall.getPhotoId(): Id = getPathUIntId("photoId", "Photo ID")
+                        val zoneId = call.getZoneId()
+                        val userId = call.getCurrentUserId()
+                        val photoId = call.getPhotoId()
+
+                        zoneService
+                            .removePhotoFromZone(zoneId, userId, photoId)
+                            .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
+                            .onFailure { throw it }
+                    }
                 }
             }
         }

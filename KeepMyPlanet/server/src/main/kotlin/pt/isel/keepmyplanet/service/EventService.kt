@@ -38,7 +38,6 @@ class EventService(
             findUserOrFail(organizerId)
             val zone = findZoneOrFail(zoneId)
 
-            // ver melhor logica
             if (zone.eventId != null) {
                 throw ConflictException("Zone '$zoneId' is already associated with an event.")
             }
@@ -50,7 +49,7 @@ class EventService(
             val currentTime = now()
             val event =
                 Event(
-                    id = Id(1u),
+                    id = Id(0u),
                     title = title,
                     description = description,
                     period = period,
@@ -163,18 +162,6 @@ class EventService(
             updatedEvent
         }
 
-//    suspend fun searchZoneEvents(
-//        zoneId: Id,
-//        name: String?,
-//    ): Result<List<Event>> =
-//        runCatching {
-//            if (name.isNullOrBlank()) {
-//                eventRepository.findByZoneId(zoneId)
-//            } else {
-//                eventRepository.findByZoneAndName(zoneId, name)
-//            }
-//        }
-
     suspend fun joinEvent(
         eventId: Id,
         userId: Id,
@@ -197,7 +184,7 @@ class EventService(
             }
 
             val updatedEvent = event.copy(participantsIds = event.participantsIds + userId)
-            eventRepository.save(updatedEvent)
+            eventRepository.update(updatedEvent)
         }
 
     suspend fun leaveEvent(

@@ -90,7 +90,7 @@ class ChatViewModel(
         _uiState.update { it.copy(isSending = true, messageInput = "") }
 
         viewModelScope.launch {
-            val result = chatService.sendMessage(event.id, user.id, messageContent)
+            val result = chatService.sendMessage(event.id, messageContent)
 
             result
                 .onSuccess {

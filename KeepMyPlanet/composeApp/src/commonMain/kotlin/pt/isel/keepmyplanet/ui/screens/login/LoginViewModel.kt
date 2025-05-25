@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pt.isel.keepmyplanet.data.model.toUserSession
 import pt.isel.keepmyplanet.data.service.AuthService
+import pt.isel.keepmyplanet.dto.auth.LoginRequest
 
 class LoginViewModel(
     private val authService: AuthService,
@@ -33,23 +35,24 @@ class LoginViewModel(
         val currentState = _uiState.value
         if (!currentState.isLoginEnabled) return
 
-        val username = currentState.username.trim()
-        val password = currentState.password
-
-        _uiState.update { it.copy(isLoading = true) }
-
         viewModelScope.launch {
-            val result = authService.login(username, password)
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val request = LoginRequest(currentState.username.trim(), currentState.password)
+                val result = authService.login(request)
 
-            result
-                .onSuccess { userSession ->
-                    _events.send(LoginEvent.NavigateToHome(userSession))
-                    _uiState.update { it.copy(isLoading = false) }
-                }.onFailure { exception ->
-                    val errorMessage = exception.message ?: "An unknown error occurred"
-                    _events.send(LoginEvent.ShowSnackbar(errorMessage))
-                    _uiState.update { it.copy(isLoading = false) }
-                }
+                result
+                    .onSuccess { loginResponse ->
+                        _events.send(LoginEvent.NavigateToHome(loginResponse.toUserSession()))
+                    }.onFailure { exception ->
+                        val errorMessage = exception.message ?: "An unknown error occurred"
+                        _events.send(LoginEvent.ShowSnackbar(errorMessage))
+                    }
+            } catch (e: Exception) {
+                _events.send(LoginEvent.ShowSnackbar(e.message ?: "An unexpected error occurred"))
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
+            }
         }
     }
 }

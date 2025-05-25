@@ -1,38 +1,26 @@
 package pt.isel.keepmyplanet.data.service
 
 import io.ktor.client.HttpClient
-import pt.isel.keepmyplanet.data.model.UserInfo
-import pt.isel.keepmyplanet.data.model.UserSession
+import io.ktor.client.request.setBody
+import io.ktor.client.request.url
+import io.ktor.http.HttpMethod
+import pt.isel.keepmyplanet.data.api.executeRequest
+import pt.isel.keepmyplanet.dto.auth.LoginRequest
+import pt.isel.keepmyplanet.dto.auth.LoginResponse
 
 class AuthService(
     private val httpClient: HttpClient,
 ) {
-    private val validUsers =
-        mapOf(
-            "rafael" to "pass",
-            "diogo" to "pass",
-            "user" to "pass",
-        )
+    private object Endpoints {
+        const val AUTH_BASE = "auth"
 
-    private val userIds =
-        mapOf(
-            "rafael" to 1U,
-            "diogo" to 2U,
-            "user" to 3U,
-        )
+        fun login() = "$AUTH_BASE/login"
+    }
 
-    suspend fun login(
-        username: String,
-        password: String,
-    ): Result<UserSession> =
-        if (validUsers[username] == password) {
-            val userId = userIds[username] ?: 0U
-            if (userId != 0U) {
-                Result.success(UserSession(UserInfo(userId, username, "f", null), token = "token"))
-            } else {
-                Result.failure(Exception("User ID not found for username."))
-            }
-        } else {
-            Result.failure(Exception("Invalid username or password."))
+    suspend fun login(request: LoginRequest): Result<LoginResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.login())
+            setBody(request)
         }
 }

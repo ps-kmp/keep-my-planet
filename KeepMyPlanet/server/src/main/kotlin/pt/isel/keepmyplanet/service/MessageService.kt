@@ -59,12 +59,14 @@ class MessageService(
 
             val senderName =
                 userRepository.getById(senderId)
-                    ?: throw NotFoundException("Could not find user details for sender '${senderId.value}'.")
+                    ?: throw NotFoundException(
+                        "Could not find user details for sender '${senderId.value}'.",
+                    )
 
             val messageContent = MessageContent(content)
             val newMessage =
                 Message(
-                    id = Id(1U),
+                    id = Id(0U),
                     eventId = eventId,
                     senderId = senderId,
                     senderName = senderName.name,
@@ -89,7 +91,9 @@ class MessageService(
             val event = findEventOrFail(eventId)
             val message =
                 messageRepository.getSingleByEventIdAndSeqNum(eventId, sequenceNum)
-                    ?: throw NotFoundException("Message $sequenceNum in event '$eventId' not found.")
+                    ?: throw NotFoundException(
+                        "Message $sequenceNum in event '$eventId' not found.",
+                    )
 
             if (message.senderId != requestingUserId && event.organizerId != requestingUserId) {
                 throw AuthorizationException(

@@ -2,7 +2,7 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.request.header
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -19,24 +19,9 @@ import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.mapper.message.toResponse
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
+import pt.isel.keepmyplanet.util.getCurrentUserId
 import pt.isel.keepmyplanet.util.getPathIntParameter
 import pt.isel.keepmyplanet.util.getPathUIntId
-
-fun ApplicationCall.getCurrentUserId(): Id {
-//    val principal = principal<JWTPrincipal>()
-//    if (principal == null) throw AuthenticationException("Authentication required.")
-//
-//    val userIdClaim = principal.payload.getClaim("userId")
-//    if (userIdClaim.isNull) {
-//        NotFoundException("Required JWT claim 'userId' is missing in the token payload")
-//    }
-//
-//    return Id(userIdClaim.asLong().toUInt())
-    val mockUserIdHeader = request.header("X-Mock-User-Id")
-    val requestedUserId = mockUserIdHeader?.toUIntOrNull()
-
-    return if (requestedUserId != null) Id(requestedUserId) else Id(UInt.MAX_VALUE)
-}
 
 fun Route.messageWebApi(
     messageService: MessageService,
@@ -45,75 +30,77 @@ fun Route.messageWebApi(
     route("/events/{eventId}/chat") {
         fun ApplicationCall.getEventId(): Id = getPathUIntId("eventId", "Event ID")
 
-        // Add message to chat
-        post {
-            val eventId = call.getEventId()
-            val senderId = call.getCurrentUserId()
-            val request = call.receive<CreateMessageRequest>()
-
-            messageService
-                .addMessage(eventId, senderId, request.content)
-                .onSuccess { call.respond(HttpStatusCode.Created, it.toResponse()) }
-                .onFailure { throw it }
-        }
-
-        // Get all messages from chat
-        get {
-            val eventId = call.getEventId()
-
-            messageService
-                .getAllMessagesFromEvent(eventId)
-                .onSuccess { msg ->
-                    call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList())
-                }.onFailure { throw it }
-        }
-
-        route("/stream") {
-            sse {
+        authenticate("auth-jwt") {
+            // Add message to chat
+            post {
                 val eventId = call.getEventId()
+                val senderId = call.getCurrentUserId()
+                val request = call.receive<CreateMessageRequest>()
 
-                chatSseService.messages
-                    .filter { it.eventId == eventId }
-                    .collect { message ->
-                        send(
-                            ServerSentEvent(
-                                data = Json.encodeToString(message.toResponse()),
-                                id = message.chatPosition.toString(),
-                                event = "new-message",
-                            ),
-                        )
-                    }
+                messageService
+                    .addMessage(eventId, senderId, request.content)
+                    .onSuccess { call.respond(HttpStatusCode.Created, it.toResponse()) }
+                    .onFailure { throw it }
             }
-        }
 
-        route("/{seq}") {
-            fun ApplicationCall.getSequenceNum(): Int =
-                getPathIntParameter(
-                    paramName = "seq",
-                    description = "Message sequence number",
-                )
-
-            // Get a single message from chat
+            // Get all messages from chat
             get {
                 val eventId = call.getEventId()
-                val sequenceNum = call.getSequenceNum()
 
                 messageService
-                    .getSingleMessageBySequence(eventId, sequenceNum)
-                    .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
-                    .onFailure { throw it }
+                    .getAllMessagesFromEvent(eventId)
+                    .onSuccess { msg ->
+                        call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList())
+                    }.onFailure { throw it }
             }
 
-            // Delete a single message from chat
-            delete {
-                val eventId = call.getEventId()
-                val sequenceNum = call.getSequenceNum()
-                val requestingUserId = call.getCurrentUserId()
+            route("/stream") {
+                sse {
+                    val eventId = call.getEventId()
 
-                messageService
-                    .deleteMessage(eventId, sequenceNum, requestingUserId)
-                    .onSuccess { call.respond(HttpStatusCode.NoContent) }
-                    .onFailure { throw it }
+                    chatSseService.messages
+                        .filter { it.eventId == eventId }
+                        .collect { message ->
+                            send(
+                                ServerSentEvent(
+                                    data = Json.encodeToString(message.toResponse()),
+                                    id = message.chatPosition.toString(),
+                                    event = "new-message",
+                                ),
+                            )
+                        }
+                }
+            }
+
+            route("/{seq}") {
+                fun ApplicationCall.getSequenceNum(): Int =
+                    getPathIntParameter(
+                        paramName = "seq",
+                        description = "Message sequence number",
+                    )
+
+                // Get a single message from chat
+                get {
+                    val eventId = call.getEventId()
+                    val sequenceNum = call.getSequenceNum()
+
+                    messageService
+                        .getSingleMessageBySequence(eventId, sequenceNum)
+                        .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
+                        .onFailure { throw it }
+                }
+
+                // Delete a single message from chat
+                delete {
+                    val eventId = call.getEventId()
+                    val sequenceNum = call.getSequenceNum()
+                    val requestingUserId = call.getCurrentUserId()
+
+                    messageService
+                        .deleteMessage(eventId, sequenceNum, requestingUserId)
+                        .onSuccess { call.respond(HttpStatusCode.NoContent) }
+                        .onFailure { throw it }
+                }
             }
         }
     }

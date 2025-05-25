@@ -1,0 +1,17 @@
+import kotlinx.datetime.LocalDateTime;
+import pt.isel.keepmyplanet.domain.common.Id;
+
+CREATE TABLE photos (
+    id BIGINT AS Id PRIMARY KEY,
+    url TEXT NOT NULL,
+    uploader_id BIGINT AS Id NOT NULL,
+    uploaded_at TEXT AS LocalDateTime NOT NULL
+);
+
+getPhotoById:
+SELECT * FROM photos WHERE id = :id;
+
+insertPhoto:
+INSERT INTO photos(url, uploader_id, uploaded_at)
+VALUES(:url, :uploader_id, CAST(:uploaded_at AS TIMESTAMP))
+RETURNING *;

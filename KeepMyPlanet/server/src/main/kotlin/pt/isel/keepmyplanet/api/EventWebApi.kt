@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -24,6 +25,7 @@ import pt.isel.keepmyplanet.mapper.event.toResponse
 import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
+import pt.isel.keepmyplanet.util.getCurrentUserId
 import pt.isel.keepmyplanet.util.getPathUIntId
 import pt.isel.keepmyplanet.util.getQueryStringParameter
 
@@ -43,22 +45,27 @@ fun Route.eventWebApi(
                 }.onFailure { throw it }
         }
 
-        // Create Event
-        post {
-            val request = call.receive<CreateEventRequest>()
-            val organizerId = call.getCurrentUserId()
+        authenticate("auth-jwt") {
+            // Create Event
+            post {
+                val request = call.receive<CreateEventRequest>()
+                val organizerId = call.getCurrentUserId()
 
-            val title = Title(request.title)
-            val description = Description(request.description)
-            val period =
-                Period(LocalDateTime.parse(request.startDate), LocalDateTime.parse(request.endDate))
-            val zoneId = Id(request.zoneId)
-            val maxParticipants = request.maxParticipants
+                val title = Title(request.title)
+                val description = Description(request.description)
+                val period =
+                    Period(
+                        LocalDateTime.parse(request.startDate),
+                        LocalDateTime.parse(request.endDate),
+                    )
+                val zoneId = Id(request.zoneId)
+                val maxParticipants = request.maxParticipants
 
-            eventService
-                .createEvent(title, description, period, zoneId, organizerId, maxParticipants)
-                .onSuccess { event -> call.respond(HttpStatusCode.Created, event.toResponse()) }
-                .onFailure { throw it }
+                eventService
+                    .createEvent(title, description, period, zoneId, organizerId, maxParticipants)
+                    .onSuccess { event -> call.respond(HttpStatusCode.Created, event.toResponse()) }
+                    .onFailure { throw it }
+            }
         }
 
         /*
@@ -89,88 +96,102 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
-            // Update Event Details
-            patch {
-                val eventId = call.getEventId()
-                val userId = call.getCurrentUserId()
-                val request = call.receive<UpdateEventRequest>()
+            authenticate("auth-jwt") {
+                // Update Event Details
+                patch {
+                    val eventId = call.getEventId()
+                    val userId = call.getCurrentUserId()
+                    val request = call.receive<UpdateEventRequest>()
 
-                val title = request.title?.let { Title(it) }
-                val description = request.description?.let { Description(it) }
-                val period =
-                    if (request.startDate != null && request.endDate != null) {
-                        Period(
-                            LocalDateTime.parse(request.startDate!!),
-                            LocalDateTime.parse(request.endDate!!),
-                        )
-                    } else if (request.startDate != null || request.endDate != null) {
-                        throw ValidationException(
-                            "Both startDate and endDate must be provided if one is present.",
-                        )
-                    } else {
-                        null
-                    }
-                val max = request.maxParticipants
+                    val title = request.title?.let { Title(it) }
+                    val description = request.description?.let { Description(it) }
+                    val period =
+                        if (request.startDate != null && request.endDate != null) {
+                            Period(
+                                LocalDateTime.parse(request.startDate!!),
+                                LocalDateTime.parse(request.endDate!!),
+                            )
+                        } else if (request.startDate != null || request.endDate != null) {
+                            throw ValidationException(
+                                "Both startDate and endDate must be provided if one is present.",
+                            )
+                        } else {
+                            null
+                        }
+                    val max = request.maxParticipants
 
-                eventService
-                    .updateEventDetails(eventId, userId, title, description, period, max)
-                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
-                    .onFailure { throw it }
-            }
+                    eventService
+                        .updateEventDetails(eventId, userId, title, description, period, max)
+                        .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                        .onFailure { throw it }
+                }
 
-            // Delete Event
-            delete {
-                val eventId = call.getEventId()
-                val userId = call.getCurrentUserId()
+                // Delete Event
+                delete {
+                    val eventId = call.getEventId()
+                    val userId = call.getCurrentUserId()
 
-                eventService
-                    .deleteEvent(eventId, userId)
-                    .onSuccess { call.respond(HttpStatusCode.NoContent) }
-                    .onFailure { throw it }
-            }
+                    eventService
+                        .deleteEvent(eventId, userId)
+                        .onSuccess { call.respond(HttpStatusCode.NoContent) }
+                        .onFailure { throw it }
+                }
 
-            // Cancel Event
-            post("/cancel") {
-                val eventId = call.getEventId()
-                val userId = call.getCurrentUserId()
+                // Cancel Event
+                post("/cancel") {
+                    val eventId = call.getEventId()
+                    val userId = call.getCurrentUserId()
 
-                eventService
-                    .cancelEvent(eventId, userId)
-                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
-                    .onFailure { throw it }
-            }
+                    eventService
+                        .cancelEvent(eventId, userId)
+                        .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                        .onFailure { throw it }
+                }
 
-            // Complete Event
-            post("/complete") {
-                val eventId = call.getEventId()
-                val userId = call.getCurrentUserId()
+                // Complete Event
+                post("/complete") {
+                    val eventId = call.getEventId()
+                    val userId = call.getCurrentUserId()
 
-                eventService
-                    .completeEvent(eventId, userId)
-                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
-                    .onFailure { throw it }
-            }
+                    eventService
+                        .completeEvent(eventId, userId)
+                        .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                        .onFailure { throw it }
+                }
 
-            // Join Event
-            post("/join") {
-                val eventId = call.getEventId()
-                val userId = call.getCurrentUserId()
+                // Join Event
+                post("/join") {
+                    val eventId = call.getEventId()
+                    val userId = call.getCurrentUserId()
 
-                eventService
-                    .joinEvent(eventId, userId)
-                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
-                    .onFailure { throw it }
-            }
+                    eventService
+                        .joinEvent(eventId, userId)
+                        .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                        .onFailure { throw it }
+                }
 
-            // Leave Event
-            post("/leave") {
-                val eventId = call.getEventId()
-                val userId = call.getCurrentUserId()
+                // Leave Event
+                post("/leave") {
+                    val eventId = call.getEventId()
+                    val userId = call.getCurrentUserId()
 
-                eventService
-                    .leaveEvent(eventId, userId)
-                    .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
-                    .onFailure { throw it }
+                    eventService
+                        .leaveEvent(eventId, userId)
+                        .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                        .onFailure { throw it }
+                }
+
+                // Change Event Status
+                put("/status") {
+                    val eventId = call.getEventId()
+                    val userId = call.getCurrentUserId()
+                    val request = call.receive<ChangeEventStatusRequest>()
+
+                    eventStateChangeService
+                        .changeEventStatus(eventId, request.newStatus, userId)
+                        .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
+                        .onFailure { throw it }
+                }
             }
 
             // Get Event Participants
@@ -182,18 +203,6 @@ fun Route.eventWebApi(
                     .onSuccess { users ->
                         call.respond(HttpStatusCode.OK, users.map { it.toResponse() })
                     }.onFailure { throw it }
-            }
-
-            // Change Event Status
-            put("/status") {
-                val eventId = call.getEventId()
-                val userId = call.getCurrentUserId()
-                val request = call.receive<ChangeEventStatusRequest>()
-
-                eventStateChangeService
-                    .changeEventStatus(eventId, request.newStatus, userId)
-                    .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
-                    .onFailure { throw it }
             }
 
             // Show Event Status History
