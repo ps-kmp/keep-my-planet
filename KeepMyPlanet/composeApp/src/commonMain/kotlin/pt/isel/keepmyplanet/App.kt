@@ -11,6 +11,7 @@ import pt.isel.keepmyplanet.ui.screens.chat.ChatScreen
 import pt.isel.keepmyplanet.ui.screens.event.CreateEventScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventListScreen
+import pt.isel.keepmyplanet.ui.screens.event.EventScreenEvent
 import pt.isel.keepmyplanet.ui.screens.home.HomeScreen
 import pt.isel.keepmyplanet.ui.screens.login.LoginScreen
 import pt.isel.keepmyplanet.ui.screens.register.RegisterScreen
@@ -54,7 +55,7 @@ fun App(appViewModel: AppViewModel) {
                 events = listState.events,
                 isLoading = listState.isLoading,
                 error = listState.error,
-                onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
+                onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id.value)) },
                 onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
                 onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent) },
             )
@@ -63,19 +64,21 @@ fun App(appViewModel: AppViewModel) {
         is AppRoute.CreateEvent -> {
             requireNotNull(currentUserInfo) { "User must be logged in for CreateEvent route" }
             val eventViewModel = appViewModel.eventViewModel
-            val lastCreatedEvent by eventViewModel.lastCreatedEvent.collectAsState()
 
-            LaunchedEffect(lastCreatedEvent) {
-                // Quando tivermos um novo evento criado, navegamos para os seus detalhes
-                lastCreatedEvent?.let { response ->
-                    appViewModel.navigate(AppRoute.EventDetails(response.id))
+            LaunchedEffect(Unit) {
+                eventViewModel.events.collect { event ->
+                    when (event) {
+                        is EventScreenEvent.EventCreated -> {
+                            appViewModel.navigate(AppRoute.EventDetails(event.eventId))
+                        }
+                        else -> { /* ignore other events */ }
+                    }
                 }
             }
+
             CreateEventScreen(
                 onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
-                onCreateEvent = { request ->
-                    eventViewModel.createEvent(request)
-                },
+                onCreateEvent = { request -> eventViewModel.createEvent(request) },
             )
         }
 

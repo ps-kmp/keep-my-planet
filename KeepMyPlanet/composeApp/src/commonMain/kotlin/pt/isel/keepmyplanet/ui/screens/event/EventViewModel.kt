@@ -9,11 +9,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.data.model.EventInfo
 import pt.isel.keepmyplanet.data.model.UserInfo
 import pt.isel.keepmyplanet.data.service.EventService
+import pt.isel.keepmyplanet.domain.common.Description
+import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.event.Period
+import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
-import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 
 class EventViewModel(
@@ -29,8 +34,8 @@ class EventViewModel(
     private val _events = Channel<EventScreenEvent>(Channel.BUFFERED)
     val events: Flow<EventScreenEvent> = _events.receiveAsFlow()
 
-    private val _lastCreatedEvent = MutableStateFlow<EventResponse?>(null)
-    val lastCreatedEvent: StateFlow<EventResponse?> = _lastCreatedEvent.asStateFlow()
+/*    private val _lastCreatedEvent = MutableStateFlow<EventResponse?>(null)
+    val lastCreatedEvent: StateFlow<EventResponse?> = _lastCreatedEvent.asStateFlow()*/
 
     init {
         loadEvents()
@@ -47,12 +52,15 @@ class EventViewModel(
                             events =
                                 events.map { response ->
                                     EventInfo(
-                                        id = response.id,
-                                        title = response.title,
-                                        description = response.description,
-                                        startDate = response.startDate,
-                                        endDate = response.endDate,
-                                        status = response.status,
+                                        id = Id(response.id),
+                                        title = Title(response.title),
+                                        description = Description(response.description),
+                                        period =
+                                            Period(
+                                                LocalDateTime.parse(response.startDate),
+                                                LocalDateTime.parse(response.endDate),
+                                            ),
+                                        status = EventStatus.valueOf(response.status.uppercase()),
                                     )
                                 },
                             isLoading = false,
@@ -74,8 +82,8 @@ class EventViewModel(
             eventService
                 .createEvent(request)
                 .onSuccess { response ->
-                    _lastCreatedEvent.value = response
                     loadEvents()
+                    _events.send(EventScreenEvent.EventCreated(response.id))
                     _events.send(EventScreenEvent.ShowSnackbar("Event created successfully"))
                 }.onFailure {
                     _listUiState.value =

@@ -34,11 +34,11 @@ fun EventItem(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = event.title,
+                text = event.title.value,
                 style = MaterialTheme.typography.h6,
             )
             Text(
-                text = event.description,
+                text = event.description.value,
                 style = MaterialTheme.typography.body2,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -48,11 +48,11 @@ fun EventItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "Início: ${event.startDate}",
+                    text = "Start: ${event.period.start.toFormattedString()}",
                     style = MaterialTheme.typography.caption,
                 )
                 Text(
-                    text = event.status,
+                    text = event.status.name,
                     style = MaterialTheme.typography.caption,
                     color = MaterialTheme.colors.secondary,
                 )

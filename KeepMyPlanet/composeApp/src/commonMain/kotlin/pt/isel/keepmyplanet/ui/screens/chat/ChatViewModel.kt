@@ -35,7 +35,7 @@ class ChatViewModel(
     private fun loadInitialMessages() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val result = chatService.getMessages(event.id)
+            val result = chatService.getMessages(event.id.value)
 
             result
                 .onSuccess { messages ->
@@ -50,7 +50,7 @@ class ChatViewModel(
     private fun startListeningToMessages() {
         viewModelScope.launch {
             chatService
-                .listenToMessages(event.id)
+                .listenToMessages(event.id.value)
                 .catch { exception ->
                     handleError("Chat connection error", exception)
                 }.collect { messageResult ->
@@ -90,7 +90,7 @@ class ChatViewModel(
         _uiState.update { it.copy(isSending = true, messageInput = "") }
 
         viewModelScope.launch {
-            val result = chatService.sendMessage(event.id, messageContent)
+            val result = chatService.sendMessage(event.id.value, messageContent)
 
             result
                 .onSuccess {

@@ -24,13 +24,6 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.data.model.EventInfo
 import pt.isel.keepmyplanet.ui.screens.event.components.EventItem
 
-/*val sampleChatEvents =
-    listOf(
-        EventInfo(1U, "event1"),
-        EventInfo(2U, "event2"),
-        EventInfo(3U, "event3"),
-    )*/
-
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun EventListScreen(
@@ -44,7 +37,7 @@ fun EventListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chat Events") },
+                title = { Text("Events") },
                 elevation = 4.dp,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

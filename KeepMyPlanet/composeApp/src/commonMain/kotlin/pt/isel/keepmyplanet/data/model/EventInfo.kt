@@ -1,10 +1,16 @@
 package pt.isel.keepmyplanet.data.model
 
+import pt.isel.keepmyplanet.domain.common.Description
+import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.event.Period
+import pt.isel.keepmyplanet.domain.event.Title
+
 data class EventInfo(
-    val id: UInt,
-    val title: String,
-    val description: String,
-    val startDate: String,
-    val endDate: String,
-    val status: String,
+    val id: Id,
+    val title: Title,
+    val description: Description,
+    val period: Period,
+    // val endDate: String,
+    val status: EventStatus,
 )

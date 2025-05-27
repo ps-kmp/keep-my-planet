@@ -5,5 +5,9 @@ sealed class EventScreenEvent {
         val message: String,
     ) : EventScreenEvent()
 
+    data class EventCreated(
+        val eventId: UInt,
+    ) : EventScreenEvent()
+
     data object NavigateBack : EventScreenEvent()
 }

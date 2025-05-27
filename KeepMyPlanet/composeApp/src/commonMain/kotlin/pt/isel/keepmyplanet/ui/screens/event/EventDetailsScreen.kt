@@ -24,7 +24,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.data.model.EventInfo
+import pt.isel.keepmyplanet.domain.common.Description
+import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.event.Period
+import pt.isel.keepmyplanet.domain.event.Title
+import pt.isel.keepmyplanet.ui.screens.event.components.toFormattedDateTime
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -89,13 +96,13 @@ fun EventDetailsScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            text = "Start Date: ${event.startDate}",
+                            text = "Start Date: ${event.startDate.toFormattedDateTime()}",
                             style = MaterialTheme.typography.body2,
                         )
-                        Text(
+/*                        Text(
                             text = "End Date: ${event.endDate}",
                             style = MaterialTheme.typography.body2,
-                        )
+                        )*/
                     }
 
                     Column(
@@ -118,11 +125,11 @@ fun EventDetailsScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
-                            text = "Created: ${event.createdAt}",
+                            text = "Created: ${event.createdAt.toFormattedDateTime()}",
                             style = MaterialTheme.typography.caption,
                         )
                         Text(
-                            text = "Last update: ${event.updatedAt}",
+                            text = "Last update: ${event.updatedAt.toFormattedDateTime()}",
                             style = MaterialTheme.typography.caption,
                         )
                     }
@@ -153,12 +160,15 @@ fun EventDetailsScreen(
                             onClick = {
                                 onNavigateToChat(
                                     EventInfo(
-                                        id = event.id,
-                                        title = event.title,
-                                        description = event.description,
-                                        startDate = event.startDate,
-                                        endDate = event.endDate,
-                                        status = event.status,
+                                        id = Id(event.id),
+                                        title = Title(event.title),
+                                        description = Description(event.description),
+                                        period =
+                                            Period(
+                                                LocalDateTime.parse(event.startDate),
+                                                LocalDateTime.parse(event.endDate),
+                                            ),
+                                        status = EventStatus.valueOf(event.status.uppercase()),
                                     ),
                                 )
                             },
