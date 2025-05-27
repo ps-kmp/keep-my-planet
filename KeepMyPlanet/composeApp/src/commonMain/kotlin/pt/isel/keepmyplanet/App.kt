@@ -3,10 +3,12 @@
 package pt.isel.keepmyplanet
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.screens.chat.ChatScreen
+import pt.isel.keepmyplanet.ui.screens.event.CreateEventScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventListScreen
 import pt.isel.keepmyplanet.ui.screens.home.HomeScreen
@@ -54,6 +56,26 @@ fun App(appViewModel: AppViewModel) {
                 error = listState.error,
                 onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
                 onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
+                onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent) },
+            )
+        }
+
+        is AppRoute.CreateEvent -> {
+            requireNotNull(currentUserInfo) { "User must be logged in for CreateEvent route" }
+            val eventViewModel = appViewModel.eventViewModel
+            val lastCreatedEvent by eventViewModel.lastCreatedEvent.collectAsState()
+
+            LaunchedEffect(lastCreatedEvent) {
+                // Quando tivermos um novo evento criado, navegamos para os seus detalhes
+                lastCreatedEvent?.let { response ->
+                    appViewModel.navigate(AppRoute.EventDetails(response.id))
+                }
+            }
+            CreateEventScreen(
+                onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
+                onCreateEvent = { request ->
+                    eventViewModel.createEvent(request)
+                },
             )
         }
 

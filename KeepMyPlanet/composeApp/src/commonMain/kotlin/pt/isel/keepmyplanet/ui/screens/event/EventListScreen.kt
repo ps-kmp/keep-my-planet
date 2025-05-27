@@ -1,11 +1,14 @@
 package pt.isel.keepmyplanet.ui.screens.event
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -36,6 +39,7 @@ fun EventListScreen(
     error: String?,
     onEventSelected: (event: EventInfo) -> Unit,
     onNavigateBack: () -> Unit,
+    onCreateEventClick: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -55,29 +59,49 @@ fun EventListScreen(
     ) { paddingValues ->
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.padding(paddingValues).fillMaxSize(),
+                modifier =
+                    Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
             )
         } else {
-            LazyColumn(
-                modifier = Modifier.padding(paddingValues).fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            Column(
+                modifier =
+                    Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
             ) {
-                items(events, key = { it.id }) { event ->
-                    EventItem(
-                        event = event,
-                        onClick = { onEventSelected(event) },
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(events, key = { it.id }) { event ->
+                        EventItem(
+                            event = event,
+                            onClick = { onEventSelected(event) },
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = onCreateEventClick,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                ) {
+                    Text("Create Event")
+                }
+
+                error?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colors.error,
+                        modifier = Modifier.padding(16.dp),
                     )
                 }
             }
-        }
-
-        error?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colors.error,
-                modifier = Modifier.padding(16.dp),
-            )
         }
     }
 }

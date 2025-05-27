@@ -13,19 +13,9 @@ import pt.isel.keepmyplanet.data.model.EventInfo
 import pt.isel.keepmyplanet.data.model.UserInfo
 import pt.isel.keepmyplanet.data.service.EventService
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
+import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 
-/*class EventViewModel(
-    private val eventService: EventService,
-    val user: UserInfo,
-    val event: EventInfo,
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(EventUiState(user = user, event = event))
-    val uiState: StateFlow<EventUiState> = _uiState.asStateFlow()
-
-    private val _events = Channel<EventScreenEvent>(Channel.BUFFERED)
-    val events: Flow<EventScreenEvent> = _events.receiveAsFlow()
-}*/
 class EventViewModel(
     private val eventService: EventService,
     private val user: UserInfo,
@@ -38,6 +28,9 @@ class EventViewModel(
 
     private val _events = Channel<EventScreenEvent>(Channel.BUFFERED)
     val events: Flow<EventScreenEvent> = _events.receiveAsFlow()
+
+    private val _lastCreatedEvent = MutableStateFlow<EventResponse?>(null)
+    val lastCreatedEvent: StateFlow<EventResponse?> = _lastCreatedEvent.asStateFlow()
 
     init {
         loadEvents()
@@ -69,7 +62,7 @@ class EventViewModel(
                     _listUiState.value =
                         _listUiState.value.copy(
                             isLoading = false,
-                            error = "Erro ao carregar eventos",
+                            error = "Failed to load events",
                         )
                 }
         }
@@ -80,14 +73,15 @@ class EventViewModel(
             _listUiState.value = _listUiState.value.copy(isLoading = true)
             eventService
                 .createEvent(request)
-                .onSuccess {
+                .onSuccess { response ->
+                    _lastCreatedEvent.value = response
                     loadEvents()
-                    _events.send(EventScreenEvent.ShowSnackbar("Evento criado com sucesso"))
+                    _events.send(EventScreenEvent.ShowSnackbar("Event created successfully"))
                 }.onFailure {
                     _listUiState.value =
                         _listUiState.value.copy(
                             isLoading = false,
-                            error = "Erro ao criar evento",
+                            error = "Failed to create event",
                         )
                 }
         }
@@ -109,7 +103,7 @@ class EventViewModel(
                     _detailsUiState.value =
                         _detailsUiState.value.copy(
                             isLoading = false,
-                            error = "Erro ao carregar detalhes do evento",
+                            error = "Failed to load event details",
                         )
                 }
         }
@@ -122,12 +116,12 @@ class EventViewModel(
                 .joinEvent(eventId)
                 .onSuccess {
                     loadEventDetails(eventId)
-                    _events.send(EventScreenEvent.ShowSnackbar("Aderiu ao evento com sucesso"))
+                    _events.send(EventScreenEvent.ShowSnackbar("Joined event successfully"))
                 }.onFailure {
                     _detailsUiState.value =
                         _detailsUiState.value.copy(
                             isJoining = false,
-                            error = "Erro ao aderir ao evento",
+                            error = "Failed to join event",
                         )
                 }
         }
@@ -143,12 +137,12 @@ class EventViewModel(
                 .updateEventDetails(eventId, request)
                 .onSuccess {
                     loadEventDetails(eventId)
-                    _events.send(EventScreenEvent.ShowSnackbar("Evento atualizado com sucesso"))
+                    _events.send(EventScreenEvent.ShowSnackbar("Event updated successfully"))
                 }.onFailure {
                     _detailsUiState.value =
                         _detailsUiState.value.copy(
                             isEditing = false,
-                            error = "Erro ao atualizar evento",
+                            error = "Failed to update event",
                         )
                 }
         }
@@ -161,12 +155,12 @@ class EventViewModel(
                 .leaveEvent(eventId)
                 .onSuccess {
                     loadEventDetails(eventId)
-                    _events.send(EventScreenEvent.ShowSnackbar("Saiu do evento com sucesso"))
+                    _events.send(EventScreenEvent.ShowSnackbar("Left event successfully"))
                 }.onFailure {
                     _detailsUiState.value =
                         _detailsUiState.value.copy(
                             isLeaving = false,
-                            error = "Erro ao sair do evento",
+                            error = "Failed to leave event",
                         )
                 }
         }
