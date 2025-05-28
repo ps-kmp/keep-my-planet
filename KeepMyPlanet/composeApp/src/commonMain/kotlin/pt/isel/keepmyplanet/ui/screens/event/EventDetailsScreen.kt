@@ -165,8 +165,9 @@ fun EventDetailsScreen(
                                         description = Description(event.description),
                                         period =
                                             Period(
-                                                LocalDateTime.parse(event.startDate),
-                                                LocalDateTime.parse(event.endDate),
+                                                start = LocalDateTime.parse(event.startDate),
+                                                // LocalDateTime.parse(event.endDate),
+                                                end = event.endDate?.let { LocalDateTime.parse(it) },
                                             ),
                                         status = EventStatus.valueOf(event.status.uppercase()),
                                     ),

@@ -49,7 +49,7 @@ class DatabaseEventRepository(
     override suspend fun create(entity: Event): Event {
         val currentTime = now()
         entity.maxParticipants?.let {
-            require(entity.participantsIds.size >= it) {
+            require(entity.participantsIds.size <= it) {
                 "Number of participants exceeds maxParticipants limit."
             }
         }

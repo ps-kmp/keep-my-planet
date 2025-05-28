@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS events (
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     start_datetime TIMESTAMP NOT NULL,
-    end_datetime TIMESTAMP NOT NULL,
+    end_datetime TIMESTAMP,
     zone_id BIGINT NOT NULL,
     organizer_id BIGINT NOT NULL,
     status TEXT NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS events (
     updated_at TIMESTAMP NOT NULL,
     CONSTRAINT fk_event_zone FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,
     CONSTRAINT fk_event_organizer FOREIGN KEY (organizer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT check_event_dates CHECK (end_datetime >= start_datetime)
+    CONSTRAINT check_event_dates CHECK (end_datetime IS NULL OR end_datetime >= start_datetime)
 );
 
 ALTER TABLE zones

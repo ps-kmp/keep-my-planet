@@ -56,7 +56,7 @@ class Location {
 
 class Period {
   start: DateTime
-  end: DateTime
+  end: DateTime?
 }
 
 User <- Event : organizer

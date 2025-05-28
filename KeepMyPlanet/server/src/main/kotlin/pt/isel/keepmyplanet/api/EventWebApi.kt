@@ -56,7 +56,7 @@ fun Route.eventWebApi(
                 val period =
                     Period(
                         LocalDateTime.parse(request.startDate),
-                        LocalDateTime.parse(request.endDate),
+                        request.endDate?.let { LocalDateTime.parse(it) },
                     )
                 val zoneId = Id(request.zoneId)
                 val maxParticipants = request.maxParticipants

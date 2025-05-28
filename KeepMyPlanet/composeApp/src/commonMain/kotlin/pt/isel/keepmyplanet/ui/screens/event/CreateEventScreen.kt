@@ -35,7 +35,6 @@ fun CreateEventScreen(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf("") }
-    var endDate by remember { mutableStateOf("") }
     var maxParticipants by remember { mutableStateOf("") }
 
     Scaffold(
@@ -79,21 +78,14 @@ fun CreateEventScreen(
             OutlinedTextField(
                 value = startDate,
                 onValueChange = { startDate = it },
-                label = { Text("Start Date (YYYY-MM-DD)") },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            OutlinedTextField(
-                value = endDate,
-                onValueChange = { endDate = it },
-                label = { Text("End Date (YYYY-MM-DD)") },
+                label = { Text("Start Date and Time (YYYY-MM-DDTHH:MM:SS)") },
                 modifier = Modifier.fillMaxWidth(),
             )
 
             OutlinedTextField(
                 value = maxParticipants,
                 onValueChange = { maxParticipants = it },
-                label = { Text("Max participants") },
+                label = { Text("Max Participants") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -107,7 +99,6 @@ fun CreateEventScreen(
                             title = title,
                             description = description,
                             startDate = startDate,
-                            endDate = endDate,
                             zoneId = 1u, // HARDCODED
                             maxParticipants = maxParticipants.toIntOrNull(),
                         ),
@@ -117,8 +108,7 @@ fun CreateEventScreen(
                 enabled =
                     title.isNotBlank() &&
                         description.isNotBlank() &&
-                        startDate.isNotBlank() &&
-                        endDate.isNotBlank(),
+                        startDate.isNotBlank(),
             ) {
                 Text("Create Event")
             }

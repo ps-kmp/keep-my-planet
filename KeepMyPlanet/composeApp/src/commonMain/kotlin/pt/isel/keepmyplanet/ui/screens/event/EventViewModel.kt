@@ -57,8 +57,10 @@ class EventViewModel(
                                         description = Description(response.description),
                                         period =
                                             Period(
-                                                LocalDateTime.parse(response.startDate),
-                                                LocalDateTime.parse(response.endDate),
+                                                start = LocalDateTime.parse(response.startDate),
+                                                // LocalDateTime.parse(response.endDate),
+                                                // end = response.endDate?.let { LocalDateTime.parse(it) },
+                                                end = response.endDate?.takeIf { it != "null" }?.let { LocalDateTime.parse(it) },
                                             ),
                                         status = EventStatus.valueOf(response.status.uppercase()),
                                     )
