@@ -19,8 +19,7 @@ import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
-import pt.isel.keepmyplanet.dto.zone.UpdateSeverityRequest
-import pt.isel.keepmyplanet.dto.zone.UpdateStatusRequest
+import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.zone.toResponse
 import pt.isel.keepmyplanet.service.ZoneService
@@ -70,40 +69,34 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             }
 
             authenticate("auth-jwt") {
+                patch {
+                    val zoneId = call.getZoneId()
+                    val userId = call.getCurrentUserId()
+                    val request = call.receive<UpdateZoneRequest>()
+                    val description = request.description?.let { Description(it) }
+                    val status =
+                        request.status?.let {
+                            safeValueOf<ZoneStatus>(it)
+                                ?: throw IllegalArgumentException("Invalid status value: $it")
+                        }
+                    val severity =
+                        request.severity?.let {
+                            safeValueOf<ZoneSeverity>(it)
+                                ?: throw IllegalArgumentException("Invalid severity value: $it")
+                        }
+
+                    zoneService
+                        .updateZone(zoneId, userId, description, status, severity)
+                        .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
+                        .onFailure { throw it }
+                }
+
                 delete {
                     val zoneId = call.getZoneId()
                     val userId = call.getCurrentUserId()
                     zoneService
                         .deleteZone(zoneId, userId)
                         .onSuccess { call.respond(HttpStatusCode.NoContent) }
-                        .onFailure { throw it }
-                }
-
-                patch("/status") {
-                    val zoneId = call.getZoneId()
-                    val userId = call.getCurrentUserId()
-                    val request = call.receive<UpdateStatusRequest>()
-                    val newStatus =
-                        safeValueOf<ZoneStatus>(request.status)
-                            ?: throw IllegalArgumentException("Invalid status value: ${request.status}")
-
-                    zoneService
-                        .updateZoneStatus(zoneId, userId, newStatus)
-                        .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
-                        .onFailure { throw it }
-                }
-
-                patch("/severity") {
-                    val zoneId = call.getZoneId()
-                    val userId = call.getCurrentUserId()
-                    val request = call.receive<UpdateSeverityRequest>()
-                    val newZoneSeverity =
-                        safeValueOf<ZoneSeverity>(request.severity)
-                            ?: throw IllegalArgumentException("Invalid severity value: ${request.severity}")
-
-                    zoneService
-                        .updateZoneSeverity(zoneId, userId, newZoneSeverity)
-                        .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }
 

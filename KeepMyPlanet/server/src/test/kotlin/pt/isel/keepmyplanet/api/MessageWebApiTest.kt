@@ -2,10 +2,12 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
@@ -36,12 +38,13 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
             val requestBody = CreateMessageRequest(content = "Hello from organizer!")
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/chat") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.Created, response.status)
 
@@ -68,12 +71,13 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zone.id, organizer.id, setOf(participant.id))
             val requestBody = CreateMessageRequest(content = "Hi from participant!")
+            val token = generateTestToken(participant.id)
 
             val response =
                 client.post("/events/${event.id.value}/chat") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(participant.id)
                 }
             assertEquals(HttpStatusCode.Created, response.status)
 
@@ -99,26 +103,26 @@ class MessageWebApiTest : BaseWebApiTest() {
             val event = createTestEvent(zone.id, user1.id, setOf(user2.id))
             val requestBody1 = CreateMessageRequest(content = "First")
             val requestBody2 = CreateMessageRequest(content = "Second")
+            val tokenUser1 = generateTestToken(user1.id)
+            val tokenUser2 = generateTestToken(user2.id)
 
             val response1 =
                 client.post("/events/${event.id.value}/chat") {
-                    mockUser(user1.id)
+                    header(HttpHeaders.Authorization, "Bearer $tokenUser1")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody1))
                 }
             assertEquals(HttpStatusCode.Created, response1.status)
-
             val responseBody1 = Json.decodeFromString<MessageResponse>(response1.bodyAsText())
             assertEquals(0, responseBody1.chatPosition)
 
             val response2 =
                 client.post("/events/${event.id.value}/chat") {
-                    mockUser(user2.id)
+                    header(HttpHeaders.Authorization, "Bearer $tokenUser2")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody2))
                 }
             assertEquals(HttpStatusCode.Created, response2.status)
-
             val responseBody2 = Json.decodeFromString<MessageResponse>(response2.bodyAsText())
             assertEquals(1, responseBody2.chatPosition)
 
@@ -139,10 +143,11 @@ class MessageWebApiTest : BaseWebApiTest() {
             val user = createTestUser()
             val nonExistentEventId = 999u
             val requestBody = CreateMessageRequest(content = "Doesn't matter")
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/events/$nonExistentEventId/chat") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
                 }
@@ -158,14 +163,32 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zone.id, organizer.id, setOf(participant.id))
             val requestBody = CreateMessageRequest(content = "Intruder message")
+            val tokenNonParticipant = generateTestToken(nonParticipant.id)
 
             val response =
                 client.post("/events/${event.id.value}/chat") {
+                    header(HttpHeaders.Authorization, "Bearer $tokenNonParticipant")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(nonParticipant.id)
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
+        }
+
+    @Test
+    fun `POST message - should fail with 401 if no auth token`() =
+        testApp({ messageWebApi(messageService, chatSseService) }) {
+            val organizer = createTestUser()
+            val zone = createTestZone()
+            val event = createTestEvent(zone.id, organizer.id)
+            val requestBody = CreateMessageRequest(content = "Test message")
+
+            val response =
+                client.post("/events/${event.id.value}/chat") {
+                    // No Authorization header
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 
     @Test
@@ -175,12 +198,13 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zone.id, user.id, status = EventStatus.COMPLETED)
             val requestBody = CreateMessageRequest(content = "Too late")
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/events/${event.id.value}/chat") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -192,14 +216,14 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zone.id, user.id, status = EventStatus.CANCELLED)
             val requestBody = CreateMessageRequest(content = "Event cancelled")
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/events/${event.id.value}/chat") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
                 }
-
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
@@ -208,10 +232,11 @@ class MessageWebApiTest : BaseWebApiTest() {
         testApp({ messageWebApi(messageService, chatSseService) }) {
             val user = createTestUser()
             val requestBody = CreateMessageRequest(content = "Valid content")
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/events/abc/chat") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
                 }
@@ -225,10 +250,11 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
             val requestBody = CreateMessageRequest(content = "")
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/events/${event.id.value}/chat") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
                 }
@@ -238,10 +264,15 @@ class MessageWebApiTest : BaseWebApiTest() {
     @Test
     fun `GET messages - should return empty list for new event`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
+            val user = createTestUser() // User for token
             val zone = createTestZone()
-            val event = createTestEvent(zoneId = zone.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val token = generateTestToken(user.id)
 
-            val response = client.get("/events/${event.id.value}/chat")
+            val response =
+                client.get("/events/${event.id.value}/chat") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals("[]", response.bodyAsText())
         }
@@ -253,12 +284,16 @@ class MessageWebApiTest : BaseWebApiTest() {
             val user2 = createTestUser(email = Email("p1@test.com"))
             val zone = createTestZone()
             val event = createTestEvent(zone.id, user1.id, setOf(user2.id))
+            val token = generateTestToken(user1.id)
 
             val msg1 = createTestMessage(event.id, user1.id, user1.name, "First")
             val msg2 = createTestMessage(event.id, user2.id, user2.name, "Second")
             val msg3 = createTestMessage(event.id, user1.id, user1.name, "Third")
 
-            val response = client.get("/events/${event.id.value}/chat")
+            val response =
+                client.get("/events/${event.id.value}/chat") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
 
             val responseList = Json.decodeFromString<List<MessageResponse>>(response.bodyAsText())
@@ -283,16 +318,41 @@ class MessageWebApiTest : BaseWebApiTest() {
     @Test
     fun `GET messages - should fail with 404 if event not found`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
+            val user = createTestUser()
             val nonExistentEventId = 999u
-            val response = client.get("/events/$nonExistentEventId/chat")
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.get("/events/$nonExistentEventId/chat") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
 
     @Test
     fun `GET messages - should return 400 for invalid event ID`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
-            val response = client.get("/events/abc/chat")
+            val user = createTestUser()
+            val token = generateTestToken(user.id)
+            val response =
+                client.get("/events/abc/chat") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+
+    @Test
+    fun `GET messages - should fail with 401 if no auth token`() =
+        testApp({ messageWebApi(messageService, chatSseService) }) {
+            val organizer = createTestUser()
+            val zone = createTestZone()
+            val event = createTestEvent(zone.id, organizer.id)
+
+            val response =
+                client.get("/events/${event.id.value}/chat") {
+                    // No Authorization header
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 
     @Test
@@ -301,10 +361,15 @@ class MessageWebApiTest : BaseWebApiTest() {
             val user = createTestUser()
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val token = generateTestToken(user.id)
+
             createTestMessage(event.id, user.id, user.name, "Message Zero")
             val msg1 = createTestMessage(event.id, user.id, user.name, "Message One")
 
-            val response = client.get("/events/${event.id.value}/chat/${msg1.chatPosition}")
+            val response =
+                client.get("/events/${event.id.value}/chat/${msg1.chatPosition}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
 
             val responseBody = Json.decodeFromString<MessageResponse>(response.bodyAsText())
@@ -318,8 +383,13 @@ class MessageWebApiTest : BaseWebApiTest() {
     @Test
     fun `GET single message - should fail with 404 if event not found`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
+            val user = createTestUser()
             val nonExistentEventId = 999u
-            val response = client.get("/events/$nonExistentEventId/chat/0")
+            val token = generateTestToken(user.id)
+            val response =
+                client.get("/events/$nonExistentEventId/chat/0") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
 
@@ -329,37 +399,72 @@ class MessageWebApiTest : BaseWebApiTest() {
             val user = createTestUser()
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val token = generateTestToken(user.id)
             createTestMessage(event.id, user.id, user.name)
 
-            val response = client.get("/events/${event.id.value}/chat/5")
+            val response =
+                client.get("/events/${event.id.value}/chat/5") {
+                    // Sequence 5 likely not found
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
 
     @Test
     fun `GET single message - should fail with 400 for invalid event ID format`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
-            val response = client.get("/events/bad-id/chat/0")
+            val user = createTestUser()
+            val token = generateTestToken(user.id)
+            val response =
+                client.get("/events/bad-id/chat/0") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
     @Test
     fun `GET single message - should fail with 400 for invalid sequence number format`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
+            val user = createTestUser()
             val zone = createTestZone()
-            val event = createTestEvent(zoneId = zone.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val token = generateTestToken(user.id)
 
-            val response = client.get("/events/${event.id.value}/chat/abc")
+            val response =
+                client.get("/events/${event.id.value}/chat/abc") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
     @Test
     fun `GET single message - should fail with 400 for negative sequence number`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
+            val user = createTestUser()
             val zone = createTestZone()
-            val event = createTestEvent(zoneId = zone.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val token = generateTestToken(user.id)
 
-            val response = client.get("/events/${event.id.value}/chat/-1")
+            val response =
+                client.get("/events/${event.id.value}/chat/-1") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                }
             assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+
+    @Test
+    fun `GET single message - should fail with 401 if no auth token`() =
+        testApp({ messageWebApi(messageService, chatSseService) }) {
+            val user = createTestUser()
+            val zone = createTestZone()
+            val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val msg = createTestMessage(event.id, user.id, user.name)
+
+            val response =
+                client.get("/events/${event.id.value}/chat/${msg.chatPosition}") {
+                    // No Authorization header
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 
     @Test
@@ -367,15 +472,17 @@ class MessageWebApiTest : BaseWebApiTest() {
         testApp({ messageWebApi(messageService, chatSseService) }) {
             val participant = createTestUser()
             val zone = createTestZone()
-            val event = createTestEvent(zoneId = zone.id, participantsIds = setOf(participant.id))
+            val organizerPlaceholder = createTestUser(email = Email("org@delete.com"))
+            val event = createTestEvent(zone.id, organizerPlaceholder.id, setOf(participant.id))
             val msg = createTestMessage(event.id, participant.id, participant.name)
+            val token = generateTestToken(participant.id)
             assertNotNull(
                 fakeMessageRepository.getSingleByEventIdAndSeqNum(event.id, msg.chatPosition),
             )
 
             val response =
                 client.delete("/events/${event.id.value}/chat/${msg.chatPosition}") {
-                    mockUser(participant.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NoContent, response.status)
             assertNull(
@@ -391,13 +498,14 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zone.id, organizer.id, setOf(participant.id))
             val msg = createTestMessage(event.id, participant.id, participant.name)
+            val tokenOrganizer = generateTestToken(organizer.id)
             assertNotNull(
                 fakeMessageRepository.getSingleByEventIdAndSeqNum(event.id, msg.chatPosition),
             )
 
             val response =
                 client.delete("/events/${event.id.value}/chat/${msg.chatPosition}") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $tokenOrganizer")
                 }
             assertEquals(HttpStatusCode.NoContent, response.status)
             assertNull(
@@ -414,15 +522,35 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zone.id, organizer.id, setOf(participant.id))
             val msg = createTestMessage(event.id, participant.id, participant.name)
+            val tokenOutsider = generateTestToken(outsider.id)
             assertNotNull(
                 fakeMessageRepository.getSingleByEventIdAndSeqNum(event.id, msg.chatPosition),
             )
 
             val response =
                 client.delete("/events/${event.id.value}/chat/${msg.chatPosition}") {
-                    mockUser(outsider.id)
+                    header(HttpHeaders.Authorization, "Bearer $tokenOutsider")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
+            assertNotNull(
+                fakeMessageRepository.getSingleByEventIdAndSeqNum(event.id, msg.chatPosition),
+            )
+        }
+
+    @Test
+    fun `DELETE message - should fail with 401 if no auth token`() =
+        testApp({ messageWebApi(messageService, chatSseService) }) {
+            val participant = createTestUser()
+            val zone = createTestZone()
+            val organizerPlaceholder = createTestUser(email = Email("org@delete.com"))
+            val event = createTestEvent(zone.id, organizerPlaceholder.id, setOf(participant.id))
+            val msg = createTestMessage(event.id, participant.id, participant.name)
+
+            val response =
+                client.delete("/events/${event.id.value}/chat/${msg.chatPosition}") {
+                    // No Authorization header
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
             assertNotNull(
                 fakeMessageRepository.getSingleByEventIdAndSeqNum(event.id, msg.chatPosition),
             )
@@ -433,10 +561,11 @@ class MessageWebApiTest : BaseWebApiTest() {
         testApp({ messageWebApi(messageService, chatSseService) }) {
             val user = createTestUser()
             val nonExistentEventId = 999u
+            val token = generateTestToken(user.id)
 
             val response =
                 client.delete("/events/$nonExistentEventId/chat/0") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -448,13 +577,15 @@ class MessageWebApiTest : BaseWebApiTest() {
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
             val msg = createTestMessage(event.id, user.id, user.name)
+            val token = generateTestToken(user.id)
             assertNotNull(
                 fakeMessageRepository.getSingleByEventIdAndSeqNum(event.id, msg.chatPosition),
             )
 
             val response =
                 client.delete("/events/${event.id.value}/chat/5") {
-                    mockUser(user.id)
+                    // Sequence 5 likely not found
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
             assertNotNull(
@@ -466,9 +597,10 @@ class MessageWebApiTest : BaseWebApiTest() {
     fun `DELETE message - should fail with 400 for invalid event ID format`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
             val user = createTestUser()
+            val token = generateTestToken(user.id)
             val response =
                 client.delete("/events/bad-id/chat/0") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -479,10 +611,11 @@ class MessageWebApiTest : BaseWebApiTest() {
             val user = createTestUser()
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.delete("/events/${event.id.value}/chat/abc") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -493,10 +626,11 @@ class MessageWebApiTest : BaseWebApiTest() {
             val user = createTestUser()
             val zone = createTestZone()
             val event = createTestEvent(zoneId = zone.id, organizerId = user.id)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.delete("/events/${event.id.value}/chat/-1") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }

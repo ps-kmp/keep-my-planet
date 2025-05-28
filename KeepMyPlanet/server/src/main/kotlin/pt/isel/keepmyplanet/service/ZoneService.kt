@@ -66,32 +66,42 @@ class ZoneService(
             zoneRepository.findNearLocation(center, radius)
         }
 
-    suspend fun updateZoneStatus(
+    suspend fun updateZone(
         zoneId: Id,
         userId: Id,
-        newStatus: ZoneStatus,
+        description: Description? = null,
+        status: ZoneStatus? = null,
+        severity: ZoneSeverity? = null,
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
             hasPermissionsOrFail(zone, userId)
 
-            if (zone.status == newStatus) return@runCatching zone
-            val updatedZone = zone.copy(status = newStatus)
-            zoneRepository.update(updatedZone)
-        }
+            var modifiedZone = zone
+            var hasChanges = false
 
-    suspend fun updateZoneSeverity(
-        zoneId: Id,
-        userId: Id,
-        newZoneSeverity: ZoneSeverity,
-    ): Result<Zone> =
-        runCatching {
-            val zone = findZoneOrFail(zoneId)
-            hasPermissionsOrFail(zone, userId)
+            description?.let { newDescription ->
+                if (modifiedZone.description != newDescription) {
+                    modifiedZone = modifiedZone.copy(description = newDescription)
+                    hasChanges = true
+                }
+            }
 
-            if (zone.zoneSeverity == newZoneSeverity) return@runCatching zone
-            val updatedZone = zone.copy(zoneSeverity = newZoneSeverity)
-            zoneRepository.update(updatedZone)
+            status?.let { newStatus ->
+                if (modifiedZone.status != newStatus) {
+                    modifiedZone = modifiedZone.copy(status = newStatus)
+                    hasChanges = true
+                }
+            }
+
+            severity?.let { newSeverity ->
+                if (modifiedZone.zoneSeverity != newSeverity) {
+                    modifiedZone = modifiedZone.copy(zoneSeverity = newSeverity)
+                    hasChanges = true
+                }
+            }
+
+            if (hasChanges) zoneRepository.update(modifiedZone) else zone
         }
 
     suspend fun addPhotoToZone(
@@ -104,6 +114,7 @@ class ZoneService(
             hasPermissionsOrFail(zone, userId)
 
             if (photoId in zone.photosIds) return@runCatching zone
+
             val updatedZone = zone.copy(photosIds = zone.photosIds + photoId)
             zoneRepository.update(updatedZone)
         }

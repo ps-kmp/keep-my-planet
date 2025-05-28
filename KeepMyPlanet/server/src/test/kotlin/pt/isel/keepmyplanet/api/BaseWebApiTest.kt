@@ -1,8 +1,9 @@
 package pt.isel.keepmyplanet.api
 
-import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.request.header
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.install
+import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.sse.SSE
@@ -21,7 +22,7 @@ import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
-import pt.isel.keepmyplanet.domain.user.PasswordHash
+import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
@@ -38,6 +39,7 @@ import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.util.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.util.now
+import java.util.*
 import kotlin.test.BeforeTest
 
 abstract class BaseWebApiTest {
@@ -49,6 +51,11 @@ abstract class BaseWebApiTest {
     protected val chatSseService = ChatSseService()
     protected val passwordHasher = Pbkdf2PasswordHasher()
 
+    protected val testJwtSecret = "test-jwt-secret-for-ktor-tests"
+    protected val testJwtIssuer = "test-issuer-for-ktor-tests"
+    protected val testJwtAudience = "test-audience-for-ktor-tests"
+    protected val testJwtRealm = "test-realm-for-ktor-tests"
+
     @BeforeTest
     fun setup() {
         fakeUserRepository.clear()
@@ -57,18 +64,30 @@ abstract class BaseWebApiTest {
         fakeMessageRepository.clear()
     }
 
+    protected fun generateTestToken(
+        userId: Id,
+        expiresInMs: Long = 3_600_000L, // 1 hour
+    ): String =
+        JWT
+            .create()
+            .withAudience(testJwtAudience)
+            .withIssuer(testJwtIssuer)
+            .withClaim("userId", userId.value.toString())
+            .withExpiresAt(Date(System.currentTimeMillis() + expiresInMs))
+            .sign(Algorithm.HMAC256(testJwtSecret))
+
     protected suspend fun createTestUser(
         name: Name = Name("user"),
         email: Email = Email("test@example.com"),
-        passwordHash: PasswordHash = PasswordHash("Password1!"),
+        password: Password = Password("Password1!"),
         profilePictureId: Id? = null,
     ): User =
         fakeUserRepository.create(
             User(
-                id = Id(1U),
+                id = Id(0U),
                 name = name,
                 email = email,
-                passwordHash = passwordHash,
+                passwordHash = passwordHasher.hash(password),
                 profilePictureId = profilePictureId,
                 createdAt = now(),
                 updatedAt = now(),
@@ -76,7 +95,7 @@ abstract class BaseWebApiTest {
         )
 
     protected suspend fun createTestZone(
-        reporterId: Id = Id(1U),
+        reporterId: Id = Id(0U),
         location: Location = Location(0.0, 0.0),
         description: String = "Test Zone",
         status: ZoneStatus = ZoneStatus.REPORTED,
@@ -86,7 +105,7 @@ abstract class BaseWebApiTest {
     ): Zone =
         fakeZoneRepository.create(
             Zone(
-                id = Id(1U),
+                id = Id(0U),
                 location = location,
                 description = Description(description),
                 reporterId = reporterId,
@@ -101,8 +120,8 @@ abstract class BaseWebApiTest {
 
     protected suspend fun createTestEvent(
         zoneId: Id,
-        organizerId: Id = Id(1U),
-        participantsIds: Set<Id> = setOf(Id(2U)),
+        organizerId: Id = Id(0U),
+        participantsIds: Set<Id> = setOf(Id(0U)),
         status: EventStatus = EventStatus.PLANNED,
         title: String = "Test Event Title",
         description: String = "Event for testing",
@@ -111,7 +130,7 @@ abstract class BaseWebApiTest {
     ): Event =
         fakeEventRepository.create(
             Event(
-                id = Id(1U),
+                id = Id(0U),
                 zoneId = zoneId,
                 organizerId = organizerId,
                 title = Title(title),
@@ -126,13 +145,13 @@ abstract class BaseWebApiTest {
         )
 
     protected suspend fun createTestEventStateChange(
-        eventId: Id = Id(1U),
+        eventId: Id = Id(0U),
         newStatus: EventStatus = EventStatus.PLANNED,
-        changedBy: Id = Id(1U),
+        changedBy: Id = Id(0U),
     ): EventStateChange =
         fakeEventStateChangeRepository.create(
             EventStateChange(
-                id = Id(1U),
+                id = Id(0U),
                 eventId = eventId,
                 newStatus = newStatus,
                 changedBy = changedBy,
@@ -163,7 +182,7 @@ abstract class BaseWebApiTest {
     ): Message =
         fakeMessageRepository.create(
             Message(
-                id = Id(1U),
+                id = Id(0U),
                 eventId = eventId,
                 senderId = senderId,
                 senderName = senderName,
@@ -177,6 +196,15 @@ abstract class BaseWebApiTest {
         routingConfig: Routing.() -> Unit,
         block: suspend ApplicationTestBuilder.() -> Unit,
     ) = testApplication {
+        environment {
+            config =
+                MapApplicationConfig(
+                    "jwt.secret" to testJwtSecret,
+                    "jwt.issuer" to testJwtIssuer,
+                    "jwt.audience" to testJwtAudience,
+                    "jwt.realm" to testJwtRealm,
+                )
+        }
         application {
             configureAuthentication()
             configureSerialization()
@@ -185,9 +213,5 @@ abstract class BaseWebApiTest {
             routing { routingConfig() }
         }
         block()
-    }
-
-    protected fun HttpRequestBuilder.mockUser(userId: Id) {
-        header("X-Mock-User-Id", userId.value.toString())
     }
 }

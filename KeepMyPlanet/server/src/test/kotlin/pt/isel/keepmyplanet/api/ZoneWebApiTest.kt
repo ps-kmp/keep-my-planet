@@ -2,15 +2,18 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
+import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.user.Email
@@ -18,8 +21,7 @@ import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
-import pt.isel.keepmyplanet.dto.zone.UpdateSeverityRequest
-import pt.isel.keepmyplanet.dto.zone.UpdateStatusRequest
+import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.dto.zone.ZoneResponse
 import pt.isel.keepmyplanet.service.ZoneService
 import kotlin.test.Test
@@ -37,20 +39,14 @@ class ZoneWebApiTest : BaseWebApiTest() {
     fun `POST zones - should create zone successfully`() {
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
-            val requestBody =
-                ReportZoneRequest(
-                    latitude = 40.0,
-                    longitude = -75.0,
-                    description = "Park entrance",
-                    photoIds = setOf(10u, 11u),
-                    severity = "HIGH",
-                )
+            val token = generateTestToken(user.id)
+            val requestBody = ReportZoneRequest(40.0, -75.0, "Park", setOf(10u, 11u), "HIGH")
 
             val response =
                 client.post("/zones") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.Created, response.status)
 
@@ -75,20 +71,14 @@ class ZoneWebApiTest : BaseWebApiTest() {
     fun `POST zones - should fail with 400 on invalid latitude`() =
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
-            val requestBody =
-                ReportZoneRequest(
-                    latitude = 200.0,
-                    longitude = -75.0,
-                    description = "Bad data",
-                    photoIds = setOf(1u),
-                    severity = "MEDIUM",
-                )
+            val token = generateTestToken(user.id)
+            val requestBody = ReportZoneRequest(200.0, -75.0, "Bad data", setOf(1u), "MEDIUM")
 
             val response =
                 client.post("/zones") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -97,19 +87,13 @@ class ZoneWebApiTest : BaseWebApiTest() {
     fun `POST zones - should fail with 400 on blank description`() =
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
-            val requestBody =
-                ReportZoneRequest(
-                    latitude = 10.0,
-                    longitude = 10.0,
-                    description = "  ",
-                    photoIds = setOf(1u),
-                    severity = "LOW",
-                )
+            val token = generateTestToken(user.id)
+            val requestBody = ReportZoneRequest(10.0, 10.0, "  ", setOf(1u), "LOW")
             val response =
                 client.post("/zones") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -169,7 +153,6 @@ class ZoneWebApiTest : BaseWebApiTest() {
                 client.get("/zones") {
                     parameter("lat", 50.0)
                     parameter("lon", 10.0)
-                    // Missing radius
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -179,7 +162,6 @@ class ZoneWebApiTest : BaseWebApiTest() {
         testApp({ zoneWebApi(zoneService) }) {
             val response =
                 client.get("/zones") {
-                    // Missing lat
                     parameter("lon", 10.0)
                     parameter("radius", 10.0)
                 }
@@ -191,7 +173,7 @@ class ZoneWebApiTest : BaseWebApiTest() {
         testApp({ zoneWebApi(zoneService) }) {
             val response =
                 client.get("/zones") {
-                    parameter("lat", 200.0) // Invalid latitude
+                    parameter("lat", 200.0)
                     parameter("lon", 10.0)
                     parameter("radius", 10.0)
                 }
@@ -205,7 +187,7 @@ class ZoneWebApiTest : BaseWebApiTest() {
                 client.get("/zones") {
                     parameter("lat", 50.0)
                     parameter("lon", 10.0)
-                    parameter("radius", -5.0) // Invalid radius
+                    parameter("radius", -5.0)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -239,14 +221,214 @@ class ZoneWebApiTest : BaseWebApiTest() {
         }
 
     @Test
+    fun `PATCH zones by ID - should update description successfully by reporter`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val user = createTestUser()
+            val zone = createTestZone(reporterId = user.id, description = "Old Description")
+            val newDescription = "New Updated Description"
+            val requestBody = UpdateZoneRequest(description = newDescription)
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.OK, response.status)
+
+            val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
+            assertEquals(newDescription, responseBody.description)
+
+            val updatedZone = fakeZoneRepository.getById(zone.id)
+            assertNotNull(updatedZone)
+            assertEquals(Description(newDescription), updatedZone.description)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should update status successfully by reporter`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val user = createTestUser()
+            val zone = createTestZone(reporterId = user.id, status = ZoneStatus.REPORTED)
+            val newStatus = ZoneStatus.CLEANING_SCHEDULED
+            val requestBody = UpdateZoneRequest(status = newStatus.name)
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.OK, response.status)
+
+            val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
+            assertEquals(newStatus.name, responseBody.status)
+
+            val updatedZone = fakeZoneRepository.getById(zone.id)
+            assertNotNull(updatedZone)
+            assertEquals(newStatus, updatedZone.status)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should update severity successfully by reporter`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val user = createTestUser()
+            val zone = createTestZone(reporterId = user.id, zoneSeverity = ZoneSeverity.LOW)
+            val newSeverity = ZoneSeverity.HIGH
+            val requestBody = UpdateZoneRequest(severity = newSeverity.name)
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.OK, response.status)
+
+            val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
+            assertEquals(newSeverity.name, responseBody.severity)
+
+            val updatedZone = fakeZoneRepository.getById(zone.id)
+            assertNotNull(updatedZone)
+            assertEquals(newSeverity, updatedZone.zoneSeverity)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should update multiple fields successfully by reporter`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val user = createTestUser()
+            val zone =
+                createTestZone(
+                    reporterId = user.id,
+                    description = "Initial",
+                    status = ZoneStatus.REPORTED,
+                    zoneSeverity = ZoneSeverity.LOW,
+                )
+            val newDescription = "Updated Desc"
+            val newStatus = ZoneStatus.CLEANED
+            val newSeverity = ZoneSeverity.MEDIUM
+            val requestBody = UpdateZoneRequest(newDescription, newStatus.name, newSeverity.name)
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.OK, response.status)
+            val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
+            assertEquals(newDescription, responseBody.description)
+            assertEquals(newStatus.name, responseBody.status)
+            assertEquals(newSeverity.name, responseBody.severity)
+
+            val updatedZone = fakeZoneRepository.getById(zone.id)!!
+            assertEquals(Description(newDescription), updatedZone.description)
+            assertEquals(newStatus, updatedZone.status)
+            assertEquals(newSeverity, updatedZone.zoneSeverity)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should return 404 if zone not found`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val user = createTestUser()
+            val requestBody = UpdateZoneRequest(status = "CLEANED")
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.patch("/zones/999") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.NotFound, response.status)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should return 400 for invalid status value`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val user = createTestUser()
+            val zone = createTestZone(reporterId = user.id)
+            val requestBody = UpdateZoneRequest(status = "INVALID_STATUS")
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should return 400 for invalid severity value`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val user = createTestUser()
+            val zone = createTestZone(reporterId = user.id)
+            val requestBody = UpdateZoneRequest(severity = "INVALID_SEVERITY")
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should return 400 for blank description`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val user = createTestUser()
+            val zone = createTestZone(reporterId = user.id)
+            val requestBody = UpdateZoneRequest(description = "   ")
+            val token = generateTestToken(user.id)
+
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should return 403 if user not authorized`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val reporter = createTestUser()
+            val otherUser = createTestUser(email = Email("other@test.com"))
+            val zone = createTestZone(reporterId = reporter.id, status = ZoneStatus.REPORTED)
+            val requestBody = UpdateZoneRequest(status = "CLEANED")
+            val token = generateTestToken(otherUser.id)
+
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.Forbidden, response.status)
+
+            val currentZone = fakeZoneRepository.getById(zone.id)
+            assertNotNull(currentZone)
+            assertEquals(ZoneStatus.REPORTED, currentZone.status)
+        }
+
+    @Test
     fun `DELETE zones by ID - should return 204 when reporter deletes own reported zone`() =
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
             val zone = createTestZone(reporterId = user.id, status = ZoneStatus.REPORTED)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.delete("/zones/${zone.id.value}") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NoContent, response.status)
             assertNull(fakeZoneRepository.getById(zone.id))
@@ -256,10 +438,11 @@ class ZoneWebApiTest : BaseWebApiTest() {
     fun `DELETE zones by ID - should return 404 when zone not found`() =
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
+            val token = generateTestToken(user.id)
 
             val response =
                 client.delete("/zones/999") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -270,10 +453,11 @@ class ZoneWebApiTest : BaseWebApiTest() {
             val reporter = createTestUser()
             val otherUser = createTestUser(email = Email("other@test.com"))
             val zone = createTestZone(reporterId = reporter.id, status = ZoneStatus.REPORTED)
+            val token = generateTestToken(otherUser.id)
 
             val response =
                 client.delete("/zones/${zone.id.value}") {
-                    mockUser(otherUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
             assertNotNull(fakeZoneRepository.getById(zone.id))
@@ -286,6 +470,7 @@ class ZoneWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser(email = Email("organizer@test.com"))
             val zone = createTestZone(reporterId = reporter.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+            val token = generateTestToken(reporter.id)
 
             linkEventToZone(zoneId = zone.id, eventId = event.id)
 
@@ -295,149 +480,10 @@ class ZoneWebApiTest : BaseWebApiTest() {
 
             val response =
                 client.delete("/zones/${zone.id.value}") {
-                    mockUser(reporter.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
             assertNotNull(fakeZoneRepository.getById(zone.id))
-        }
-
-    @Test
-    fun `PATCH zone status - should update status successfully by reporter`() =
-        testApp({ zoneWebApi(zoneService) }) {
-            val user = createTestUser()
-            val zone = createTestZone(reporterId = user.id, status = ZoneStatus.REPORTED)
-            val requestBody = UpdateStatusRequest(status = "CLEANING_SCHEDULED")
-
-            val response =
-                client.patch("/zones/${zone.id.value}/status") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
-                }
-            assertEquals(HttpStatusCode.OK, response.status)
-
-            val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
-            assertEquals(ZoneStatus.CLEANING_SCHEDULED.name, responseBody.status)
-
-            val updatedZone = fakeZoneRepository.getById(zone.id)
-            assertNotNull(updatedZone)
-            assertEquals(ZoneStatus.CLEANING_SCHEDULED, updatedZone.status)
-        }
-
-    @Test
-    fun `PATCH zone status - should return 404 if zone not found`() =
-        testApp({ zoneWebApi(zoneService) }) {
-            val user = createTestUser()
-            val requestBody = UpdateStatusRequest(status = "CLEANED")
-
-            val response =
-                client.patch("/zones/999/status") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
-                }
-            assertEquals(HttpStatusCode.NotFound, response.status)
-        }
-
-    @Test
-    fun `PATCH zone status - should return 400 for invalid status value`() =
-        testApp({ zoneWebApi(zoneService) }) {
-            val user = createTestUser()
-            val zone = createTestZone(reporterId = user.id)
-            val requestBody = UpdateStatusRequest(status = "INVALID_STATUS")
-
-            val response =
-                client.patch("/zones/${zone.id.value}/status") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
-                }
-            assertEquals(HttpStatusCode.BadRequest, response.status)
-        }
-
-    @Test
-    fun `PATCH zone status - should return 403 if user not authorized`() =
-        testApp({ zoneWebApi(zoneService) }) {
-            val reporter = createTestUser()
-            val otherUser = createTestUser(email = Email("other@test.com"))
-            val zone = createTestZone(reporterId = reporter.id, status = ZoneStatus.REPORTED)
-            val requestBody = UpdateStatusRequest(status = "CLEANED")
-
-            val response =
-                client.patch("/zones/${zone.id.value}/status") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                    mockUser(otherUser.id)
-                }
-            assertEquals(HttpStatusCode.Forbidden, response.status)
-
-            val currentZone = fakeZoneRepository.getById(zone.id)
-            assertNotNull(currentZone)
-            assertEquals(ZoneStatus.REPORTED, currentZone.status)
-        }
-
-    @Test
-    fun `PATCH zone severity - should update severity successfully by reporter`() =
-        testApp({ zoneWebApi(zoneService) }) {
-            val user = createTestUser()
-            val zone = createTestZone(reporterId = user.id, zoneSeverity = ZoneSeverity.LOW)
-            val requestBody = UpdateSeverityRequest(severity = "HIGH")
-
-            val response =
-                client.patch("/zones/${zone.id.value}/severity") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
-                }
-            assertEquals(HttpStatusCode.OK, response.status)
-
-            val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
-            assertEquals(ZoneSeverity.HIGH.name, responseBody.severity)
-
-            val updatedZone = fakeZoneRepository.getById(zone.id)
-            assertNotNull(updatedZone)
-            assertEquals(ZoneSeverity.HIGH, updatedZone.zoneSeverity)
-        }
-
-    @Test
-    fun `PATCH zone severity - should return 400 for invalid severity value`() =
-        testApp({ zoneWebApi(zoneService) }) {
-            val user = createTestUser()
-            val zone = createTestZone(reporterId = user.id)
-            val requestBody = UpdateSeverityRequest(severity = "SUPER_HIGH")
-
-            val response =
-                client.patch("/zones/${zone.id.value}/severity") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
-                }
-            assertEquals(HttpStatusCode.BadRequest, response.status)
-        }
-
-    @Test
-    fun `PATCH zone severity - should return 403 if user not authorized`() =
-        testApp({ zoneWebApi(zoneService) }) {
-            val reporter = createTestUser()
-            val otherUser = createTestUser(email = Email("other@test.com"))
-            val zone = createTestZone(reporterId = reporter.id, zoneSeverity = ZoneSeverity.MEDIUM)
-            val requestBody = UpdateSeverityRequest(severity = "HIGH")
-
-            val response =
-                client.patch("/zones/${zone.id.value}/severity") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                    mockUser(otherUser.id)
-                }
-            assertEquals(HttpStatusCode.Forbidden, response.status)
-
-            val currentZone = fakeZoneRepository.getById(zone.id)
-            assertNotNull(currentZone)
-            assertEquals(
-                ZoneSeverity.MEDIUM,
-                currentZone.zoneSeverity,
-                "Severity should not change",
-            )
         }
 
     @Test
@@ -448,12 +494,13 @@ class ZoneWebApiTest : BaseWebApiTest() {
             val zone = createTestZone(reporterId = user.id, photosIds = initialPhotos)
             val newPhotoId = Id(2u)
             val requestBody = AddPhotoRequest(photoId = newPhotoId.value)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/zones/${zone.id.value}/photos") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.OK, response.status)
 
@@ -472,12 +519,13 @@ class ZoneWebApiTest : BaseWebApiTest() {
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
             val requestBody = AddPhotoRequest(photoId = 1u)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/zones/999/photos") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(user.id)
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -489,12 +537,13 @@ class ZoneWebApiTest : BaseWebApiTest() {
             val otherUser = createTestUser(email = Email("other@test.com"))
             val zone = createTestZone(reporterId = reporter.id, photosIds = setOf(Id(1u)))
             val requestBody = AddPhotoRequest(photoId = 2u)
+            val token = generateTestToken(otherUser.id)
 
             val response =
                 client.post("/zones/${zone.id.value}/photos") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(otherUser.id)
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
 
@@ -511,10 +560,11 @@ class ZoneWebApiTest : BaseWebApiTest() {
             val initialPhotos = setOf(Id(1u), photoToRemove)
             val user = createTestUser()
             val zone = createTestZone(reporterId = user.id, photosIds = initialPhotos)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.delete("/zones/${zone.id.value}/photos/${photoToRemove.value}") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
 
@@ -532,10 +582,11 @@ class ZoneWebApiTest : BaseWebApiTest() {
     fun `DELETE zone photo - should return 404 if zone not found`() =
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
+            val token = generateTestToken(user.id)
 
             val response =
                 client.delete("/zones/999/photos/1") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -545,10 +596,11 @@ class ZoneWebApiTest : BaseWebApiTest() {
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
             val zone = createTestZone(reporterId = user.id, photosIds = setOf(Id(1u)))
+            val token = generateTestToken(user.id)
 
             val response =
                 client.delete("/zones/${zone.id.value}/photos/2") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -560,10 +612,11 @@ class ZoneWebApiTest : BaseWebApiTest() {
             val otherUser = createTestUser(email = Email("other@test.com"))
             val photoToRemove = Id(2u)
             val zone = createTestZone(reporter.id, photosIds = setOf(Id(1u), photoToRemove))
+            val token = generateTestToken(otherUser.id)
 
             val response =
                 client.delete("/zones/${zone.id.value}/photos/${photoToRemove.value}") {
-                    mockUser(otherUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
 
@@ -571,5 +624,59 @@ class ZoneWebApiTest : BaseWebApiTest() {
             assertNotNull(currentZone)
             assertEquals(2, currentZone.photosIds.size)
             assertTrue(currentZone.photosIds.contains(photoToRemove))
+        }
+
+    @Test
+    fun `POST zones - should fail with 401 Unauthorized if no token`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val requestBody = ReportZoneRequest(40.0, -75.0, "Desc", setOf(1u), "HIGH")
+            val response =
+                client.post("/zones") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `PATCH zones by ID - should fail with 401 Unauthorized if no token`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val zone = createTestZone()
+            val requestBody = UpdateZoneRequest(description = "New Description")
+            val response =
+                client.patch("/zones/${zone.id.value}") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `DELETE zones by ID - should fail with 401 Unauthorized if no token`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val zone = createTestZone()
+            val response = client.delete("/zones/${zone.id.value}")
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `POST zone photos - should fail with 401 Unauthorized if no token`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val zone = createTestZone()
+            val requestBody = AddPhotoRequest(1u)
+            val response =
+                client.post("/zones/${zone.id.value}/photos") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `DELETE zone photo - should fail with 401 Unauthorized if no token`() =
+        testApp({ zoneWebApi(zoneService) }) {
+            val zone = createTestZone(photosIds = setOf(Id(1u)))
+            val response = client.delete("/zones/${zone.id.value}/photos/1")
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 }

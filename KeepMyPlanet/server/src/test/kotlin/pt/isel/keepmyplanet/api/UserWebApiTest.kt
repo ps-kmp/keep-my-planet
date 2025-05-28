@@ -2,11 +2,13 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
@@ -57,7 +59,7 @@ class UserWebApiTest : BaseWebApiTest() {
     @Test
     fun `POST users - should fail with 409 Conflict when email exists`() =
         testApp({ userWebApi(userService) }) {
-            createTestUser(email = Email("conflict@example.com"))
+            createTestUser(email = Email("conflict@example.com"), password = Password("Password1!"))
             val request = RegisterRequest("Another User", "conflict@example.com", "Password123!")
 
             val response =
@@ -94,17 +96,6 @@ class UserWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
-    /*
-    @Test
-    fun `GET users - should return empty list when no users exist`() =
-        testApp({ userWebApi(userService) }) {
-            val response = client.get("/users")
-
-            assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals("[]", response.bodyAsText())
-        }
-     */
-
     @Test
     fun `GET users - should return list of existing users`() =
         testApp({ userWebApi(userService) }) {
@@ -139,7 +130,7 @@ class UserWebApiTest : BaseWebApiTest() {
     @Test
     fun `GET users by ID - should return 404 when not found`() =
         testApp({ userWebApi(userService) }) {
-            val nonExistentId = 999U
+            val nonExistentId = 9999U
             val response = client.get("/users/$nonExistentId")
 
             assertEquals(HttpStatusCode.NotFound, response.status)
@@ -149,7 +140,6 @@ class UserWebApiTest : BaseWebApiTest() {
     fun `GET users by ID - should return 400 for invalid ID format`() =
         testApp({ userWebApi(userService) }) {
             val response = client.get("/users/invalid-id-format")
-
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
@@ -158,10 +148,11 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val userToUpdate = createTestUser(Name("Old Name"), Email("old@test.com"))
             val request = UpdateProfileRequest(name = "New Name", email = "new@test.com")
+            val token = generateTestToken(userToUpdate.id)
 
             val response =
                 client.patch("/users/${userToUpdate.id.value}") {
-                    mockUser(userToUpdate.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -182,12 +173,13 @@ class UserWebApiTest : BaseWebApiTest() {
     fun `PATCH users by ID - should fail with 404 when user not found`() =
         testApp({ userWebApi(userService) }) {
             val actingUser = createTestUser()
-            val nonExistentId = 999U
+            val nonExistentId = 9999U
             val request = UpdateProfileRequest(name = "Name")
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.patch("/users/$nonExistentId") {
-                    mockUser(actingUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -200,10 +192,11 @@ class UserWebApiTest : BaseWebApiTest() {
             val userToUpdate = createTestUser(email = Email("target@test.com"))
             val actingUser = createTestUser(email = Email("actor@test.com"))
             val request = UpdateProfileRequest(name = "Attempted Name")
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.patch("/users/${userToUpdate.id.value}") {
-                    mockUser(actingUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -211,18 +204,18 @@ class UserWebApiTest : BaseWebApiTest() {
         }
 
     @Test
-    fun `PATCH users by ID - should fail with 401 Unauthorized when no auth`() =
+    fun `PATCH users by ID - should fail with 401 Unauthorized when no auth token`() =
         testApp({ userWebApi(userService) }) {
             val userToUpdate = createTestUser()
             val request = UpdateProfileRequest(name = "New Name")
 
             val response =
                 client.patch("/users/${userToUpdate.id.value}") {
-                    // No mockUser header
+                    // No Authorization header
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
-            assertEquals(HttpStatusCode.Forbidden, response.status)
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 
     @Test
@@ -231,10 +224,11 @@ class UserWebApiTest : BaseWebApiTest() {
             val user1 = createTestUser(email = Email("user1@test.com"))
             createTestUser(email = Email("user2@test.com"))
             val request = UpdateProfileRequest(email = "user2@test.com")
+            val token = generateTestToken(user1.id)
 
             val response =
                 client.patch("/users/${user1.id.value}") {
-                    mockUser(user1.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -246,10 +240,11 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val actingUser = createTestUser()
             val request = UpdateProfileRequest(name = "Any Name")
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.patch("/users/invalid-id") {
-                    mockUser(actingUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -261,10 +256,11 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val userToDelete = createTestUser()
             val userId = userToDelete.id
+            val token = generateTestToken(userId)
 
             val response =
                 client.delete("/users/${userId.value}") {
-                    mockUser(userId)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NoContent, response.status)
             assertNull(fakeUserRepository.getById(userId))
@@ -274,11 +270,12 @@ class UserWebApiTest : BaseWebApiTest() {
     fun `DELETE users by ID - should fail with 404 when user not found`() =
         testApp({ userWebApi(userService) }) {
             val actingUser = createTestUser()
-            val nonExistentId = 999U
+            val nonExistentId = 9999U
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.delete("/users/$nonExistentId") {
-                    mockUser(actingUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -288,25 +285,26 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val userToDelete = createTestUser(email = Email("target@delete.com"))
             val actingUser = createTestUser(email = Email("actor@delete.com"))
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.delete("/users/${userToDelete.id.value}") {
-                    mockUser(actingUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
             assertNotNull(fakeUserRepository.getById(userToDelete.id))
         }
 
     @Test
-    fun `DELETE users by ID - should fail with 401 Unauthorized when no auth`() =
+    fun `DELETE users by ID - should fail with 401 Unauthorized when no auth token`() =
         testApp({ userWebApi(userService) }) {
             val userToDelete = createTestUser()
 
             val response =
                 client.delete("/users/${userToDelete.id.value}") {
-                    // No mockUser header
+                    // No Authorization header
                 }
-            assertEquals(HttpStatusCode.Forbidden, response.status)
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
             assertNotNull(fakeUserRepository.getById(userToDelete.id))
         }
 
@@ -317,10 +315,11 @@ class UserWebApiTest : BaseWebApiTest() {
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.PLANNED)
             linkEventToZone(zone.id, event.id)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.delete("/users/${organizer.id.value}") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
             assertNotNull(fakeUserRepository.getById(organizer.id))
@@ -330,10 +329,11 @@ class UserWebApiTest : BaseWebApiTest() {
     fun `DELETE users by ID - should fail with 400 Bad Request for invalid ID format`() =
         testApp({ userWebApi(userService) }) {
             val actingUser = createTestUser()
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.delete("/users/invalid-id") {
-                    mockUser(actingUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -343,13 +343,13 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val newPassword = "NewPassword1!"
-            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
-            val user = createTestUser(passwordHash = oldPasswordHash)
+            val user = createTestUser(password = Password(oldPassword))
             val request = ChangePasswordRequest(oldPassword, newPassword)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.patch("/users/${user.id.value}/password") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -365,12 +365,13 @@ class UserWebApiTest : BaseWebApiTest() {
     fun `PATCH users password - should fail with 404 when user not found`() =
         testApp({ userWebApi(userService) }) {
             val actingUser = createTestUser()
-            val nonExistentId = 999U
-            val request = ChangePasswordRequest("Password1!", "Password1!")
+            val nonExistentId = 9999U
+            val request = ChangePasswordRequest("Password1!", "NewPassword1!")
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.patch("/users/$nonExistentId/password") {
-                    mockUser(actingUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -382,14 +383,15 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val newPassword = "NewPassword1!"
-            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
-            val userToUpdate = createTestUser(passwordHash = oldPasswordHash)
+            val userToUpdate = createTestUser(password = Password(oldPassword))
             val actingUser = createTestUser(email = Email("actor@pass.com"))
             val request = ChangePasswordRequest(oldPassword, newPassword)
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.patch("/users/${userToUpdate.id.value}/password") {
-                    mockUser(actingUser.id)
+                    // Path for userToUpdate
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -397,7 +399,8 @@ class UserWebApiTest : BaseWebApiTest() {
 
             val notUpdatedUser = fakeUserRepository.getById(userToUpdate.id)
             assertNotNull(notUpdatedUser)
-            assertEquals(oldPasswordHash, notUpdatedUser.passwordHash)
+            // Verify password hash is still the old one
+            assertTrue(passwordHasher.verify(Password(oldPassword), notUpdatedUser.passwordHash))
         }
 
     @Test
@@ -405,13 +408,13 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val newPassword = "NewPassword1!"
-            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
-            val user = createTestUser(passwordHash = oldPasswordHash)
+            val user = createTestUser(password = Password(oldPassword))
             val request = ChangePasswordRequest("WRONG_OLD_PASSWORDa1!", newPassword)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.patch("/users/${user.id.value}/password") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -419,38 +422,37 @@ class UserWebApiTest : BaseWebApiTest() {
 
             val notUpdatedUser = fakeUserRepository.getById(user.id)
             assertNotNull(notUpdatedUser)
-            assertEquals(oldPasswordHash, notUpdatedUser.passwordHash)
+            assertTrue(passwordHasher.verify(Password(oldPassword), notUpdatedUser.passwordHash))
         }
 
     @Test
-    fun `PATCH users password - should fail with 401 Unauthorized when no auth`() =
+    fun `PATCH users password - should fail with 401 Unauthorized when no auth token`() =
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val newPassword = "NewPassword1!"
-            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
-            val user = createTestUser(passwordHash = oldPasswordHash)
+            val user = createTestUser(password = Password(oldPassword))
             val request = ChangePasswordRequest(oldPassword, newPassword)
 
             val response =
                 client.patch("/users/${user.id.value}/password") {
-                    // No mockUser header
+                    // No Authorization header
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
-            assertEquals(HttpStatusCode.Forbidden, response.status)
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 
     @Test
     fun `PATCH users password - should fail with 400 Bad Request when new password is same as old`() =
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
-            val oldPasswordHash = passwordHasher.hash(Password(oldPassword))
-            val user = createTestUser(passwordHash = oldPasswordHash)
+            val user = createTestUser(password = Password(oldPassword))
             val request = ChangePasswordRequest(oldPassword, oldPassword)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.patch("/users/${user.id.value}/password") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -461,11 +463,12 @@ class UserWebApiTest : BaseWebApiTest() {
     fun `PATCH users password - should fail with 400 Bad Request for invalid ID format`() =
         testApp({ userWebApi(userService) }) {
             val actingUser = createTestUser()
-            val request = ChangePasswordRequest(oldPassword = "any", newPassword = "any")
+            val request = ChangePasswordRequest("anyPassword1!", "newPassword1!")
+            val token = generateTestToken(actingUser.id)
 
             val response =
                 client.patch("/users/invalid-id/password") {
-                    mockUser(actingUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(request))
                 }
@@ -477,10 +480,11 @@ class UserWebApiTest : BaseWebApiTest() {
         testApp({ userWebApi(userService) }) {
             val user = createTestUser()
             val invalidJson = """{"oldPassword": "somePassword"}"""
+            val token = generateTestToken(user.id)
 
             val response =
                 client.patch("/users/${user.id.value}/password") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(invalidJson)
                 }

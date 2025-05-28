@@ -2,11 +2,13 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
@@ -20,6 +22,7 @@ import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
+import pt.isel.keepmyplanet.dto.user.UserResponse
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
 import pt.isel.keepmyplanet.util.minus
@@ -56,6 +59,7 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser(name = Name("Organizer User"))
             val zone = createTestZone(reporterId = organizer.id)
+            val token = generateTestToken(organizer.id)
 
             val requestBody =
                 CreateEventRequest(
@@ -69,9 +73,9 @@ class EventWebApiTest : BaseWebApiTest() {
 
             val response =
                 client.post("/events") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
 
             assertEquals(HttpStatusCode.Created, response.status)
@@ -103,6 +107,7 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
+            val token = generateTestToken(organizer.id)
             val requestBody =
                 CreateEventRequest(
                     title = "Event",
@@ -113,9 +118,9 @@ class EventWebApiTest : BaseWebApiTest() {
                 )
             val response =
                 client.post("/events") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -125,6 +130,7 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
+            val token = generateTestToken(organizer.id)
             val requestBody =
                 CreateEventRequest(
                     title = "Event",
@@ -135,9 +141,9 @@ class EventWebApiTest : BaseWebApiTest() {
                 )
             val response =
                 client.post("/events") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -147,6 +153,7 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
+            val token = generateTestToken(organizer.id)
             val requestBody =
                 CreateEventRequest(
                     title = "Event",
@@ -157,9 +164,9 @@ class EventWebApiTest : BaseWebApiTest() {
                 )
             val response =
                 client.post("/events") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -169,6 +176,7 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
+            val token = generateTestToken(organizer.id)
             val pastDate = now().minus(1.days).toString()
             val requestBody =
                 CreateEventRequest(
@@ -180,9 +188,9 @@ class EventWebApiTest : BaseWebApiTest() {
                 )
             val response =
                 client.post("/events") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -191,6 +199,7 @@ class EventWebApiTest : BaseWebApiTest() {
     fun `POST events - should fail with 404 if zone not found`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
+            val token = generateTestToken(organizer.id)
             val nonExistentZoneId = 999U
             val requestBody =
                 CreateEventRequest(
@@ -202,9 +211,9 @@ class EventWebApiTest : BaseWebApiTest() {
                 )
             val response =
                 client.post("/events") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -213,6 +222,7 @@ class EventWebApiTest : BaseWebApiTest() {
     fun `POST events - should fail with 404 if organizer (current user) not found`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val nonExistentOrganizerId = Id(998U)
+            val token = generateTestToken(nonExistentOrganizerId)
             val zone = createTestZone()
             val requestBody =
                 CreateEventRequest(
@@ -224,9 +234,9 @@ class EventWebApiTest : BaseWebApiTest() {
                 )
             val response =
                 client.post("/events") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(nonExistentOrganizerId)
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -236,6 +246,7 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
+            val token = generateTestToken(organizer.id)
             val existingEvent =
                 createTestEvent(
                     zoneId = zone.id,
@@ -254,9 +265,9 @@ class EventWebApiTest : BaseWebApiTest() {
                 )
             val response =
                 client.post("/events") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -276,10 +287,8 @@ class EventWebApiTest : BaseWebApiTest() {
             val user = createTestUser()
             val zone1 = createTestZone(reporterId = user.id)
             val zone2 = createTestZone(reporterId = user.id, location = Location(1.0, 1.0))
-            val event1 =
-                createTestEvent(zoneId = zone1.id, organizerId = user.id, title = "Event 1")
-            val event2 =
-                createTestEvent(zoneId = zone2.id, organizerId = user.id, title = "Event 2")
+            val event1 = createTestEvent(zone1.id, organizerId = user.id, title = "Event 1")
+            val event2 = createTestEvent(zone2.id, organizerId = user.id, title = "Event 2")
 
             val response = client.get("/events")
             assertEquals(HttpStatusCode.OK, response.status)
@@ -294,8 +303,7 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val user = createTestUser()
             val zone = createTestZone(reporterId = user.id)
-            val event =
-                createTestEvent(zoneId = zone.id, organizerId = user.id, title = "Specific Event")
+            val event = createTestEvent(zone.id, organizerId = user.id, title = "Specific Event")
 
             val response = client.get("/events/${event.id.value}")
             assertEquals(HttpStatusCode.OK, response.status)
@@ -324,6 +332,7 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+            val token = generateTestToken(organizer.id)
 
             val newTitle = "Updated Event Title"
             val newDescription = "Updated description."
@@ -342,9 +351,9 @@ class EventWebApiTest : BaseWebApiTest() {
 
             val response =
                 client.patch("/events/${event.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<EventResponse>(response.bodyAsText())
@@ -367,14 +376,14 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
-            val requestBody =
-                UpdateEventRequest(startDate = "invalid-date", endDate = futureEnd.toString())
+            val token = generateTestToken(organizer.id)
+            val requestBody = UpdateEventRequest(startDate = "inv", endDate = futureEnd.toString())
 
             val response =
                 client.patch("/events/${event.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -385,13 +394,14 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+            val token = generateTestToken(organizer.id)
             val requestBody = UpdateEventRequest(startDate = futureStart.toString())
 
             val response =
                 client.patch("/events/${event.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -402,15 +412,15 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
-            val pastDate = now().minus(1.days).toString()
-            val requestBody =
-                UpdateEventRequest(startDate = pastDate, endDate = futureEnd.toString())
+            val token = generateTestToken(organizer.id)
+            val past = now().minus(1.days).toString()
+            val requestBody = UpdateEventRequest(startDate = past, endDate = futureEnd.toString())
 
             val response =
                 client.patch("/events/${event.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -422,13 +432,14 @@ class EventWebApiTest : BaseWebApiTest() {
             val otherUser = createTestUser(name = Name("Other"), email = Email("other@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+            val token = generateTestToken(otherUser.id)
             val requestBody = UpdateEventRequest(title = "Attempted Update")
 
             val response =
                 client.patch("/events/${event.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(otherUser.id)
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
@@ -440,20 +451,16 @@ class EventWebApiTest : BaseWebApiTest() {
             val p1 = createTestUser(email = Email("p1@e.com"))
             val p2 = createTestUser(email = Email("p2@e.com"))
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    participantsIds = setOf(p1.id, p2.id),
-                )
+            val event = createTestEvent(zone.id, organizer.id, setOf(p1.id, p2.id))
+            val token = generateTestToken(organizer.id)
 
             val requestBody = UpdateEventRequest(maxParticipants = 1)
 
             val response =
                 client.patch("/events/${event.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
@@ -463,19 +470,15 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.COMPLETED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.COMPLETED)
+            val token = generateTestToken(organizer.id)
             val requestBody = UpdateEventRequest(title = "Too late update")
 
             val response =
                 client.patch("/events/${event.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -485,19 +488,15 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.CANCELLED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.CANCELLED)
+            val token = generateTestToken(organizer.id)
             val requestBody = UpdateEventRequest(title = "Too late update")
 
             val response =
                 client.patch("/events/${event.id.value}") {
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     setBody(Json.encodeToString(requestBody))
-                    mockUser(organizer.id)
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -507,13 +506,9 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.PLANNED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.PLANNED)
             linkEventToZone(zone.id, event.id)
+            val token = generateTestToken(organizer.id)
 
             assertNotNull(fakeEventRepository.getById(event.id))
             val initialZone = fakeZoneRepository.getById(zone.id)
@@ -523,7 +518,7 @@ class EventWebApiTest : BaseWebApiTest() {
 
             val response =
                 client.delete("/events/${event.id.value}") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NoContent, response.status)
             assertNull(fakeEventRepository.getById(event.id))
@@ -539,20 +534,68 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.CANCELLED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.CANCELLED)
+            val token = generateTestToken(organizer.id)
             assertNotNull(fakeEventRepository.getById(event.id))
 
             val response =
                 client.delete("/events/${event.id.value}") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NoContent, response.status)
             assertNull(fakeEventRepository.getById(event.id))
+        }
+
+    @Test
+    fun `POST events - should fail with 401 Unauthorized if no token provided`() =
+        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
+            val organizer = createTestUser(name = Name("Organizer User"))
+            val zone = createTestZone(reporterId = organizer.id)
+
+            val requestBody =
+                CreateEventRequest(
+                    title = "New Beach Cleanup",
+                    description = "Let's clean the beach!",
+                    startDate = futureStart.toString(),
+                    endDate = futureEnd.toString(),
+                    zoneId = zone.id.value,
+                    maxParticipants = 50,
+                )
+
+            val response =
+                client.post("/events") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `PATCH event by ID - should fail with 401 Unauthorized if no token provided`() =
+        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
+            val organizer = createTestUser()
+            val zone = createTestZone(reporterId = organizer.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+
+            val requestBody = UpdateEventRequest(title = "Attempted Update")
+
+            val response =
+                client.patch("/events/${event.id.value}") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `DELETE event by ID - should fail with 401 Unauthorized if no token provided`() =
+        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
+            val organizer = createTestUser()
+            val zone = createTestZone(reporterId = organizer.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+
+            val response = client.delete("/events/${event.id.value}")
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 
     @Test
@@ -562,10 +605,11 @@ class EventWebApiTest : BaseWebApiTest() {
             val otherUser = createTestUser(name = Name("Other"), email = Email("other@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+            val token = generateTestToken(otherUser.id)
 
             val response =
                 client.delete("/events/${event.id.value}") {
-                    mockUser(otherUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
             assertNotNull(fakeEventRepository.getById(event.id))
@@ -576,16 +620,12 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.IN_PROGRESS,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.IN_PROGRESS)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.delete("/events/${event.id.value}") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
             assertNotNull(fakeEventRepository.getById(event.id))
@@ -596,16 +636,12 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.COMPLETED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.COMPLETED)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.delete("/events/${event.id.value}") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -615,16 +651,13 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.PLANNED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.PLANNED)
+            linkEventToZone(zone.id, event.id)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/cancel") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<EventResponse>(response.bodyAsText())
@@ -645,16 +678,12 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.IN_PROGRESS,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.IN_PROGRESS)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/cancel") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val cancelledEvent = fakeEventRepository.getById(event.id)
@@ -668,16 +697,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val otherUser = createTestUser(name = Name("Other"), email = Email("other@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.PLANNED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.PLANNED)
+            val token = generateTestToken(otherUser.id)
 
             val response =
                 client.post("/events/${event.id.value}/cancel") {
-                    mockUser(otherUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
@@ -687,16 +712,12 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.CANCELLED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.CANCELLED)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/cancel") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -706,16 +727,12 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.COMPLETED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.COMPLETED)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/cancel") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -733,10 +750,11 @@ class EventWebApiTest : BaseWebApiTest() {
                     period = Period(now().minus(2.hours), now().minus(1.hours)),
                 )
             linkEventToZone(zone.id, event.id)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/complete") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<EventResponse>(response.bodyAsText())
@@ -764,10 +782,11 @@ class EventWebApiTest : BaseWebApiTest() {
                     status = EventStatus.PLANNED,
                     period = Period(now().minus(2.days).minus(2.hours), now().minus(1.days)),
                 )
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/complete") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val completedEvent = fakeEventRepository.getById(event.id)
@@ -781,16 +800,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val otherUser = createTestUser(name = Name("Other"), email = Email("other@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.IN_PROGRESS,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.IN_PROGRESS)
+            val token = generateTestToken(otherUser.id)
 
             val response =
                 client.post("/events/${event.id.value}/complete") {
-                    mockUser(otherUser.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
@@ -800,16 +815,12 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.COMPLETED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.COMPLETED)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/complete") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -819,16 +830,12 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.CANCELLED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.CANCELLED)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/complete") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -839,17 +846,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val participant = createTestUser(name = Name("Part"), email = Email("part@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    participantsIds = emptySet(),
-                    status = EventStatus.PLANNED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, emptySet(), EventStatus.PLANNED)
+            val token = generateTestToken(participant.id)
 
             val response =
                 client.post("/events/${event.id.value}/join") {
-                    mockUser(participant.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<EventResponse>(response.bodyAsText())
@@ -876,10 +878,11 @@ class EventWebApiTest : BaseWebApiTest() {
                     maxParticipants = 1,
                     status = EventStatus.PLANNED,
                 )
+            val token = generateTestToken(p2Attempting.id)
 
             val response =
                 client.post("/events/${event.id.value}/join") {
-                    mockUser(p2Attempting.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -891,16 +894,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val participant = createTestUser(name = Name("Part"), email = Email("part@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
             val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    participantsIds = setOf(participant.id),
-                    status = EventStatus.PLANNED,
-                )
+                createTestEvent(zone.id, organizer.id, setOf(participant.id), EventStatus.PLANNED)
+            val token = generateTestToken(participant.id)
 
             val response =
                 client.post("/events/${event.id.value}/join") {
-                    mockUser(participant.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -911,16 +910,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val user = createTestUser(name = Name("User"), email = Email("user@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.IN_PROGRESS,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.IN_PROGRESS)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/events/${event.id.value}/join") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -931,16 +926,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val user = createTestUser(name = Name("User"), email = Email("user@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.CANCELLED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.CANCELLED)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/events/${event.id.value}/join") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -951,16 +942,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val user = createTestUser(name = Name("User"), email = Email("user@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.COMPLETED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.COMPLETED)
+            val token = generateTestToken(user.id)
 
             val response =
                 client.post("/events/${event.id.value}/join") {
-                    mockUser(user.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -970,16 +957,12 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.PLANNED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, status = EventStatus.PLANNED)
+            val token = generateTestToken(organizer.id)
 
             val response =
                 client.post("/events/${event.id.value}/join") {
-                    mockUser(organizer.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -991,16 +974,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val participant = createTestUser(name = Name("Part"), email = Email("part@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
             val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    participantsIds = setOf(participant.id),
-                    status = EventStatus.PLANNED,
-                )
+                createTestEvent(zone.id, organizer.id, setOf(participant.id), EventStatus.PLANNED)
+            val token = generateTestToken(participant.id)
 
             val response =
                 client.post("/events/${event.id.value}/leave") {
-                    mockUser(participant.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<EventResponse>(response.bodyAsText())
@@ -1018,17 +997,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val nonParticipant = createTestUser(name = Name("Non"), email = Email("non@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    participantsIds = emptySet(),
-                    status = EventStatus.PLANNED,
-                )
+            val event = createTestEvent(zone.id, organizer.id, emptySet(), EventStatus.PLANNED)
+            val token = generateTestToken(nonParticipant.id)
 
             val response =
                 client.post("/events/${event.id.value}/leave") {
-                    mockUser(nonParticipant.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
         }
@@ -1046,10 +1020,11 @@ class EventWebApiTest : BaseWebApiTest() {
                     participantsIds = setOf(participant.id),
                     status = EventStatus.IN_PROGRESS,
                 )
+            val token = generateTestToken(participant.id)
 
             val response =
                 client.post("/events/${event.id.value}/leave") {
-                    mockUser(participant.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -1067,10 +1042,11 @@ class EventWebApiTest : BaseWebApiTest() {
                     participantsIds = setOf(participant.id),
                     status = EventStatus.CANCELLED,
                 )
+            val token = generateTestToken(participant.id)
 
             val response =
                 client.post("/events/${event.id.value}/leave") {
-                    mockUser(participant.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
@@ -1088,17 +1064,30 @@ class EventWebApiTest : BaseWebApiTest() {
                     participantsIds = setOf(participant.id),
                     status = EventStatus.COMPLETED,
                 )
+            val token = generateTestToken(participant.id)
 
             val response =
                 client.post("/events/${event.id.value}/leave") {
-                    mockUser(participant.id)
+                    header(HttpHeaders.Authorization, "Bearer $token")
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
+    @Test
     fun `GET event participants - should return list of participants`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
-            TODO()
+            val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
+            val p1 = createTestUser(name = Name("P1"), email = Email("p1@test.com"))
+            val p2 = createTestUser(name = Name("P2"), email = Email("p2@test.com"))
+            val zone = createTestZone(reporterId = organizer.id)
+            val event = createTestEvent(zone.id, organizer.id, setOf(p1.id, p2.id))
+
+            val response = client.get("/events/${event.id.value}/participants")
+            assertEquals(HttpStatusCode.OK, response.status)
+            val responseList = Json.decodeFromString<List<UserResponse>>(response.bodyAsText())
+            assertEquals(2, responseList.size)
+            assertTrue(responseList.any { it.id == p1.id.value && it.name == p1.name.value })
+            assertTrue(responseList.any { it.id == p2.id.value && it.name == p2.name.value })
         }
 
     @Test
@@ -1106,15 +1095,54 @@ class EventWebApiTest : BaseWebApiTest() {
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    participantsIds = emptySet(),
-                )
+            val event = createTestEvent(zone.id, organizer.id, emptySet())
 
             val response = client.get("/events/${event.id.value}/participants")
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals("[]", response.bodyAsText())
+        }
+
+    @Test
+    fun `POST cancel event - should fail with 401 Unauthorized if no token`() =
+        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
+            val organizer = createTestUser()
+            val zone = createTestZone(reporterId = organizer.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+
+            val response = client.post("/events/${event.id.value}/cancel")
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `POST complete event - should fail with 401 Unauthorized if no token`() =
+        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
+            val organizer = createTestUser()
+            val zone = createTestZone(reporterId = organizer.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+
+            val response = client.post("/events/${event.id.value}/complete")
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `POST join event - should fail with 401 Unauthorized if no token`() =
+        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
+            val organizer = createTestUser()
+            val zone = createTestZone(reporterId = organizer.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+
+            val response = client.post("/events/${event.id.value}/join")
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+        }
+
+    @Test
+    fun `POST leave event - should fail with 401 Unauthorized if no token`() =
+        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
+            val organizer = createTestUser()
+            val zone = createTestZone(reporterId = organizer.id)
+            val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+
+            val response = client.post("/events/${event.id.value}/leave")
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 }
