@@ -67,9 +67,12 @@ class DatabaseZoneRepository(
 
     override suspend fun getById(id: Id): Zone? = getZoneWithPhotos(id)
 
-    override suspend fun getAll(): List<Zone> =
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<Zone> =
         zoneQueries
-            .getAll()
+            .getAll(limit.toLong(), offset.toLong())
             .executeAsList()
             .map { getZoneWithPhotos(it) }
 
@@ -134,8 +137,10 @@ class DatabaseZoneRepository(
     override suspend fun findNearLocation(
         center: Location,
         radiusKm: Double,
+        limit: Int,
+        offset: Int,
     ): List<Zone> {
-        val allDbZones = zoneQueries.getAll().executeAsList()
+        val allDbZones = zoneQueries.getAll(limit.toLong(), offset.toLong()).executeAsList()
 
         val nearbyDbZonesWithDistance =
             allDbZones.mapNotNull { dbZone ->

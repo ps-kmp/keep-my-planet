@@ -26,7 +26,10 @@ class InMemoryEventStateChangeRepository : EventStateChangeRepository {
 
     override suspend fun getById(id: Id): EventStateChange? = changes[id]
 
-    override suspend fun getAll(): List<EventStateChange> = changes.values.sortedBy { it.changeTime }
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<EventStateChange> = changes.values.sortedBy { it.changeTime }
 
     override suspend fun deleteById(id: Id): Boolean = changes.remove(id) != null
 

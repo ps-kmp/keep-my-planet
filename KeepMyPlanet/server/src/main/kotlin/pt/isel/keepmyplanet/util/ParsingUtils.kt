@@ -44,6 +44,11 @@ fun ApplicationCall.getQueryStringParameter(paramName: String): String? =
     request
         .queryParameters[paramName]
 
+fun ApplicationCall.getQueryIntParameter(
+    name: String,
+    default: Int,
+): Int = this.request.queryParameters[name]?.toIntOrNull() ?: default
+
 fun ApplicationCall.getCurrentUserId(): Id {
     val principal =
         principal<JWTPrincipal>()

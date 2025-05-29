@@ -69,9 +69,12 @@ class DatabaseMessageRepository(
             .deleteByIdReturningId(id)
             .executeAsOneOrNull() != null
 
-    override suspend fun getAll(): List<Message> =
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<Message> =
         messageQueries
-            .getAll()
+            .getAll(limit.toLong(), offset.toLong())
             .executeAsList()
             .map { it.toDomainMessage() }
 

@@ -32,7 +32,7 @@ deleteByIdReturningId:
 DELETE FROM messages WHERE id = :id RETURNING id;
 
 getAll:
-SELECT * FROM messages ORDER BY event_id, chat_position;
+SELECT * FROM messages ORDER BY event_id, chat_position LIMIT :limit OFFSET :offset ;
 
 updateMessage:
 UPDATE messages

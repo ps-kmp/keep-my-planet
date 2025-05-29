@@ -45,9 +45,14 @@ class InMemoryMessageRepository : MessageRepository {
 
     override suspend fun getById(id: Id): Message? = messages[id]
 
-    override suspend fun getAll(): List<Message> =
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<Message> =
         messages.values
             .sortedWith(compareBy({ it.eventId.value }, { it.chatPosition }))
+            .drop(offset)
+            .take(limit)
 
     override suspend fun update(entity: Message): Message {
         messages[entity.id] ?: throw NotFoundException("Message '${entity.id} not found.")

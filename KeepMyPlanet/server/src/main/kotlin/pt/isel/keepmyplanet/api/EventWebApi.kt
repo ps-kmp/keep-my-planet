@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.api
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -27,6 +28,7 @@ import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
 import pt.isel.keepmyplanet.util.getCurrentUserId
 import pt.isel.keepmyplanet.util.getPathUIntId
+import pt.isel.keepmyplanet.util.getQueryIntParameter
 import pt.isel.keepmyplanet.util.getQueryStringParameter
 
 fun Route.eventWebApi(
@@ -37,9 +39,18 @@ fun Route.eventWebApi(
         // Search System Events (Optional - by name)
         get {
             val query = call.getQueryStringParameter("name")
+            val limit = call.getQueryIntParameter("limit", default = 10)
+            val offset = call.getQueryIntParameter("offset", default = 0)
+
+            if (limit < 1 || limit > 100) {
+                throw BadRequestException("Limit must be between 1 and 100.")
+            }
+            if (offset < 0) {
+                throw BadRequestException("Offset must be non-negative.")
+            }
 
             eventService
-                .searchAllEvents(query)
+                .searchAllEvents(query, limit, offset)
                 .onSuccess { events ->
                     call.respond(HttpStatusCode.OK, events.map { it.toResponse() })
                 }.onFailure { throw it }

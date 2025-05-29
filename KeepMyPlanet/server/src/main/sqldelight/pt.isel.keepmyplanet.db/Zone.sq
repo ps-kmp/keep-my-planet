@@ -34,7 +34,7 @@ getById:
 SELECT * FROM zones WHERE id = :id;
 
 getAll:
-SELECT * FROM zones ORDER BY id;
+SELECT * FROM zones ORDER BY id LIMIT :limit OFFSET :offset;
 
 updateZone:
 UPDATE zones

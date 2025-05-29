@@ -73,10 +73,14 @@ class EventService(
             findEventOrFail(eventId)
         }
 
-    suspend fun searchAllEvents(name: String?): Result<List<Event>> =
+    suspend fun searchAllEvents(
+        name: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<Event>> =
         runCatching {
             if (name.isNullOrBlank()) {
-                eventRepository.getAll()
+                eventRepository.getAll(limit, offset)
             } else {
                 eventRepository.findByName(name)
             }

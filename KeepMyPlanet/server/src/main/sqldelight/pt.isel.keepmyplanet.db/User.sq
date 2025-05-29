@@ -23,7 +23,7 @@ getById:
 SELECT * FROM users WHERE id = :id;
 
 getAll:
-SELECT * FROM users ORDER BY id;
+SELECT * FROM users ORDER BY id LIMIT :limit OFFSET :offset;
 
 updateUser:
 UPDATE users

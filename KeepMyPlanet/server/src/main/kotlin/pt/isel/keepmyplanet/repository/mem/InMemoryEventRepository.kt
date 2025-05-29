@@ -108,10 +108,15 @@ class InMemoryEventRepository(
     override suspend fun getById(id: Id): Event? = events[id]
 
     // Get all events from the system
-    override suspend fun getAll(): List<Event> =
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
         events.values
             .toList()
             .sortedBy { it.id.value }
+            .drop(offset)
+            .take(limit)
 
     override suspend fun update(entity: Event): Event {
         val event = events[entity.id] ?: throw NotFoundException("Event '${entity.id}' not found.")

@@ -5,7 +5,10 @@ interface Repository<T : Any, ID : Any> {
 
     suspend fun getById(id: ID): T?
 
-    suspend fun getAll(): List<T>
+    suspend fun getAll(
+        limit: Int = 20,
+        offset: Int = 0,
+    ): List<T>
 
     suspend fun update(entity: T): T
 

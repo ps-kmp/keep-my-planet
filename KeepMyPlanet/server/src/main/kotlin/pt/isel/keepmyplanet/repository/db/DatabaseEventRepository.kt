@@ -87,9 +87,12 @@ class DatabaseEventRepository(
 
     override suspend fun getById(id: Id): Event? = getEventWithParticipants(id)
 
-    override suspend fun getAll(): List<Event> =
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
         eventQueries
-            .getAll()
+            .getAll(limit.toLong(), offset.toLong())
             .executeAsList()
             .map { getEventWithParticipants(it) }
 

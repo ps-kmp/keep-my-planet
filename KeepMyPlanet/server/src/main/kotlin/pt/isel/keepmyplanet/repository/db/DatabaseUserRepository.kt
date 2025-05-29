@@ -47,9 +47,12 @@ class DatabaseUserRepository(
             .executeAsOneOrNull()
             ?.toDomainUser()
 
-    override suspend fun getAll(): List<User> =
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<User> =
         userQueries
-            .getAll()
+            .getAll(limit.toLong(), offset.toLong())
             .executeAsList()
             .map { it.toDomainUser() }
 

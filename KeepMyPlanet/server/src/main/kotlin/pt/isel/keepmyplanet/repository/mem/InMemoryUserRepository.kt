@@ -63,10 +63,15 @@ class InMemoryUserRepository : UserRepository {
 
     override suspend fun getById(id: Id): User? = users[id]
 
-    override suspend fun getAll(): List<User> =
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<User> =
         users.values
             .toList()
             .sortedBy { it.id.value }
+            .drop(offset)
+            .take(limit)
 
     override suspend fun update(entity: User): User {
         val existingUser =

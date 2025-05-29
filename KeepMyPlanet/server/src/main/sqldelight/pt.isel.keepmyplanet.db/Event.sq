@@ -40,7 +40,7 @@ getById:
 SELECT * FROM events WHERE id = :id;
 
 getAll:
-SELECT * FROM events ORDER BY id;
+SELECT * FROM events ORDER BY id LIMIT :limit OFFSET :offset;
 
 updateEvent:
 UPDATE events

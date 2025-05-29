@@ -60,10 +60,15 @@ class InMemoryZoneRepository : ZoneRepository {
 
     override suspend fun getById(id: Id): Zone? = zones[id]
 
-    override suspend fun getAll(): List<Zone> =
+    override suspend fun getAll(
+        limit: Int,
+        offset: Int,
+    ): List<Zone> =
         zones.values
             .toList()
             .sortedBy { it.id.value }
+            .drop(offset)
+            .take(limit)
 
     override suspend fun update(entity: Zone): Zone {
         val existingZone =
@@ -97,10 +102,14 @@ class InMemoryZoneRepository : ZoneRepository {
     override suspend fun findNearLocation(
         center: Location,
         radiusKm: Double,
+        limit: Int,
+        offset: Int,
     ): List<Zone> =
         zones.values
             .filter { calculateDistanceKm(it.location, center) <= radiusKm }
             .sortedBy { it.id.value }
+            .drop(offset)
+            .take(limit)
 
     fun clear() {
         zones.clear()

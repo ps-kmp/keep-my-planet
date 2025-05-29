@@ -18,5 +18,7 @@ interface ZoneRepository : Repository<Zone, Id> {
     suspend fun findNearLocation(
         center: Location,
         radiusKm: Double,
+        limit: Int = 20,
+        offset: Int = 0,
     ): List<Zone>
 }
