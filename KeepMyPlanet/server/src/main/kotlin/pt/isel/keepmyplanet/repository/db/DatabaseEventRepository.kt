@@ -137,9 +137,13 @@ class DatabaseEventRepository(
         return deletedIdResult != null
     }
 
-    override suspend fun findByName(name: String): List<Event> =
+    override suspend fun findByName(
+        name: String,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
         eventQueries
-            .findByName(name)
+            .findByName(name, limit.toLong(), offset.toLong())
             .executeAsList()
             .map { getEventWithParticipants(it) }
 

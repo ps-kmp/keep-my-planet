@@ -19,7 +19,11 @@ interface EventRepository : Repository<Event, Id> {
 
     suspend fun save(event: Event): Event
 
-    suspend fun findByName(name: String): List<Event>
+    suspend fun findByName(
+        name: String,
+        limit: Int = 20,
+        offset: Int = 0,
+    ): List<Event>
 
     suspend fun findByZoneId(zoneId: Id): List<Event>
 

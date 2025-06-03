@@ -82,7 +82,7 @@ class EventService(
             if (name.isNullOrBlank()) {
                 eventRepository.getAll(limit, offset)
             } else {
-                eventRepository.findByName(name)
+                eventRepository.findByName(name, limit, offset)
             }
         }
 

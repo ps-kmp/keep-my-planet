@@ -84,10 +84,16 @@ class InMemoryEventRepository(
         }
 
     // Get all events from the system (search by name)
-    override suspend fun findByName(name: String): List<Event> =
+    override suspend fun findByName(
+        name: String,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
         events.values
             .filter { it.title.value.contains(name, ignoreCase = true) }
             .sortedBy { it.period.start }
+            .drop(offset)
+            .take(limit)
 
     override suspend fun findByZoneAndName(
         zoneId: Id,
