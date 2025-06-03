@@ -38,9 +38,7 @@ import pt.isel.keepmyplanet.ui.screens.event.components.EventItem
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun EventListScreen(
-    events: List<EventInfo>,
-    isLoading: Boolean,
-    error: String?,
+    uiState: EventListUiState,
     onEventSelected: (event: EventInfo) -> Unit,
     onNavigateBack: () -> Unit,
     onCreateEventClick: () -> Unit,
@@ -66,7 +64,7 @@ fun EventListScreen(
             )
         },
     ) { paddingValues ->
-        if (isLoading) {
+        if (uiState.isLoading) {
             CircularProgressIndicator(
                 modifier =
                     Modifier
@@ -85,7 +83,7 @@ fun EventListScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(events, key = { it.id }) { event ->
+                    items(uiState.events, key = { it.id }) { event ->
                         EventItem(
                             event = event,
                             onClick = { onEventSelected(event) },
@@ -115,7 +113,7 @@ fun EventListScreen(
                                 offset += limit
                                 onLoadEvents(limit, offset)
                             },
-                            enabled = events.size == limit,
+                            enabled = uiState.events.size == limit,
                         ) {
                             Text("Next")
                         }
@@ -160,7 +158,7 @@ fun EventListScreen(
                         Text("Create Event")
                     }
 
-                    error?.let {
+                    uiState.error?.let {
                         Text(
                             text = it,
                             color = MaterialTheme.colors.error,

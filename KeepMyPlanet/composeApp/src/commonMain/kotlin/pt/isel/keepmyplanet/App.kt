@@ -52,9 +52,7 @@ fun App(appViewModel: AppViewModel) {
             requireNotNull(currentUserInfo) { "User must be logged in for EventList route" }
             val listState by appViewModel.eventViewModel.listUiState.collectAsState()
             EventListScreen(
-                events = listState.events,
-                isLoading = listState.isLoading,
-                error = listState.error,
+                uiState = listState,
                 onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id.value)) },
                 onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
                 onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent) },
