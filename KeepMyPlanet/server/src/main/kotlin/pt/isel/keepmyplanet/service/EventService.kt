@@ -36,10 +36,18 @@ class EventService(
     ): Result<Event> =
         runCatching {
             findUserOrFail(organizerId)
-            val zone = findZoneOrFail(zoneId)
+/*            val zone = findZoneOrFail(zoneId)
 
             if (zone.eventId != null) {
                 throw ConflictException("Zone '$zoneId' is already associated with an event.")
+            }*/
+
+            // hardcoded
+            if (zoneId != Id(1u)) {
+                val zone = findZoneOrFail(zoneId)
+                if (zone.eventId != null) {
+                    throw ConflictException("Zone '$zoneId' is already associated with an event.")
+                }
             }
 
             if (period.start < now()) {
@@ -61,10 +69,16 @@ class EventService(
                 )
             val createdEvent = eventRepository.create(event)
 
-            val updatedZone =
+/*            val updatedZone =
                 zone.copy(eventId = createdEvent.id, status = ZoneStatus.CLEANING_SCHEDULED)
-            zoneRepository.update(updatedZone)
+            zoneRepository.update(updatedZone)*/
 
+            // hardcoded
+            if (zoneId != Id(1u)) {
+                val zone = findZoneOrFail(zoneId)
+                val updatedZone = zone.copy(eventId = createdEvent.id, status = ZoneStatus.CLEANING_SCHEDULED)
+                zoneRepository.update(updatedZone)
+            }
             createdEvent
         }
 

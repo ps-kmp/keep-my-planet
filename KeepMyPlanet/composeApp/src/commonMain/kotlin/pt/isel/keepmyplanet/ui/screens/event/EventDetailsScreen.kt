@@ -36,12 +36,14 @@ import pt.isel.keepmyplanet.ui.screens.event.components.toFormattedDateTime
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun EventDetailsScreen(
+    userId: UInt,
     eventId: UInt,
     uiState: EventDetailsUiState,
     onNavigateBack: () -> Unit,
     onNavigateToChat: (EventInfo) -> Unit,
     onLoadEventDetails: (UInt) -> Unit,
     onJoinEvent: (UInt) -> Unit,
+    onRefresh: () -> Unit,
 ) {
     val event = uiState.event
 
@@ -141,11 +143,24 @@ fun EventDetailsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Button(
-                            onClick = { onJoinEvent(eventId) },
+                            onClick = {
+                                onJoinEvent(eventId)
+                                onRefresh()
+                            },
                             modifier = Modifier.weight(1f),
-                            enabled = !uiState.isJoining,
+                            // enabled = !uiState.isJoining ,
+                            enabled =
+                                !uiState.isJoining &&
+                                    event.status == "PLANNED" &&
+                                    !(uiState.event?.participantsIds?.contains(userId) ?: false) &&
+                                    (event.maxParticipants == null || event.participantsIds.size < event.maxParticipants!!),
                         ) {
-                            if (uiState.isJoining) {
+                            if (
+                                uiState.isJoining &&
+                                event.status == "PLANNED" &&
+                                !(uiState.event?.participantsIds?.contains(userId) ?: false) &&
+                                (event.maxParticipants == null || event.participantsIds.size < event.maxParticipants!!)
+                            ) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
                                     color = MaterialTheme.colors.onPrimary,

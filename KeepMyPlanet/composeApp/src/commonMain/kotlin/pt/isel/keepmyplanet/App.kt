@@ -87,6 +87,7 @@ fun App(appViewModel: AppViewModel) {
             val detailsState by eventViewModel.detailsUiState.collectAsState()
 
             EventDetailsScreen(
+                userId = currentUserInfo.id,
                 eventId = route.eventId,
                 uiState = detailsState,
                 onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
@@ -99,6 +100,7 @@ fun App(appViewModel: AppViewModel) {
                 onJoinEvent = { id ->
                     eventViewModel.joinEvent(id)
                 },
+                onRefresh = { appViewModel.navigate(AppRoute.EventDetails(route.eventId)) },
             )
         }
 

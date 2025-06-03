@@ -129,7 +129,7 @@ class EventViewModel(
             eventService
                 .joinEvent(eventId)
                 .onSuccess {
-                    loadEventDetails(eventId)
+                    // loadEventDetails(eventId)
                     _events.send(EventScreenEvent.ShowSnackbar("Joined event successfully"))
                 }.onFailure {
                     _detailsUiState.value =
