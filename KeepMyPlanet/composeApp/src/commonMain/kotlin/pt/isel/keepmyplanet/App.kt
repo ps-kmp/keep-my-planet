@@ -58,6 +58,7 @@ fun App(appViewModel: AppViewModel) {
                 onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id.value)) },
                 onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
                 onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent) },
+                onLoadEvents = { limit, offset -> appViewModel.eventViewModel.loadEvents(limit = limit, offset = offset) },
             )
         }
 

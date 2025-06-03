@@ -39,11 +39,17 @@ class EventService(
         fun getParticipants(eventId: UInt) = "${eventById(eventId)}/participants"
     }
 
-    suspend fun searchAllEvents(query: String?): Result<List<EventResponse>> =
+    suspend fun searchAllEvents(
+        query: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<EventResponse>> =
         httpClient.executeRequest {
             method = HttpMethod.Get
             url(Endpoints.searchEvents())
             if (query != null) parameter("name", query)
+            parameter("limit", limit)
+            parameter("offset", offset)
         }
 
     suspend fun createEvent(request: CreateEventRequest): Result<EventResponse> =

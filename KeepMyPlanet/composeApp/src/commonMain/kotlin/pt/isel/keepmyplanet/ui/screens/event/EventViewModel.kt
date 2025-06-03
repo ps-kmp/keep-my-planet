@@ -41,11 +41,15 @@ class EventViewModel(
         loadEvents()
     }
 
-    fun loadEvents(query: String? = null) {
+    fun loadEvents(
+        query: String? = null,
+        limit: Int = 20,
+        offset: Int = 0,
+    ) {
         viewModelScope.launch {
             _listUiState.value = _listUiState.value.copy(isLoading = true)
             eventService
-                .searchAllEvents(query)
+                .searchAllEvents(query, limit, offset)
                 .onSuccess { events ->
                     _listUiState.value =
                         _listUiState.value.copy(
