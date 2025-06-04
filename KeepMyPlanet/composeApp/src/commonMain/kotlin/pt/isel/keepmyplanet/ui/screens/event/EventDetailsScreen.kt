@@ -205,6 +205,7 @@ fun EventDetailsScreen(
                                 )
                             },
                             modifier = Modifier.weight(1f),
+                            enabled = event.participantsIds.contains(userId) || event.organizerId == userId,
                         ) {
                             Text("Chat")
                         }
