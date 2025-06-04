@@ -7,6 +7,5 @@ data class UpdateEventRequest(
     val title: String? = null,
     val description: String? = null,
     val startDate: String? = null,
-    val endDate: String? = null,
     val maxParticipants: Int? = null,
 )

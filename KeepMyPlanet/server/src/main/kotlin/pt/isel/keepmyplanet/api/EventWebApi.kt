@@ -117,12 +117,12 @@ fun Route.eventWebApi(
                     val title = request.title?.let { Title(it) }
                     val description = request.description?.let { Description(it) }
                     val period =
-                        if (request.startDate != null && request.endDate != null) {
+                        if (request.startDate != null) { // && request.endDate != null
                             Period(
                                 LocalDateTime.parse(request.startDate!!),
-                                LocalDateTime.parse(request.endDate!!),
+                                // LocalDateTime.parse(request.endDate!!),
                             )
-                        } else if (request.startDate != null || request.endDate != null) {
+                        } else if (request.startDate != null) { // || request.endDate != null
                             throw ValidationException(
                                 "Both startDate and endDate must be provided if one is present.",
                             )

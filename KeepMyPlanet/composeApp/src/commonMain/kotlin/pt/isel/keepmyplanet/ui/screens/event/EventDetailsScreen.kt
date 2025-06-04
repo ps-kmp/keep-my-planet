@@ -44,6 +44,7 @@ fun EventDetailsScreen(
     onLoadEventDetails: (UInt) -> Unit,
     onJoinEvent: (UInt) -> Unit,
     onRefresh: () -> Unit,
+    onNavigateToEditEvent: (UInt) -> Unit,
 ) {
     val event = uiState.event
 
@@ -134,6 +135,21 @@ fun EventDetailsScreen(
                             text = "Last update: ${event.updatedAt.toFormattedDateTime()}",
                             style = MaterialTheme.typography.caption,
                         )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Button(
+                            onClick = { onNavigateToEditEvent(eventId) },
+                            modifier = Modifier.weight(1f),
+                            enabled = event.organizerId == userId,
+                        ) {
+                            Text("Edit Event")
+                        }
                     }
 
                     Spacer(modifier = Modifier.weight(1f))

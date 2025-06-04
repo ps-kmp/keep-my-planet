@@ -13,4 +13,5 @@ data class EventInfo(
     val period: Period,
     // val endDate: String,
     val status: EventStatus,
+    val maxParticipants: Int? = null,
 )

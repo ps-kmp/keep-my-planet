@@ -6,12 +6,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import kotlinx.datetime.LocalDateTime
+import pt.isel.keepmyplanet.data.model.EventInfo
+import pt.isel.keepmyplanet.domain.common.Description
+import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.event.Period
+import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.screens.chat.ChatScreen
 import pt.isel.keepmyplanet.ui.screens.event.CreateEventScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventListScreen
 import pt.isel.keepmyplanet.ui.screens.event.EventScreenEvent
+import pt.isel.keepmyplanet.ui.screens.event.UpdateEventScreen
 import pt.isel.keepmyplanet.ui.screens.home.HomeScreen
 import pt.isel.keepmyplanet.ui.screens.login.LoginScreen
 import pt.isel.keepmyplanet.ui.screens.register.RegisterScreen
@@ -101,7 +109,38 @@ fun App(appViewModel: AppViewModel) {
                     eventViewModel.joinEvent(id)
                 },
                 onRefresh = { appViewModel.navigate(AppRoute.EventDetails(route.eventId)) },
+                onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(route.eventId)) },
             )
+        }
+
+        is AppRoute.EditEvent -> {
+            requireNotNull(currentUserInfo) { "User must be logged in for EditEvent route" }
+            val eventViewModel = appViewModel.eventViewModel
+            val detailsState by eventViewModel.detailsUiState.collectAsState()
+
+            detailsState.event?.let { event ->
+                UpdateEventScreen(
+                    event =
+                        EventInfo(
+                            id = Id(event.id),
+                            title = Title(event.title),
+                            description = Description(event.description),
+                            period =
+                                Period(
+                                    start = LocalDateTime.parse(event.startDate),
+                                    end = event.endDate?.takeIf { it != "null" }?.let { LocalDateTime.parse(it) },
+                                    // end = event.endDate?.let { LocalDateTime.parse(it) },
+                                ),
+                            status = EventStatus.valueOf(event.status.uppercase()),
+                            maxParticipants = event.maxParticipants,
+                        ),
+                    onNavigateBack = { appViewModel.navigate(AppRoute.EventDetails(event.id)) },
+                    onUpdateEvent = { request ->
+                        eventViewModel.updateEvent(event.id, request)
+                        appViewModel.navigate(AppRoute.EventDetails(event.id))
+                    },
+                )
+            }
         }
 
         is AppRoute.Chat -> {
