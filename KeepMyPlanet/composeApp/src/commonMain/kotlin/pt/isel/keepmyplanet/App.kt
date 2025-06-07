@@ -2,39 +2,47 @@
 
 package pt.isel.keepmyplanet
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import kotlinx.datetime.LocalDateTime
-import pt.isel.keepmyplanet.data.model.EventInfo
-import pt.isel.keepmyplanet.domain.common.Description
-import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.event.EventStatus
-import pt.isel.keepmyplanet.domain.event.Period
-import pt.isel.keepmyplanet.domain.event.Title
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import pt.isel.keepmyplanet.navigation.AppRoute
-import pt.isel.keepmyplanet.ui.screens.chat.ChatScreen
-import pt.isel.keepmyplanet.ui.screens.event.CreateEventScreen
-import pt.isel.keepmyplanet.ui.screens.event.EventDetailsScreen
-import pt.isel.keepmyplanet.ui.screens.event.EventListScreen
-import pt.isel.keepmyplanet.ui.screens.event.EventScreenEvent
-import pt.isel.keepmyplanet.ui.screens.event.UpdateEventScreen
-import pt.isel.keepmyplanet.ui.screens.home.HomeScreen
-import pt.isel.keepmyplanet.ui.screens.login.LoginScreen
-import pt.isel.keepmyplanet.ui.screens.register.RegisterScreen
-import pt.isel.keepmyplanet.ui.screens.user.UserProfileScreen
+import pt.isel.keepmyplanet.ui.chat.ChatScreen
+import pt.isel.keepmyplanet.ui.event.create.CreateEventScreen
+import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
+import pt.isel.keepmyplanet.ui.event.list.EventListScreen
+import pt.isel.keepmyplanet.ui.event.update.UpdateEventScreen
+import pt.isel.keepmyplanet.ui.home.HomeScreen
+import pt.isel.keepmyplanet.ui.login.LoginScreen
+import pt.isel.keepmyplanet.ui.register.RegisterScreen
+import pt.isel.keepmyplanet.ui.user.UserProfileScreen
 
 @Composable
 fun App(appViewModel: AppViewModel) {
     val currentRoute by appViewModel.currentRoute.collectAsState()
     val userSession by appViewModel.userSession.collectAsState()
-    val currentUserInfo = userSession?.userInfo
 
+    val isProtectedRoute = currentRoute !is AppRoute.Login && currentRoute !is AppRoute.Register
+    if (isProtectedRoute && userSession == null) {
+        LaunchedEffect(currentRoute) {
+            appViewModel.navigate(AppRoute.Login)
+        }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val currentUserInfo = userSession?.userInfo
     when (val route = currentRoute) {
         is AppRoute.Login -> {
             LoginScreen(
-                authHttpClient = appViewModel.authHttpClient,
+                authApi = appViewModel.container.authApi,
                 onNavigateHome = { appViewModel.updateSession(it) },
                 onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
             )
@@ -42,7 +50,7 @@ fun App(appViewModel: AppViewModel) {
 
         is AppRoute.Register -> {
             RegisterScreen(
-                userService = appViewModel.userService,
+                userService = appViewModel.container.userApi,
                 onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
             )
         }
@@ -55,127 +63,97 @@ fun App(appViewModel: AppViewModel) {
                     onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
                     onLogout = { appViewModel.logout() },
                 )
-            } ?: LaunchedEffect(Unit) { appViewModel.logout() }
+            }
         }
 
         is AppRoute.EventList -> {
-            currentUserInfo?.let {
-                appViewModel.eventViewModel?.let { eventViewModel ->
-                    val listState by eventViewModel.listUiState.collectAsState()
-                    EventListScreen(
-                        uiState = listState,
-                        onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id.value)) },
-                        onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
-                        onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent) },
-                        onLoadNextPage = eventViewModel::loadNextPage,
-                        onLoadPreviousPage = eventViewModel::loadPreviousPage,
-                        onChangeLimit = eventViewModel::changeLimit,
-                    )
-                }
-            } ?: LaunchedEffect(Unit) { appViewModel.logout() }
+            val eventViewModel by appViewModel.eventViewModel.collectAsState()
+            eventViewModel?.let { vm ->
+                EventListScreen(
+                    viewModel = vm,
+                    onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id.value)) },
+                    onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
+                    onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent) },
+                )
+            }
         }
 
         is AppRoute.CreateEvent -> {
-            currentUserInfo?.let {
-                appViewModel.eventViewModel?.let { eventViewModel ->
-                    LaunchedEffect(Unit) {
-                        eventViewModel.events.collect { event ->
-                            when (event) {
-                                is EventScreenEvent.EventCreated -> {
-                                    appViewModel.navigate(AppRoute.EventDetails(event.eventId))
-                                }
-
-                                else -> { // ignore other events
-                                }
-                            }
-                        }
-                    }
-
-                    CreateEventScreen(
-                        onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
-                        onCreateEvent = { request -> eventViewModel.createEvent(request) },
-                    )
-                }
-            } ?: LaunchedEffect(Unit) { appViewModel.logout() }
+            val eventViewModel by appViewModel.eventViewModel.collectAsState()
+            eventViewModel?.let { vm ->
+                LaunchedEffect(Unit) { vm.resetFormState() }
+                CreateEventScreen(
+                    viewModel = vm,
+                    onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
+                )
+            }
         }
 
         is AppRoute.EventDetails -> {
             currentUserInfo?.let { user ->
-                appViewModel.eventViewModel?.let { eventViewModel ->
-                    val detailsState by eventViewModel.detailsUiState.collectAsState()
-
+                val eventViewModel by appViewModel.eventViewModel.collectAsState()
+                eventViewModel?.let { vm ->
                     EventDetailsScreen(
-                        userId = user.id,
+                        viewModel = vm,
+                        userId = user.id.value,
                         eventId = route.eventId,
-                        uiState = detailsState,
                         onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
-                        onNavigateToChat = { event -> appViewModel.navigate(AppRoute.Chat(event)) },
-                        onLoadEventDetails = { id -> eventViewModel.loadEventDetails(id) },
-                        onJoinEvent = { id -> eventViewModel.joinEvent(id) },
-                        onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(route.eventId)) },
+                        onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
+                        onNavigateToEditEvent = {
+                            appViewModel.navigate(AppRoute.EditEvent(route.eventId))
+                        },
                     )
                 }
-            } ?: LaunchedEffect(Unit) { appViewModel.logout() }
+            }
         }
 
         is AppRoute.EditEvent -> {
-            currentUserInfo?.let {
-                appViewModel.eventViewModel?.let { eventViewModel ->
-                    val detailsState by eventViewModel.detailsUiState.collectAsState()
+            val eventViewModel by appViewModel.eventViewModel.collectAsState()
+            eventViewModel?.let { vm ->
+                val detailsState by vm.detailsUiState.collectAsState()
 
-                    LaunchedEffect(eventViewModel) {
-                        eventViewModel.events.collect { event ->
-                            if (event is EventScreenEvent.NavigateBack) {
-                                appViewModel.navigate(AppRoute.EventDetails(route.eventId))
-                            }
-                        }
+                LaunchedEffect(route.eventId) {
+                    vm.loadEventDetails(route.eventId)
+                    vm.prepareFormForEdit()
+                }
+
+                if (detailsState.isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
-
+                } else {
                     detailsState.event?.let { event ->
                         UpdateEventScreen(
-                            event =
-                                EventInfo(
-                                    id = Id(event.id),
-                                    title = Title(event.title),
-                                    description = Description(event.description),
-                                    period =
-                                        Period(
-                                            start = LocalDateTime.parse(event.startDate),
-                                            end = event.endDate?.let { LocalDateTime.parse(it) },
-                                        ),
-                                    status = EventStatus.valueOf(event.status.uppercase()),
-                                    maxParticipants = event.maxParticipants,
-                                ),
-                            onNavigateBack = { appViewModel.navigate(AppRoute.EventDetails(event.id)) },
-                            onUpdateEvent = { request ->
-                                eventViewModel.updateEvent(event.id, request)
+                            viewModel = vm,
+                            onUpdateEvent = { vm.updateEvent(event.id.value) },
+                            onNavigateBack = {
+                                appViewModel.navigate(AppRoute.EventDetails(event.id.value))
                             },
                         )
                     }
                 }
-            } ?: LaunchedEffect(Unit) { appViewModel.logout() }
+            }
         }
 
         is AppRoute.Chat -> {
-            currentUserInfo?.let { user ->
+            val chatViewModel by appViewModel.chatViewModel.collectAsState()
+            chatViewModel?.let { vm ->
                 ChatScreen(
-                    chatHttpClient = appViewModel.chatHttpClient,
-                    user = user,
-                    event = route.event,
+                    viewModel = vm,
                     onNavigateBack = { appViewModel.navigate(AppRoute.EventList) },
                 )
-            } ?: LaunchedEffect(Unit) { appViewModel.logout() }
+            }
         }
 
         is AppRoute.UserProfile -> {
-            currentUserInfo?.let { user ->
+            val userProfileViewModel by appViewModel.userProfileViewModel.collectAsState()
+            userProfileViewModel?.let { vm ->
                 UserProfileScreen(
-                    userService = appViewModel.userService,
-                    user = user,
+                    viewModel = vm,
                     onNavigateToLogin = { appViewModel.logout() },
                     onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
                 )
-            } ?: LaunchedEffect(Unit) { appViewModel.logout() }
+            }
         }
     }
 }

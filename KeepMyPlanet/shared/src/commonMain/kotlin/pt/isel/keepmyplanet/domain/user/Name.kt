@@ -1,7 +1,9 @@
 package pt.isel.keepmyplanet.domain.user
 
+import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
+@Serializable
 @JvmInline
 value class Name(
     val value: String,

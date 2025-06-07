@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.navigation
 
-import pt.isel.keepmyplanet.data.model.EventInfo
+import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 
 sealed class AppRoute {
     data object Login : AppRoute()
@@ -12,7 +12,7 @@ sealed class AppRoute {
     data object EventList : AppRoute()
 
     data class Chat(
-        val event: EventInfo,
+        val info: ChatInfo,
     ) : AppRoute()
 
     data class EventDetails(

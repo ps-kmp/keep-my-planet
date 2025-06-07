@@ -5,4 +5,5 @@ enum class EventStatus {
     IN_PROGRESS,
     COMPLETED,
     CANCELLED,
+    UNKNOWN,
 }

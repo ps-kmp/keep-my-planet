@@ -67,7 +67,7 @@ class EventStateChangeService(
         when (from) {
             EventStatus.PLANNED -> to in listOf(EventStatus.IN_PROGRESS, EventStatus.CANCELLED)
             EventStatus.IN_PROGRESS -> to in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
-            EventStatus.COMPLETED, EventStatus.CANCELLED -> false
+            EventStatus.COMPLETED, EventStatus.CANCELLED, EventStatus.UNKNOWN -> false
         }
 
     private fun canUserChangeStatus(

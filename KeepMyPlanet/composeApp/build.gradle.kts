@@ -70,6 +70,7 @@ kotlin {
 
                 // lifecycle / viewmodel
                 implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.androidx.lifecycle.viewmodel.compose)
 
                 // projects
                 implementation(projects.shared)
@@ -81,6 +82,9 @@ kotlin {
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.client.logging)
                 implementation(libs.ktor.sse)
+
+                implementation(libs.multiplatform.settings)
+                implementation(libs.multiplatform.settings.coroutines)
             }
         }
         val androidMain by getting {

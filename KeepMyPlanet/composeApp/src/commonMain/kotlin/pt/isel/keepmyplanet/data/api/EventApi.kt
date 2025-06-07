@@ -1,0 +1,113 @@
+package pt.isel.keepmyplanet.data.api
+
+import io.ktor.client.HttpClient
+import io.ktor.client.request.parameter
+import io.ktor.client.request.setBody
+import io.ktor.client.request.url
+import io.ktor.http.HttpMethod
+import pt.isel.keepmyplanet.data.http.executeRequest
+import pt.isel.keepmyplanet.data.http.executeRequestUnit
+import pt.isel.keepmyplanet.dto.event.CreateEventRequest
+import pt.isel.keepmyplanet.dto.event.EventResponse
+import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
+import pt.isel.keepmyplanet.dto.user.UserResponse
+
+class EventApi(
+    private val httpClient: HttpClient,
+) {
+    private object Endpoints {
+        const val EVENTS_BASE = "events"
+
+        fun searchEvents() = EVENTS_BASE
+
+        fun createEvent() = EVENTS_BASE
+
+        fun eventById(eventId: UInt) = "$EVENTS_BASE/$eventId"
+
+        fun updateEvent(eventId: UInt) = eventById(eventId)
+
+        fun deleteEvent(eventId: UInt) = eventById(eventId)
+
+        fun cancelEvent(eventId: UInt) = "${eventById(eventId)}/cancel"
+
+        fun completeEvent(eventId: UInt) = "${eventById(eventId)}/complete"
+
+        fun joinEvent(eventId: UInt) = "${eventById(eventId)}/join"
+
+        fun leaveEvent(eventId: UInt) = "${eventById(eventId)}/leave"
+
+        fun getParticipants(eventId: UInt) = "${eventById(eventId)}/participants"
+    }
+
+    suspend fun searchAllEvents(
+        query: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<EventResponse>> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.searchEvents())
+            if (query != null) parameter("name", query)
+            parameter("limit", limit)
+            parameter("offset", offset)
+        }
+
+    suspend fun createEvent(request: CreateEventRequest): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.createEvent())
+            setBody(request)
+        }
+
+    suspend fun getEventDetails(eventId: UInt): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.eventById(eventId))
+        }
+
+    suspend fun updateEventDetails(
+        eventId: UInt,
+        request: UpdateEventRequest,
+    ): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Patch
+            url(Endpoints.updateEvent(eventId))
+            setBody(request)
+        }
+
+    suspend fun deleteEvent(eventId: UInt): Result<Unit> =
+        httpClient.executeRequestUnit {
+            method = HttpMethod.Delete
+            url(Endpoints.deleteEvent(eventId))
+        }
+
+    suspend fun cancelEvent(eventId: UInt): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.cancelEvent(eventId))
+        }
+
+    suspend fun completeEvent(eventId: UInt): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.completeEvent(eventId))
+        }
+
+    suspend fun joinEvent(eventId: UInt): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.joinEvent(eventId))
+        }
+
+    suspend fun leaveEvent(eventId: UInt): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.leaveEvent(eventId))
+        }
+
+    suspend fun getEventParticipants(eventId: UInt): Result<List<UserResponse>> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.getParticipants(eventId))
+        }
+}
