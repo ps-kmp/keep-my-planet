@@ -69,7 +69,9 @@ fun MessageItem(
 fun formatTimestamp(isoTimestamp: String): String =
     try {
         val dateTime = LocalDateTime.parse(isoTimestamp)
-        dateTime.time.toString().substring(0, 5)
+        val hour = dateTime.hour.toString().padStart(2, '0')
+        val minute = dateTime.minute.toString().padStart(2, '0')
+        "$hour:$minute"
     } catch (_: Exception) {
         isoTimestamp
     }

@@ -30,17 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.register.model.RegisterEvent
 import pt.isel.keepmyplanet.ui.register.model.RegisterUiState
 
 @Composable
 fun RegisterScreen(
-    userService: UserApi,
+    viewModel: RegisterViewModel,
     onNavigateToLogin: () -> Unit,
 ) {
-    val viewModel = remember { RegisterViewModel(userService) }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 

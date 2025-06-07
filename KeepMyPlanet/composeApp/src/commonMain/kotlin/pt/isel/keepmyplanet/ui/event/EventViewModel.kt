@@ -236,10 +236,10 @@ class EventViewModel(
             _detailsUiState.value = _detailsUiState.value.copy(isLeaving = true)
             eventApi
                 .leaveEvent(eventId)
-                .onSuccess {
-                    loadEventDetails(eventId)
-                    _detailsUiState.value =
-                        _detailsUiState.value.copy(isEditing = false, error = null)
+                .onSuccess { updatedEventResponse ->
+                    _detailsUiState.update {
+                        it.copy(isLeaving = false, event = updatedEventResponse.toEvent())
+                    }
                     _events.send(EventScreenEvent.ShowSnackbar("Left event successfully"))
                 }.onFailure {
                     _detailsUiState.value =

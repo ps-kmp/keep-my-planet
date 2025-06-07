@@ -41,18 +41,24 @@ fun App(appViewModel: AppViewModel) {
     val currentUserInfo = userSession?.userInfo
     when (val route = currentRoute) {
         is AppRoute.Login -> {
-            LoginScreen(
-                authApi = appViewModel.container.authApi,
-                onNavigateHome = { appViewModel.updateSession(it) },
-                onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
-            )
+            val loginViewModel by appViewModel.loginViewModel.collectAsState()
+            loginViewModel?.let { vm ->
+                LoginScreen(
+                    viewModel = vm,
+                    onNavigateHome = { appViewModel.updateSession(it) },
+                    onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
+                )
+            }
         }
 
         is AppRoute.Register -> {
-            RegisterScreen(
-                userService = appViewModel.container.userApi,
-                onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
-            )
+            val registerViewModel by appViewModel.registerViewModel.collectAsState()
+            registerViewModel?.let { vm ->
+                RegisterScreen(
+                    viewModel = vm,
+                    onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
+                )
+            }
         }
 
         is AppRoute.Home -> {
@@ -114,7 +120,12 @@ fun App(appViewModel: AppViewModel) {
 
                 LaunchedEffect(route.eventId) {
                     vm.loadEventDetails(route.eventId)
-                    vm.prepareFormForEdit()
+                }
+
+                LaunchedEffect(detailsState.event) {
+                    if (detailsState.event?.id?.value == route.eventId) {
+                        vm.prepareFormForEdit()
+                    }
                 }
 
                 if (detailsState.isLoading) {

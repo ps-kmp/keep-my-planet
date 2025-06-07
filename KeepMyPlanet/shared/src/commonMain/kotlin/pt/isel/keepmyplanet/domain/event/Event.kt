@@ -12,7 +12,7 @@ data class Event(
     val zoneId: Id,
     val organizerId: Id,
     val status: EventStatus = EventStatus.PLANNED,
-    val maxParticipants: Int? = null, // null means no limit
+    val maxParticipants: Int? = null,
     val participantsIds: Set<Id> = emptySet(),
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
@@ -29,7 +29,5 @@ data class Event(
     val isFull: Boolean
         get() = maxParticipants?.let { participantsIds.size >= it } ?: false
 
-    val isUserParticipantOrOrganizer: (Id) -> Boolean = { userId ->
-        participantsIds.contains(userId) || organizerId == userId
-    }
+    fun isUserParticipantOrOrganizer(userId: Id): Boolean = userId in participantsIds || userId == organizerId
 }

@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.data.api.AuthApi
 import pt.isel.keepmyplanet.session.model.UserSession
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.login.model.LoginEvent
@@ -34,11 +33,10 @@ import pt.isel.keepmyplanet.ui.login.model.LoginUiState
 
 @Composable
 fun LoginScreen(
-    authApi: AuthApi,
+    viewModel: LoginViewModel,
     onNavigateHome: (UserSession) -> Unit,
     onNavigateToRegister: () -> Unit,
 ) {
-    val viewModel = remember { LoginViewModel(authApi) }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 

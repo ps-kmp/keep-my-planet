@@ -13,6 +13,8 @@ import pt.isel.keepmyplanet.session.model.UserSession
 import pt.isel.keepmyplanet.ui.chat.ChatViewModel
 import pt.isel.keepmyplanet.ui.event.EventViewModel
 import pt.isel.keepmyplanet.ui.event.model.EventScreenEvent
+import pt.isel.keepmyplanet.ui.login.LoginViewModel
+import pt.isel.keepmyplanet.ui.register.RegisterViewModel
 import pt.isel.keepmyplanet.ui.user.UserProfileViewModel
 
 class AppViewModel(
@@ -32,12 +34,20 @@ class AppViewModel(
     private val _userProfileViewModel = MutableStateFlow<UserProfileViewModel?>(null)
     val userProfileViewModel: StateFlow<UserProfileViewModel?> = _userProfileViewModel.asStateFlow()
 
+    private val _loginViewModel = MutableStateFlow<LoginViewModel?>(null)
+    val loginViewModel: StateFlow<LoginViewModel?> = _loginViewModel.asStateFlow()
+
+    private val _registerViewModel = MutableStateFlow<RegisterViewModel?>(null)
+    val registerViewModel: StateFlow<RegisterViewModel?> = _registerViewModel.asStateFlow()
+
     private var eventSideEffectsJob: Job? = null
 
     init {
         viewModelScope.launch {
             userSession.collect { session ->
                 if (session != null) {
+                    _loginViewModel.value = null
+                    _registerViewModel.value = null
                     if (_eventViewModel.value == null) {
                         val newVm = EventViewModel(container.eventApi, session.userInfo)
                         _eventViewModel.value = newVm
@@ -76,15 +86,31 @@ class AppViewModel(
     }
 
     fun navigate(route: AppRoute) {
-        updateChatViewModel(route)
+        updateScopedViewModels(route)
         val targetRoute = resolveRoute(route, userSession.value)
         if (_currentRoute.value != targetRoute) {
             _currentRoute.value = targetRoute
         }
     }
 
-    private fun updateChatViewModel(route: AppRoute) {
+    private fun updateScopedViewModels(route: AppRoute) {
         val session = userSession.value
+
+        if (route is AppRoute.Login) {
+            if (_loginViewModel.value == null) {
+                _loginViewModel.value = LoginViewModel(container.authApi)
+            }
+        } else {
+            _loginViewModel.value = null
+        }
+
+        if (route is AppRoute.Register) {
+            if (_registerViewModel.value == null) {
+                _registerViewModel.value = RegisterViewModel(container.userApi)
+            }
+        } else {
+            _registerViewModel.value = null
+        }
         if (route is AppRoute.Chat && session != null) {
             if (_chatViewModel.value
                     ?.uiState
