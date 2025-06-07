@@ -61,7 +61,7 @@ DELETE FROM events WHERE id = :id RETURNING id;
 
 findByName:
 SELECT * FROM events
-WHERE title LIKE ('%' || :name || '%')
+WHERE to_tsvector('simple', title) @@ to_tsquery('simple', :name)
 ORDER BY start_datetime
 LIMIT :limit OFFSET :offset;
 

@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.model.EventInfo
 import pt.isel.keepmyplanet.data.model.UserInfo
-import pt.isel.keepmyplanet.data.service.ChatService
+import pt.isel.keepmyplanet.data.service.ChatHttpClient
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 class ChatViewModel(
-    private val chatService: ChatService,
+    private val chatHttpClient: ChatHttpClient,
     val user: UserInfo,
     val event: EventInfo,
 ) : ViewModel() {
@@ -35,7 +35,7 @@ class ChatViewModel(
     private fun loadInitialMessages() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val result = chatService.getMessages(event.id.value)
+            val result = chatHttpClient.getMessages(event.id.value)
 
             result
                 .onSuccess { messages ->
@@ -49,7 +49,7 @@ class ChatViewModel(
 
     private fun startListeningToMessages() {
         viewModelScope.launch {
-            chatService
+            chatHttpClient
                 .listenToMessages(event.id.value)
                 .catch { exception ->
                     handleError("Chat connection error", exception)
@@ -90,7 +90,7 @@ class ChatViewModel(
         _uiState.update { it.copy(isSending = true, messageInput = "") }
 
         viewModelScope.launch {
-            val result = chatService.sendMessage(event.id.value, messageContent)
+            val result = chatHttpClient.sendMessage(event.id.value, messageContent)
 
             result
                 .onSuccess {

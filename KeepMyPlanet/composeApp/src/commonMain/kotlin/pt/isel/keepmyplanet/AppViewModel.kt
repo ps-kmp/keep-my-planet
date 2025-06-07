@@ -7,35 +7,37 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pt.isel.keepmyplanet.data.api.createHttpClient
 import pt.isel.keepmyplanet.data.model.UserSession
-import pt.isel.keepmyplanet.data.service.AuthService
-import pt.isel.keepmyplanet.data.service.ChatService
-import pt.isel.keepmyplanet.data.service.EventService
-import pt.isel.keepmyplanet.data.service.UserService
+import pt.isel.keepmyplanet.data.service.AuthHttpClient
+import pt.isel.keepmyplanet.data.service.ChatHttpClient
+import pt.isel.keepmyplanet.data.service.EventHttpClient
+import pt.isel.keepmyplanet.data.service.UserHttpClient
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.screens.event.EventViewModel
 
-class AppViewModel(
-    private val httpClient: HttpClient,
-    val authService: AuthService = AuthService(httpClient),
-    val chatService: ChatService = ChatService(httpClient),
-    val userService: UserService = UserService(httpClient),
-    val eventService: EventService = EventService(httpClient),
-) : ViewModel() {
+class AppViewModel : ViewModel() {
     private val _userSession = MutableStateFlow<UserSession?>(null)
     val userSession: StateFlow<UserSession?> = _userSession.asStateFlow()
+
+    private val httpClient: HttpClient = createHttpClient { userSession.value?.token }
+
+    val authHttpClient: AuthHttpClient = AuthHttpClient(httpClient)
+    val chatHttpClient: ChatHttpClient = ChatHttpClient(httpClient)
+    val userService: UserHttpClient = UserHttpClient(httpClient)
+    val eventHttpClient: EventHttpClient = EventHttpClient(httpClient)
 
     private val _currentRoute = MutableStateFlow(determineInitialRoute(null))
     val currentRoute: StateFlow<AppRoute> = _currentRoute.asStateFlow()
 
-    val eventViewModel by lazy {
-        val userInfo = checkNotNull(userSession.value?.userInfo) { "User must be logged in" }
-        EventViewModel(eventService, userInfo)
-    }
+    var eventViewModel: EventViewModel? = null
+        private set
 
     init {
         viewModelScope.launch {
             userSession.collect { session ->
+                eventViewModel =
+                    if (session != null) EventViewModel(eventHttpClient, session.userInfo) else null
                 val newRoute = determineInitialRoute(session)
                 if (_currentRoute.value != newRoute) {
                     _currentRoute.value = newRoute

@@ -39,13 +39,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.data.model.UserInfo
-import pt.isel.keepmyplanet.data.service.UserService
+import pt.isel.keepmyplanet.data.service.UserHttpClient
 import pt.isel.keepmyplanet.ui.screens.user.components.PasswordChangeSection
 import pt.isel.keepmyplanet.ui.screens.user.components.ProfileInfoSection
 
 @Composable
 fun UserProfileScreen(
-    userService: UserService,
+    userService: UserHttpClient,
     user: UserInfo,
     onNavigateToLogin: () -> Unit = {},
     onNavigateBack: () -> Unit = {},

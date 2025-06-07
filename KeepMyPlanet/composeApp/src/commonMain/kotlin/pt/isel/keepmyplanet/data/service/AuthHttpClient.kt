@@ -8,7 +8,7 @@ import pt.isel.keepmyplanet.data.api.executeRequest
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
 import pt.isel.keepmyplanet.dto.auth.LoginResponse
 
-class AuthService(
+class AuthHttpClient(
     private val httpClient: HttpClient,
 ) {
     private object Endpoints {

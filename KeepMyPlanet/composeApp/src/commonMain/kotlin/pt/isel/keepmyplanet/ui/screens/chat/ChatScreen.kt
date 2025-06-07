@@ -36,19 +36,19 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.model.EventInfo
 import pt.isel.keepmyplanet.data.model.UserInfo
-import pt.isel.keepmyplanet.data.service.ChatService
+import pt.isel.keepmyplanet.data.service.ChatHttpClient
 import pt.isel.keepmyplanet.ui.screens.chat.components.MessageInput
 import pt.isel.keepmyplanet.ui.screens.chat.components.MessageItem
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun ChatScreen(
-    chatService: ChatService,
+    chatHttpClient: ChatHttpClient,
     user: UserInfo,
     event: EventInfo,
     onNavigateBack: () -> Unit,
 ) {
-    val viewModel = remember(event.id) { ChatViewModel(chatService, user, event) }
+    val viewModel = remember(event.id) { ChatViewModel(chatHttpClient, user, event) }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
@@ -110,7 +110,7 @@ fun ChatScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
-                    items(reversedMessages, key = { it.id }) { message ->
+                    items(reversedMessages, key = { it.id.toString() }) { message ->
                         MessageItem(
                             message = message,
                             currentUserId = uiState.user.id,

@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 
 @Suppress("ktlint:standard:function-naming")
@@ -67,11 +68,8 @@ fun MessageItem(
 @Composable
 fun formatTimestamp(isoTimestamp: String): String =
     try {
-        isoTimestamp
-            .substringAfter('T', "")
-            .substringBefore('.', "")
-            .take(5)
-            .ifBlank { isoTimestamp }
-    } catch (e: Exception) {
+        val dateTime = LocalDateTime.parse(isoTimestamp)
+        dateTime.time.toString().substring(0, 5)
+    } catch (_: Exception) {
         isoTimestamp
     }

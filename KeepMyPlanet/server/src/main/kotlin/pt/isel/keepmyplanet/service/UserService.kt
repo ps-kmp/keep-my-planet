@@ -114,7 +114,7 @@ class UserService(
             val activeEventStatus = setOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
             val organizedEvents = eventRepository.findByOrganizerId(userId)
             if (organizedEvents.any { it.status in activeEventStatus }) {
-                throw ConflictException("Cannot delete user with unresolved reported zones.")
+                throw ConflictException("Cannot delete user with active organized events.")
             }
 
             val deleted = userRepository.deleteById(userId)

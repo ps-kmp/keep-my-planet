@@ -12,7 +12,7 @@ import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 
-class EventService(
+class EventHttpClient(
     private val httpClient: HttpClient,
 ) {
     private object Endpoints {

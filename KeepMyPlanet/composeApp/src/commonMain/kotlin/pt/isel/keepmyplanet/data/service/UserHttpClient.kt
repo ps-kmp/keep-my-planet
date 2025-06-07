@@ -11,7 +11,7 @@ import pt.isel.keepmyplanet.dto.user.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 
-class UserService(
+class UserHttpClient(
     private val httpClient: HttpClient,
 ) {
     private object Endpoints {

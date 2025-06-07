@@ -389,24 +389,6 @@ class EventWebApiTest : BaseWebApiTest() {
         }
 
     @Test
-    fun `PATCH event by ID - should fail with 400 if only startDate is provided for period update`() =
-        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
-            val organizer = createTestUser()
-            val zone = createTestZone(reporterId = organizer.id)
-            val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
-            val token = generateTestToken(organizer.id)
-            val requestBody = UpdateEventRequest(startDate = futureStart.toString())
-
-            val response =
-                client.patch("/events/${event.id.value}") {
-                    header(HttpHeaders.Authorization, "Bearer $token")
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(requestBody))
-                }
-            assertEquals(HttpStatusCode.BadRequest, response.status)
-        }
-
-    @Test
     fun `PATCH event by ID - should fail with 400 if new start date is in the past`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()

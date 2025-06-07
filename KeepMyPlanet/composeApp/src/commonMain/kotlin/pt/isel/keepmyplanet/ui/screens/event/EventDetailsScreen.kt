@@ -43,10 +43,18 @@ fun EventDetailsScreen(
     onNavigateToChat: (EventInfo) -> Unit,
     onLoadEventDetails: (UInt) -> Unit,
     onJoinEvent: (UInt) -> Unit,
-    onRefresh: () -> Unit,
     onNavigateToEditEvent: (UInt) -> Unit,
 ) {
     val event = uiState.event
+
+    val canAttemptToJoin =
+        event != null &&
+            event.status == "PLANNED" &&
+            !(event.participantsIds.contains(userId)) &&
+            (event.maxParticipants == null || event.participantsIds.size < event.maxParticipants!!)
+
+    val isJoinButtonEnabled = !uiState.isJoining && canAttemptToJoin
+    val isJoiningThisEvent = uiState.isJoining && canAttemptToJoin
 
     LaunchedEffect(eventId) {
         onLoadEventDetails(eventId)
@@ -102,10 +110,7 @@ fun EventDetailsScreen(
                             text = "Start Date: ${event.startDate.toFormattedDateTime()}",
                             style = MaterialTheme.typography.body2,
                         )
-/*                        Text(
-                            text = "End Date: ${event.endDate}",
-                            style = MaterialTheme.typography.body2,
-                        )*/
+                        // Text("End Date: ${event.endDate}", style = MaterialTheme.typography.body2)
                     }
 
                     Column(
@@ -159,24 +164,11 @@ fun EventDetailsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Button(
-                            onClick = {
-                                onJoinEvent(eventId)
-                                onRefresh()
-                            },
+                            onClick = { onJoinEvent(eventId) },
                             modifier = Modifier.weight(1f),
-                            // enabled = !uiState.isJoining ,
-                            enabled =
-                                !uiState.isJoining &&
-                                    event.status == "PLANNED" &&
-                                    !(uiState.event?.participantsIds?.contains(userId) ?: false) &&
-                                    (event.maxParticipants == null || event.participantsIds.size < event.maxParticipants!!),
+                            enabled = isJoinButtonEnabled,
                         ) {
-                            if (
-                                uiState.isJoining &&
-                                event.status == "PLANNED" &&
-                                !(uiState.event?.participantsIds?.contains(userId) ?: false) &&
-                                (event.maxParticipants == null || event.participantsIds.size < event.maxParticipants!!)
-                            ) {
+                            if (isJoiningThisEvent) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
                                     color = MaterialTheme.colors.onPrimary,
@@ -197,8 +189,7 @@ fun EventDetailsScreen(
                                         period =
                                             Period(
                                                 start = LocalDateTime.parse(event.startDate),
-                                                // LocalDateTime.parse(event.endDate),
-                                                end = null,
+                                                end = event.endDate?.let { LocalDateTime.parse(it) },
                                             ),
                                         status = EventStatus.valueOf(event.status.uppercase()),
                                     ),

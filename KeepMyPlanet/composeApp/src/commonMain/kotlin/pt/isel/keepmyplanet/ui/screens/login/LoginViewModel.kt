@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.model.toUserSession
-import pt.isel.keepmyplanet.data.service.AuthService
+import pt.isel.keepmyplanet.data.service.AuthHttpClient
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
 
 class LoginViewModel(
-    private val authService: AuthService,
+    private val authHttpClient: AuthHttpClient,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -39,7 +39,7 @@ class LoginViewModel(
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val request = LoginRequest(currentState.username.trim(), currentState.password)
-                val result = authService.login(request)
+                val result = authHttpClient.login(request)
 
                 result
                     .onSuccess { loginResponse ->

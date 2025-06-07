@@ -13,7 +13,7 @@ import pt.isel.keepmyplanet.data.api.executeRequestUnit
 import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 
-class ChatService(
+class ChatHttpClient(
     private val httpClient: HttpClient,
 ) {
     private object Endpoints {

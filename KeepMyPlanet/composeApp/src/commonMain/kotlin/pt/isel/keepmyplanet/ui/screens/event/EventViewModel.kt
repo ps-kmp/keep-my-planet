@@ -8,21 +8,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
-import pt.isel.keepmyplanet.data.model.EventInfo
 import pt.isel.keepmyplanet.data.model.UserInfo
-import pt.isel.keepmyplanet.data.service.EventService
-import pt.isel.keepmyplanet.domain.common.Description
-import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.event.EventStatus
-import pt.isel.keepmyplanet.domain.event.Period
-import pt.isel.keepmyplanet.domain.event.Title
+import pt.isel.keepmyplanet.data.model.toEventInfo
+import pt.isel.keepmyplanet.data.service.EventHttpClient
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 
 class EventViewModel(
-    private val eventService: EventService,
+    private val eventHttpClient: EventHttpClient,
     private val user: UserInfo,
 ) : ViewModel() {
     private val _listUiState = MutableStateFlow(EventListUiState())
@@ -34,61 +29,73 @@ class EventViewModel(
     private val _events = Channel<EventScreenEvent>(Channel.BUFFERED)
     val events: Flow<EventScreenEvent> = _events.receiveAsFlow()
 
-/*    private val _lastCreatedEvent = MutableStateFlow<EventResponse?>(null)
-    val lastCreatedEvent: StateFlow<EventResponse?> = _lastCreatedEvent.asStateFlow()*/
-
     init {
         loadEvents()
     }
 
     fun loadEvents(
-        query: String? = null,
-        limit: Int = 20,
-        offset: Int = 0,
+        query: String? = _listUiState.value.query.ifBlank { null },
+        limit: Int = _listUiState.value.limit,
+        offset: Int = _listUiState.value.offset,
     ) {
         viewModelScope.launch {
-            _listUiState.value = _listUiState.value.copy(isLoading = true)
-            eventService
+            _listUiState.update { it.copy(isLoading = true) }
+            eventHttpClient
                 .searchAllEvents(query, limit, offset)
                 .onSuccess { events ->
-                    _listUiState.value =
-                        _listUiState.value.copy(
-                            events =
-                                events.map { response ->
-                                    EventInfo(
-                                        id = Id(response.id),
-                                        title = Title(response.title),
-                                        description = Description(response.description),
-                                        period =
-                                            Period(
-                                                start = LocalDateTime.parse(response.startDate),
-                                                // LocalDateTime.parse(response.endDate),
-                                                // end = response.endDate?.let { LocalDateTime.parse(it) },
-                                                end = response.endDate?.takeIf { it != "null" }?.let { LocalDateTime.parse(it) },
-                                            ),
-                                        status = EventStatus.valueOf(response.status.uppercase()),
-                                    )
-                                },
+                    _listUiState.update {
+                        it.copy(
+                            events = events.map { response -> response.toEventInfo() },
                             isLoading = false,
                             error = null,
+                            limit = limit,
+                            offset = offset,
                         )
+                    }
                 }.onFailure {
-                    _listUiState.value =
-                        _listUiState.value.copy(
+                    _listUiState.update {
+                        it.copy(
                             isLoading = false,
                             error = "Failed to load events",
                         )
+                    }
                 }
+        }
+    }
+
+    fun loadNextPage() {
+        val currentState = _listUiState.value
+        if (currentState.canLoadNext) {
+            loadEvents(offset = currentState.offset + currentState.limit)
+        }
+    }
+
+    fun loadPreviousPage() {
+        val currentState = _listUiState.value
+        if (currentState.canLoadPrevious) {
+            loadEvents(offset = (currentState.offset - currentState.limit).coerceAtLeast(0))
+        }
+    }
+
+    fun changeLimit(newLimit: Int) {
+        if (!_listUiState.value.isLoading && newLimit > 0) {
+            loadEvents(limit = newLimit, offset = 0)
         }
     }
 
     fun createEvent(request: CreateEventRequest) {
         viewModelScope.launch {
             _listUiState.value = _listUiState.value.copy(isLoading = true)
-            eventService
+            eventHttpClient
                 .createEvent(request)
                 .onSuccess { response ->
-                    loadEvents()
+                    val newEvent = response.toEventInfo()
+                    _listUiState.update {
+                        it.copy(
+                            events = listOf(newEvent) + it.events,
+                            isLoading = false,
+                        )
+                    }
                     _events.send(EventScreenEvent.EventCreated(response.id))
                     _events.send(EventScreenEvent.ShowSnackbar("Event created successfully"))
                 }.onFailure {
@@ -104,7 +111,7 @@ class EventViewModel(
     fun loadEventDetails(eventId: UInt) {
         viewModelScope.launch {
             _detailsUiState.value = _detailsUiState.value.copy(isLoading = true)
-            eventService
+            eventHttpClient
                 .getEventDetails(eventId)
                 .onSuccess { event ->
                     _detailsUiState.value =
@@ -126,10 +133,15 @@ class EventViewModel(
     fun joinEvent(eventId: UInt) {
         viewModelScope.launch {
             _detailsUiState.value = _detailsUiState.value.copy(isJoining = true)
-            eventService
+            eventHttpClient
                 .joinEvent(eventId)
-                .onSuccess {
-                    // loadEventDetails(eventId)
+                .onSuccess { updatedEvent ->
+                    _detailsUiState.value =
+                        _detailsUiState.value.copy(
+                            isJoining = false,
+                            error = null,
+                            event = updatedEvent,
+                        )
                     _events.send(EventScreenEvent.ShowSnackbar("Joined event successfully"))
                 }.onFailure {
                     _detailsUiState.value =
@@ -147,11 +159,13 @@ class EventViewModel(
     ) {
         viewModelScope.launch {
             _detailsUiState.value = _detailsUiState.value.copy(isEditing = true)
-            eventService
+            eventHttpClient
                 .updateEventDetails(eventId, request)
                 .onSuccess {
-                    loadEventDetails(eventId)
+                    _detailsUiState.value =
+                        _detailsUiState.value.copy(isEditing = false, error = null)
                     _events.send(EventScreenEvent.ShowSnackbar("Event updated successfully"))
+                    _events.send(EventScreenEvent.NavigateBack)
                 }.onFailure {
                     _detailsUiState.value =
                         _detailsUiState.value.copy(
@@ -165,10 +179,12 @@ class EventViewModel(
     fun leaveEvent(eventId: UInt) {
         viewModelScope.launch {
             _detailsUiState.value = _detailsUiState.value.copy(isLeaving = true)
-            eventService
+            eventHttpClient
                 .leaveEvent(eventId)
                 .onSuccess {
                     loadEventDetails(eventId)
+                    _detailsUiState.value =
+                        _detailsUiState.value.copy(isEditing = false, error = null)
                     _events.send(EventScreenEvent.ShowSnackbar("Left event successfully"))
                 }.onFailure {
                     _detailsUiState.value =

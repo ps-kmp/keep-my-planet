@@ -27,16 +27,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.data.model.UserSession
-import pt.isel.keepmyplanet.data.service.AuthService
+import pt.isel.keepmyplanet.data.service.AuthHttpClient
 import pt.isel.keepmyplanet.ui.screens.common.LoadingButton
 
 @Composable
 fun LoginScreen(
-    authService: AuthService,
+    authHttpClient: AuthHttpClient,
     onNavigateHome: (UserSession) -> Unit,
     onNavigateToRegister: () -> Unit,
 ) {
-    val viewModel = remember { LoginViewModel(authService) }
+    val viewModel = remember { LoginViewModel(authHttpClient) }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 

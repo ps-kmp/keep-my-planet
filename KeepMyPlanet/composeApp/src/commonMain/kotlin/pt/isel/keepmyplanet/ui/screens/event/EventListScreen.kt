@@ -24,6 +24,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.data.model.EventInfo
 import pt.isel.keepmyplanet.ui.screens.event.components.EventItem
@@ -42,11 +44,15 @@ fun EventListScreen(
     onEventSelected: (event: EventInfo) -> Unit,
     onNavigateBack: () -> Unit,
     onCreateEventClick: () -> Unit,
-    onLoadEvents: (limit: Int, offset: Int) -> Unit,
+    onLoadNextPage: () -> Unit,
+    onLoadPreviousPage: () -> Unit,
+    onChangeLimit: (Int) -> Unit,
 ) {
-    var limit by remember { mutableStateOf(20) }
-    var offset by remember { mutableStateOf(0) }
-    var tempLimit by remember { mutableStateOf(limit.toString()) }
+    var tempLimit by remember { mutableStateOf(uiState.limit.toString()) }
+
+    LaunchedEffect(uiState.limit) {
+        tempLimit = uiState.limit.toString()
+    }
 
     Scaffold(
         topBar = {
@@ -64,7 +70,7 @@ fun EventListScreen(
             )
         },
     ) { paddingValues ->
-        if (uiState.isLoading) {
+        if (uiState.isLoading && uiState.events.isEmpty()) {
             CircularProgressIndicator(
                 modifier =
                     Modifier
@@ -83,7 +89,7 @@ fun EventListScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(uiState.events, key = { it.id }) { event ->
+                    items(uiState.events, key = { it.id.value.toInt() }) { event ->
                         EventItem(
                             event = event,
                             onClick = { onEventSelected(event) },
@@ -99,21 +105,15 @@ fun EventListScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Button(
-                            onClick = {
-                                offset = (offset - limit).coerceAtLeast(0)
-                                onLoadEvents(limit, offset)
-                            },
-                            enabled = offset > 0,
+                            onClick = onLoadPreviousPage,
+                            enabled = uiState.canLoadPrevious,
                         ) {
                             Text("Previous")
                         }
 
                         Button(
-                            onClick = {
-                                offset += limit
-                                onLoadEvents(limit, offset)
-                            },
-                            enabled = uiState.events.size == limit,
+                            onClick = onLoadNextPage,
+                            enabled = uiState.canLoadNext,
                         ) {
                             Text("Next")
                         }
@@ -127,19 +127,18 @@ fun EventListScreen(
                         TextField(
                             value = tempLimit,
                             onValueChange = { newValue ->
-                                tempLimit = newValue
+                                tempLimit = newValue.filter { it.isDigit() }
                             },
                             keyboardOptions =
                                 KeyboardOptions.Default.copy(
+                                    keyboardType = KeyboardType.Number,
                                     imeAction = ImeAction.Done,
                                 ),
                             keyboardActions =
                                 KeyboardActions(
                                     onDone = {
                                         tempLimit.toIntOrNull()?.let {
-                                            limit = it.coerceAtLeast(1)
-                                            offset = 0 // Restart offset when limit changes
-                                            onLoadEvents(limit, offset)
+                                            onChangeLimit(it)
                                         }
                                     },
                                 ),

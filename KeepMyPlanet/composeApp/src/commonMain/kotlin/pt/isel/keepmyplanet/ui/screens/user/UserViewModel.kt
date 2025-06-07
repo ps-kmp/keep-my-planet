@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.model.UserInfo
 import pt.isel.keepmyplanet.data.model.toUserInfo
-import pt.isel.keepmyplanet.data.service.UserService
+import pt.isel.keepmyplanet.data.service.UserHttpClient
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
@@ -22,7 +22,7 @@ import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 
 class UserProfileViewModel(
-    private val userService: UserService,
+    private val userService: UserHttpClient,
     private val user: UserInfo,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState(userDetails = user))

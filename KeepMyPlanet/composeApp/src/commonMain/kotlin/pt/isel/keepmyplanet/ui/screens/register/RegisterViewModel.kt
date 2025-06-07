@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.service.UserService
+import pt.isel.keepmyplanet.data.service.UserHttpClient
 import pt.isel.keepmyplanet.dto.user.RegisterRequest
 
 class RegisterViewModel(
-    private val userService: UserService,
+    private val userService: UserHttpClient,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()

@@ -6,8 +6,8 @@ import pt.isel.keepmyplanet.domain.zone.ZoneStatus;
 
 CREATE TABLE zones (
     id BIGINT AS Id PRIMARY KEY,
-    latitude REAL NOT NULL,
-    longitude REAL NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
     description TEXT AS Description NOT NULL,
     reporter_id BIGINT AS Id NOT NULL,
     event_id BIGINT AS Id,

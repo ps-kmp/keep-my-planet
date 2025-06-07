@@ -36,6 +36,7 @@ fun CreateEventScreen(
     var description by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf("") }
     var maxParticipants by remember { mutableStateOf("") }
+    var zoneId by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -85,7 +86,15 @@ fun CreateEventScreen(
             OutlinedTextField(
                 value = maxParticipants,
                 onValueChange = { maxParticipants = it },
-                label = { Text("Max Participants") },
+                label = { Text("Max Participants (Optional)") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OutlinedTextField(
+                value = zoneId,
+                onValueChange = { zoneId = it },
+                label = { Text("Zone ID") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -99,7 +108,7 @@ fun CreateEventScreen(
                             title = title,
                             description = description,
                             startDate = startDate,
-                            zoneId = 1u, // HARDCODED
+                            zoneId = zoneId.toUInt(),
                             maxParticipants = maxParticipants.toIntOrNull(),
                         ),
                     )
@@ -108,7 +117,8 @@ fun CreateEventScreen(
                 enabled =
                     title.isNotBlank() &&
                         description.isNotBlank() &&
-                        startDate.isNotBlank(),
+                        startDate.isNotBlank() &&
+                        zoneId.toUIntOrNull() != null,
             ) {
                 Text("Create Event")
             }
