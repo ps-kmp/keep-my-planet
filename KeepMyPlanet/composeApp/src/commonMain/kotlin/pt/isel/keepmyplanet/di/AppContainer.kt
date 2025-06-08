@@ -7,6 +7,7 @@ import pt.isel.keepmyplanet.data.api.AuthApi
 import pt.isel.keepmyplanet.data.api.ChatApi
 import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.data.api.UserApi
+import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.createHttpClient
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.session.model.UserSession
@@ -34,4 +35,5 @@ class AppContainer(
     val userApi: UserApi by lazy { UserApi(httpClient) }
     val eventApi: EventApi by lazy { EventApi(httpClient) }
     val chatApi: ChatApi by lazy { ChatApi(httpClient) }
+    val zoneApi: ZoneApi by lazy { ZoneApi(httpClient) }
 }

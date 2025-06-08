@@ -19,6 +19,7 @@ import pt.isel.keepmyplanet.ui.event.list.EventListScreen
 import pt.isel.keepmyplanet.ui.event.update.UpdateEventScreen
 import pt.isel.keepmyplanet.ui.home.HomeScreen
 import pt.isel.keepmyplanet.ui.login.LoginScreen
+import pt.isel.keepmyplanet.ui.map.MapScreen
 import pt.isel.keepmyplanet.ui.register.RegisterScreen
 import pt.isel.keepmyplanet.ui.user.UserProfileScreen
 
@@ -67,6 +68,7 @@ fun App(appViewModel: AppViewModel) {
                     user = user,
                     onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
                     onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
+                    onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
                     onLogout = { appViewModel.logout() },
                 )
             }
@@ -165,6 +167,12 @@ fun App(appViewModel: AppViewModel) {
                     onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
                 )
             }
+        }
+
+        is AppRoute.Map -> {
+            MapScreen(
+                onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
+            )
         }
     }
 }

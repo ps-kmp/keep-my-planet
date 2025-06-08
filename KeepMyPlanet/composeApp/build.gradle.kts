@@ -62,7 +62,7 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material)
-                implementation(compose.ui)
+                implementation(compose.materialIconsExtended)
 
                 // compose utilities
                 implementation(compose.components.resources)
@@ -70,7 +70,6 @@ kotlin {
 
                 // lifecycle / viewmodel
                 implementation(libs.androidx.lifecycle.viewmodel)
-                implementation(libs.androidx.lifecycle.viewmodel.compose)
 
                 // projects
                 implementation(projects.shared)
@@ -92,6 +91,8 @@ kotlin {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.ktor.client.okhttp)
+                implementation(libs.androidx.lifecycle.viewmodel.compose)
+                implementation(libs.maplibre.compose)
             }
         }
         val desktopMain by getting {
@@ -99,6 +100,7 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.ktor.client.cio)
+                implementation(libs.maplibre.compose)
             }
         }
     }
@@ -146,6 +148,14 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "pt.isel.keepmyplanet.MainKt"
+
+        jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+        jvmArgs("--add-opens", "java.desktop/java.awt.peer=ALL-UNNAMED")
+
+        if (System.getProperty("os.name").contains("Mac")) {
+            jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
+            jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+        }
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)

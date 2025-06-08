@@ -34,12 +34,6 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.sse)
 
-    // exposed
-    implementation(libs.exposed.core)
-    implementation(libs.exposed.dao)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.exposed.kotlin.datetime)
-
     // database
     implementation(libs.sqldelight.runtime)
     implementation(libs.jdbc.driver)

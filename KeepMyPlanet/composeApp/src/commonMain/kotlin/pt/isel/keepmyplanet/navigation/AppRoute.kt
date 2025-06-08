@@ -25,5 +25,7 @@ sealed class AppRoute {
         val eventId: UInt,
     ) : AppRoute()
 
+    data object Map : AppRoute()
+
     data object UserProfile : AppRoute()
 }

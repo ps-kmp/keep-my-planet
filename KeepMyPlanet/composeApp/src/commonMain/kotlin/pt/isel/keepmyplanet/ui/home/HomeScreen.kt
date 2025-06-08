@@ -23,6 +23,7 @@ fun HomeScreen(
     user: UserInfo,
     onNavigateToEventList: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToMap: () -> Unit,
     onLogout: () -> Unit,
 ) {
     Scaffold(
@@ -48,6 +49,12 @@ fun HomeScreen(
 
             Button(onClick = onNavigateToEventList) {
                 Text("View Events")
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Button(onClick = onNavigateToMap) {
+                Text("View Map")
             }
 
             Spacer(modifier = Modifier.height(10.dp))
