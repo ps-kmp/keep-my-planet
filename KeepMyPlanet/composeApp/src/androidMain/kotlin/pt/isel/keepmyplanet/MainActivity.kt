@@ -9,17 +9,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.ktor.client.engine.okhttp.OkHttp
-import pt.isel.keepmyplanet.di.AppContainer
 
 class MainActivity : ComponentActivity() {
-    private val appContainer by lazy { AppContainer(OkHttp) }
-
     @Suppress("UNCHECKED_CAST")
     private val viewModelFactory =
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(AppViewModel::class.java)) {
-                    return AppViewModel(appContainer) as T
+                    return AppViewModel(OkHttp) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }

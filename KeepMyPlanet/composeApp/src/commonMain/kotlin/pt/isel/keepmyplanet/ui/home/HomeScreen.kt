@@ -10,11 +10,11 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.user.model.UserInfo
 
 @Suppress("ktlint:standard:function-naming")
@@ -26,9 +26,7 @@ fun HomeScreen(
     onNavigateToMap: () -> Unit,
     onLogout: () -> Unit,
 ) {
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Home") }) },
-    ) { paddingValues ->
+    Scaffold(topBar = { AppTopBar(title = "Home") }) { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

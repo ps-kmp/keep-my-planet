@@ -11,33 +11,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
+import pt.isel.keepmyplanet.ui.user.components.DeleteAccountSection
 import pt.isel.keepmyplanet.ui.user.components.PasswordChangeSection
 import pt.isel.keepmyplanet.ui.user.components.ProfileInfoSection
 import pt.isel.keepmyplanet.ui.user.model.UserProfileEvent
@@ -100,63 +94,22 @@ fun UserProfileScreenContent(
     onChangePasswordClicked: () -> Unit,
     onConfirmDeleteAccount: () -> Unit,
 ) {
-    val showDeleteConfirmDialog = remember { mutableStateOf(false) }
-
-    if (showDeleteConfirmDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmDialog.value = false },
-            title = { Text("Delete Account?") },
-            text = { Text("Are you sure you want to permanently delete your account?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDeleteConfirmDialog.value = false
-                        onConfirmDeleteAccount()
-                    },
-                    colors = ButtonDefaults.buttonColors(MaterialTheme.colors.error),
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { showDeleteConfirmDialog.value = false }) {
-                    Text("Cancel")
-                }
-            },
-        )
-    }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("User Profile") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-            )
-        },
+        topBar = { AppTopBar(title = "User Profile", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                FullScreenLoading()
             } else if (uiState.userDetails == null) {
                 Text(
-                    "Failed to load user profile.",
+                    text = "Failed to load user profile.",
                     modifier = Modifier.align(Alignment.Center).padding(16.dp),
                 )
             } else {
                 Column(
                     modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp),
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
@@ -183,26 +136,20 @@ fun UserProfileScreenContent(
                         onConfirmPasswordChanged = onConfirmPasswordChanged,
                         onChangePasswordClicked = onChangePasswordClicked,
                     )
-
                     Button(
                         onClick = onPasswordChangeToggled,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(if (uiState.showPasswordChangeSection) "Cancel Password Change" else "Change Password")
+                        Text(
+                            if (uiState.showPasswordChangeSection) {
+                                "Cancel Password Change"
+                            } else {
+                                "Change Password"
+                            },
+                        )
                     }
 
-                    OutlinedButton(
-                        onClick = { showDeleteConfirmDialog.value = true },
-                        enabled = uiState.isDeleteAccountEnabled,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
-                    ) {
-                        if (uiState.isDeletingAccount) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                        } else {
-                            Text("Delete Account")
-                        }
-                    }
+                    DeleteAccountSection(uiState, onConfirmDeleteAccount)
                 }
             }
         }

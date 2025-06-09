@@ -7,20 +7,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.event.EventViewModel
 
@@ -33,65 +28,52 @@ fun CreateEventScreen(
     val formUiState by viewModel.formUiState.collectAsState()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Create Event") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-            )
-        },
+        topBar = { AppTopBar(title = "Create Event", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            OutlinedTextField(
+            FormField(
                 value = formUiState.title,
                 onValueChange = viewModel::onTitleChanged,
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth(),
+                label = "Title",
                 enabled = !formUiState.isSubmitting,
+                singleLine = true,
             )
 
-            OutlinedTextField(
+            FormField(
                 value = formUiState.description,
                 onValueChange = viewModel::onDescriptionChanged,
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
+                label = "Description",
                 minLines = 3,
                 enabled = !formUiState.isSubmitting,
             )
 
-            OutlinedTextField(
+            FormField(
                 value = formUiState.startDate,
                 onValueChange = viewModel::onStartDateChanged,
-                label = { Text("Start Date and Time (YYYY-MM-DDTHH:MM:SS)") },
-                modifier = Modifier.fillMaxWidth(),
+                label = "Start Date and Time (YYYY-MM-DDTHH:MM:SS)",
                 enabled = !formUiState.isSubmitting,
+                singleLine = true,
             )
 
-            OutlinedTextField(
+            FormField(
                 value = formUiState.maxParticipants,
                 onValueChange = viewModel::onMaxParticipantsChanged,
-                label = { Text("Max Participants (Optional)") },
+                label = "Max Participants (Optional)",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
                 enabled = !formUiState.isSubmitting,
+                singleLine = true,
             )
 
-            OutlinedTextField(
+            FormField(
                 value = formUiState.zoneId,
                 onValueChange = viewModel::onZoneIdChanged,
-                label = { Text("Zone ID") },
+                label = "Zone ID",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
                 enabled = !formUiState.isSubmitting,
+                singleLine = true,
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -101,6 +83,7 @@ fun CreateEventScreen(
                 enabled = formUiState.canSubmit,
                 isLoading = formUiState.isSubmitting,
                 text = "Create Event",
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

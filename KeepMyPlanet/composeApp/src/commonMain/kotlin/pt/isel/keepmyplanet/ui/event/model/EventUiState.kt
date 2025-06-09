@@ -31,6 +31,13 @@ data class EventDetailsUiState(
             !event.isUserParticipantOrOrganizer(currentUserId) &&
             !event.isFull
 
+    fun canUserLeave(currentUserId: Id): Boolean =
+        event != null &&
+            !isLeaving &&
+            !isJoining &&
+            event.participantsIds.contains(currentUserId) &&
+            event.organizerId != currentUserId
+
     fun canUserEdit(userId: Id): Boolean = event != null && event.organizerId == userId
 
     fun canUserChat(userId: Id): Boolean = event != null && event.isUserParticipantOrOrganizer(userId)

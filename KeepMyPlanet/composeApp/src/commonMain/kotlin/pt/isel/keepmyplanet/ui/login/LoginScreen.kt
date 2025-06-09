@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
@@ -27,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.session.model.UserSession
+import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.login.model.LoginEvent
 import pt.isel.keepmyplanet.ui.login.model.LoginUiState
@@ -66,7 +66,7 @@ fun LoginScreen(
         ) {
             LoginContent(
                 uiState = uiState,
-                onUsernameChanged = viewModel::onUsernameChanged,
+                onEmailChanged = viewModel::onEmailChanged,
                 onPasswordChanged = viewModel::onPasswordChanged,
                 onLoginClicked = viewModel::onLoginClicked,
                 onNavigateToRegister = onNavigateToRegister,
@@ -78,7 +78,7 @@ fun LoginScreen(
 @Composable
 private fun LoginContent(
     uiState: LoginUiState,
-    onUsernameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
     onLoginClicked: () -> Unit,
     onNavigateToRegister: () -> Unit,
@@ -93,23 +93,21 @@ private fun LoginContent(
             style = MaterialTheme.typography.h4,
         )
 
-        OutlinedTextField(
-            value = uiState.username,
-            onValueChange = onUsernameChanged,
-            label = { Text("Username") },
+        FormField(
+            value = uiState.email,
+            onValueChange = onEmailChanged,
+            label = "Email",
             singleLine = true,
             enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth(),
         )
 
-        OutlinedTextField(
+        FormField(
             value = uiState.password,
             onValueChange = onPasswordChanged,
-            label = { Text("Password") },
+            label = "Password",
             singleLine = true,
             enabled = !uiState.isLoading,
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
         )
 
         LoadingButton(

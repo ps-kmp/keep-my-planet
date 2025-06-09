@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
 
 @Composable
@@ -36,24 +36,22 @@ fun ProfileInfoSection(
         }
 
         if (uiState.isEditingProfile) {
-            OutlinedTextField(
+            FormField(
                 value = uiState.nameInput,
                 onValueChange = onNameChanged,
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth(),
+                label = "Name",
                 singleLine = true,
                 enabled = !uiState.isUpdatingProfile,
             )
         } else {
-            Text("Name: ${uiState.userDetails?.name?.value ?: "N/A"}")
+            Text("Name: ${uiState.userDetails?.name?.value ?: ""}")
         }
 
         if (uiState.isEditingProfile) {
-            OutlinedTextField(
+            FormField(
                 value = uiState.emailInput,
                 onValueChange = onEmailChanged,
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
+                label = "Email",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
                 enabled = !uiState.isUpdatingProfile,

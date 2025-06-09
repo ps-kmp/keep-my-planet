@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
@@ -30,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.register.model.RegisterEvent
 import pt.isel.keepmyplanet.ui.register.model.RegisterUiState
@@ -99,56 +99,51 @@ private fun RegisterContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = "Create Account",
+            text = "Register",
             style = MaterialTheme.typography.h4,
-            modifier = Modifier.padding(bottom = 16.dp),
         )
 
-        OutlinedTextField(
+        FormField(
             value = uiState.username,
             onValueChange = onUsernameChanged,
-            label = { Text("Username") },
+            label = "Username",
             singleLine = true,
             enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth(),
         )
 
-        OutlinedTextField(
+        FormField(
             value = uiState.email,
             onValueChange = onEmailChanged,
-            label = { Text("Email") },
+            label = "Email",
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth(),
         )
 
-        OutlinedTextField(
+        FormField(
             value = uiState.password,
             onValueChange = onPasswordChanged,
-            label = { Text("Password (min 8 chars)") },
+            label = "Password (min 8 chars)",
             singleLine = true,
             enabled = !uiState.isLoading,
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
         )
 
-        OutlinedTextField(
+        FormField(
             value = uiState.confirmPassword,
             onValueChange = onConfirmPasswordChanged,
-            label = { Text("Confirm Password") },
+            label = "Confirm Password",
             singleLine = true,
             enabled = !uiState.isLoading,
             visualTransformation = PasswordVisualTransformation(),
             isError = uiState.showPasswordMismatchError,
-            modifier = Modifier.fillMaxWidth(),
         )
         if (uiState.showPasswordMismatchError) {
             Text(
                 text = "Passwords do not match",
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.caption,
-                modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
             )
         }
 

@@ -7,13 +7,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import io.ktor.client.engine.js.Js
 import kotlinx.browser.document
-import pt.isel.keepmyplanet.di.AppContainer
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     ComposeViewport(document.body!!) {
-        val container = remember { AppContainer(Js) }
-        val appViewModel = remember { AppViewModel(container) }
+        val appViewModel = remember { AppViewModel(Js) }
         App(appViewModel)
     }
 }

@@ -8,7 +8,6 @@ import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
-import pt.isel.keepmyplanet.util.calculateDistanceKm
 import pt.isel.keepmyplanet.util.now
 import ptiselkeepmyplanetdb.EventQueries
 import ptiselkeepmyplanetdb.Events
@@ -189,24 +188,10 @@ class DatabaseEventRepository(
         if (nearbyZones.isEmpty()) return emptyList()
 
         val nearbyZoneIds = nearbyZones.map { it.id }
-        val zoneMap = nearbyZones.associateBy { it.id }
 
-        val candidateEvents =
-            eventQueries
-                .findEventsByZoneIds(nearbyZoneIds)
-                .executeAsList()
-
-        val eventsWithDistance =
-            candidateEvents.mapNotNull { event ->
-                zoneMap[event.zone_id]?.let { zone ->
-                    val distance = calculateDistanceKm(zone.location, center)
-                    if (distance <= radiusKm) event to distance else null
-                }
-            }
-
-        return eventsWithDistance
-            .sortedBy { it.second }
-            .map { it.first }
+        return eventQueries
+            .findEventsByZoneIds(nearbyZoneIds)
+            .executeAsList()
             .map { getEventWithParticipants(it) }
     }
 }

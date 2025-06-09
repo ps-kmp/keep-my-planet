@@ -7,6 +7,7 @@ import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.ZoneRepository
+import pt.isel.keepmyplanet.util.calculateBoundingBox
 import pt.isel.keepmyplanet.util.calculateDistanceKm
 import pt.isel.keepmyplanet.util.now
 import ptiselkeepmyplanetdb.ZoneQueries
@@ -140,18 +141,25 @@ class DatabaseZoneRepository(
         limit: Int,
         offset: Int,
     ): List<Zone> {
-        val allDbZones = zoneQueries.getAll(limit.toLong(), offset.toLong()).executeAsList()
+        val (minCoords, maxCoords) = calculateBoundingBox(center, radiusKm)
+        val candidateDbZones =
+            zoneQueries
+                .findInBoundingBox(
+                    minLat = minCoords.latitude,
+                    maxLat = maxCoords.latitude,
+                    minLon = minCoords.longitude,
+                    maxLon = maxCoords.longitude,
+                ).executeAsList()
 
-        val nearbyDbZonesWithDistance =
-            allDbZones.mapNotNull { dbZone ->
+        return candidateDbZones
+            .map { dbZone ->
                 val zoneLocation = Location(dbZone.latitude, dbZone.longitude)
                 val distance = calculateDistanceKm(zoneLocation, center)
-                if (distance <= radiusKm) dbZone to distance else null
-            }
-
-        return nearbyDbZonesWithDistance
+                getZoneWithPhotos(dbZone) to distance
+            }.filter { (_, distance) -> distance <= radiusKm }
             .sortedBy { it.second }
+            .drop(offset)
+            .take(limit)
             .map { it.first }
-            .map { getZoneWithPhotos(it) }
     }
 }

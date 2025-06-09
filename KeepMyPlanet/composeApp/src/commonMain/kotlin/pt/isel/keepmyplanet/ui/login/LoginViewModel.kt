@@ -25,8 +25,8 @@ class LoginViewModel(
     private val _events = Channel<LoginEvent>(Channel.BUFFERED)
     val events: Flow<LoginEvent> = _events.receiveAsFlow()
 
-    fun onUsernameChanged(username: String) {
-        _uiState.update { it.copy(username = username) }
+    fun onEmailChanged(email: String) {
+        _uiState.update { it.copy(email = email) }
     }
 
     fun onPasswordChanged(password: String) {
@@ -40,7 +40,7 @@ class LoginViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val request = LoginRequest(currentState.username.trim(), currentState.password)
+                val request = LoginRequest(currentState.email.trim(), currentState.password)
                 val result = authApi.login(request)
 
                 result

@@ -1,16 +1,12 @@
 package pt.isel.keepmyplanet.ui.chat.components
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
@@ -22,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.components.LoadingIconButton
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -52,27 +49,21 @@ fun MessageInput(
                 shape = MaterialTheme.shapes.medium,
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                if (isSending) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colors.primary,
-                    )
-                } else {
-                    IconButton(onClick = onSendClick, enabled = sendEnabled) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send Message",
-                            tint =
-                                if (sendEnabled) {
-                                    MaterialTheme.colors.primary
-                                } else {
-                                    MaterialTheme.colors.onSurface.copy(ContentAlpha.disabled)
-                                },
-                        )
-                    }
-                }
+            LoadingIconButton(
+                onClick = onSendClick,
+                isLoading = isSending,
+                enabled = sendEnabled,
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send Message",
+                    tint =
+                        if (sendEnabled) {
+                            MaterialTheme.colors.primary
+                        } else {
+                            MaterialTheme.colors.onSurface.copy(ContentAlpha.disabled)
+                        },
+                )
             }
         }
     }

@@ -3,22 +3,13 @@ package pt.isel.keepmyplanet.ui.event.details
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -28,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
+import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.event.EventViewModel
+import pt.isel.keepmyplanet.ui.event.details.components.EventActions
 import pt.isel.keepmyplanet.ui.event.list.components.toFormattedString
 
 @Suppress("ktlint:standard:function-naming")
@@ -51,16 +44,9 @@ fun EventDetailsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(event?.title?.value ?: "Event Details") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                        )
-                    }
-                },
+            AppTopBar(
+                title = event?.title?.value ?: "Event Details",
+                onNavigateBack = onNavigateBack,
             )
         },
     ) { paddingValues ->
@@ -117,49 +103,14 @@ fun EventDetailsScreen(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Button(
-                            onClick = { onNavigateToEditEvent(eventId) },
-                            modifier = Modifier.weight(1f),
-                            enabled = uiState.canUserEdit(currentUserId),
-                        ) {
-                            Text("Edit Event")
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Button(
-                            onClick = { viewModel.joinEvent(eventId) },
-                            modifier = Modifier.weight(1f),
-                            enabled = uiState.canUserJoin(currentUserId),
-                        ) {
-                            if (uiState.isJoining) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = MaterialTheme.colors.onPrimary,
-                                    strokeWidth = 2.dp,
-                                )
-                            } else {
-                                Text("Join Event")
-                            }
-                        }
-
-                        Button(
-                            onClick = { onNavigateToChat(ChatInfo(event.id, event.title)) },
-                            modifier = Modifier.weight(1f),
-                            enabled = uiState.canUserChat(currentUserId),
-                        ) {
-                            Text("Chat")
-                        }
-                    }
+                    EventActions(
+                        uiState = uiState,
+                        currentUserId = currentUserId,
+                        onJoinEvent = { viewModel.joinEvent(eventId) },
+                        onLeaveEvent = { viewModel.leaveEvent(eventId) },
+                        onNavigateToChat = onNavigateToChat,
+                        onNavigateToEditEvent = { onNavigateToEditEvent(eventId) },
+                    )
                 }
             }
 
