@@ -12,7 +12,7 @@ import io.ktor.client.engine.okhttp.OkHttp
 
 class MainActivity : ComponentActivity() {
     @Suppress("UNCHECKED_CAST")
-    private val viewModelFactory =
+    private val factory =
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(AppViewModel::class.java)) {
@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val appViewModel: AppViewModel = viewModel(factory = viewModelFactory)
+            val appViewModel: AppViewModel = viewModel(factory = factory)
             App(appViewModel)
         }
     }
@@ -35,7 +35,6 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun AppAndroidPreview() {
-//    val container = remember { AppContainer(OkHttp) }
-//    val appViewModel = remember { AppViewModel(container) }
-//    App(appViewModel)
+    val appViewModel = AppViewModel(OkHttp)
+    App(appViewModel)
 }

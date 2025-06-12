@@ -4,5 +4,9 @@ import androidx.compose.runtime.Composable
 
 @Composable
 @Suppress("ktlint:standard:function-naming")
-actual fun MapScreen(onNavigateBack: () -> Unit) {
+actual fun MapScreen(
+    viewModel: MapViewModel,
+    onNavigateToZoneDetails: (zoneId: UInt) -> Unit,
+    onNavigateBack: () -> Unit,
+) {
 }

@@ -17,10 +17,11 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.BASE_URL
+import pt.isel.keepmyplanet.session.SessionManager
 
 fun createHttpClient(
     engine: HttpClientEngineFactory<*>,
-    tokenProvider: () -> String?,
+    sessionManager: SessionManager,
 ): HttpClient =
     HttpClient(engine) {
         defaultRequest {
@@ -45,8 +46,8 @@ fun createHttpClient(
         install(Auth) {
             bearer {
                 loadTokens {
-                    tokenProvider()?.let { access ->
-                        BearerTokens(accessToken = access, refreshToken = "")
+                    sessionManager.loadSession()?.let { access ->
+                        BearerTokens(accessToken = access.token, refreshToken = "")
                     }
                 }
             }

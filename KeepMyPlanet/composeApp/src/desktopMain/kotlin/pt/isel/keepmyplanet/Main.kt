@@ -3,8 +3,6 @@ package pt.isel.keepmyplanet
 import androidx.compose.runtime.remember
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import dev.sargunv.maplibrecompose.compose.KcefProvider
-import dev.sargunv.maplibrecompose.compose.MaplibreContextProvider
 import io.ktor.client.engine.cio.CIO
 
 fun main() =
@@ -15,10 +13,6 @@ fun main() =
             onCloseRequest = ::exitApplication,
             title = "KeepMyPlanet",
         ) {
-            KcefProvider {
-                MaplibreContextProvider {
-                    App(appViewModel)
-                }
-            }
+            App(appViewModel)
         }
     }

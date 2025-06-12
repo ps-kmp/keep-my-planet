@@ -28,7 +28,7 @@ class AppContainer(
     }
 
     private val httpClient: HttpClient by lazy {
-        createHttpClient(engine, sessionManager::getToken)
+        createHttpClient(engine, sessionManager)
     }
 
     val authApi: AuthApi by lazy { AuthApi(httpClient) }

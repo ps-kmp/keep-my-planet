@@ -45,8 +45,6 @@ class SessionManager {
         _userSession.value = null
     }
 
-    fun getToken(): String? = _userSession.value?.token
-
     companion object {
         private const val USER_SESSION_KEY = "user_session"
     }

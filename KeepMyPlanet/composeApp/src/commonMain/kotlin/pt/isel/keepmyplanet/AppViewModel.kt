@@ -23,7 +23,7 @@ class AppViewModel(
     init {
         viewModelScope.launch {
             userSession.collect { session ->
-                navigate(currentRoute.value)
+                navigate(determineInitialRoute(session))
             }
         }
     }

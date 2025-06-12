@@ -6,7 +6,7 @@ import com.auth0.jwt.interfaces.DecodedJWT
 import io.ktor.server.config.ApplicationConfig
 import pt.isel.keepmyplanet.domain.common.Id
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 
@@ -16,7 +16,7 @@ class JwtService(
     private val secret = config.property("jwt.secret").getString()
     private val issuer = config.property("jwt.issuer").getString()
     private val audience = config.property("jwt.audience").getString()
-    private val validity = 1.hours
+    private val validity = 30.days
     private val algorithm = Algorithm.HMAC256(secret)
 
     companion object {

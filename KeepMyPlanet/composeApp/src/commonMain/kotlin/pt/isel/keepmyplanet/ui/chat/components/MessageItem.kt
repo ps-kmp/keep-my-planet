@@ -66,7 +66,7 @@ fun MessageItem(
 }
 
 @Composable
-fun formatTimestamp(isoTimestamp: String): String =
+private fun formatTimestamp(isoTimestamp: String): String =
     try {
         val dateTime = LocalDateTime.parse(isoTimestamp)
         val hour = dateTime.hour.toString().padStart(2, '0')
