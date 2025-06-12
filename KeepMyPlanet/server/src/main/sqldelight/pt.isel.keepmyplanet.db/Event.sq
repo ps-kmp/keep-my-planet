@@ -40,7 +40,7 @@ getById:
 SELECT * FROM events WHERE id = :id;
 
 getAll:
-SELECT * FROM events ORDER BY id LIMIT :limit OFFSET :offset;
+SELECT * FROM events ORDER BY start_datetime DESC LIMIT :limit OFFSET :offset;
 
 updateEvent:
 UPDATE events
@@ -61,8 +61,8 @@ DELETE FROM events WHERE id = :id RETURNING id;
 
 findByName:
 SELECT * FROM events
-WHERE to_tsvector('simple', title) @@ to_tsquery('simple', :name)
-ORDER BY start_datetime
+WHERE title ILIKE ('%' || :name || '%')
+ORDER BY start_datetime DESC
 LIMIT :limit OFFSET :offset;
 
 findByZoneAndName:
@@ -71,7 +71,16 @@ WHERE zone_id = :zoneId AND title LIKE ('%' || :name || '%')
 ORDER BY start_datetime;
 
 findByOrganizerId:
-SELECT * FROM events WHERE organizer_id = :organizerId ORDER BY start_datetime;
+SELECT * FROM events
+WHERE organizer_id = :organizerId
+ORDER BY start_datetime DESC
+LIMIT :limit OFFSET :offset;
+
+findByNameAndOrganizerId:
+SELECT * FROM events
+WHERE organizer_id = :organizerId AND title ILIKE ('%' || :name || '%')
+ORDER BY start_datetime DESC
+LIMIT :limit OFFSET :offset;
 
 findByZoneId:
 SELECT * FROM events WHERE zone_id = :zoneId ORDER BY start_datetime;
@@ -98,7 +107,16 @@ SELECT e.*
 FROM events e
 JOIN event_participants ep ON e.id = ep.event_id
 WHERE ep.user_id = :participantId
-ORDER BY e.start_datetime;
+ORDER BY e.start_datetime DESC
+LIMIT :limit OFFSET :offset;
+
+findByNameAndParticipantId:
+SELECT e.*
+FROM events e
+JOIN event_participants ep ON e.id = ep.event_id
+WHERE ep.user_id = :participantId AND e.title ILIKE ('%' || :name || '%')
+ORDER BY e.start_datetime DESC
+LIMIT :limit OFFSET :offset;
 
 getEventsWithZoneLocation:
 SELECT

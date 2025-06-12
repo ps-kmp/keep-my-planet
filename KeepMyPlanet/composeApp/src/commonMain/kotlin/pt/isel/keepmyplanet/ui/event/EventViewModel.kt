@@ -2,7 +2,9 @@ package pt.isel.keepmyplanet.ui.event
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +18,7 @@ import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.mapper.event.toEvent
 import pt.isel.keepmyplanet.ui.event.model.EventDetailsUiState
+import pt.isel.keepmyplanet.ui.event.model.EventFilterType
 import pt.isel.keepmyplanet.ui.event.model.EventFormUiState
 import pt.isel.keepmyplanet.ui.event.model.EventListUiState
 import pt.isel.keepmyplanet.ui.event.model.EventScreenEvent
@@ -37,55 +40,88 @@ class EventViewModel(
     private val _events = Channel<EventScreenEvent>(Channel.BUFFERED)
     val events: Flow<EventScreenEvent> = _events.receiveAsFlow()
 
+    private var searchJob: Job? = null
+
     init {
-        loadEvents()
+        loadEvents(isRefresh = true)
     }
 
-    fun loadEvents(
-        query: String? = _listUiState.value.query.ifBlank { null },
-        limit: Int = _listUiState.value.limit,
-        offset: Int = _listUiState.value.offset,
-    ) {
+    private fun loadEvents(isRefresh: Boolean = false) {
+        val currentState = _listUiState.value
+        val offset = if (isRefresh) 0 else currentState.offset
+
+        if (currentState.isLoading || currentState.isAddingMore) return
+
         viewModelScope.launch {
             _listUiState.update { it.copy(isLoading = true) }
-            eventApi
-                .searchAllEvents(query, limit, offset)
-                .onSuccess { events ->
+
+            if (!isRefresh) {
+                _listUiState.update { it.copy(isAddingMore = true) }
+            }
+
+            val result =
+                when (currentState.filter) {
+                    EventFilterType.ALL ->
+                        eventApi.searchAllEvents(
+                            currentState.query.ifBlank { null },
+                            currentState.limit,
+                            offset,
+                        )
+
+                    EventFilterType.ORGANIZED ->
+                        eventApi.searchOrganizedEvents(
+                            currentState.query.ifBlank { null },
+                            currentState.limit,
+                            offset,
+                        )
+
+                    EventFilterType.JOINED ->
+                        eventApi.searchJoinedEvents(
+                            currentState.query.ifBlank { null },
+                            currentState.limit,
+                            offset,
+                        )
+                }
+
+            result
+                .onSuccess { newEvents ->
                     _listUiState.update {
+                        val currentEvents = if (isRefresh) emptyList() else it.events
                         it.copy(
-                            events = events.map { response -> response.toListItem() },
-                            isLoading = false,
+                            events = (currentEvents + newEvents.map { r -> r.toListItem() }).distinctBy { item -> item.id },
+                            offset = if (isRefresh) newEvents.size else it.offset + newEvents.size,
+                            hasMorePages = newEvents.size == it.limit,
                             error = null,
-                            limit = limit,
-                            offset = offset,
                         )
                     }
                 }.onFailure {
-                    _listUiState.update {
-                        it.copy(isLoading = false, error = "Failed to load events")
-                    }
+                    _listUiState.update { it.copy(error = "Failed to load events") }
                 }
+
+            _listUiState.update { it.copy(isLoading = false, isAddingMore = false) }
         }
     }
 
     fun loadNextPage() {
         val currentState = _listUiState.value
-        if (currentState.canLoadNext) {
-            loadEvents(offset = currentState.offset + currentState.limit)
-        }
+        if (currentState.isLoading || currentState.isAddingMore || !currentState.hasMorePages) return
+        loadEvents()
     }
 
-    fun loadPreviousPage() {
-        val currentState = _listUiState.value
-        if (currentState.canLoadPrevious) {
-            loadEvents(offset = (currentState.offset - currentState.limit).coerceAtLeast(0))
-        }
+    fun onSearchQueryChanged(query: String) {
+        _listUiState.update { it.copy(query = query) }
+        searchJob?.cancel()
+        searchJob =
+            viewModelScope.launch {
+                delay(500)
+                loadEvents(isRefresh = true)
+            }
     }
 
-    fun changeLimit(newLimit: Int) {
-        if (!_listUiState.value.isLoading && newLimit > 0) {
-            loadEvents(limit = newLimit, offset = 0)
-        }
+    fun onFilterChanged(filterType: EventFilterType) {
+        if (_listUiState.value.filter == filterType) return
+        _listUiState.update { it.copy(filter = filterType, query = "") }
+        loadEvents(isRefresh = true)
     }
 
     fun onTitleChanged(title: String) {
@@ -148,10 +184,7 @@ class EventViewModel(
                 .createEvent(request)
                 .onSuccess { response ->
                     _formUiState.update { it.copy(isSubmitting = false) }
-                    val newEvent = response.toListItem()
-                    _listUiState.update {
-                        it.copy(events = listOf(newEvent) + it.events, isLoading = false)
-                    }
+                    loadEvents(isRefresh = true)
                     _events.send(EventScreenEvent.EventCreated(response.id))
                 }.onFailure { error ->
                     _formUiState.update { it.copy(isSubmitting = false) }

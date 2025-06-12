@@ -6,13 +6,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.People
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.event.model.EventListItem
@@ -23,7 +31,7 @@ fun EventItem(
     onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(8.dp),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         elevation = 4.dp,
     ) {
         Column(
@@ -33,6 +41,7 @@ fun EventItem(
             Text(
                 text = event.title.value,
                 style = MaterialTheme.typography.h6,
+                fontWeight = FontWeight.Bold,
             )
             Text(
                 text = event.description.value,
@@ -40,18 +49,36 @@ fun EventItem(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "Start: ${event.period.start.toFormattedString()}",
-                    style = MaterialTheme.typography.caption,
-                )
+                Column {
+                    Text(
+                        text = "Starts: ${event.period.start.toFormattedString()}",
+                        style = MaterialTheme.typography.caption,
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.People,
+                            contentDescription = "Participants",
+                            modifier = Modifier.padding(end = 4.dp),
+                        )
+                        Text(
+                            text = "${event.participantCount}${event.maxParticipants?.let { "/$it" } ?: ""}",
+                            style = MaterialTheme.typography.caption,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = event.status.name,
                     style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.colors.secondary,
+                    fontWeight = FontWeight.Bold,
+                    color = getStatusColor(event.status),
+                    modifier = Modifier.align(Alignment.Bottom),
                 )
             }
         }

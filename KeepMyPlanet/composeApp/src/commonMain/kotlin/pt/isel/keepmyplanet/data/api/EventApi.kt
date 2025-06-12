@@ -20,6 +20,10 @@ class EventApi(
 
         fun searchEvents() = EVENTS_BASE
 
+        fun organizedEvents() = "$EVENTS_BASE/organized"
+
+        fun joinedEvents() = "$EVENTS_BASE/joined"
+
         fun createEvent() = EVENTS_BASE
 
         fun eventById(eventId: UInt) = "$EVENTS_BASE/$eventId"
@@ -47,6 +51,32 @@ class EventApi(
         httpClient.executeRequest {
             method = HttpMethod.Get
             url(Endpoints.searchEvents())
+            if (query != null) parameter("name", query)
+            parameter("limit", limit)
+            parameter("offset", offset)
+        }
+
+    suspend fun searchOrganizedEvents(
+        query: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<EventResponse>> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.organizedEvents())
+            if (query != null) parameter("name", query)
+            parameter("limit", limit)
+            parameter("offset", offset)
+        }
+
+    suspend fun searchJoinedEvents(
+        query: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<EventResponse>> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.joinedEvents())
             if (query != null) parameter("name", query)
             parameter("limit", limit)
             parameter("offset", offset)

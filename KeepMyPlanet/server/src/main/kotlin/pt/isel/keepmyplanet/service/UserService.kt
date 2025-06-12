@@ -112,7 +112,7 @@ class UserService(
             ensureSelfActionOrFail(userId, actingUserId, "delete account")
 
             val activeEventStatus = setOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
-            val organizedEvents = eventRepository.findByOrganizerId(userId)
+            val organizedEvents = eventRepository.findByOrganizerId(userId, 1, 0)
             if (organizedEvents.any { it.status in activeEventStatus }) {
                 throw ConflictException("Cannot delete user with active organized events.")
             }

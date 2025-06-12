@@ -57,6 +57,32 @@ fun Route.eventWebApi(
         }
 
         authenticate("auth-jwt") {
+            // Get events organized by the current user
+            get("/organized") {
+                val userId = call.getCurrentUserId()
+                val limit = call.getQueryIntParameter("limit", default = 10)
+                val offset = call.getQueryIntParameter("offset", default = 0)
+                val query = call.getQueryStringParameter("name")
+                eventService
+                    .getEventsOrganizedBy(userId, query, limit, offset)
+                    .onSuccess { events ->
+                        call.respond(HttpStatusCode.OK, events.map { it.toResponse() })
+                    }.onFailure { throw it }
+            }
+
+            // Get events the current user has joined
+            get("/joined") {
+                val userId = call.getCurrentUserId()
+                val limit = call.getQueryIntParameter("limit", default = 10)
+                val offset = call.getQueryIntParameter("offset", default = 0)
+                val query = call.getQueryStringParameter("name")
+                eventService
+                    .getEventsJoinedBy(userId, query, limit, offset)
+                    .onSuccess { events ->
+                        call.respond(HttpStatusCode.OK, events.map { it.toResponse() })
+                    }.onFailure { throw it }
+            }
+
             // Create Event
             post {
                 val request = call.receive<CreateEventRequest>()
@@ -78,21 +104,6 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
         }
-
-        /*
-        route("/zone/{zoneId}/event") {
-            // Search Events (Optional - by name)
-            get {
-                val zoneId = call.getPathUIntId("zoneId", "Zone ID")
-                val query = call.getQueryStringParameter("name")
-
-                eventService
-                    .searchZoneEvents(zoneId, query)
-                    .onSuccess { events ->
-                        call.respond(HttpStatusCode.OK, events.map { it.toResponse() })
-                    }.onFailure { throw it }
-            }
-         */
 
         route("/{id}") {
             fun ApplicationCall.getEventId(): Id = getPathUIntId("id", "Event ID")

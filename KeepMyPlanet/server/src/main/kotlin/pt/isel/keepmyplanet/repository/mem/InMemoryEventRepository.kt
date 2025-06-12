@@ -83,7 +83,6 @@ class InMemoryEventRepository(
             create(event)
         }
 
-    // Get all events from the system (search by name)
     override suspend fun findByName(
         name: String,
         limit: Int,
@@ -91,7 +90,7 @@ class InMemoryEventRepository(
     ): List<Event> =
         events.values
             .filter { it.title.value.contains(name, ignoreCase = true) }
-            .sortedBy { it.period.start }
+            .sortedByDescending { it.period.start }
             .drop(offset)
             .take(limit)
 
@@ -113,14 +112,13 @@ class InMemoryEventRepository(
 
     override suspend fun getById(id: Id): Event? = events[id]
 
-    // Get all events from the system
     override suspend fun getAll(
         limit: Int,
         offset: Int,
     ): List<Event> =
         events.values
             .toList()
-            .sortedBy { it.id.value }
+            .sortedByDescending { it.period.start }
             .drop(offset)
             .take(limit)
 
@@ -133,19 +131,55 @@ class InMemoryEventRepository(
 
     override suspend fun deleteById(id: Id): Boolean = events.remove(id) != null
 
-    override suspend fun findByOrganizerId(organizerId: Id): List<Event> =
+    override suspend fun findByOrganizerId(
+        organizerId: Id,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
         events.values
             .filter { it.organizerId == organizerId }
-            .sortedBy { it.period.start }
+            .sortedByDescending { it.period.start }
+            .drop(offset)
+            .take(limit)
+
+    override suspend fun findByNameAndOrganizerId(
+        organizerId: Id,
+        name: String,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
+        events.values
+            .filter { it.organizerId == organizerId && it.title.value.contains(name, ignoreCase = true) }
+            .sortedByDescending { it.period.start }
+            .drop(offset)
+            .take(limit)
+
+    override suspend fun findByParticipantId(
+        participantId: Id,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
+        events.values
+            .filter { it.participantsIds.contains(participantId) }
+            .sortedByDescending { it.period.start }
+            .drop(offset)
+            .take(limit)
+
+    override suspend fun findByNameAndParticipantId(
+        participantId: Id,
+        name: String,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
+        events.values
+            .filter { it.participantsIds.contains(participantId) && it.title.value.contains(name, ignoreCase = true) }
+            .sortedByDescending { it.period.start }
+            .drop(offset)
+            .take(limit)
 
     override suspend fun findByZoneId(zoneId: Id): List<Event> =
         events.values
             .filter { it.zoneId == zoneId }
-            .sortedBy { it.period.start }
-
-    override suspend fun findByParticipantId(participantId: Id): List<Event> =
-        events.values
-            .filter { it.participantsIds.contains(participantId) }
             .sortedBy { it.period.start }
 
     override suspend fun findByStatus(status: EventStatus): List<Event> =

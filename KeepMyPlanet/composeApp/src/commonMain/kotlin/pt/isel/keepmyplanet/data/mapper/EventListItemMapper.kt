@@ -17,4 +17,6 @@ fun EventResponse.toListItem(): EventListItem =
         description = Description(description),
         period = Period(LocalDateTime.parse(startDate), endDate?.let { LocalDateTime.parse(it) }),
         status = safeValueOf<EventStatus>(status) ?: EventStatus.UNKNOWN,
+        participantCount = participantsIds.size,
+        maxParticipants = maxParticipants,
     )

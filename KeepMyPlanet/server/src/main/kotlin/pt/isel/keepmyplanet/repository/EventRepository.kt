@@ -6,9 +6,31 @@ import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 
 interface EventRepository : Repository<Event, Id> {
-    suspend fun findByOrganizerId(organizerId: Id): List<Event>
+    suspend fun findByOrganizerId(
+        organizerId: Id,
+        limit: Int,
+        offset: Int,
+    ): List<Event>
 
-    suspend fun findByParticipantId(participantId: Id): List<Event>
+    suspend fun findByNameAndOrganizerId(
+        organizerId: Id,
+        name: String,
+        limit: Int,
+        offset: Int,
+    ): List<Event>
+
+    suspend fun findByParticipantId(
+        participantId: Id,
+        limit: Int,
+        offset: Int,
+    ): List<Event>
+
+    suspend fun findByNameAndParticipantId(
+        participantId: Id,
+        name: String,
+        limit: Int,
+        offset: Int,
+    ): List<Event>
 
     suspend fun findByStatus(status: EventStatus): List<Event>
 

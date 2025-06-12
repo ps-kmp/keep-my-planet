@@ -12,4 +12,6 @@ data class EventListItem(
     val description: Description,
     val period: Period,
     val status: EventStatus,
+    val participantCount: Int,
+    val maxParticipants: Int?,
 )

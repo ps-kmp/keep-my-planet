@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- Indexes for users table
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
@@ -18,7 +20,8 @@ CREATE INDEX IF NOT EXISTS idx_events_zone_id ON events(zone_id);
 CREATE INDEX IF NOT EXISTS idx_events_organizer_id ON events(organizer_id);
 CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
 CREATE INDEX IF NOT EXISTS idx_events_start_datetime ON events(start_datetime);
-CREATE INDEX IF NOT EXISTS idx_events_title ON events USING GIN (to_tsvector('simple', title));
+CREATE INDEX IF NOT EXISTS idx_events_title_trgm ON events USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_events_status_start_datetime ON events(status, start_datetime);
 
 -- Indexes for messages table
 CREATE INDEX IF NOT EXISTS idx_messages_event_id_chat_position ON messages(event_id, chat_position);

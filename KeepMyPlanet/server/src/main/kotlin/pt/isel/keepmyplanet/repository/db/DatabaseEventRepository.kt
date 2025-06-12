@@ -156,9 +156,24 @@ class DatabaseEventRepository(
             .executeAsList()
             .map { getEventWithParticipants(it) }
 
-    override suspend fun findByOrganizerId(organizerId: Id): List<Event> =
+    override suspend fun findByOrganizerId(
+        organizerId: Id,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
         eventQueries
-            .findByOrganizerId(organizerId)
+            .findByOrganizerId(organizerId, limit.toLong(), offset.toLong())
+            .executeAsList()
+            .map { getEventWithParticipants(it) }
+
+    override suspend fun findByNameAndOrganizerId(
+        organizerId: Id,
+        name: String,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
+        eventQueries
+            .findByNameAndOrganizerId(organizerId, name, limit.toLong(), offset.toLong())
             .executeAsList()
             .map { getEventWithParticipants(it) }
 
@@ -168,9 +183,24 @@ class DatabaseEventRepository(
             .executeAsList()
             .map { getEventWithParticipants(it) }
 
-    override suspend fun findByParticipantId(participantId: Id): List<Event> =
+    override suspend fun findByParticipantId(
+        participantId: Id,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
         eventQueries
-            .findByParticipantId(participantId)
+            .findByParticipantId(participantId, limit.toLong(), offset.toLong())
+            .executeAsList()
+            .map { getEventWithParticipants(it) }
+
+    override suspend fun findByNameAndParticipantId(
+        participantId: Id,
+        name: String,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
+        eventQueries
+            .findByNameAndParticipantId(participantId, name, limit.toLong(), offset.toLong())
             .executeAsList()
             .map { getEventWithParticipants(it) }
 

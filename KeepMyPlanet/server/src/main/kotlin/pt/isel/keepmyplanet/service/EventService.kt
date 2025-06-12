@@ -86,6 +86,36 @@ class EventService(
             }
         }
 
+    suspend fun getEventsOrganizedBy(
+        userId: Id,
+        query: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<Event>> =
+        runCatching {
+            findUserOrFail(userId)
+            if (query.isNullOrBlank()) {
+                eventRepository.findByOrganizerId(userId, limit, offset)
+            } else {
+                eventRepository.findByNameAndOrganizerId(userId, query, limit, offset)
+            }
+        }
+
+    suspend fun getEventsJoinedBy(
+        userId: Id,
+        query: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<Event>> =
+        runCatching {
+            findUserOrFail(userId)
+            if (query.isNullOrBlank()) {
+                eventRepository.findByParticipantId(userId, limit, offset)
+            } else {
+                eventRepository.findByNameAndParticipantId(userId, query, limit, offset)
+            }
+        }
+
     suspend fun updateEventDetails(
         eventId: Id,
         userId: Id,

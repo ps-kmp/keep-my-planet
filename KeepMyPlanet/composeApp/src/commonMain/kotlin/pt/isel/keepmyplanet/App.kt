@@ -4,6 +4,7 @@ package pt.isel.keepmyplanet
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +57,8 @@ fun App(appViewModel: AppViewModel) {
             remember(user.id) { UserProfileViewModel(appViewModel.container.userApi, user) }
         }
 
+    val eventListState = rememberLazyListState()
+
     when (val route = currentRoute) {
         is AppRoute.Login -> {
             val loginViewModel = remember { LoginViewModel(appViewModel.container.authApi) }
@@ -90,6 +93,7 @@ fun App(appViewModel: AppViewModel) {
             eventViewModel?.let { vm ->
                 EventListScreen(
                     viewModel = vm,
+                    listState = eventListState,
                     onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id.value)) },
                     onNavigateBack = { appViewModel.navigate(AppRoute.Home) },
                     onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent) },
