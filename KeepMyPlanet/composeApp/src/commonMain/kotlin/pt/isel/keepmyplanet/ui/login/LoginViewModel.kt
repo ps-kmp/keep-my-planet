@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.AuthApi
+import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.data.mapper.toUserSession
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
 import pt.isel.keepmyplanet.ui.login.model.LoginEvent
@@ -47,14 +48,25 @@ class LoginViewModel(
                     .onSuccess { loginResponse ->
                         _events.send(LoginEvent.NavigateToHome(loginResponse.toUserSession()))
                     }.onFailure { exception ->
-                        val errorMessage = exception.message ?: "An unknown error occurred"
-                        _events.send(LoginEvent.ShowSnackbar(errorMessage))
+                        handleError("Login failed", exception)
                     }
             } catch (e: Exception) {
-                _events.send(LoginEvent.ShowSnackbar(e.message ?: "An unexpected error occurred"))
+                handleError("An unexpected error occurred", e)
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
+    }
+
+    private suspend fun handleError(
+        prefix: String,
+        exception: Throwable,
+    ) {
+        val message =
+            when (exception) {
+                is ApiException -> exception.error.message
+                else -> "$prefix: ${exception.message ?: "An unknown error occurred"}"
+            }
+        _events.send(LoginEvent.ShowSnackbar(message))
     }
 }

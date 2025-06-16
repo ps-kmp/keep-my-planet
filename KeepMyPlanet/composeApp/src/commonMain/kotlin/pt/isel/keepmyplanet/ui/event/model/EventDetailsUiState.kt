@@ -10,7 +10,6 @@ data class EventDetailsUiState(
     val isJoining: Boolean = false,
     val isLeaving: Boolean = false,
     val isEditing: Boolean = false,
-    val error: String? = null,
 ) {
     fun canUserJoin(currentUserId: Id): Boolean =
         event != null &&

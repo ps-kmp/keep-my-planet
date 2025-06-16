@@ -1,9 +1,8 @@
 package pt.isel.keepmyplanet.ui.map.model
 
-import pt.isel.keepmyplanet.dto.zone.ZoneResponse
+import pt.isel.keepmyplanet.domain.zone.Zone
 
 data class MapUiState(
-    val zones: List<ZoneResponse> = emptyList(),
+    val zones: List<Zone> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
 )

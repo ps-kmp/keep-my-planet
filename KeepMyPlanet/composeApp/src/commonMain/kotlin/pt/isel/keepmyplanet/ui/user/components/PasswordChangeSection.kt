@@ -6,9 +6,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.FormField
+import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
 
 @Composable
@@ -56,17 +54,13 @@ fun PasswordChangeSection(
                 singleLine = true,
                 enabled = !uiState.isChangingPassword,
             )
-            Button(
+            LoadingButton(
                 onClick = onChangePasswordClicked,
                 enabled = uiState.isChangePasswordEnabled,
+                isLoading = uiState.isChangingPassword,
+                text = "Confirm Password Change",
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                if (uiState.isChangingPassword) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                } else {
-                    Text("Confirm Password Change")
-                }
-            }
+            )
         }
     }
 }

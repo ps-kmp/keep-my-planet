@@ -11,12 +11,13 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.UserApi
+import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.dto.user.RegisterRequest
 import pt.isel.keepmyplanet.ui.register.model.RegisterEvent
 import pt.isel.keepmyplanet.ui.register.model.RegisterUiState
 
 class RegisterViewModel(
-    private val userService: UserApi,
+    private val userApi: UserApi,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
@@ -53,22 +54,32 @@ class RegisterViewModel(
                         email = currentState.email.trim(),
                         password = currentState.password,
                     )
-                val result = userService.registerUser(request)
+                val result = userApi.registerUser(request)
 
                 result
                     .onSuccess {
                         _events.send(RegisterEvent.ShowSnackbar("Registration successful! Please login."))
                         _events.send(RegisterEvent.NavigateToLogin)
                     }.onFailure { exception ->
-                        val errorMessage = exception.message ?: "Registration failed"
-                        _events.send(RegisterEvent.ShowSnackbar(errorMessage))
+                        handleError("Registration failed", exception)
                     }
             } catch (e: Exception) {
-                val errorMessage = e.message ?: "An unexpected error occurred during registration"
-                _events.send(RegisterEvent.ShowSnackbar(errorMessage))
+                handleError("An unexpected error occurred", e)
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
+    }
+
+    private suspend fun handleError(
+        prefix: String,
+        exception: Throwable,
+    ) {
+        val message =
+            when (exception) {
+                is ApiException -> exception.error.message
+                else -> "$prefix: ${exception.message ?: "Registration failed"}"
+            }
+        _events.send(RegisterEvent.ShowSnackbar(message))
     }
 }

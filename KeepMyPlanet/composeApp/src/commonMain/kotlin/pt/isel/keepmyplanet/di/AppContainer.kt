@@ -11,6 +11,15 @@ import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.createHttpClient
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.session.model.UserSession
+import pt.isel.keepmyplanet.ui.chat.ChatViewModel
+import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
+import pt.isel.keepmyplanet.ui.event.EventViewModel
+import pt.isel.keepmyplanet.ui.login.LoginViewModel
+import pt.isel.keepmyplanet.ui.map.MapViewModel
+import pt.isel.keepmyplanet.ui.register.RegisterViewModel
+import pt.isel.keepmyplanet.ui.user.UserProfileViewModel
+import pt.isel.keepmyplanet.ui.user.model.UserInfo
+import pt.isel.keepmyplanet.ui.zone.ZoneViewModel
 
 class AppContainer(
     engine: HttpClientEngineFactory<*>,
@@ -36,4 +45,21 @@ class AppContainer(
     val eventApi: EventApi by lazy { EventApi(httpClient) }
     val chatApi: ChatApi by lazy { ChatApi(httpClient) }
     val zoneApi: ZoneApi by lazy { ZoneApi(httpClient) }
+
+    fun createLoginViewModel(): LoginViewModel = LoginViewModel(authApi)
+
+    fun createRegisterViewModel(): RegisterViewModel = RegisterViewModel(userApi)
+
+    fun createEventViewModel(): EventViewModel = EventViewModel(eventApi)
+
+    fun createMapViewModel(): MapViewModel = MapViewModel(zoneApi)
+
+    fun createZoneViewModel(): ZoneViewModel = ZoneViewModel(zoneApi)
+
+    fun createUserProfileViewModel(user: UserInfo): UserProfileViewModel = UserProfileViewModel(userApi, user)
+
+    fun createChatViewModel(
+        user: UserInfo,
+        chatInfo: ChatInfo,
+    ): ChatViewModel = ChatViewModel(chatApi, user, chatInfo)
 }

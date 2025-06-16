@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ChatApi
+import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 import pt.isel.keepmyplanet.ui.chat.model.ChatEvent
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
@@ -44,7 +45,7 @@ class ChatViewModel(
                     _uiState.update { it.copy(isLoading = false, messages = messages) }
                     if (messages.isNotEmpty()) _events.send(ChatEvent.ScrollToBottom)
                 }.onFailure { exception ->
-                    handleError("Failed to load messages", exception, showSnackbar = true)
+                    handleError("Failed to load messages", exception)
                 }
         }
     }
@@ -54,14 +55,14 @@ class ChatViewModel(
             chatApi
                 .listenToMessages(_uiState.value.chatInfo.eventId.value)
                 .catch { exception ->
-                    handleError("Chat connection error", exception, showSnackbar = true)
+                    handleError("Chat connection error", exception)
                 }.collect { messageResult ->
                     messageResult
                         .onSuccess { newMessage ->
                             val messageAdded = addNewMessage(newMessage)
                             if (messageAdded) _events.send(ChatEvent.ScrollToBottom)
                         }.onFailure { exception ->
-                            handleError("Error processing incoming message", exception, true)
+                            handleError("Error processing incoming message", exception)
                         }
                 }
         }
@@ -100,7 +101,7 @@ class ChatViewModel(
                     _uiState.update { it.copy(isSending = false) }
                 }.onFailure { exception ->
                     _uiState.update { it.copy(isSending = false, messageInput = messageContent) }
-                    handleError("Failed to send message", exception, showSnackbar = true)
+                    handleError("Failed to send message", exception)
                 }
         }
     }
@@ -108,10 +109,13 @@ class ChatViewModel(
     private suspend fun handleError(
         prefix: String,
         exception: Throwable,
-        showSnackbar: Boolean = false,
     ) {
-        val errorMsg = "$prefix: ${exception.message ?: "Unknown error"}"
+        val errorMsg =
+            when (exception) {
+                is ApiException -> exception.error.message
+                else -> "$prefix: ${exception.message ?: "Unknown error"}"
+            }
         _uiState.update { it.copy(isLoading = false, isSending = false) }
-        if (showSnackbar) _events.send(ChatEvent.ShowSnackbar(errorMsg))
+        _events.send(ChatEvent.ShowSnackbar(errorMsg))
     }
 }

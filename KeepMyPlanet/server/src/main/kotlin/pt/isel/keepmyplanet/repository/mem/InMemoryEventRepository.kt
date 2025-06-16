@@ -7,22 +7,17 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.EventRepository
-import pt.isel.keepmyplanet.repository.ZoneRepository
-import pt.isel.keepmyplanet.util.calculateDistanceKm
 import pt.isel.keepmyplanet.util.now
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
-class InMemoryEventRepository(
-    private val zoneRepository: ZoneRepository,
-) : EventRepository {
+class InMemoryEventRepository : EventRepository {
     private val events = ConcurrentHashMap<Id, Event>()
     private val nextId = AtomicInteger(1)
 
@@ -149,8 +144,10 @@ class InMemoryEventRepository(
         offset: Int,
     ): List<Event> =
         events.values
-            .filter { it.organizerId == organizerId && it.title.value.contains(name, ignoreCase = true) }
-            .sortedByDescending { it.period.start }
+            .filter {
+                it.organizerId == organizerId &&
+                    it.title.value.contains(name, ignoreCase = true)
+            }.sortedByDescending { it.period.start }
             .drop(offset)
             .take(limit)
 
@@ -172,8 +169,10 @@ class InMemoryEventRepository(
         offset: Int,
     ): List<Event> =
         events.values
-            .filter { it.participantsIds.contains(participantId) && it.title.value.contains(name, ignoreCase = true) }
-            .sortedByDescending { it.period.start }
+            .filter {
+                it.participantsIds.contains(participantId) &&
+                    it.title.value.contains(name, ignoreCase = true)
+            }.sortedByDescending { it.period.start }
             .drop(offset)
             .take(limit)
 
@@ -187,22 +186,10 @@ class InMemoryEventRepository(
             .filter { it.status == status }
             .sortedBy { it.period.start }
 
-    override suspend fun findNearLocation(
-        center: Location,
-        radiusKm: Double,
-    ): List<Event> {
-        val eventsWithDistance = mutableListOf<Pair<Event, Double>>()
-        for (event in events.values) {
-            val zone = zoneRepository.getById(event.zoneId)
-            if (zone != null) {
-                val distance = calculateDistanceKm(zone.location, center)
-                if (distance <= radiusKm) eventsWithDistance.add(event to distance)
-            }
-        }
-        return eventsWithDistance
-            .sortedBy { it.second }
-            .map { it.first }
-    }
+    override suspend fun findEventsByZoneIds(zoneIds: List<Id>): List<Event> =
+        events.values
+            .filter { it.zoneId in zoneIds }
+            .sortedBy { it.period.start }
 
     fun clear() {
         events.clear()

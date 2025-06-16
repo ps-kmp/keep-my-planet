@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.plugins
 
+import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.calllogging.CallLogging
@@ -11,7 +12,16 @@ fun Application.configureLogging() {
     install(CallLogging) {
         level = Level.INFO
         filter { call ->
-            call.request.path().startsWith("/")
+            val path = call.request.path()
+            val method = call.request.httpMethod
+            when {
+                path == "/auth/login" && method == HttpMethod.Post -> false
+                path == "/users" && method == HttpMethod.Post -> false
+                path.contains("/password") &&
+                    (method == HttpMethod.Patch || method == HttpMethod.Post) -> false
+
+                else -> true
+            }
         }
         format { call ->
             val status = call.response.status()

@@ -39,13 +39,13 @@ import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.util.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.util.now
-import java.util.*
+import java.util.Date
 import kotlin.test.BeforeTest
 
 abstract class BaseWebApiTest {
     protected val fakeUserRepository = InMemoryUserRepository()
     protected val fakeZoneRepository = InMemoryZoneRepository()
-    protected val fakeEventRepository = InMemoryEventRepository(fakeZoneRepository)
+    protected val fakeEventRepository = InMemoryEventRepository()
     protected val fakeEventStateChangeRepository = InMemoryEventStateChangeRepository()
     protected val fakeMessageRepository = InMemoryMessageRepository()
     protected val chatSseService = ChatSseService()

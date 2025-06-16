@@ -18,6 +18,7 @@ fun AppTopBar(
 ) {
     TopAppBar(
         title = { Text(title) },
+        // modifier = Modifier.statusBarsPadding(),
         navigationIcon =
             {
                 onNavigateBack?.let {

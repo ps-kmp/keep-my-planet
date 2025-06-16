@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.UserApi
+import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.data.mapper.toUserInfo
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
@@ -53,7 +54,7 @@ class UserProfileViewModel(
                         )
                     }
                 }.onFailure { e ->
-                    handleError("Failed to load profile", e, showSnackbar = true)
+                    handleError("Failed to load profile", e)
                 }
         }
     }
@@ -135,7 +136,7 @@ class UserProfileViewModel(
                     }
                     _events.send(UserProfileEvent.ShowSnackbar("Profile updated successfully"))
                 }.onFailure { e ->
-                    handleError("Failed to update profile", e, showSnackbar = true)
+                    handleError("Failed to update profile", e)
                 }
         }
     }
@@ -211,7 +212,7 @@ class UserProfileViewModel(
                     }
                     _events.send(UserProfileEvent.ShowSnackbar("Password changed successfully"))
                 }.onFailure { e ->
-                    handleError("Failed to change password", e, showSnackbar = true)
+                    handleError("Failed to change password", e)
                 }
         }
     }
@@ -230,7 +231,7 @@ class UserProfileViewModel(
                     _events.send(UserProfileEvent.ShowSnackbar("Account deleted successfully"))
                     _events.send(UserProfileEvent.NavigateToLogin)
                 }.onFailure { e ->
-                    handleError("Failed to delete account", e, showSnackbar = true)
+                    handleError("Failed to delete account", e)
                 }
         }
     }
@@ -238,9 +239,12 @@ class UserProfileViewModel(
     private suspend fun handleError(
         prefix: String,
         exception: Throwable,
-        showSnackbar: Boolean = false,
     ) {
-        val errorMsg = "$prefix: ${exception.message ?: "Unknown error"}"
+        val errorMsg =
+            when (exception) {
+                is ApiException -> exception.error.message
+                else -> "$prefix: ${exception.message ?: "Unknown error"}"
+            }
         _uiState.update {
             it.copy(
                 isLoading = false,
@@ -249,6 +253,6 @@ class UserProfileViewModel(
                 isDeletingAccount = false,
             )
         }
-        if (showSnackbar) _events.send(UserProfileEvent.ShowSnackbar(errorMsg))
+        _events.send(UserProfileEvent.ShowSnackbar(errorMsg))
     }
 }

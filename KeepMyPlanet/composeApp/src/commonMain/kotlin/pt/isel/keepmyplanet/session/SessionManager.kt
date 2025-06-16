@@ -17,7 +17,7 @@ class SessionManager {
         _userSession.value = session
         if (session != null) {
             try {
-                val sessionJson = Json.Default.encodeToString(session)
+                val sessionJson = Json.encodeToString(session)
                 settings[USER_SESSION_KEY] = sessionJson
             } catch (_: Exception) {
             }
@@ -30,7 +30,7 @@ class SessionManager {
         val sessionJson = settings.getStringOrNull(USER_SESSION_KEY)
         return if (sessionJson != null) {
             try {
-                Json.Default.decodeFromString<UserSession>(sessionJson)
+                Json.decodeFromString<UserSession>(sessionJson)
             } catch (_: Exception) {
                 clearSession()
                 null

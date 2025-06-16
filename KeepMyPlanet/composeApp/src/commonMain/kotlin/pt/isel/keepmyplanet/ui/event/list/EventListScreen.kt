@@ -14,22 +14,28 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.event.EventViewModel
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
 import pt.isel.keepmyplanet.ui.event.list.components.SearchBarAndFilters
 import pt.isel.keepmyplanet.ui.event.model.EventListItem
+import pt.isel.keepmyplanet.ui.event.model.EventScreenEvent
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -41,6 +47,15 @@ fun EventListScreen(
     onCreateEventClick: () -> Unit,
 ) {
     val uiState by viewModel.listUiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel.events) {
+        viewModel.events.collectLatest { event ->
+            if (event is EventScreenEvent.ShowSnackbar) {
+                snackbarHostState.showSnackbar(event.message, duration = SnackbarDuration.Short)
+            }
+        }
+    }
 
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -55,6 +70,7 @@ fun EventListScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { AppTopBar(title = "Events", onNavigateBack = onNavigateBack) },
         floatingActionButton = {
             FloatingActionButton(onClick = onCreateEventClick) {

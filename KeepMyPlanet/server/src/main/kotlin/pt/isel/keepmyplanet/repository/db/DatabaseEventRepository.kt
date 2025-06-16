@@ -2,12 +2,10 @@ package pt.isel.keepmyplanet.repository.db
 
 import io.ktor.server.plugins.NotFoundException
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.repository.EventRepository
-import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.util.now
 import ptiselkeepmyplanetdb.EventQueries
 import ptiselkeepmyplanetdb.Events
@@ -29,7 +27,6 @@ private fun Events.toDomainEvent(participantIds: Set<Id>): Event =
 
 class DatabaseEventRepository(
     private val eventQueries: EventQueries,
-    private val zoneRepository: ZoneRepository,
 ) : EventRepository {
     private fun getEventWithParticipants(dbEvent: Events): Event {
         val participantIds =
@@ -210,18 +207,9 @@ class DatabaseEventRepository(
             .executeAsList()
             .map { getEventWithParticipants(it) }
 
-    override suspend fun findNearLocation(
-        center: Location,
-        radiusKm: Double,
-    ): List<Event> {
-        val nearbyZones = zoneRepository.findNearLocation(center, radiusKm)
-        if (nearbyZones.isEmpty()) return emptyList()
-
-        val nearbyZoneIds = nearbyZones.map { it.id }
-
-        return eventQueries
-            .findEventsByZoneIds(nearbyZoneIds)
+    override suspend fun findEventsByZoneIds(zoneIds: List<Id>): List<Event> =
+        eventQueries
+            .findEventsByZoneIds(zoneIds)
             .executeAsList()
             .map { getEventWithParticipants(it) }
-    }
 }

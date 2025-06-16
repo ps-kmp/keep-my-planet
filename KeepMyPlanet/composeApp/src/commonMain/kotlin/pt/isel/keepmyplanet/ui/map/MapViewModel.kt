@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ZoneApi
+import pt.isel.keepmyplanet.data.http.ApiException
+import pt.isel.keepmyplanet.mapper.zone.toZone
 import pt.isel.keepmyplanet.ui.map.model.MapScreenEvent
 import pt.isel.keepmyplanet.ui.map.model.MapUiState
 
@@ -30,12 +32,16 @@ class MapViewModel(
         viewModelScope.launch {
             zoneApi
                 .findAllZones()
-                .onSuccess { zones ->
-                    _uiState.update { it.copy(isLoading = false, zones = zones, error = null) }
-                }.onFailure { error ->
+                .onSuccess { zonesResponse ->
                     _uiState.update {
-                        it.copy(isLoading = false, error = "Failed to load zones: ${error.message}")
+                        it.copy(
+                            isLoading = false,
+                            zones = zonesResponse.map { response -> response.toZone() },
+                        )
                     }
+                }.onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false) }
+                    handleError("Failed to load zones", error)
                 }
         }
     }
@@ -46,9 +52,15 @@ class MapViewModel(
         }
     }
 
-    fun showSnackbar(message: String) {
-        viewModelScope.launch {
-            _events.send(MapScreenEvent.ShowSnackbar(message))
-        }
+    private suspend fun handleError(
+        prefix: String,
+        error: Throwable,
+    ) {
+        val message =
+            when (error) {
+                is ApiException -> error.error.message
+                else -> "$prefix: ${error.message ?: "Unknown error"}"
+            }
+        _events.send(MapScreenEvent.ShowSnackbar(message))
     }
 }

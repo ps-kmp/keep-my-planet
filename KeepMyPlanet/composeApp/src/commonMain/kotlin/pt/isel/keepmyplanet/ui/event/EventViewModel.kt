@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.EventApi
+import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.data.mapper.toListItem
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
@@ -22,11 +23,9 @@ import pt.isel.keepmyplanet.ui.event.model.EventFilterType
 import pt.isel.keepmyplanet.ui.event.model.EventFormUiState
 import pt.isel.keepmyplanet.ui.event.model.EventListUiState
 import pt.isel.keepmyplanet.ui.event.model.EventScreenEvent
-import pt.isel.keepmyplanet.ui.user.model.UserInfo
 
 class EventViewModel(
     private val eventApi: EventApi,
-    private val user: UserInfo,
 ) : ViewModel() {
     private val _listUiState = MutableStateFlow(EventListUiState())
     val listUiState: StateFlow<EventListUiState> = _listUiState.asStateFlow()
@@ -91,11 +90,10 @@ class EventViewModel(
                             events = (currentEvents + newEvents.map { r -> r.toListItem() }).distinctBy { item -> item.id },
                             offset = if (isRefresh) newEvents.size else it.offset + newEvents.size,
                             hasMorePages = newEvents.size == it.limit,
-                            error = null,
                         )
                     }
-                }.onFailure {
-                    _listUiState.update { it.copy(error = "Failed to load events") }
+                }.onFailure { error ->
+                    handleError("Failed to load events", error)
                 }
 
             _listUiState.update { it.copy(isLoading = false, isAddingMore = false) }
@@ -188,52 +186,40 @@ class EventViewModel(
                     _events.send(EventScreenEvent.EventCreated(response.id))
                 }.onFailure { error ->
                     _formUiState.update { it.copy(isSubmitting = false) }
-                    _events.send(EventScreenEvent.ShowSnackbar("Failed to create event: ${error.message}"))
+                    handleError("Failed to create event", error)
                 }
         }
     }
 
     fun loadEventDetails(eventId: UInt) {
         viewModelScope.launch {
-            _detailsUiState.value = _detailsUiState.value.copy(isLoading = true)
+            _detailsUiState.update { it.copy(isLoading = true) }
             eventApi
                 .getEventDetails(eventId)
                 .onSuccess { event ->
-                    _detailsUiState.value =
-                        _detailsUiState.value.copy(
-                            event = event.toEvent(),
-                            isLoading = false,
-                            error = null,
-                        )
-                }.onFailure {
-                    _detailsUiState.value =
-                        _detailsUiState.value.copy(
-                            isLoading = false,
-                            error = "Failed to load event details",
-                        )
+                    _detailsUiState.update {
+                        it.copy(event = event.toEvent(), isLoading = false)
+                    }
+                }.onFailure { error ->
+                    _detailsUiState.update { it.copy(isLoading = false) }
+                    handleError("Failed to load event details", error)
                 }
         }
     }
 
     fun joinEvent(eventId: UInt) {
         viewModelScope.launch {
-            _detailsUiState.value = _detailsUiState.value.copy(isJoining = true)
+            _detailsUiState.update { it.copy(isJoining = true) }
             eventApi
                 .joinEvent(eventId)
                 .onSuccess { updatedEvent ->
-                    _detailsUiState.value =
-                        _detailsUiState.value.copy(
-                            isJoining = false,
-                            error = null,
-                            event = updatedEvent.toEvent(),
-                        )
+                    _detailsUiState.update {
+                        it.copy(isJoining = false, event = updatedEvent.toEvent())
+                    }
                     _events.send(EventScreenEvent.ShowSnackbar("Joined event successfully"))
-                }.onFailure {
-                    _detailsUiState.value =
-                        _detailsUiState.value.copy(
-                            isJoining = false,
-                            error = "Failed to join event",
-                        )
+                }.onFailure { error ->
+                    _detailsUiState.update { it.copy(isJoining = false) }
+                    handleError("Failed to join event", error)
                 }
         }
     }
@@ -259,14 +245,14 @@ class EventViewModel(
                     resetFormState()
                 }.onFailure { error ->
                     _formUiState.update { it.copy(isSubmitting = false) }
-                    _events.send(EventScreenEvent.ShowSnackbar("Failed to update event: ${error.message}"))
+                    handleError("Failed to update event", error)
                 }
         }
     }
 
     fun leaveEvent(eventId: UInt) {
         viewModelScope.launch {
-            _detailsUiState.value = _detailsUiState.value.copy(isLeaving = true)
+            _detailsUiState.update { it.copy(isLeaving = true) }
             eventApi
                 .leaveEvent(eventId)
                 .onSuccess { updatedEventResponse ->
@@ -274,13 +260,22 @@ class EventViewModel(
                         it.copy(isLeaving = false, event = updatedEventResponse.toEvent())
                     }
                     _events.send(EventScreenEvent.ShowSnackbar("Left event successfully"))
-                }.onFailure {
-                    _detailsUiState.value =
-                        _detailsUiState.value.copy(
-                            isLeaving = false,
-                            error = "Failed to leave event",
-                        )
+                }.onFailure { error ->
+                    _detailsUiState.update { it.copy(isLeaving = false) }
+                    handleError("Failed to leave event", error)
                 }
         }
+    }
+
+    private suspend fun handleError(
+        prefix: String,
+        error: Throwable,
+    ) {
+        val message =
+            when (error) {
+                is ApiException -> error.error.message
+                else -> "$prefix: ${error.message ?: "Unknown error"}"
+            }
+        _events.send(EventScreenEvent.ShowSnackbar(message))
     }
 }

@@ -15,4 +15,7 @@ data class EventFormUiState(
                 startDate.isNotBlank() &&
                 zoneId.toUIntOrNull() != null &&
                 !isSubmitting
+    val canUpdate: Boolean
+        get() =
+            title.isNotBlank() && description.isNotBlank() && startDate.isNotBlank() && !isSubmitting
 }

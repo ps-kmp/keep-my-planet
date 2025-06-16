@@ -25,6 +25,11 @@ sealed class AppRoute {
         val eventId: UInt,
     ) : AppRoute()
 
+    data class ReportZone(
+        val latitude: Double,
+        val longitude: Double,
+    ) : AppRoute()
+
     data class ZoneDetails(
         val zoneId: UInt,
     ) : AppRoute()

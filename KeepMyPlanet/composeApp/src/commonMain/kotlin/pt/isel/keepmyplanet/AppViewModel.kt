@@ -4,8 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.ktor.client.engine.HttpClientEngineFactory
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.di.AppContainer
 import pt.isel.keepmyplanet.navigation.AppRoute
@@ -17,21 +21,32 @@ class AppViewModel(
     val container = AppContainer(engine)
     val userSession: StateFlow<UserSession?> = container.userSession
 
-    private val _currentRoute = MutableStateFlow(determineInitialRoute(userSession.value))
-    val currentRoute: StateFlow<AppRoute> = _currentRoute.asStateFlow()
+    private val _navStack = MutableStateFlow(listOf(determineInitialRoute(userSession.value)))
+    val navStack: StateFlow<List<AppRoute>> = _navStack.asStateFlow()
+
+    val currentRoute: StateFlow<AppRoute> =
+        navStack
+            .map { it.last() }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, _navStack.value.last())
 
     init {
         viewModelScope.launch {
             userSession.collect { session ->
-                navigate(determineInitialRoute(session))
+                _navStack.value = listOf(determineInitialRoute(session))
             }
         }
     }
 
     fun navigate(route: AppRoute) {
-        val targetRoute = resolveRoute(route, userSession.value)
-        if (_currentRoute.value != targetRoute) {
-            _currentRoute.value = targetRoute
+        val resolvedRoute = resolveRoute(route, userSession.value)
+        if (_navStack.value.lastOrNull() != resolvedRoute) {
+            _navStack.update { it + resolvedRoute }
+        }
+    }
+
+    fun navigateBack() {
+        if (_navStack.value.size > 1) {
+            _navStack.update { it.dropLast(1) }
         }
     }
 

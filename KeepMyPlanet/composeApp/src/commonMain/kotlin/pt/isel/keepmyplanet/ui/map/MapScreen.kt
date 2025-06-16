@@ -7,5 +7,6 @@ import androidx.compose.runtime.Composable
 expect fun MapScreen(
     viewModel: MapViewModel,
     onNavigateToZoneDetails: (zoneId: UInt) -> Unit,
+    onNavigateToReportZone: (latitude: Double, longitude: Double) -> Unit,
     onNavigateBack: () -> Unit,
 )

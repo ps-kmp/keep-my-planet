@@ -5,11 +5,8 @@ data class EventListUiState(
     val isLoading: Boolean = false,
     val isAddingMore: Boolean = false,
     val query: String = "",
-    val error: String? = null,
     val filter: EventFilterType = EventFilterType.ALL,
     val limit: Int = 10,
     val offset: Int = 0,
     val hasMorePages: Boolean = true,
-) {
-    val canLoadNext: Boolean get() = !isLoading && !isAddingMore && events.size >= offset
-}
+)

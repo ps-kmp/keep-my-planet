@@ -29,7 +29,7 @@ fun Application.configureRouting() {
     // Data Access Layer
     val userRepository = DatabaseUserRepository(database.userQueries)
     val zoneRepository = DatabaseZoneRepository(database.zoneQueries)
-    val eventRepository = DatabaseEventRepository(database.eventQueries, zoneRepository)
+    val eventRepository = DatabaseEventRepository(database.eventQueries)
     val eventStateChangeRepository = InMemoryEventStateChangeRepository()
     val messageRepository = DatabaseMessageRepository(database.messageQueries)
 

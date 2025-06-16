@@ -1,18 +1,33 @@
 package pt.isel.keepmyplanet.ui.map
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Button
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddLocation
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.sargunv.maplibrecompose.compose.ClickResult
@@ -44,16 +59,19 @@ import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.map.model.MapScreenEvent
 import kotlin.time.Duration.Companion.seconds
 
+@Suppress("ktlint:standard:function-naming")
 @Composable
 actual fun MapScreen(
     viewModel: MapViewModel,
     onNavigateToZoneDetails: (zoneId: UInt) -> Unit,
+    onNavigateToReportZone: (latitude: Double, longitude: Double) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val cameraState = rememberCameraState()
     val styleState = rememberStyleState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var isPositioningMode by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         cameraState.animateTo(
@@ -76,12 +94,20 @@ actual fun MapScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { AppTopBar(title = "Map", onNavigateBack = onNavigateBack) },
+        floatingActionButton = {
+            if (!isPositioningMode) {
+                FloatingActionButton(onClick = { isPositioningMode = true }) {
+                    Icon(Icons.Default.AddLocation, contentDescription = "Report a New Zone")
+                }
+            }
+        },
     ) { paddingValues ->
         Box(
             modifier =
                 Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
+            contentAlignment = Alignment.Center,
         ) {
             if (uiState.isLoading) {
                 FullScreenLoading()
@@ -95,53 +121,23 @@ actual fun MapScreen(
                     val apiFeatures =
                         uiState.zones.map { zone ->
                             Feature(
-                                geometry = Point(Position(zone.longitude, zone.latitude)),
+                                geometry =
+                                    Point(
+                                        Position(zone.location.longitude, zone.location.latitude),
+                                    ),
                                 properties =
                                     mutableMapOf(
-                                        "zoneId" to JsonPrimitive(zone.id.toString()),
-                                        "description" to JsonPrimitive(zone.description),
-                                        "severity" to JsonPrimitive(zone.severity),
+                                        "zoneId" to JsonPrimitive(zone.id.value.toString()),
+                                        "description" to JsonPrimitive(zone.description.value),
+                                        "severity" to JsonPrimitive(zone.zoneSeverity.name),
                                     ),
                             )
                         }
 
-                    val mockMarker1 =
-                        Feature(
-                            geometry = Point(Position(-9.13333, 38.71667)),
-                            properties =
-                                mutableMapOf(
-                                    "zoneId" to JsonPrimitive("mock-1"),
-                                    "description" to JsonPrimitive("This is a mock marker!"),
-                                    "severity" to JsonPrimitive("LOW"),
-                                ),
-                        )
-
-                    val mockMarker2 =
-                        Feature(
-                            geometry = Point(Position(-9.13, 38.72)),
-                            properties =
-                                mutableMapOf(
-                                    "zoneId" to JsonPrimitive(2),
-                                    "description" to JsonPrimitive("This is a mock marker!"),
-                                    "severity" to JsonPrimitive("MEDIUM"),
-                                ),
-                        )
-
-                    val mockMarker3 =
-                        Feature(
-                            geometry = Point(Position(-9.14, 38.71)),
-                            properties =
-                                mutableMapOf(
-                                    "zoneId" to JsonPrimitive(3),
-                                    "description" to JsonPrimitive("This is a mock marker!"),
-                                    "severity" to JsonPrimitive("HIGH"),
-                                ),
-                        )
-
                     val geoJsonSource =
                         rememberGeoJsonSource(
                             id = "zones-source",
-                            data = FeatureCollection(apiFeatures + mockMarker1 + mockMarker2 + mockMarker3),
+                            data = FeatureCollection(apiFeatures),
                         )
 
                     SymbolLayer(
@@ -151,13 +147,7 @@ actual fun MapScreen(
                             features.firstOrNull()?.let { feature ->
                                 val zoneId =
                                     (feature.properties["zoneId"] as? JsonPrimitive)?.content?.toUIntOrNull()
-                                if (zoneId != null) {
-                                    viewModel.onZoneSelected(zoneId)
-                                } else {
-                                    (feature.properties["description"] as? JsonPrimitive)?.content?.let {
-                                        viewModel.showSnackbar(it)
-                                    }
-                                }
+                                zoneId?.let { viewModel.onZoneSelected(zoneId) }
                             }
                             ClickResult.Consume
                         },
@@ -173,8 +163,45 @@ actual fun MapScreen(
                         iconAllowOverlap = const(true),
                     )
                 }
+
+                if (isPositioningMode) {
+                    Icon(
+                        imageVector = Icons.Default.GpsFixed,
+                        contentDescription = "Crosshair",
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colors.primary,
+                    )
+
+                    Column(
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Button(
+                            onClick = {
+                                val centerPosition = cameraState.position.target
+                                onNavigateToReportZone(
+                                    centerPosition.latitude,
+                                    centerPosition.longitude,
+                                )
+                                isPositioningMode = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Confirm Location")
+                        }
+                        OutlinedButton(
+                            onClick = { isPositioningMode = false },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Cancel")
+                        }
+                    }
+                }
             }
-            uiState.error?.let { Text(text = it, modifier = Modifier.padding(16.dp)) }
         }
     }
 }

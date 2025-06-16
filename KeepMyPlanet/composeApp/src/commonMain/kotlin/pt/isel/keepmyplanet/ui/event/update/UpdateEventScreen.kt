@@ -1,24 +1,20 @@
 package pt.isel.keepmyplanet.ui.event.update
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
@@ -71,15 +67,6 @@ fun UpdateEventScreen(
                 FullScreenLoading(modifier = Modifier.padding(paddingValues))
             }
 
-            detailsState.error != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(text = detailsState.error!!, color = MaterialTheme.colors.error)
-                }
-            }
-
             detailsState.event != null -> {
                 Column(
                     modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
@@ -101,11 +88,7 @@ fun UpdateEventScreen(
                         onClick = { viewModel.updateEvent(eventId) },
                         modifier = Modifier.fillMaxWidth(),
                         isLoading = formUiState.isSubmitting,
-                        enabled =
-                            !formUiState.isSubmitting &&
-                                formUiState.title.isNotBlank() &&
-                                formUiState.description.isNotBlank() &&
-                                formUiState.startDate.isNotBlank(),
+                        enabled = formUiState.canUpdate,
                         text = "Confirm",
                     )
                 }

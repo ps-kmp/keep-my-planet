@@ -35,13 +35,13 @@ fun DeleteAccountSection(
                         showDeleteConfirmDialog.value = false
                         onConfirmDelete()
                     },
-                    colors = ButtonDefaults.buttonColors(MaterialTheme.colors.error),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error),
                 ) {
                     Text("Delete")
                 }
             },
             dismissButton = {
-                Button(onClick = { showDeleteConfirmDialog.value = false }) {
+                OutlinedButton(onClick = { showDeleteConfirmDialog.value = false }) {
                     Text("Cancel")
                 }
             },
@@ -55,7 +55,10 @@ fun DeleteAccountSection(
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
     ) {
         if (uiState.isDeletingAccount) {
-            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = MaterialTheme.colors.error,
+            )
         } else {
             Text("Delete Account")
         }
