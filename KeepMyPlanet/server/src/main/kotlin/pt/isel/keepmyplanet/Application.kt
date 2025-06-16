@@ -5,6 +5,7 @@ import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.sse.SSE
 import pt.isel.keepmyplanet.plugins.configureAuthentication
+import pt.isel.keepmyplanet.plugins.configureCors
 import pt.isel.keepmyplanet.plugins.configureDatabase
 import pt.isel.keepmyplanet.plugins.configureLogging
 import pt.isel.keepmyplanet.plugins.configureRouting
@@ -21,4 +22,5 @@ fun Application.module() {
     configureStatusPages()
     install(SSE)
     configureRouting()
+    configureCors()
 }

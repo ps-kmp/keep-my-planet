@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.sse)
+    implementation(libs.ktor.server.cors)
 
     // database
     implementation(libs.sqldelight.runtime)

@@ -70,6 +70,7 @@ multiplatform-settings-coroutines = { module = "com.russhwolf:multiplatform-sett
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 postgresql-dialect = { module = "app.cash.sqldelight:postgresql-dialect", version.ref = "sqldelight" }
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "ktor" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
