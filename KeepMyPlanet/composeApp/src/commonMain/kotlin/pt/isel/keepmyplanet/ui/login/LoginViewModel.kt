@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.AuthApi
 import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.data.mapper.toUserSession
+import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
 import pt.isel.keepmyplanet.ui.login.model.LoginEvent
 import pt.isel.keepmyplanet.ui.login.model.LoginUiState
@@ -27,7 +28,7 @@ class LoginViewModel(
     val events: Flow<LoginEvent> = _events.receiveAsFlow()
 
     fun onEmailChanged(email: String) {
-        _uiState.update { it.copy(email = email) }
+        _uiState.update { it.copy(email = email, emailError = null) }
     }
 
     fun onPasswordChanged(password: String) {
@@ -35,6 +36,8 @@ class LoginViewModel(
     }
 
     fun onLoginClicked() {
+        if (!validateForm()) return
+
         val currentState = _uiState.value
         if (!currentState.isLoginEnabled) return
 
@@ -56,6 +59,20 @@ class LoginViewModel(
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
+    }
+
+    private fun validateForm(): Boolean {
+        val formState = _uiState.value
+        val emailError =
+            try {
+                Email(formState.email)
+                null
+            } catch (e: IllegalArgumentException) {
+                e.message
+            }
+
+        _uiState.update { it.copy(emailError = emailError) }
+        return !_uiState.value.hasError
     }
 
     private suspend fun handleError(

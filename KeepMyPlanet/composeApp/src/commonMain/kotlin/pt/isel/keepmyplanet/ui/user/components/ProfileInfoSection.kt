@@ -40,6 +40,7 @@ fun ProfileInfoSection(
                 label = "Name",
                 singleLine = true,
                 enabled = !uiState.isUpdatingProfile,
+                errorText = uiState.nameInputError,
             )
         } else {
             Text("Name: ${uiState.userDetails?.name?.value ?: ""}")
@@ -53,6 +54,7 @@ fun ProfileInfoSection(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
                 enabled = !uiState.isUpdatingProfile,
+                errorText = uiState.emailInputError,
             )
         } else {
             Text("Email: ${uiState.userDetails?.email?.value ?: "N/A"}")

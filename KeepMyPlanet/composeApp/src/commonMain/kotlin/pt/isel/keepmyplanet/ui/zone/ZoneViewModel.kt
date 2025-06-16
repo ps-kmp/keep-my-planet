@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.ApiException
+import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.mapper.zone.toZone
@@ -51,7 +52,9 @@ class ZoneViewModel(
 
     fun onReportDescriptionChange(description: String) {
         _uiState.update {
-            it.copy(reportForm = it.reportForm.copy(description = description))
+            it.copy(
+                reportForm = it.reportForm.copy(description = description, descriptionError = null),
+            )
         }
     }
 
@@ -62,12 +65,14 @@ class ZoneViewModel(
     }
 
     fun submitZoneReport() {
+        if (!validateForm()) return
+
         val formState = _uiState.value.reportForm
         if (!formState.canSubmit) return
 
-        _uiState.update { it.copy(reportForm = it.reportForm.copy(isSubmitting = true)) }
-
         viewModelScope.launch {
+            _uiState.update { it.copy(reportForm = it.reportForm.copy(isSubmitting = true)) }
+
             val request =
                 ReportZoneRequest(
                     latitude = formState.latitude,
@@ -88,6 +93,23 @@ class ZoneViewModel(
 
             _uiState.update { it.copy(reportForm = it.reportForm.copy(isSubmitting = false)) }
         }
+    }
+
+    private fun validateForm(): Boolean {
+        val formState = _uiState.value.reportForm
+        val descriptionError =
+            try {
+                Description(formState.description)
+                null
+            } catch (e: IllegalArgumentException) {
+                e.message
+            }
+
+        _uiState.update {
+            it.copy(reportForm = it.reportForm.copy(descriptionError = descriptionError))
+        }
+
+        return !_uiState.value.reportForm.hasError
     }
 
     private suspend fun handleError(

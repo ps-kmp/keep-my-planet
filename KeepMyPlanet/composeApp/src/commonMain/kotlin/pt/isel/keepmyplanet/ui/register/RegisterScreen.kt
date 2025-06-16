@@ -109,6 +109,7 @@ private fun RegisterContent(
             label = "Username",
             singleLine = true,
             enabled = !uiState.isLoading,
+            errorText = uiState.usernameError,
         )
 
         FormField(
@@ -118,15 +119,17 @@ private fun RegisterContent(
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             enabled = !uiState.isLoading,
+            errorText = uiState.emailError,
         )
 
         FormField(
             value = uiState.password,
             onValueChange = onPasswordChanged,
-            label = "Password (min 8 chars)",
+            label = "Password",
             singleLine = true,
             enabled = !uiState.isLoading,
             visualTransformation = PasswordVisualTransformation(),
+            errorText = uiState.passwordError,
         )
 
         FormField(
@@ -136,20 +139,12 @@ private fun RegisterContent(
             singleLine = true,
             enabled = !uiState.isLoading,
             visualTransformation = PasswordVisualTransformation(),
-            isError = uiState.showPasswordMismatchError,
+            errorText = uiState.confirmPasswordError,
         )
-        if (uiState.showPasswordMismatchError) {
-            Text(
-                text = "Passwords do not match",
-                color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.caption,
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
-            )
-        }
 
         LoadingButton(
             onClick = onRegisterClicked,
-            enabled = uiState.isRegisterEnabled,
+            enabled = uiState.canAttemptRegister,
             isLoading = uiState.isLoading,
             text = "Register",
             modifier = Modifier.fillMaxWidth().height(48.dp).padding(top = 8.dp),

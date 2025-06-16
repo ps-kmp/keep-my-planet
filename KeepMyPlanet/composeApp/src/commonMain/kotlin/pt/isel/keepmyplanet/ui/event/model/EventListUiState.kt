@@ -9,4 +9,5 @@ data class EventListUiState(
     val limit: Int = 10,
     val offset: Int = 0,
     val hasMorePages: Boolean = true,
+    val error: String? = null,
 )

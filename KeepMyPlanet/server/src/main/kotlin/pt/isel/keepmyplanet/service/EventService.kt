@@ -128,8 +128,8 @@ class EventService(
             val event = findEventOrFail(eventId)
             ensureOrganizerOrFail(event, userId)
 
-            if (event.status == EventStatus.COMPLETED || event.status == EventStatus.CANCELLED) {
-                throw ConflictException("Cannot modify an event that is ${event.status}.")
+            if (event.status != EventStatus.PLANNED) {
+                throw ConflictException("Only 'PLANNED' events can be edited. Current status is ${event.status}.")
             }
 
             if (period != null && period.start < now()) {
@@ -137,7 +137,7 @@ class EventService(
             }
 
             if (maxParticipants != null && maxParticipants < event.participantsIds.size) {
-                throw ValidationException("Max participants exceeded.")
+                throw ValidationException("Max participants cannot be less than the current number of participants.")
             }
 
             val updatedEvent =
@@ -158,8 +158,8 @@ class EventService(
             val event = findEventOrFail(eventId)
             ensureOrganizerOrFail(event, userId)
 
-            if (event.status == EventStatus.CANCELLED || event.status == EventStatus.COMPLETED) {
-                throw ConflictException("Event is already ${event.status}.")
+            if (event.status == EventStatus.COMPLETED || event.status == EventStatus.CANCELLED) {
+                throw ConflictException("Event is already ${event.status} and cannot be cancelled.")
             }
 
             val cancelledEvent = event.copy(status = EventStatus.CANCELLED)
@@ -181,8 +181,8 @@ class EventService(
             val event = findEventOrFail(eventId)
             ensureOrganizerOrFail(event, actingUserId)
 
-            if (event.status != EventStatus.IN_PROGRESS && event.status != EventStatus.PLANNED) {
-                throw ConflictException("Event must be PLANNED or IN_PROGRESS to be completed.")
+            if (event.status != EventStatus.IN_PROGRESS) {
+                throw ConflictException("Only 'IN_PROGRESS' events can be completed.")
             }
 
             val completedEvent = event.copy(status = EventStatus.COMPLETED)
@@ -205,16 +205,16 @@ class EventService(
             findUserOrFail(userId)
 
             if (event.status != EventStatus.PLANNED) {
-                throw ConflictException("Cannot join an event that is '${event.status}'.")
+                throw ConflictException("Cannot join an event that is not 'PLANNED'. Current status: '${event.status}'.")
             }
             if (userId == event.organizerId) {
-                throw ConflictException("Organizer cannot join as a participant.")
+                throw ConflictException("Organizer cannot join their own event as a participant.")
             }
             if (userId in event.participantsIds) {
-                throw ConflictException("User '$userId' is already a participant in event.")
+                throw ConflictException("User '$userId' is already a participant in this event.")
             }
             if (event.isFull) {
-                throw ConflictException("Event '$eventId' is full.")
+                throw ConflictException("Event '$eventId' is full and cannot accept more participants.")
             }
 
             val updatedEvent = event.copy(participantsIds = event.participantsIds + userId)
@@ -230,7 +230,10 @@ class EventService(
             findUserOrFail(userId)
 
             if (event.status != EventStatus.PLANNED) {
-                throw ConflictException("Cannot leave an event that is ${event.status}.")
+                throw ConflictException("Cannot leave an event that is not 'PLANNED'. Current status: ${event.status}.")
+            }
+            if (userId == event.organizerId) {
+                throw AuthorizationException("Organizer cannot leave their own event. They must cancel or delete it.")
             }
             if (userId !in event.participantsIds) {
                 throw NotFoundException("User '$userId' is not a participant in event '$eventId'.")
@@ -255,7 +258,7 @@ class EventService(
             ensureOrganizerOrFail(event, userId)
 
             if (event.status != EventStatus.PLANNED && event.status != EventStatus.CANCELLED) {
-                throw ConflictException("Cannot delete event with status ${event.status}.")
+                throw ConflictException("Only 'PLANNED' or 'CANCELLED' events can be deleted. Current status: ${event.status}.")
             }
 
             val zone = findZoneOrFail(event.zoneId)
@@ -289,7 +292,7 @@ class EventService(
     ) {
         if (event.organizerId != userId) {
             throw AuthorizationException(
-                "User '$userId' is not authorized. Must be organizer ('${event.organizerId}').",
+                "User '$userId' is not authorized. Must be the event organizer ('${event.organizerId}').",
             )
         }
     }

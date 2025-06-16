@@ -8,9 +8,10 @@ data class ChatUiState(
     val chatInfo: ChatInfo,
     val messages: List<MessageResponse> = emptyList(),
     val messageInput: String = "",
+    val messageInputError: String? = null,
     val isLoading: Boolean = false,
     val isSending: Boolean = false,
 ) {
     val isSendEnabled: Boolean
-        get() = messageInput.isNotBlank() && !isSending
+        get() = messageInput.isNotBlank() && !isSending && messageInputError == null
 }

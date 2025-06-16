@@ -73,13 +73,7 @@ fun EventItem(
                     }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = event.status.name,
-                    style = MaterialTheme.typography.caption,
-                    fontWeight = FontWeight.Bold,
-                    color = getStatusColor(event.status),
-                    modifier = Modifier.align(Alignment.Bottom),
-                )
+                StatusBadge(status = event.status)
             }
         }
     }

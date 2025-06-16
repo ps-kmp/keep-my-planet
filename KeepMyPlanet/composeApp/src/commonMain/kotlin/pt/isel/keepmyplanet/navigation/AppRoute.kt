@@ -19,7 +19,9 @@ sealed class AppRoute {
         val eventId: UInt,
     ) : AppRoute()
 
-    data object CreateEvent : AppRoute()
+    data class CreateEvent(
+        val zoneId: UInt,
+    ) : AppRoute()
 
     data class EditEvent(
         val eventId: UInt,

@@ -1,4 +1,3 @@
-package pt.isel.keepmyplanet.ui.event.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +17,7 @@ import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +31,8 @@ import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.event.EventViewModel
+import pt.isel.keepmyplanet.ui.event.components.ErrorState
+import pt.isel.keepmyplanet.ui.event.list.components.EmptyState
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
 import pt.isel.keepmyplanet.ui.event.list.components.SearchBarAndFilters
 import pt.isel.keepmyplanet.ui.event.model.EventListItem
@@ -44,7 +45,7 @@ fun EventListScreen(
     listState: LazyListState,
     onEventSelected: (event: EventListItem) -> Unit,
     onNavigateBack: () -> Unit,
-    onCreateEventClick: () -> Unit,
+    onNavigateToMap: () -> Unit,
 ) {
     val uiState by viewModel.listUiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -73,8 +74,8 @@ fun EventListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { AppTopBar(title = "Events", onNavigateBack = onNavigateBack) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreateEventClick) {
-                Icon(Icons.Default.Add, contentDescription = "Create Event")
+            FloatingActionButton(onClick = onNavigateToMap) {
+                Icon(Icons.Default.AddLocation, contentDescription = "Create Event by selecting a Zone")
             }
         },
     ) { paddingValues ->
@@ -87,9 +88,16 @@ fun EventListScreen(
                 isLoading = uiState.isLoading,
             )
 
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
                 if (uiState.isLoading && uiState.events.isEmpty()) {
                     FullScreenLoading()
+                } else if (uiState.error != null) {
+                    ErrorState(message = uiState.error!!, onRetry = viewModel::refreshEvents)
+                } else if (uiState.events.isEmpty()) {
+                    EmptyState(onActionClick = onNavigateToMap)
                 } else {
                     LazyColumn(
                         state = listState,

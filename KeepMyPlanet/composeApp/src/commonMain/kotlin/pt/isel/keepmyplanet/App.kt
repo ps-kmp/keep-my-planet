@@ -2,6 +2,7 @@
 
 package pt.isel.keepmyplanet
 
+import EventListScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -17,7 +18,6 @@ import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
 import pt.isel.keepmyplanet.ui.event.create.CreateEventScreen
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
-import pt.isel.keepmyplanet.ui.event.list.EventListScreen
 import pt.isel.keepmyplanet.ui.event.update.UpdateEventScreen
 import pt.isel.keepmyplanet.ui.home.HomeScreen
 import pt.isel.keepmyplanet.ui.login.LoginScreen
@@ -96,7 +96,7 @@ fun App(appViewModel: AppViewModel) {
                     listState = eventListState,
                     onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id.value)) },
                     onNavigateBack = { appViewModel.navigateBack() },
-                    onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent) },
+                    onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
                 )
             }
         }
@@ -105,6 +105,7 @@ fun App(appViewModel: AppViewModel) {
             eventViewModel?.let { vm ->
                 CreateEventScreen(
                     viewModel = vm,
+                    zoneId = route.zoneId,
                     onEventCreated = { appViewModel.navigate(AppRoute.EventDetails(it)) },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
@@ -129,12 +130,15 @@ fun App(appViewModel: AppViewModel) {
         }
 
         is AppRoute.EditEvent -> {
-            eventViewModel?.let { vm ->
-                UpdateEventScreen(
-                    viewModel = vm,
-                    eventId = route.eventId,
-                    onNavigateBack = { appViewModel.navigateBack() },
-                )
+            currentUserInfo?.let { user ->
+                eventViewModel?.let { vm ->
+                    UpdateEventScreen(
+                        viewModel = vm,
+                        eventId = route.eventId,
+                        userId = user.id.value,
+                        onNavigateBack = { appViewModel.navigateBack() },
+                    )
+                }
             }
         }
 
@@ -174,6 +178,8 @@ fun App(appViewModel: AppViewModel) {
                 viewModel = zoneViewModel,
                 zoneId = route.zoneId,
                 onNavigateBack = { appViewModel.navigateBack() },
+                onNavigateToCreateEvent = { appViewModel.navigate(AppRoute.CreateEvent(it)) },
+                onNavigateToEventDetails = { appViewModel.navigate(AppRoute.EventDetails(it)) },
             )
         }
 

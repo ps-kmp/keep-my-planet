@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.data.http.ApiException
+import pt.isel.keepmyplanet.domain.user.Email
+import pt.isel.keepmyplanet.domain.user.Name
+import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.user.RegisterRequest
 import pt.isel.keepmyplanet.ui.register.model.RegisterEvent
 import pt.isel.keepmyplanet.ui.register.model.RegisterUiState
@@ -26,25 +29,25 @@ class RegisterViewModel(
     val events: Flow<RegisterEvent> = _events.receiveAsFlow()
 
     fun onUsernameChanged(username: String) {
-        _uiState.update { it.copy(username = username) }
+        _uiState.update { it.copy(username = username, usernameError = null) }
     }
 
     fun onEmailChanged(email: String) {
-        _uiState.update { it.copy(email = email) }
+        _uiState.update { it.copy(email = email, emailError = null) }
     }
 
     fun onPasswordChanged(password: String) {
-        _uiState.update { it.copy(password = password) }
+        _uiState.update { it.copy(password = password, passwordError = null) }
     }
 
     fun onConfirmPasswordChanged(confirmPassword: String) {
-        _uiState.update { it.copy(confirmPassword = confirmPassword) }
+        _uiState.update { it.copy(confirmPassword = confirmPassword, confirmPasswordError = null) }
     }
 
     fun onRegisterClicked() {
-        val currentState = _uiState.value
-        if (!currentState.isRegisterEnabled) return
+        if (!validateForm()) return
 
+        val currentState = _uiState.value
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
@@ -69,6 +72,44 @@ class RegisterViewModel(
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
+    }
+
+    private fun validateForm(): Boolean {
+        val formState = _uiState.value
+        var stateWithErrors = formState
+
+        stateWithErrors =
+            try {
+                Name(formState.username)
+                stateWithErrors.copy(usernameError = null)
+            } catch (e: IllegalArgumentException) {
+                stateWithErrors.copy(usernameError = e.message)
+            }
+
+        stateWithErrors =
+            try {
+                Email(formState.email)
+                stateWithErrors.copy(emailError = null)
+            } catch (e: IllegalArgumentException) {
+                stateWithErrors.copy(emailError = e.message)
+            }
+
+        stateWithErrors =
+            try {
+                Password(formState.password)
+                stateWithErrors.copy(passwordError = null)
+            } catch (e: IllegalArgumentException) {
+                stateWithErrors.copy(passwordError = e.message)
+            }
+
+        if (formState.password != formState.confirmPassword) {
+            stateWithErrors = stateWithErrors.copy(confirmPasswordError = "Passwords do not match")
+        } else {
+            stateWithErrors = stateWithErrors.copy(confirmPasswordError = null)
+        }
+
+        _uiState.value = stateWithErrors
+        return !stateWithErrors.hasErrors
     }
 
     private suspend fun handleError(

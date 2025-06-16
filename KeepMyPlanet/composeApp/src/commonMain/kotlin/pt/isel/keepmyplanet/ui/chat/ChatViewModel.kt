@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ChatApi
 import pt.isel.keepmyplanet.data.http.ApiException
+import pt.isel.keepmyplanet.domain.message.MessageContent
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 import pt.isel.keepmyplanet.ui.chat.model.ChatEvent
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
@@ -34,6 +35,42 @@ class ChatViewModel(
         loadInitialMessages()
         startListeningToMessages()
     }
+
+    fun onMessageChanged(newMessage: String) {
+        val error = validateMessage(newMessage)
+        _uiState.update { it.copy(messageInput = newMessage, messageInputError = error) }
+    }
+
+    fun sendMessage() {
+        val currentState = _uiState.value
+        if (!currentState.isSendEnabled) return
+
+        val messageContent = currentState.messageInput.trim()
+        _uiState.update { it.copy(isSending = true, messageInput = "", messageInputError = null) }
+
+        viewModelScope.launch {
+            val result =
+                chatApi.sendMessage(currentState.chatInfo.eventId.value, messageContent)
+
+            result
+                .onSuccess {
+                    _uiState.update { it.copy(isSending = false) }
+                }.onFailure { exception ->
+                    _uiState.update { it.copy(isSending = false, messageInput = messageContent) }
+                    handleError("Failed to send message", exception)
+                }
+        }
+    }
+
+    private fun validateMessage(content: String): String? =
+        try {
+            if (content.isNotBlank()) {
+                MessageContent(content)
+            }
+            null
+        } catch (e: IllegalArgumentException) {
+            e.message
+        }
 
     private fun loadInitialMessages() {
         _uiState.update { it.copy(isLoading = true) }
@@ -79,31 +116,6 @@ class ChatViewModel(
             }
         }
         return wasAdded
-    }
-
-    fun onMessageChanged(newMessage: String) {
-        _uiState.update { it.copy(messageInput = newMessage) }
-    }
-
-    fun sendMessage() {
-        val currentState = _uiState.value
-        if (!currentState.isSendEnabled) return
-
-        val messageContent = currentState.messageInput.trim()
-        _uiState.update { it.copy(isSending = true, messageInput = "") }
-
-        viewModelScope.launch {
-            val result =
-                chatApi.sendMessage(currentState.chatInfo.eventId.value, messageContent)
-
-            result
-                .onSuccess {
-                    _uiState.update { it.copy(isSending = false) }
-                }.onFailure { exception ->
-                    _uiState.update { it.copy(isSending = false, messageInput = messageContent) }
-                    handleError("Failed to send message", exception)
-                }
-        }
     }
 
     private suspend fun handleError(

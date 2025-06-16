@@ -6,16 +6,19 @@ data class RegisterUiState(
     val password: String = "",
     val confirmPassword: String = "",
     val isLoading: Boolean = false,
+    // Validation Errors
+    val usernameError: String? = null,
+    val emailError: String? = null,
+    val passwordError: String? = null,
+    val confirmPasswordError: String? = null,
 ) {
-    val isRegisterEnabled: Boolean
+    val canAttemptRegister: Boolean
+        get() = !isLoading
+
+    val hasErrors: Boolean
         get() =
-            username.isNotBlank() &&
-                email.isNotBlank() &&
-                password.isNotBlank() &&
-                password.length >= 8 &&
-                confirmPassword.isNotBlank() &&
-                password == confirmPassword &&
-                !isLoading
-    val showPasswordMismatchError: Boolean
-        get() = password.isNotEmpty() && confirmPassword.isNotEmpty() && password != confirmPassword
+            usernameError != null ||
+                emailError != null ||
+                passwordError != null ||
+                confirmPasswordError != null
 }

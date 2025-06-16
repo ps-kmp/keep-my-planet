@@ -7,15 +7,17 @@ data class EventFormUiState(
     val maxParticipants: String = "",
     val zoneId: String = "",
     val isSubmitting: Boolean = false,
+    val titleError: String? = null,
+    val descriptionError: String? = null,
+    val startDateError: String? = null,
+    val maxParticipantsError: String? = null,
+    val zoneIdError: String? = null,
 ) {
-    val canSubmit: Boolean
+    val hasErrors: Boolean
         get() =
-            title.isNotBlank() &&
-                description.isNotBlank() &&
-                startDate.isNotBlank() &&
-                zoneId.toUIntOrNull() != null &&
-                !isSubmitting
-    val canUpdate: Boolean
-        get() =
-            title.isNotBlank() && description.isNotBlank() && startDate.isNotBlank() && !isSubmitting
+            titleError != null ||
+                descriptionError != null ||
+                startDateError != null ||
+                maxParticipantsError != null ||
+                zoneIdError != null
 }

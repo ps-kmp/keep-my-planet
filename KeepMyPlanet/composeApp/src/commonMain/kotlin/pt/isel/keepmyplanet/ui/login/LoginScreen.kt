@@ -99,6 +99,7 @@ private fun LoginContent(
             label = "Email",
             singleLine = true,
             enabled = !uiState.isLoading,
+            errorText = uiState.emailError,
         )
 
         FormField(

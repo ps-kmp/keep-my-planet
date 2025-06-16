@@ -1,16 +1,23 @@
 package pt.isel.keepmyplanet.ui.event.details
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,7 +31,10 @@ import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.event.EventViewModel
+import pt.isel.keepmyplanet.ui.event.details.components.DetailCard
 import pt.isel.keepmyplanet.ui.event.details.components.EventActions
+import pt.isel.keepmyplanet.ui.event.details.components.InfoRow
+import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
 import pt.isel.keepmyplanet.ui.event.list.components.toFormattedString
 import pt.isel.keepmyplanet.ui.event.model.EventScreenEvent
 
@@ -45,8 +55,16 @@ fun EventDetailsScreen(
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
-            if (event is EventScreenEvent.ShowSnackbar) {
-                snackbarHostState.showSnackbar(event.message, duration = SnackbarDuration.Short)
+            when (event) {
+                is EventScreenEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message, duration = SnackbarDuration.Short)
+                }
+
+                is EventScreenEvent.EventDeleted -> {
+                    onNavigateBack()
+                }
+
+                else -> {}
             }
         }
     }
@@ -67,68 +85,86 @@ fun EventDetailsScreen(
         if (uiState.isLoading) {
             FullScreenLoading(modifier = Modifier.padding(paddingValues))
         } else if (event != null) {
-            Column(
+            LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Text(
-                    text = event.title.value,
-                    style = MaterialTheme.typography.h5,
-                )
-
-                Text(
-                    text = event.description.value,
-                    style = MaterialTheme.typography.body1,
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item {
                     Text(
-                        text = "Start Date: ${event.period.start.toFormattedString()}",
-                        style = MaterialTheme.typography.body2,
+                        text = event.title.value,
+                        style = MaterialTheme.typography.h4,
+                        modifier = Modifier.padding(bottom = 8.dp),
                     )
-                    event.period.end?.let {
-                        Text(
-                            text = "End Date: ${it.toFormattedString()}",
-                            style = MaterialTheme.typography.body2,
+                }
+
+                item {
+                    DetailCard(title = "Description") {
+                        InfoRow(
+                            icon = Icons.Default.Description,
+                            text = event.description.value,
                         )
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "Status: ${event.status}",
-                        style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.secondary,
-                    )
-                    event.maxParticipants?.let {
-                        Text(
-                            text = "Participants: ${event.participantsIds.size}/$it",
-                            style = MaterialTheme.typography.body2,
+                item {
+                    DetailCard(title = "Details") {
+                        uiState.organizer?.let { organizer ->
+                            InfoRow(
+                                icon = Icons.Default.Person,
+                                text = "Organized by ${organizer.name.value}",
+                            )
+                        }
+                        InfoRow(
+                            icon = Icons.Default.Schedule,
+                            text = "Status: ${event.status.name}",
                         )
+                        InfoRow(
+                            icon = Icons.Default.CalendarToday,
+                            text = "Starts: ${event.period.start.toFormattedString()}",
+                        )
+                        uiState.zone?.let { zone ->
+                            InfoRow(
+                                icon = Icons.Default.LocationOn,
+                                text =
+                                    "Location: Lat ${zone.location.latitude}, Lon ${zone.location.longitude}",
+                            )
+                        }
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "Created: ${event.createdAt.toFormattedString()}",
-                        style = MaterialTheme.typography.caption,
-                    )
-                    Text(
-                        text = "Last update: ${event.updatedAt.toFormattedString()}",
-                        style = MaterialTheme.typography.caption,
-                    )
+                item {
+                    DetailCard(
+                        title =
+                            "Participants " +
+                                "(${uiState.participants.size}/${event.maxParticipants ?: "∞"})",
+                    ) {
+                        if (uiState.participants.isEmpty()) {
+                            Text(
+                                "No participants yet.",
+                                modifier = Modifier.padding(vertical = 8.dp),
+                            )
+                        } else {
+                            uiState.participants.forEach { participant ->
+                                ParticipantRow(participant)
+                            }
+                        }
+                    }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                EventActions(
-                    uiState = uiState,
-                    currentUserId = currentUserId,
-                    onJoinEvent = { viewModel.joinEvent(eventId) },
-                    onLeaveEvent = { viewModel.leaveEvent(eventId) },
-                    onNavigateToChat = onNavigateToChat,
-                    onNavigateToEditEvent = { onNavigateToEditEvent(eventId) },
-                )
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    EventActions(
+                        uiState = uiState,
+                        currentUserId = currentUserId,
+                        onJoinEvent = { viewModel.joinEvent(eventId) },
+                        onLeaveEvent = { viewModel.leaveEvent(eventId) },
+                        onNavigateToChat = onNavigateToChat,
+                        onNavigateToEditEvent = { onNavigateToEditEvent(eventId) },
+                        onCancelEvent = { viewModel.cancelEvent(eventId) },
+                        onCompleteEvent = { viewModel.completeEvent(eventId) },
+                        onDeleteEvent = { viewModel.deleteEvent(eventId) },
+                    )
+                }
             }
         }
     }

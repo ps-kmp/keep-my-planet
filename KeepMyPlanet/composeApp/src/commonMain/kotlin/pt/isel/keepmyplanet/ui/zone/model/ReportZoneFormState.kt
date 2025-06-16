@@ -8,7 +8,11 @@ data class ReportZoneFormState(
     val description: String = "",
     val severity: ZoneSeverity = ZoneSeverity.LOW,
     val isSubmitting: Boolean = false,
+    val descriptionError: String? = null,
 ) {
     val canSubmit: Boolean
-        get() = description.isNotBlank() && !isSubmitting
+        get() = !isSubmitting
+
+    val hasError: Boolean
+        get() = descriptionError != null
 }

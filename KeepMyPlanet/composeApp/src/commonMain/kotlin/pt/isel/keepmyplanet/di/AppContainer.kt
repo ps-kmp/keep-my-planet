@@ -56,7 +56,7 @@ class AppContainer(
 
     fun createZoneViewModel(): ZoneViewModel = ZoneViewModel(zoneApi)
 
-    fun createUserProfileViewModel(user: UserInfo): UserProfileViewModel = UserProfileViewModel(userApi, user)
+    fun createUserProfileViewModel(user: UserInfo) = UserProfileViewModel(userApi, user)
 
     fun createChatViewModel(
         user: UserInfo,

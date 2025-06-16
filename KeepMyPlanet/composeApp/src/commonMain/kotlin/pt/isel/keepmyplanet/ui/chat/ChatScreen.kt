@@ -96,6 +96,7 @@ fun ChatScreen(
                     onSendClick = viewModel::sendMessage,
                     isSending = uiState.isSending,
                     sendEnabled = uiState.isSendEnabled,
+                    errorText = uiState.messageInputError,
                 )
             }
         }

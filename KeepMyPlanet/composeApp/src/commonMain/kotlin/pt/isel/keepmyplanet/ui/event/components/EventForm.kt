@@ -20,6 +20,7 @@ fun EventForm(
     onMaxParticipantsChanged: (String) -> Unit,
     onZoneIdChanged: (String) -> Unit,
     showZoneIdField: Boolean,
+    isZoneIdEditable: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -30,6 +31,7 @@ fun EventForm(
             value = formUiState.title,
             onValueChange = onTitleChanged,
             label = "Title",
+            errorText = formUiState.titleError,
             enabled = !formUiState.isSubmitting,
             singleLine = true,
         )
@@ -39,6 +41,7 @@ fun EventForm(
             onValueChange = onDescriptionChanged,
             label = "Description",
             minLines = 3,
+            errorText = formUiState.descriptionError,
             enabled = !formUiState.isSubmitting,
         )
 
@@ -46,6 +49,7 @@ fun EventForm(
             value = formUiState.startDate,
             onValueChange = onStartDateChanged,
             label = "Start Date and Time (YYYY-MM-DDTHH:MM:SS)",
+            errorText = formUiState.startDateError,
             enabled = !formUiState.isSubmitting,
             singleLine = true,
         )
@@ -55,6 +59,7 @@ fun EventForm(
             onValueChange = onMaxParticipantsChanged,
             label = "Max Participants (Optional)",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            errorText = formUiState.maxParticipantsError,
             enabled = !formUiState.isSubmitting,
             singleLine = true,
         )
@@ -65,8 +70,9 @@ fun EventForm(
                 onValueChange = onZoneIdChanged,
                 label = "Zone ID",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                enabled = !formUiState.isSubmitting,
+                enabled = !formUiState.isSubmitting && isZoneIdEditable,
                 singleLine = true,
+                errorText = formUiState.zoneIdError,
             )
         }
     }

@@ -76,6 +76,7 @@ fun ReportZoneScreen(
                 label = "Description of the issue",
                 minLines = 4,
                 enabled = !formState.isSubmitting,
+                errorText = formState.descriptionError,
             )
 
             Text("Severity:", style = MaterialTheme.typography.subtitle1)

@@ -10,4 +10,6 @@ sealed class EventScreenEvent {
     ) : EventScreenEvent()
 
     data object NavigateBack : EventScreenEvent()
+
+    data object EventDeleted : EventScreenEvent()
 }

@@ -45,6 +45,7 @@ fun PasswordChangeSection(
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 enabled = !uiState.isChangingPassword,
+                errorText = uiState.newPasswordInputError,
             )
             FormField(
                 value = uiState.confirmPasswordInput,
@@ -53,6 +54,7 @@ fun PasswordChangeSection(
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 enabled = !uiState.isChangingPassword,
+                errorText = uiState.confirmPasswordInputError,
             )
             LoadingButton(
                 onClick = onChangePasswordClicked,
