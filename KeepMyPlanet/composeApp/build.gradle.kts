@@ -93,6 +93,7 @@ kotlin {
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.maplibre.compose)
+                implementation("io.ktor:ktor-client-android:3.1.3")
             }
         }
         val desktopMain by getting {
@@ -100,10 +101,12 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.ktor.client.cio)
+                implementation("io.ktor:ktor-client-java:3.1.3")
             }
         }
         val wasmJsMain by getting {
             dependencies {
+                implementation("io.ktor:ktor-client-js:3.1.3")
             }
         }
     }

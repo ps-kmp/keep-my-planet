@@ -15,7 +15,7 @@ import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.mapper.event.toEvent
-import pt.isel.keepmyplanet.ui.event.model.EventDetailsUiState
+import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsUiState
 
 class EventDetailsViewModel(
     private val eventApi: EventApi,

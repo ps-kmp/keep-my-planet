@@ -14,16 +14,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlinx.datetime.LocalDateTime
-import pt.isel.keepmyplanet.dto.message.MessageResponse
+import pt.isel.keepmyplanet.domain.message.Message
+import pt.isel.keepmyplanet.ui.components.formatTimestamp
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
 fun MessageItem(
-    message: MessageResponse,
+    message: Message,
     currentUserId: UInt,
 ) {
-    val isCurr = message.senderId == currentUserId
+    val isCurr = message.senderId.value == currentUserId
 
     val alignment = if (isCurr) Alignment.CenterEnd else Alignment.CenterStart
     val backgroundColor = if (isCurr) MaterialTheme.colors.primary else MaterialTheme.colors.surface
@@ -41,7 +41,7 @@ fun MessageItem(
             Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 if (!isCurr) {
                     Text(
-                        text = message.senderName.ifBlank { "Unknown User" },
+                        text = message.senderName.value,
                         style = MaterialTheme.typography.caption,
                         fontWeight = FontWeight.Bold,
                         color = textColor.copy(alpha = 0.8f),
@@ -49,7 +49,7 @@ fun MessageItem(
                     )
                 }
                 Text(
-                    text = message.content,
+                    text = message.content.value,
                     style = MaterialTheme.typography.body1,
                     color = textColor,
                 )
@@ -64,14 +64,3 @@ fun MessageItem(
         }
     }
 }
-
-@Composable
-private fun formatTimestamp(isoTimestamp: String): String =
-    try {
-        val dateTime = LocalDateTime.parse(isoTimestamp)
-        val hour = dateTime.hour.toString().padStart(2, '0')
-        val minute = dateTime.minute.toString().padStart(2, '0')
-        "$hour:$minute"
-    } catch (_: Exception) {
-        isoTimestamp
-    }

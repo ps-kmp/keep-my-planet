@@ -15,8 +15,11 @@ import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.data.mapper.toListItem
-import pt.isel.keepmyplanet.ui.event.model.EventFilterType
-import pt.isel.keepmyplanet.ui.event.model.EventListUiState
+import pt.isel.keepmyplanet.ui.event.list.model.EventFilterType
+import pt.isel.keepmyplanet.ui.event.list.model.EventListScreenEvent
+import pt.isel.keepmyplanet.ui.event.list.model.EventListUiState
+
+private const val SEARCH_DEBOUNCE_DELAY_MS = 500L
 
 class EventListViewModel(
     private val eventApi: EventApi,
@@ -30,10 +33,11 @@ class EventListViewModel(
     private var searchJob: Job? = null
 
     init {
-        loadEvents(isRefresh = true)
+        refreshEvents()
     }
 
     fun refreshEvents() {
+        _listUiState.update { it.copy(error = null) }
         loadEvents(isRefresh = true)
     }
 
@@ -50,7 +54,7 @@ class EventListViewModel(
         searchJob?.cancel()
         searchJob =
             viewModelScope.launch {
-                delay(500)
+                delay(SEARCH_DEBOUNCE_DELAY_MS)
                 loadEvents(isRefresh = true)
             }
     }
@@ -65,7 +69,7 @@ class EventListViewModel(
         val currentState = _listUiState.value
         val offset = if (isRefresh) 0 else currentState.offset
 
-        if (currentState.isLoading || currentState.isAddingMore) return
+        if (isRefresh.not() && (currentState.isLoading || currentState.isAddingMore)) return
 
         viewModelScope.launch {
             _listUiState.update { it.copy(isLoading = isRefresh, isAddingMore = !isRefresh) }
@@ -103,6 +107,7 @@ class EventListViewModel(
                                 (currentEvents + newEvents.map { r -> r.toListItem() })
                                     .distinctBy { item -> item.id },
                             offset = if (isRefresh) newEvents.size else it.offset + newEvents.size,
+                            error = null,
                             hasMorePages = newEvents.size == it.limit,
                         )
                     }
@@ -123,6 +128,10 @@ class EventListViewModel(
                 is ApiException -> error.error.message
                 else -> "$prefix: ${error.message ?: "Unknown error"}"
             }
-        _events.send(EventListScreenEvent.ShowSnackbar(message))
+        if (listUiState.value.events.isEmpty()) {
+            _listUiState.update { it.copy(error = message) }
+        } else {
+            _events.send(EventListScreenEvent.ShowSnackbar(message))
+        }
     }
 }

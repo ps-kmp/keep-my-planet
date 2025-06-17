@@ -30,10 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
+import pt.isel.keepmyplanet.ui.event.list.components.EmptyState
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
 import pt.isel.keepmyplanet.ui.event.list.components.SearchBarAndFilters
-import pt.isel.keepmyplanet.ui.event.model.EventListItem
+import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
+import pt.isel.keepmyplanet.ui.event.list.model.EventListScreenEvent
+
+private const val PAGINATION_THRESHOLD = 3
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
@@ -46,6 +51,10 @@ fun EventListScreen(
 ) {
     val uiState by viewModel.listUiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.filter) {
+        viewModel.refreshEvents()
+    }
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
@@ -64,7 +73,9 @@ fun EventListScreen(
                 .lastOrNull()
                 ?.index
         }.collect { lastVisibleItemIndex ->
-            if (lastVisibleItemIndex != null && lastVisibleItemIndex >= uiState.events.size - 3) {
+            if (lastVisibleItemIndex != null &&
+                lastVisibleItemIndex >= uiState.events.size - PAGINATION_THRESHOLD
+            ) {
                 viewModel.loadNextPage()
             }
         }
@@ -89,8 +100,15 @@ fun EventListScreen(
             )
 
             Box(modifier = Modifier.fillMaxSize()) {
-                if (uiState.isLoading && uiState.events.isEmpty()) {
+                if (uiState.isLoading && uiState.events.isEmpty() && uiState.error == null) {
                     FullScreenLoading()
+                } else if (uiState.error != null) {
+                    ErrorState(
+                        message = uiState.error!!,
+                        onRetry = { viewModel.refreshEvents() },
+                    )
+                } else if (uiState.events.isEmpty()) {
+                    EmptyState(onActionClick = onCreateEventClick)
                 } else {
                     LazyColumn(
                         state = listState,

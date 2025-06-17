@@ -4,6 +4,7 @@ import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.session.model.UserSession
 
@@ -19,7 +20,7 @@ class SessionManager {
             try {
                 val sessionJson = Json.encodeToString(session)
                 settings[USER_SESSION_KEY] = sessionJson
-            } catch (_: Exception) {
+            } catch (_: SerializationException) {
             }
         } else {
             settings.remove(USER_SESSION_KEY)
@@ -31,7 +32,7 @@ class SessionManager {
         return if (sessionJson != null) {
             try {
                 Json.decodeFromString<UserSession>(sessionJson)
-            } catch (_: Exception) {
+            } catch (_: SerializationException) {
                 clearSession()
                 null
             }

@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.user.components.DeleteAccountSection
 import pt.isel.keepmyplanet.ui.user.components.PasswordChangeSection
@@ -75,6 +76,7 @@ fun UserProfileScreen(
         onPasswordChangeToggled = viewModel::onPasswordChangeToggled,
         onChangePasswordClicked = viewModel::onChangePasswordClicked,
         onConfirmDeleteAccount = viewModel::onDeleteAccountClicked,
+        onRetry = viewModel::loadUserProfile,
     )
 }
 
@@ -93,6 +95,7 @@ fun UserProfileScreenContent(
     onPasswordChangeToggled: () -> Unit,
     onChangePasswordClicked: () -> Unit,
     onConfirmDeleteAccount: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -101,6 +104,8 @@ fun UserProfileScreenContent(
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             if (uiState.isLoading) {
                 FullScreenLoading()
+            } else if (uiState.error != null) {
+                ErrorState(message = uiState.error, onRetry = onRetry)
             } else if (uiState.userDetails == null) {
                 Text(
                     text = "Failed to load user profile.",

@@ -17,6 +17,7 @@ data class UserProfileUiState(
     val emailInputError: String? = null,
     val newPasswordInputError: String? = null,
     val confirmPasswordInputError: String? = null,
+    val error: String? = null,
 ) {
     val hasProfileChanges: Boolean
         get() =

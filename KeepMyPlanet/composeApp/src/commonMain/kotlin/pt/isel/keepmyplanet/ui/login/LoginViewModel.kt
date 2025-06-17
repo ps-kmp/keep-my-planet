@@ -15,11 +15,13 @@ import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.data.mapper.toUserSession
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
+import pt.isel.keepmyplanet.session.model.UserSession
 import pt.isel.keepmyplanet.ui.login.model.LoginEvent
 import pt.isel.keepmyplanet.ui.login.model.LoginUiState
 
 class LoginViewModel(
     private val authApi: AuthApi,
+    private val onLoginSuccess: (UserSession) -> Unit,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -49,7 +51,7 @@ class LoginViewModel(
 
                 result
                     .onSuccess { loginResponse ->
-                        _events.send(LoginEvent.NavigateToHome(loginResponse.toUserSession()))
+                        onLoginSuccess(loginResponse.toUserSession())
                     }.onFailure { exception ->
                         handleError("Login failed", exception)
                     }

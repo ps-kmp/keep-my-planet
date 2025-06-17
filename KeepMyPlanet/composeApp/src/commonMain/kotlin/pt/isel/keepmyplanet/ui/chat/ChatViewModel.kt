@@ -13,8 +13,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ChatApi
 import pt.isel.keepmyplanet.data.http.ApiException
+import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
-import pt.isel.keepmyplanet.dto.message.MessageResponse
+import pt.isel.keepmyplanet.mapper.message.toMessage
 import pt.isel.keepmyplanet.ui.chat.model.ChatEvent
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 import pt.isel.keepmyplanet.ui.chat.model.ChatUiState
@@ -79,7 +80,12 @@ class ChatViewModel(
 
             result
                 .onSuccess { messages ->
-                    _uiState.update { it.copy(isLoading = false, messages = messages) }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            messages = messages.map { dto -> dto.toMessage() },
+                        )
+                    }
                     if (messages.isNotEmpty()) _events.send(ChatEvent.ScrollToBottom)
                 }.onFailure { exception ->
                     handleError("Failed to load messages", exception)
@@ -95,8 +101,8 @@ class ChatViewModel(
                     handleError("Chat connection error", exception)
                 }.collect { messageResult ->
                     messageResult
-                        .onSuccess { newMessage ->
-                            val messageAdded = addNewMessage(newMessage)
+                        .onSuccess { newMessageResponse ->
+                            val messageAdded = addNewMessage(newMessageResponse.toMessage())
                             if (messageAdded) _events.send(ChatEvent.ScrollToBottom)
                         }.onFailure { exception ->
                             handleError("Error processing incoming message", exception)
@@ -105,7 +111,7 @@ class ChatViewModel(
         }
     }
 
-    private fun addNewMessage(newMessage: MessageResponse): Boolean {
+    private fun addNewMessage(newMessage: Message): Boolean {
         var wasAdded = false
         _uiState.update { currentState ->
             if (currentState.messages.any { it.id == newMessage.id }) {

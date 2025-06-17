@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.event.model.EventFilterType
+import pt.isel.keepmyplanet.ui.event.list.model.EventFilterType
 
 @Suppress("ktlint:standard:function-naming")
 @Composable

@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 import pt.isel.keepmyplanet.ui.components.LoadingButton
-import pt.isel.keepmyplanet.ui.event.model.EventDetailsUiState
+import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsUiState
 
 @Suppress("ktlint:standard:function-naming")
 @Composable

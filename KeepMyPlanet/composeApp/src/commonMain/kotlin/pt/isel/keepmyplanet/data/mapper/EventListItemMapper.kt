@@ -7,7 +7,7 @@ import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.dto.event.EventResponse
-import pt.isel.keepmyplanet.ui.event.model.EventListItem
+import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
 import pt.isel.keepmyplanet.util.safeValueOf
 
 fun EventResponse.toListItem(): EventListItem =

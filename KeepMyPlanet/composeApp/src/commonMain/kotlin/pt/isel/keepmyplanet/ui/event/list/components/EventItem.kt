@@ -23,7 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.event.model.EventListItem
+import pt.isel.keepmyplanet.ui.components.StatusBadge
+import pt.isel.keepmyplanet.ui.components.getStatusColor
+import pt.isel.keepmyplanet.ui.components.toFormattedString
+import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
 
 @Composable
 fun EventItem(

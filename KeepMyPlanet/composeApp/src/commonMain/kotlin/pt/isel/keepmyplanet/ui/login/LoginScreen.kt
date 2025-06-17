@@ -1,5 +1,3 @@
-@file:Suppress("ktlint:standard:function-naming")
-
 package pt.isel.keepmyplanet.ui.login
 
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.session.model.UserSession
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.login.model.LoginEvent
@@ -34,7 +31,6 @@ import pt.isel.keepmyplanet.ui.login.model.LoginUiState
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
-    onNavigateHome: (UserSession) -> Unit,
     onNavigateToRegister: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -43,10 +39,6 @@ fun LoginScreen(
     LaunchedEffect(viewModel, snackbarHostState) {
         viewModel.events.collect { event ->
             when (event) {
-                is LoginEvent.NavigateToHome -> {
-                    onNavigateHome(event.userSession)
-                }
-
                 is LoginEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         message = event.message,

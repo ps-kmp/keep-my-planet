@@ -2,7 +2,6 @@ package pt.isel.keepmyplanet
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.ktor.client.engine.HttpClientEngineFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -11,16 +10,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.di.AppContainer
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.session.model.UserSession
 
 class AppViewModel(
-    engine: HttpClientEngineFactory<*>,
+    val userSession: StateFlow<UserSession?>,
 ) : ViewModel() {
-    val container = AppContainer(engine)
-    val userSession: StateFlow<UserSession?> = container.userSession
-
     private val _navStack = MutableStateFlow(listOf(determineInitialRoute(userSession.value)))
     val navStack: StateFlow<List<AppRoute>> = _navStack.asStateFlow()
 
@@ -65,10 +60,6 @@ class AppViewModel(
                 else -> AppRoute.Login
             }
         }
-
-    fun updateSession(newSession: UserSession?) = container.updateSession(newSession)
-
-    fun logout() = container.logout()
 
     private fun determineInitialRoute(session: UserSession?): AppRoute =
         if (session != null) {

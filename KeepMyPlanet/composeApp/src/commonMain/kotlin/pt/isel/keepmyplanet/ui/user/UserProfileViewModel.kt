@@ -147,8 +147,8 @@ class UserProfileViewModel(
         }
     }
 
-    private fun loadUserProfile() {
-        _uiState.update { it.copy(isLoading = true) }
+    fun loadUserProfile() {
+        _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             val result = userService.getUserDetails(user.id.value)
             result
@@ -163,7 +163,12 @@ class UserProfileViewModel(
                         )
                     }
                 }.onFailure { e ->
-                    handleError("Failed to load profile", e)
+                    val errorMessage =
+                        when (e) {
+                            is ApiException -> e.error.message
+                            else -> "Failed to load profile: ${e.message ?: "Unknown error"}"
+                        }
+                    _uiState.update { it.copy(isLoading = false, error = errorMessage) }
                 }
         }
     }

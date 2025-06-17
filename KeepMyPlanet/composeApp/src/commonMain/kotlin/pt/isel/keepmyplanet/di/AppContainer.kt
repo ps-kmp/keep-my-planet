@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.di
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngineFactory
 import kotlinx.coroutines.flow.StateFlow
+import pt.isel.keepmyplanet.AppViewModel
 import pt.isel.keepmyplanet.data.api.AuthApi
 import pt.isel.keepmyplanet.data.api.ChatApi
 import pt.isel.keepmyplanet.data.api.EventApi
@@ -14,20 +15,20 @@ import pt.isel.keepmyplanet.session.model.UserSession
 import pt.isel.keepmyplanet.ui.chat.ChatViewModel
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsViewModel
-import pt.isel.keepmyplanet.ui.event.form.EventFormViewModel
+import pt.isel.keepmyplanet.ui.event.forms.EventFormViewModel
 import pt.isel.keepmyplanet.ui.event.list.EventListViewModel
 import pt.isel.keepmyplanet.ui.login.LoginViewModel
 import pt.isel.keepmyplanet.ui.map.MapViewModel
 import pt.isel.keepmyplanet.ui.register.RegisterViewModel
 import pt.isel.keepmyplanet.ui.user.UserProfileViewModel
 import pt.isel.keepmyplanet.ui.user.model.UserInfo
-import pt.isel.keepmyplanet.ui.zone.ZoneViewModel
+import pt.isel.keepmyplanet.ui.zone.ReportZoneViewModel
+import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsViewModel
 
 class AppContainer(
     engine: HttpClientEngineFactory<*>,
 ) {
     private val sessionManager = SessionManager()
-
     val userSession: StateFlow<UserSession?> = sessionManager.userSession
 
     fun updateSession(newSession: UserSession?) {
@@ -42,30 +43,34 @@ class AppContainer(
         createHttpClient(engine, sessionManager)
     }
 
-    val authApi: AuthApi by lazy { AuthApi(httpClient) }
-    val userApi: UserApi by lazy { UserApi(httpClient) }
-    val eventApi: EventApi by lazy { EventApi(httpClient) }
-    val chatApi: ChatApi by lazy { ChatApi(httpClient) }
-    val zoneApi: ZoneApi by lazy { ZoneApi(httpClient) }
+    private val authApi: AuthApi by lazy { AuthApi(httpClient) }
+    private val userApi: UserApi by lazy { UserApi(httpClient) }
+    private val eventApi: EventApi by lazy { EventApi(httpClient) }
+    private val chatApi: ChatApi by lazy { ChatApi(httpClient) }
+    private val zoneApi: ZoneApi by lazy { ZoneApi(httpClient) }
 
-    fun createLoginViewModel(): LoginViewModel = LoginViewModel(authApi)
+    val appViewModel: AppViewModel by lazy { AppViewModel(userSession) }
 
-    fun createRegisterViewModel(): RegisterViewModel = RegisterViewModel(userApi)
+    fun createLoginViewModel() = LoginViewModel(authApi, ::updateSession)
 
-    fun createEventListViewModel(): EventListViewModel = EventListViewModel(eventApi)
+    fun createRegisterViewModel() = RegisterViewModel(userApi)
 
-    fun createEventDetailsViewModel(): EventDetailsViewModel = EventDetailsViewModel(eventApi)
+    fun createEventListViewModel() = EventListViewModel(eventApi)
 
-    fun createEventFormViewModel(): EventFormViewModel = EventFormViewModel(eventApi)
+    fun createEventDetailsViewModel() = EventDetailsViewModel(eventApi)
 
-    fun createMapViewModel(): MapViewModel = MapViewModel(zoneApi)
+    fun createEventFormViewModel() = EventFormViewModel(eventApi)
 
-    fun createZoneViewModel(): ZoneViewModel = ZoneViewModel(zoneApi)
+    fun createMapViewModel() = MapViewModel(zoneApi)
 
-    fun createUserProfileViewModel(user: UserInfo): UserProfileViewModel = UserProfileViewModel(userApi, user)
+    fun createZoneDetailsViewModel() = ZoneDetailsViewModel(zoneApi)
+
+    fun createReportZoneViewModel() = ReportZoneViewModel(zoneApi)
+
+    fun createUserProfileViewModel(user: UserInfo) = UserProfileViewModel(userApi, user)
 
     fun createChatViewModel(
         user: UserInfo,
         chatInfo: ChatInfo,
-    ): ChatViewModel = ChatViewModel(chatApi, user, chatInfo)
+    ) = ChatViewModel(chatApi, user, chatInfo)
 }
