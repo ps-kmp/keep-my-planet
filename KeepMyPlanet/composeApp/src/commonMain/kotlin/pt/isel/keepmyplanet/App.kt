@@ -2,7 +2,6 @@
 
 package pt.isel.keepmyplanet
 
-import EventListScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -18,6 +17,7 @@ import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
 import pt.isel.keepmyplanet.ui.event.create.CreateEventScreen
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
+import pt.isel.keepmyplanet.ui.event.list.EventListScreen
 import pt.isel.keepmyplanet.ui.event.update.UpdateEventScreen
 import pt.isel.keepmyplanet.ui.home.HomeScreen
 import pt.isel.keepmyplanet.ui.login.LoginScreen
@@ -50,12 +50,10 @@ fun App(appViewModel: AppViewModel) {
     val loginViewModel = remember { container.createLoginViewModel() }
     val registerViewModel = remember { container.createRegisterViewModel() }
     val mapViewModel = remember { container.createMapViewModel() }
+    val eventListViewModel = remember { container.createEventListViewModel() }
+    val eventDetailsViewModel = remember { container.createEventDetailsViewModel() }
+    val eventFormViewModel = remember { container.createEventFormViewModel() }
     val zoneViewModel = remember { container.createZoneViewModel() }
-
-    val eventViewModel =
-        currentUserInfo?.let {
-            remember(it.id) { container.createEventViewModel() }
-        }
     val userProfileViewModel =
         currentUserInfo?.let { user ->
             remember(user.id) { container.createUserProfileViewModel(user) }
@@ -90,56 +88,49 @@ fun App(appViewModel: AppViewModel) {
         }
 
         is AppRoute.EventList -> {
-            eventViewModel?.let { vm ->
-                EventListScreen(
-                    viewModel = vm,
-                    listState = eventListState,
-                    onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id.value)) },
-                    onNavigateBack = { appViewModel.navigateBack() },
-                    onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
-                )
-            }
+            EventListScreen(
+                viewModel = eventListViewModel,
+                listState = eventListState,
+                onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
+                onNavigateBack = { appViewModel.navigateBack() },
+                onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent()) },
+            )
         }
 
         is AppRoute.CreateEvent -> {
-            eventViewModel?.let { vm ->
-                CreateEventScreen(
-                    viewModel = vm,
-                    zoneId = route.zoneId,
-                    onEventCreated = { appViewModel.navigate(AppRoute.EventDetails(it)) },
-                    onNavigateBack = { appViewModel.navigateBack() },
-                )
-            }
+            CreateEventScreen(
+                viewModel = eventFormViewModel,
+                zoneId = route.zoneId,
+                onEventCreated = {
+                    eventListViewModel.refreshEvents()
+                    appViewModel.navigate(AppRoute.EventDetails(it))
+                },
+                onNavigateBack = { appViewModel.navigateBack() },
+            )
         }
 
         is AppRoute.EventDetails -> {
             currentUserInfo?.let { user ->
-                eventViewModel?.let { vm ->
-                    EventDetailsScreen(
-                        viewModel = vm,
-                        userId = user.id.value,
-                        eventId = route.eventId,
-                        onNavigateBack = { appViewModel.navigateBack() },
-                        onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
-                        onNavigateToEditEvent = {
-                            appViewModel.navigate(AppRoute.EditEvent(route.eventId))
-                        },
-                    )
-                }
+                EventDetailsScreen(
+                    viewModel = eventDetailsViewModel,
+                    userId = user.id.value,
+                    eventId = route.eventId,
+                    onNavigateBack = {
+                        eventListViewModel.refreshEvents()
+                        appViewModel.navigateBack()
+                    },
+                    onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
+                    onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(it)) },
+                )
             }
         }
 
         is AppRoute.EditEvent -> {
-            currentUserInfo?.let { user ->
-                eventViewModel?.let { vm ->
-                    UpdateEventScreen(
-                        viewModel = vm,
-                        eventId = route.eventId,
-                        userId = user.id.value,
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-                }
-            }
+            UpdateEventScreen(
+                viewModel = eventFormViewModel,
+                eventId = route.eventId,
+                onNavigateBack = { appViewModel.navigateBack() },
+            )
         }
 
         is AppRoute.Chat -> {

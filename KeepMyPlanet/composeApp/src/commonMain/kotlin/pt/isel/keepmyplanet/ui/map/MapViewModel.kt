@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.ApiException
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.mapper.zone.toZone
 import pt.isel.keepmyplanet.ui.map.model.MapScreenEvent
 import pt.isel.keepmyplanet.ui.map.model.MapUiState
@@ -46,7 +47,7 @@ class MapViewModel(
         }
     }
 
-    fun onZoneSelected(zoneId: UInt) {
+    fun onZoneSelected(zoneId: Id) {
         viewModelScope.launch {
             _events.send(MapScreenEvent.NavigateToZoneDetails(zoneId))
         }

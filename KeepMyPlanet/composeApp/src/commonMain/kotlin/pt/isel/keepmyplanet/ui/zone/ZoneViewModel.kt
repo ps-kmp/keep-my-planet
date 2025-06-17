@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.domain.common.Description
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.mapper.zone.toZone
@@ -27,11 +28,11 @@ class ZoneViewModel(
     private val _events = Channel<ZoneScreenEvent>()
     val events = _events.receiveAsFlow()
 
-    fun loadZoneDetails(zoneId: UInt) {
+    fun loadZoneDetails(zoneId: Id) {
         _uiState.update { it.copy(isLoading = true, zoneDetails = null) }
         viewModelScope.launch {
             zoneApi
-                .getZoneDetails(zoneId)
+                .getZoneDetails(zoneId.value)
                 .onSuccess { response ->
                     _uiState.update { it.copy(isLoading = false, zoneDetails = response.toZone()) }
                 }.onFailure { error ->

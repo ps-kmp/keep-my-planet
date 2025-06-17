@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.navigation
 
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 
 sealed class AppRoute {
@@ -16,15 +17,15 @@ sealed class AppRoute {
     ) : AppRoute()
 
     data class EventDetails(
-        val eventId: UInt,
+        val eventId: Id,
     ) : AppRoute()
 
     data class CreateEvent(
-        val zoneId: UInt,
+        val zoneId: Id? = null,
     ) : AppRoute()
 
     data class EditEvent(
-        val eventId: UInt,
+        val eventId: Id,
     ) : AppRoute()
 
     data class ReportZone(
@@ -33,7 +34,7 @@ sealed class AppRoute {
     ) : AppRoute()
 
     data class ZoneDetails(
-        val zoneId: UInt,
+        val zoneId: Id,
     ) : AppRoute()
 
     data object Map : AppRoute()

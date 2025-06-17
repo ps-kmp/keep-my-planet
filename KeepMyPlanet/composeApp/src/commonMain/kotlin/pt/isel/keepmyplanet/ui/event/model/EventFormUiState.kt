@@ -6,6 +6,8 @@ data class EventFormUiState(
     val startDate: String = "",
     val maxParticipants: String = "",
     val zoneId: String = "",
+    val isLoading: Boolean = false,
+    val isEditMode: Boolean = false,
     val isSubmitting: Boolean = false,
     val titleError: String? = null,
     val descriptionError: String? = null,

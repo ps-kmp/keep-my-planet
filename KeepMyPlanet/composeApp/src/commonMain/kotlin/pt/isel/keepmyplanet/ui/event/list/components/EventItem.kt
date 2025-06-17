@@ -73,7 +73,11 @@ fun EventItem(
                     }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                StatusBadge(status = event.status)
+                StatusBadge(
+                    text = event.status.name,
+                    backgroundColor = getStatusColor(event.status),
+                    modifier = Modifier.align(Alignment.Bottom),
+                )
             }
         }
     }

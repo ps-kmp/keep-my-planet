@@ -54,6 +54,7 @@ import keepmyplanet.composeapp.generated.resources.ic_marker_mid
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.compose.resources.painterResource
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.map.model.MapScreenEvent
@@ -63,7 +64,7 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 actual fun MapScreen(
     viewModel: MapViewModel,
-    onNavigateToZoneDetails: (zoneId: UInt) -> Unit,
+    onNavigateToZoneDetails: (zoneId: Id) -> Unit,
     onNavigateToReportZone: (latitude: Double, longitude: Double) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -103,10 +104,7 @@ actual fun MapScreen(
         },
     ) { paddingValues ->
         Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
             contentAlignment = Alignment.Center,
         ) {
             if (uiState.isLoading) {
@@ -146,8 +144,11 @@ actual fun MapScreen(
                         onClick = { features ->
                             features.firstOrNull()?.let { feature ->
                                 val zoneId =
-                                    (feature.properties["zoneId"] as? JsonPrimitive)?.content?.toUIntOrNull()
-                                zoneId?.let { viewModel.onZoneSelected(zoneId) }
+                                    (feature.properties["zoneId"] as? JsonPrimitive)
+                                        ?.content
+                                        ?.toUIntOrNull()
+                                        ?.let { Id(it) }
+                                zoneId?.let { viewModel.onZoneSelected(it) }
                             }
                             ClickResult.Consume
                         },
