@@ -1,10 +1,10 @@
 package pt.isel.keepmyplanet.domain.user
 
-import kotlinx.datetime.LocalDateTime
-import pt.isel.keepmyplanet.domain.common.Id
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlinx.datetime.LocalDateTime
+import pt.isel.keepmyplanet.domain.common.Id
 
 class UserTest {
     private val validId = Id(1u)

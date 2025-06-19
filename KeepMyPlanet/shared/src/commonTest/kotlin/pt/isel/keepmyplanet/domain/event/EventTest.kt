@@ -1,13 +1,13 @@
 package pt.isel.keepmyplanet.domain.event
 
-import kotlinx.datetime.LocalDateTime
-import pt.isel.keepmyplanet.domain.common.Description
-import pt.isel.keepmyplanet.domain.common.Id
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.datetime.LocalDateTime
+import pt.isel.keepmyplanet.domain.common.Description
+import pt.isel.keepmyplanet.domain.common.Id
 
 class EventTest {
     private val validId = Id(1u)

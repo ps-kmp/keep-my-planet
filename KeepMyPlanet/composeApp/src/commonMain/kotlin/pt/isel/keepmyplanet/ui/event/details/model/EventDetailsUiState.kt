@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.ui.event.details.model
 
-import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.zone.Zone
@@ -18,48 +17,48 @@ data class EventDetailsUiState(
     val isCompleting: Boolean = false,
     val isDeleting: Boolean = false,
     val error: String? = null,
+    val isCurrentUserOrganizer: Boolean = false,
+    val isCurrentUserParticipant: Boolean = false,
 ) {
-    fun isUserOrganizer(userId: Id): Boolean = event?.organizerId == userId
+    fun canUserEdit(): Boolean =
+        event != null && isCurrentUserOrganizer && event.status == EventStatus.PLANNED
 
-    fun isUserParticipant(userId: Id): Boolean = event?.participantsIds?.contains(userId) == true
-
-    fun canUserEdit(userId: Id): Boolean = event != null && isUserOrganizer(userId) && event.status == EventStatus.PLANNED
-
-    fun canUserJoin(userId: Id): Boolean =
+    fun canUserJoin(): Boolean =
         event != null &&
             !isJoining &&
             event.status == EventStatus.PLANNED &&
             !event.isFull &&
-            !isUserOrganizer(userId) &&
-            !isUserParticipant(userId)
+            !isCurrentUserOrganizer &&
+            !isCurrentUserParticipant
 
-    fun canUserLeave(userId: Id): Boolean =
+    fun canUserLeave(): Boolean =
         event != null &&
             !isLeaving &&
             event.status == EventStatus.PLANNED &&
-            isUserParticipant(userId) &&
-            !isUserOrganizer(userId)
+            isCurrentUserParticipant &&
+            !isCurrentUserOrganizer
 
-    fun canUserAccessChat(userId: Id): Boolean = event != null && (isUserOrganizer(userId) || isUserParticipant(userId))
+    fun canUserAccessChat(): Boolean =
+        event != null && (isCurrentUserOrganizer || isCurrentUserParticipant)
 
     val isChatReadOnly: Boolean
         get() = event?.status in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
 
-    fun canOrganizerCancel(userId: Id): Boolean =
+    fun canOrganizerCancel(): Boolean =
         event != null &&
             !isCancelling &&
-            isUserOrganizer(userId) &&
+            isCurrentUserOrganizer &&
             event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
 
-    fun canOrganizerComplete(userId: Id): Boolean =
+    fun canOrganizerComplete(): Boolean =
         event != null &&
             !isCompleting &&
-            isUserOrganizer(userId) &&
+            isCurrentUserOrganizer &&
             event.status == EventStatus.IN_PROGRESS
 
-    fun canOrganizerDelete(userId: Id): Boolean =
+    fun canOrganizerDelete(): Boolean =
         event != null &&
             !isDeleting &&
-            isUserOrganizer(userId) &&
+            isCurrentUserOrganizer &&
             event.status in listOf(EventStatus.PLANNED, EventStatus.CANCELLED)
 }

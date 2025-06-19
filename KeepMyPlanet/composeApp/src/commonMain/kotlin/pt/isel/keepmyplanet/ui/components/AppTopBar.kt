@@ -11,7 +11,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun AppTopBar(
     title: String,

@@ -1,5 +1,3 @@
-@file:Suppress("ktlint:standard:function-naming")
-
 package pt.isel.keepmyplanet.ui.register
 
 import androidx.compose.foundation.layout.Arrangement

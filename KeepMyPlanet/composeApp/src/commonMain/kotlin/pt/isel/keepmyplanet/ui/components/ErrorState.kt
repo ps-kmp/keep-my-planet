@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun ErrorState(
     message: String,

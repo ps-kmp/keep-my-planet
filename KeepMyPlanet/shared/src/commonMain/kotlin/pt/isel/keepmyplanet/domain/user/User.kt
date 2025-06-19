@@ -6,7 +6,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 data class User(
     val id: Id,
     val name: Name,
-    val email: Email, // unique
+    val email: Email,
     val passwordHash: PasswordHash,
     val profilePictureId: Id? = null,
     val createdAt: LocalDateTime,

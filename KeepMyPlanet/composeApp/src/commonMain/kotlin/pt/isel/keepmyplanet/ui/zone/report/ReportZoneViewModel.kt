@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.zone
+package pt.isel.keepmyplanet.ui.zone.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

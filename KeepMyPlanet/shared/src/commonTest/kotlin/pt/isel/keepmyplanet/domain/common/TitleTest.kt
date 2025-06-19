@@ -1,9 +1,9 @@
 package pt.isel.keepmyplanet.domain.common
 
-import pt.isel.keepmyplanet.domain.event.Title
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import pt.isel.keepmyplanet.domain.event.Title
 
 class TitleTest {
     @Test

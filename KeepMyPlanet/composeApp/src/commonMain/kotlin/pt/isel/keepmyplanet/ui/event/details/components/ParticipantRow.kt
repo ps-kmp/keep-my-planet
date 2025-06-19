@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.user.model.UserInfo
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun ParticipantRow(
     participant: UserInfo,

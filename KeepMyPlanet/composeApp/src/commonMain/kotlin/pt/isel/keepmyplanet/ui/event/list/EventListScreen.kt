@@ -40,7 +40,6 @@ import pt.isel.keepmyplanet.ui.event.list.model.EventListScreenEvent
 
 private const val PAGINATION_THRESHOLD = 3
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun EventListScreen(
     viewModel: EventListViewModel,

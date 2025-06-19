@@ -1,5 +1,3 @@
-@file:Suppress("ktlint:standard:filename")
-
 package pt.isel.keepmyplanet.ui.user
 
 import androidx.lifecycle.ViewModel
@@ -96,9 +94,17 @@ class UserProfileViewModel(
         if (!currentState.isSaveProfileEnabled) return
 
         val nameToUpdate =
-            if (currentState.nameInput != currentState.userDetails?.name?.value) currentState.nameInput else null
+            if (currentState.nameInput != currentState.userDetails?.name?.value) {
+                currentState.nameInput
+            } else {
+                null
+            }
         val emailToUpdate =
-            if (currentState.emailInput != currentState.userDetails?.email?.value) currentState.emailInput else null
+            if (currentState.emailInput != currentState.userDetails?.email?.value) {
+                currentState.emailInput
+            } else {
+                null
+            }
         val request = UpdateProfileRequest(nameToUpdate, emailToUpdate, profilePictureId = null)
 
         viewModelScope.launch {
@@ -138,7 +144,11 @@ class UserProfileViewModel(
 
             result
                 .onSuccess {
-                    _uiState.update { it.copy(showPasswordChangeSection = false) } // Hide on success
+                    _uiState.update {
+                        it.copy(
+                            showPasswordChangeSection = false,
+                        )
+                    } // Hide on success
                     _events.send(UserProfileEvent.ShowSnackbar("Password changed successfully"))
                 }.onFailure { e ->
                     handleError("Failed to change password", e)
@@ -158,8 +168,10 @@ class UserProfileViewModel(
                         it.copy(
                             isLoading = false,
                             userDetails = updatedUser,
-                            nameInput = if (it.isEditingProfile) it.nameInput else updatedUser.name.value,
-                            emailInput = if (it.isEditingProfile) it.emailInput else updatedUser.email.value,
+                            nameInput =
+                                if (it.isEditingProfile) it.nameInput else updatedUser.name.value,
+                            emailInput =
+                                if (it.isEditingProfile) it.emailInput else updatedUser.email.value,
                         )
                     }
                 }.onFailure { e ->
@@ -185,7 +197,7 @@ class UserProfileViewModel(
             result
                 .onSuccess {
                     _events.send(UserProfileEvent.ShowSnackbar("Account deleted successfully"))
-                    _events.send(UserProfileEvent.NavigateToLogin)
+                    _events.send(UserProfileEvent.AccountDeleted)
                 }.onFailure { e ->
                     handleError("Failed to delete account", e)
                 }
@@ -229,7 +241,13 @@ class UserProfileViewModel(
                 confirmPasswordError = "Passwords do not match"
             }
             if (state.newPasswordInput == state.oldPasswordInput) {
-                viewModelScope.launch { _events.send(UserProfileEvent.ShowSnackbar("New password cannot be the same as the old one.")) }
+                viewModelScope.launch {
+                    _events.send(
+                        UserProfileEvent.ShowSnackbar(
+                            "New password cannot be the same as the old one.",
+                        ),
+                    )
+                }
                 return false
             }
         }

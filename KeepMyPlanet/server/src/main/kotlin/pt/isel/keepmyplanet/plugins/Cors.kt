@@ -1,14 +1,13 @@
 package pt.isel.keepmyplanet.plugins
 
-import io.ktor.server.application.*
-import io.ktor.server.application.install
 import io.ktor.http.HttpMethod
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.server.plugins.cors.routing.CORS
-
 
 fun Application.configureCors() {
     install(CORS) {
-        //allowHost("localhost:3000", schemes = listOf("http"))
+        // allowHost("localhost:3000", schemes = listOf("http"))
         anyHost()
         allowHeader("Content-Type")
         allowHeader("Authorization")

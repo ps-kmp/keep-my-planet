@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.repository.mem
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
@@ -9,8 +11,6 @@ import pt.isel.keepmyplanet.errors.ConflictException
 import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.util.now
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryUserRepository : UserRepository {
     private val users = ConcurrentHashMap<Id, User>()

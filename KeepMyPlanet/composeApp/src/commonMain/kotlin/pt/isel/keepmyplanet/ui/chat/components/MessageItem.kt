@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.ui.components.formatTimestamp
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun MessageItem(
     message: Message,

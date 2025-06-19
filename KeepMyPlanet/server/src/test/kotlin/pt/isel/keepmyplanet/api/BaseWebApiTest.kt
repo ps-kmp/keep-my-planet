@@ -9,6 +9,8 @@ import io.ktor.server.routing.routing
 import io.ktor.server.sse.SSE
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import java.util.Date
+import kotlin.test.BeforeTest
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
@@ -39,8 +41,6 @@ import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.util.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.util.now
-import java.util.Date
-import kotlin.test.BeforeTest
 
 abstract class BaseWebApiTest {
     protected val fakeUserRepository = InMemoryUserRepository()
@@ -66,7 +66,7 @@ abstract class BaseWebApiTest {
 
     protected fun generateTestToken(
         userId: Id,
-        expiresInMs: Long = 3_600_000L, // 1 hour
+        expiresInMs: Long = 3_600_000L,
     ): String =
         JWT
             .create()

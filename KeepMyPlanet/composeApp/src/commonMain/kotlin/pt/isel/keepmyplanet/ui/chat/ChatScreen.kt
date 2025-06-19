@@ -30,7 +30,6 @@ import pt.isel.keepmyplanet.ui.chat.model.ChatEvent
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,

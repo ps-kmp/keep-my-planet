@@ -24,7 +24,6 @@ import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.event.forms.components.EventForm
 import pt.isel.keepmyplanet.ui.event.forms.model.EventFormScreenEvent
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun CreateEventScreen(
     viewModel: EventFormViewModel,

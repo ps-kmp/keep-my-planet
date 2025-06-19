@@ -1,11 +1,11 @@
 package pt.isel.keepmyplanet.repository.mem
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStateChange
 import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.EventStateChangeRepository
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryEventStateChangeRepository : EventStateChangeRepository {
     private val changes = ConcurrentHashMap<Id, EventStateChange>()
@@ -19,7 +19,12 @@ class InMemoryEventStateChangeRepository : EventStateChangeRepository {
     }
 
     override suspend fun update(entity: EventStateChange): EventStateChange {
-        if (!changes.containsKey(entity.id)) throw NotFoundException("StateChange ${entity.id} not found.")
+        if (!changes.containsKey(
+                entity.id,
+            )
+        ) {
+            throw NotFoundException("StateChange ${entity.id} not found.")
+        }
         changes[entity.id] = entity
         return entity
     }

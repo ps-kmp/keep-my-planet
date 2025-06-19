@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.event.details
+package pt.isel.keepmyplanet.ui.event.details.model
 
 sealed class EventDetailsScreenEvent {
     data class ShowSnackbar(

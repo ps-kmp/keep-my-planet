@@ -1,5 +1,3 @@
-@file:Suppress("ktlint:standard:function-naming")
-
 package pt.isel.keepmyplanet.ui.user
 
 import androidx.compose.foundation.layout.Arrangement
@@ -41,8 +39,8 @@ import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
 @Composable
 fun UserProfileScreen(
     viewModel: UserProfileViewModel,
-    onNavigateToLogin: () -> Unit = {},
-    onNavigateBack: () -> Unit = {},
+    onAccountDeleted: () -> Unit,
+    onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -57,7 +55,7 @@ fun UserProfileScreen(
                     )
                 }
 
-                is UserProfileEvent.NavigateToLogin -> onNavigateToLogin()
+                is UserProfileEvent.AccountDeleted -> onAccountDeleted()
             }
         }
     }

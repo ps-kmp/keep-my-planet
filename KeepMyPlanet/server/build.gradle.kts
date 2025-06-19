@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.ktlint)
 }
 
 group = "pt.isel.keepmyplanet"
@@ -16,6 +17,15 @@ application {
     mainClass.set("pt.isel.keepmyplanet.ApplicationKt")
     applicationDefaultJvmArgs =
         listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
+}
+
+ktlint {
+    filter {
+        exclude { element ->
+            @Suppress("DEPRECATION")
+            element.file.path.contains(project.buildDir.path)
+        }
+    }
 }
 
 dependencies {

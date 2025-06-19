@@ -10,6 +10,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStatus
@@ -17,10 +21,6 @@ import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 import pt.isel.keepmyplanet.service.MessageService
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 class MessageWebApiTest : BaseWebApiTest() {
     private val messageService =

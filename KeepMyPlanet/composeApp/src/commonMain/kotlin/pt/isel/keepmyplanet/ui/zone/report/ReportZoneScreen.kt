@@ -26,10 +26,8 @@ import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
-import pt.isel.keepmyplanet.ui.zone.ReportZoneViewModel
 import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneScreenEvent
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun ReportZoneScreen(
     viewModel: ReportZoneViewModel,
@@ -48,7 +46,10 @@ fun ReportZoneScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is ReportZoneScreenEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is ReportZoneScreenEvent.ShowSnackbar ->
+                    snackbarHostState.showSnackbar(
+                        event.message,
+                    )
                 is ReportZoneScreenEvent.ReportSuccessful -> onNavigateBack()
             }
         }

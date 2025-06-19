@@ -10,6 +10,17 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.ktlint)
+}
+
+ktlint {
+    android.set(true)
+    filter {
+        exclude { element ->
+            @Suppress("DEPRECATION")
+            element.file.path.contains(project.buildDir.path)
+        }
+    }
 }
 
 kotlin {
@@ -20,16 +31,16 @@ kotlin {
         }
     }
 
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64(),
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
+//    listOf(
+//        iosX64(),
+//        iosArm64(),
+//        iosSimulatorArm64(),
+//    ).forEach { iosTarget ->
+//        iosTarget.binaries.framework {
+//            baseName = "ComposeApp"
+//            isStatic = true
+//        }
+//    }
 
     jvm("desktop")
 
@@ -90,23 +101,21 @@ kotlin {
             dependencies {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
-                implementation(libs.ktor.client.okhttp)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.maplibre.compose)
-                implementation("io.ktor:ktor-client-android:3.1.3")
+                implementation(libs.ktor.client.android)
             }
         }
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
-                implementation(libs.ktor.client.cio)
-                implementation("io.ktor:ktor-client-java:3.1.3")
+                implementation(libs.ktor.client.java)
             }
         }
         val wasmJsMain by getting {
             dependencies {
-                implementation("io.ktor:ktor-client-js:3.1.3")
+                implementation(libs.ktor.client.js)
             }
         }
     }

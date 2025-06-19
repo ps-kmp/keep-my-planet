@@ -5,5 +5,5 @@ sealed interface UserProfileEvent {
         val message: String,
     ) : UserProfileEvent
 
-    data object NavigateToLogin : UserProfileEvent
+    data object AccountDeleted : UserProfileEvent
 }

@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.event.details.model
+package pt.isel.keepmyplanet.ui.event.details
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,16 +35,13 @@ import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.InfoRow
 import pt.isel.keepmyplanet.ui.components.toFormattedString
-import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreenEvent
-import pt.isel.keepmyplanet.ui.event.details.EventDetailsViewModel
 import pt.isel.keepmyplanet.ui.event.details.components.EventActions
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
+import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsScreenEvent
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun EventDetailsScreen(
     viewModel: EventDetailsViewModel,
-    userId: UInt,
     eventId: Id,
     onNavigateToChat: (ChatInfo) -> Unit,
     onNavigateToEditEvent: (Id) -> Unit,
@@ -52,14 +49,16 @@ fun EventDetailsScreen(
 ) {
     val uiState by viewModel.detailsUiState.collectAsState()
     val event = uiState.event
-    val currentUserId = Id(userId)
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
                 is EventDetailsScreenEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(event.message, duration = SnackbarDuration.Short)
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = SnackbarDuration.Short,
+                    )
                 }
 
                 is EventDetailsScreenEvent.EventDeleted -> {
@@ -93,7 +92,11 @@ fun EventDetailsScreen(
                 }
             } else if (event != null) {
                 Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Text(
@@ -110,8 +113,16 @@ fun EventDetailsScreen(
 
                     DetailCard(title = "Information") {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            InfoRow(icon = Icons.Default.Schedule, text = "Starts: ${event.period.start.toFormattedString()}")
-                            event.period.end?.let { InfoRow(icon = Icons.Default.Schedule, text = "Ends: ${it.toFormattedString()}") }
+                            InfoRow(
+                                icon = Icons.Default.Schedule,
+                                text = "Starts: ${event.period.start.toFormattedString()}",
+                            )
+                            event.period.end?.let {
+                                InfoRow(
+                                    icon = Icons.Default.Schedule,
+                                    text = "Ends: ${it.toFormattedString()}",
+                                )
+                            }
                             InfoRow(icon = Icons.Default.Flag, text = "Status: ${event.status}")
                             event.maxParticipants?.let {
                                 InfoRow(
@@ -146,7 +157,6 @@ fun EventDetailsScreen(
 
                     EventActions(
                         uiState = uiState,
-                        currentUserId = currentUserId,
                         onJoinEvent = viewModel::joinEvent,
                         onLeaveEvent = viewModel::leaveEvent,
                         onNavigateToChat = onNavigateToChat,

@@ -16,16 +16,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsUiState
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun EventActions(
     uiState: EventDetailsUiState,
-    currentUserId: Id,
     onJoinEvent: () -> Unit,
     onLeaveEvent: () -> Unit,
     onNavigateToChat: (ChatInfo) -> Unit,
@@ -51,7 +48,9 @@ fun EventActions(
             showDialog = showDeleteDialog,
             onConfirm = onDeleteEvent,
             title = "Delete Event?",
-            text = "Are you sure you want to permanently delete this event? All associated data, including chat history, will be lost.",
+            text =
+                "Are you sure you want to permanently delete this event? " +
+                    "All associated data, including chat history, will be lost.",
         )
     }
 
@@ -59,7 +58,7 @@ fun EventActions(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (uiState.canUserJoin(currentUserId)) {
+        if (uiState.canUserJoin()) {
             LoadingButton(
                 onClick = onJoinEvent,
                 isLoading = uiState.isJoining,
@@ -67,7 +66,7 @@ fun EventActions(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        if (uiState.canUserLeave(currentUserId)) {
+        if (uiState.canUserLeave()) {
             LoadingButton(
                 onClick = onLeaveEvent,
                 isLoading = uiState.isLeaving,
@@ -75,7 +74,7 @@ fun EventActions(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        if (uiState.canUserAccessChat(currentUserId)) {
+        if (uiState.canUserAccessChat()) {
             Button(
                 onClick = { onNavigateToChat(ChatInfo(event.id, event.title)) },
                 modifier = Modifier.fillMaxWidth(),
@@ -86,19 +85,19 @@ fun EventActions(
             }
         }
 
-        if (uiState.isUserOrganizer(currentUserId)) {
+        if (uiState.isCurrentUserOrganizer) {
             Spacer(modifier = Modifier.height(16.dp))
             Divider()
             Spacer(modifier = Modifier.height(16.dp))
             Text("Organizer Actions", style = MaterialTheme.typography.overline)
 
-            if (uiState.canUserEdit(currentUserId)) {
+            if (uiState.canUserEdit()) {
                 Button(
                     onClick = onNavigateToEditEvent,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Edit Event Details") }
             }
-            if (uiState.canOrganizerComplete(currentUserId)) {
+            if (uiState.canOrganizerComplete()) {
                 LoadingButton(
                     onClick = onCompleteEvent,
                     isLoading = uiState.isCompleting,
@@ -107,21 +106,27 @@ fun EventActions(
                 )
             }
 
-            if (uiState.canOrganizerCancel(currentUserId)) {
+            if (uiState.canOrganizerCancel()) {
                 OutlinedButton(
                     onClick = { showCancelDialog.value = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colors.error,
+                        ),
                     enabled = !uiState.isCancelling,
                 ) {
                     Text(if (uiState.isCancelling) "Cancelling..." else "Cancel Event")
                 }
             }
-            if (uiState.canOrganizerDelete(currentUserId)) {
+            if (uiState.canOrganizerDelete()) {
                 OutlinedButton(
                     onClick = { showDeleteDialog.value = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colors.error,
+                        ),
                     enabled = !uiState.isDeleting,
                 ) {
                     Text(if (uiState.isDeleting) "Deleting..." else "Delete Event")

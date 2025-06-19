@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.event.list.model.EventFilterType
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun SearchBarAndFilters(
     query: String,

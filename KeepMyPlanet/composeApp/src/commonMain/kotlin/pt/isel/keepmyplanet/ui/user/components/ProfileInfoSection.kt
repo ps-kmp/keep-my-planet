@@ -1,5 +1,3 @@
-@file:Suppress("ktlint:standard:function-naming")
-
 package pt.isel.keepmyplanet.ui.user.components
 
 import androidx.compose.animation.AnimatedVisibility

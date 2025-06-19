@@ -1,11 +1,11 @@
 package pt.isel.keepmyplanet.util
 
+import kotlin.time.Duration
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Duration
 
 fun now(): LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)
 

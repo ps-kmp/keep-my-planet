@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import pt.isel.keepmyplanet.di.AppContainer
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
-import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsScreen
+import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.event.forms.CreateEventScreen
 import pt.isel.keepmyplanet.ui.event.forms.UpdateEventScreen
 import pt.isel.keepmyplanet.ui.event.list.EventListScreen
@@ -28,14 +28,10 @@ import pt.isel.keepmyplanet.ui.zone.report.ReportZoneScreen
 @Composable
 fun App(container: AppContainer) {
     val appViewModel = container.appViewModel
-    val currentRoute by appViewModel.currentRoute.collectAsState()
+    val currRoute by appViewModel.currentRoute.collectAsState()
     val userSession by appViewModel.userSession.collectAsState()
 
-    val userIsAuthenticated = userSession != null
-    val isAccessingAuthRoute =
-        currentRoute is AppRoute.Login || currentRoute is AppRoute.Register
-
-    if (!userIsAuthenticated && !isAccessingAuthRoute) {
+    if (userSession == null && !(currRoute is AppRoute.Login || currRoute is AppRoute.Register)) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -45,9 +41,9 @@ fun App(container: AppContainer) {
     val currentUserInfo = userSession?.userInfo
     val eventListState = rememberLazyListState()
 
-    when (val route = currentRoute) {
+    when (val route = currRoute) {
         is AppRoute.Login -> {
-            val loginViewModel = remember { container.createLoginViewModel() }
+            val loginViewModel = remember { container.getLoginViewModel() }
             LoginScreen(
                 viewModel = loginViewModel,
                 onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
@@ -55,7 +51,7 @@ fun App(container: AppContainer) {
         }
 
         is AppRoute.Register -> {
-            val registerViewModel = remember { container.createRegisterViewModel() }
+            val registerViewModel = remember { container.getRegisterViewModel() }
             RegisterScreen(
                 viewModel = registerViewModel,
                 onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
@@ -75,7 +71,7 @@ fun App(container: AppContainer) {
         }
 
         is AppRoute.EventList -> {
-            val eventListViewModel = remember { container.createEventListViewModel() }
+            val eventListViewModel = remember { container.getEventListViewModel() }
             EventListScreen(
                 viewModel = eventListViewModel,
                 listState = eventListState,
@@ -86,7 +82,7 @@ fun App(container: AppContainer) {
         }
 
         is AppRoute.CreateEvent -> {
-            val eventFormViewModel = remember { container.createEventFormViewModel() }
+            val eventFormViewModel = remember { container.getEventFormViewModel() }
             CreateEventScreen(
                 viewModel = eventFormViewModel,
                 zoneId = route.zoneId,
@@ -97,10 +93,9 @@ fun App(container: AppContainer) {
 
         is AppRoute.EventDetails -> {
             currentUserInfo?.let { user ->
-                val eventDetailsViewModel = remember { container.createEventDetailsViewModel() }
+                val eventDetailsViewModel = remember { container.getEventDetailsViewModel(user) }
                 EventDetailsScreen(
                     viewModel = eventDetailsViewModel,
-                    userId = user.id.value,
                     eventId = route.eventId,
                     onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
                     onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(it)) },
@@ -110,7 +105,7 @@ fun App(container: AppContainer) {
         }
 
         is AppRoute.EditEvent -> {
-            val eventFormViewModel = remember { container.createEventFormViewModel() }
+            val eventFormViewModel = remember { container.getEventFormViewModel() }
             UpdateEventScreen(
                 viewModel = eventFormViewModel,
                 eventId = route.eventId,
@@ -120,7 +115,7 @@ fun App(container: AppContainer) {
 
         is AppRoute.Chat -> {
             currentUserInfo?.let { user ->
-                val vm = remember(route.info) { container.createChatViewModel(user, route.info) }
+                val vm = remember(route.info) { container.getChatViewModel(user, route.info) }
                 ChatScreen(
                     viewModel = vm,
                     onNavigateBack = { appViewModel.navigateBack() },
@@ -129,22 +124,18 @@ fun App(container: AppContainer) {
         }
 
         is AppRoute.UserProfile -> {
-            val userProfileViewModel =
-                currentUserInfo?.let { user ->
-                    remember(user.id) { container.createUserProfileViewModel(user) }
-                }
-
-            userProfileViewModel?.let {
+            currentUserInfo?.let { user ->
+                val viewModel = remember(user.id) { container.getUserProfileViewModel(user) }
                 UserProfileScreen(
-                    viewModel = it,
-                    onNavigateToLogin = { container.logout() },
+                    viewModel = viewModel,
+                    onAccountDeleted = { container.logout() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
             }
         }
 
         is AppRoute.Map -> {
-            val mapViewModel = remember { container.createMapViewModel() }
+            val mapViewModel = remember { container.getMapViewModel() }
             MapScreen(
                 viewModel = mapViewModel,
                 onNavigateToZoneDetails = { appViewModel.navigate(AppRoute.ZoneDetails(it)) },
@@ -156,7 +147,7 @@ fun App(container: AppContainer) {
         }
 
         is AppRoute.ZoneDetails -> {
-            val zoneDetailsViewModel = remember { container.createZoneDetailsViewModel() }
+            val zoneDetailsViewModel = remember { container.getZoneDetailsViewModel() }
             ZoneDetailsScreen(
                 viewModel = zoneDetailsViewModel,
                 zoneId = route.zoneId,
@@ -167,7 +158,7 @@ fun App(container: AppContainer) {
         }
 
         is AppRoute.ReportZone -> {
-            val reportZoneViewModel = remember { container.createReportZoneViewModel() }
+            val reportZoneViewModel = remember { container.getReportZoneViewModel() }
             ReportZoneScreen(
                 viewModel = reportZoneViewModel,
                 latitude = route.latitude,

@@ -29,5 +29,6 @@ data class Event(
     val isFull: Boolean
         get() = maxParticipants?.let { participantsIds.size >= it } ?: false
 
-    fun isUserParticipantOrOrganizer(userId: Id): Boolean = userId in participantsIds || userId == organizerId
+    fun isUserParticipantOrOrganizer(userId: Id): Boolean =
+        userId in participantsIds || userId == organizerId
 }

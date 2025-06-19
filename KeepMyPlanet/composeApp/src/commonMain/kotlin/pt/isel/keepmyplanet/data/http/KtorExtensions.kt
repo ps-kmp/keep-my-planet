@@ -8,7 +8,9 @@ import io.ktor.client.request.request
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.dto.common.ErrorResponse
 
-suspend inline fun <reified T> HttpClient.executeRequest(block: HttpRequestBuilder.() -> Unit): Result<T> =
+suspend inline fun <reified T> HttpClient.executeRequest(
+    block: HttpRequestBuilder.() -> Unit,
+): Result<T> =
     runCatching {
         try {
             request { block() }.body<T>()

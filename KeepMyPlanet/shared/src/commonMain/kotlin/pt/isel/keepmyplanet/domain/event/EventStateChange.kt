@@ -7,6 +7,6 @@ data class EventStateChange(
     val id: Id,
     val eventId: Id,
     val newStatus: EventStatus,
-    val changedBy: Id, // UserId
+    val changedBy: Id,
     val changeTime: LocalDateTime,
 )

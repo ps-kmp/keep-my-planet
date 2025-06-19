@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.repository.mem
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -14,8 +16,6 @@ import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.util.now
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryEventRepository : EventRepository {
     private val events = ConcurrentHashMap<Id, Event>()

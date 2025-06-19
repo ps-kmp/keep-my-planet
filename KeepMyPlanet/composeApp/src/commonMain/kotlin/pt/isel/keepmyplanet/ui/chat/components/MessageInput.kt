@@ -26,7 +26,6 @@ import pt.isel.keepmyplanet.ui.components.LoadingIconButton
 
 private const val MAX_MESSAGE_LENGTH = 1000
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun MessageInput(
     message: String,
@@ -52,8 +51,14 @@ fun MessageInput(
                     maxLines = 5,
                     colors =
                         TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = MaterialTheme.colors.primary.copy(ContentAlpha.high),
-                            unfocusedBorderColor = MaterialTheme.colors.onSurface.copy(ContentAlpha.disabled),
+                            focusedBorderColor =
+                                MaterialTheme.colors.primary.copy(
+                                    ContentAlpha.high,
+                                ),
+                            unfocusedBorderColor =
+                                MaterialTheme.colors.onSurface.copy(
+                                    ContentAlpha.disabled,
+                                ),
                         ),
                     shape = MaterialTheme.shapes.medium,
                 )
@@ -93,7 +98,12 @@ fun MessageInput(
                     text = "${message.length} / $MAX_MESSAGE_LENGTH",
                     style = MaterialTheme.typography.caption,
                     textAlign = TextAlign.End,
-                    color = if (message.length > MAX_MESSAGE_LENGTH) MaterialTheme.colors.error else Color.Unspecified,
+                    color =
+                        if (message.length > MAX_MESSAGE_LENGTH) {
+                            MaterialTheme.colors.error
+                        } else {
+                            Color.Unspecified
+                        },
                 )
             }
         }

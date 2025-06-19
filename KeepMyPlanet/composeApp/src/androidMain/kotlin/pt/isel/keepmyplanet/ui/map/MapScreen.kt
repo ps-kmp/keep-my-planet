@@ -51,6 +51,7 @@ import keepmyplanet.composeapp.generated.resources.Res
 import keepmyplanet.composeapp.generated.resources.ic_marker_high
 import keepmyplanet.composeapp.generated.resources.ic_marker_low
 import keepmyplanet.composeapp.generated.resources.ic_marker_mid
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.compose.resources.painterResource
@@ -58,9 +59,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.map.model.MapScreenEvent
-import kotlin.time.Duration.Companion.seconds
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 actual fun MapScreen(
     viewModel: MapViewModel,
@@ -86,7 +85,10 @@ actual fun MapScreen(
             when (event) {
                 is MapScreenEvent.NavigateToZoneDetails -> onNavigateToZoneDetails(event.zoneId)
                 is MapScreenEvent.ShowSnackbar -> {
-                    snackbarHostState.showSnackbar(event.message, duration = SnackbarDuration.Short)
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = SnackbarDuration.Short,
+                    )
                 }
             }
         }
@@ -104,7 +106,10 @@ actual fun MapScreen(
         },
     ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
             contentAlignment = Alignment.Center,
         ) {
             if (uiState.isLoading) {

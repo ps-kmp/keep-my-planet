@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Period(
     val start: LocalDateTime,
-    val end: LocalDateTime? = null, // Only defined when the event is finished
+    val end: LocalDateTime? = null,
 ) {
     init {
         if (end != null) {

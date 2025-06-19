@@ -61,7 +61,9 @@ class RegisterViewModel(
 
                 result
                     .onSuccess {
-                        _events.send(RegisterEvent.ShowSnackbar("Registration successful! Please login."))
+                        _events.send(
+                            RegisterEvent.ShowSnackbar("Registration successful! Please login."),
+                        )
                         _events.send(RegisterEvent.NavigateToLogin)
                     }.onFailure { exception ->
                         handleError("Registration failed", exception)
@@ -102,11 +104,12 @@ class RegisterViewModel(
                 stateWithErrors.copy(passwordError = e.message)
             }
 
-        if (formState.password != formState.confirmPassword) {
-            stateWithErrors = stateWithErrors.copy(confirmPasswordError = "Passwords do not match")
-        } else {
-            stateWithErrors = stateWithErrors.copy(confirmPasswordError = null)
-        }
+        stateWithErrors =
+            if (formState.password != formState.confirmPassword) {
+                stateWithErrors.copy(confirmPasswordError = "Passwords do not match")
+            } else {
+                stateWithErrors.copy(confirmPasswordError = null)
+            }
 
         _uiState.value = stateWithErrors
         return !stateWithErrors.hasErrors

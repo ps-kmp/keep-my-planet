@@ -1,12 +1,12 @@
 package pt.isel.keepmyplanet.repository.mem
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.MessageRepository
 import pt.isel.keepmyplanet.util.now
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryMessageRepository : MessageRepository {
     private val messages = ConcurrentHashMap<Id, Message>()

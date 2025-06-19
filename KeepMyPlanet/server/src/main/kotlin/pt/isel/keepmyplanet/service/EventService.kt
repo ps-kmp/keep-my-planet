@@ -129,7 +129,9 @@ class EventService(
             ensureOrganizerOrFail(event, userId)
 
             if (event.status != EventStatus.PLANNED) {
-                throw ConflictException("Only 'PLANNED' events can be edited. Current status is ${event.status}.")
+                throw ConflictException(
+                    "Only 'PLANNED' events can be edited. Current status is ${event.status}.",
+                )
             }
 
             if (period != null && period.start < now()) {
@@ -137,7 +139,9 @@ class EventService(
             }
 
             if (maxParticipants != null && maxParticipants < event.participantsIds.size) {
-                throw ValidationException("Max participants cannot be less than the current number of participants.")
+                throw ValidationException(
+                    "Max participants cannot be less than the current number of participants.",
+                )
             }
 
             val updatedEvent =
@@ -205,7 +209,10 @@ class EventService(
             findUserOrFail(userId)
 
             if (event.status != EventStatus.PLANNED) {
-                throw ConflictException("Cannot join an event that is not 'PLANNED'. Current status: '${event.status}'.")
+                throw ConflictException(
+                    "Cannot join an event that is not 'PLANNED'. " +
+                        "Current status: '${event.status}'.",
+                )
             }
             if (userId == event.organizerId) {
                 throw ConflictException("Organizer cannot join their own event as a participant.")
@@ -214,7 +221,9 @@ class EventService(
                 throw ConflictException("User '$userId' is already a participant in this event.")
             }
             if (event.isFull) {
-                throw ConflictException("Event '$eventId' is full and cannot accept more participants.")
+                throw ConflictException(
+                    "Event '$eventId' is full and cannot accept more participants.",
+                )
             }
 
             val updatedEvent = event.copy(participantsIds = event.participantsIds + userId)
@@ -230,10 +239,15 @@ class EventService(
             findUserOrFail(userId)
 
             if (event.status != EventStatus.PLANNED) {
-                throw ConflictException("Cannot leave an event that is not 'PLANNED'. Current status: ${event.status}.")
+                throw ConflictException(
+                    "Cannot leave an event that is not 'PLANNED'. " +
+                        "Current status: ${event.status}.",
+                )
             }
             if (userId == event.organizerId) {
-                throw AuthorizationException("Organizer cannot leave their own event. They must cancel or delete it.")
+                throw AuthorizationException(
+                    "Organizer cannot leave their own event. They must cancel or delete it.",
+                )
             }
             if (userId !in event.participantsIds) {
                 throw NotFoundException("User '$userId' is not a participant in event '$eventId'.")
@@ -258,7 +272,10 @@ class EventService(
             ensureOrganizerOrFail(event, userId)
 
             if (event.status != EventStatus.PLANNED && event.status != EventStatus.CANCELLED) {
-                throw ConflictException("Only 'PLANNED' or 'CANCELLED' events can be deleted. Current status: ${event.status}.")
+                throw ConflictException(
+                    "Only 'PLANNED' or 'CANCELLED' events can be deleted. " +
+                        "Current status: ${event.status}.",
+                )
             }
 
             val zone = findZoneOrFail(event.zoneId)
@@ -292,7 +309,8 @@ class EventService(
     ) {
         if (event.organizerId != userId) {
             throw AuthorizationException(
-                "User '$userId' is not authorized. Must be the event organizer ('${event.organizerId}').",
+                "User '$userId' is not authorized. " +
+                    "Must be the event organizer ('${event.organizerId}').",
             )
         }
     }

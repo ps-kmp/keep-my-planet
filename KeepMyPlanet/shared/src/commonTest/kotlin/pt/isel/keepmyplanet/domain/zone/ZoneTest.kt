@@ -1,11 +1,11 @@
 package pt.isel.keepmyplanet.domain.zone
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class ZoneTest {
     private val validId = Id(1u)

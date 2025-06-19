@@ -15,10 +15,13 @@ import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.mapper.event.toEvent
+import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsScreenEvent
 import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsUiState
+import pt.isel.keepmyplanet.ui.user.model.UserInfo
 
 class EventDetailsViewModel(
     private val eventApi: EventApi,
+    private val currentUser: UserInfo,
 ) : ViewModel() {
     private val _detailsUiState = MutableStateFlow(EventDetailsUiState())
     val detailsUiState: StateFlow<EventDetailsUiState> = _detailsUiState.asStateFlow()
@@ -31,9 +34,16 @@ class EventDetailsViewModel(
             _detailsUiState.update { it.copy(isLoading = true) }
             eventApi
                 .getEventDetails(eventId.value)
-                .onSuccess { event ->
+                .onSuccess { eventResponse ->
+                    val event = eventResponse.toEvent()
                     _detailsUiState.update {
-                        it.copy(event = event.toEvent(), isLoading = false)
+                        it.copy(
+                            event = event,
+                            isLoading = false,
+                            isCurrentUserOrganizer = event.organizerId == currentUser.id,
+                            isCurrentUserParticipant =
+                                event.participantsIds.contains(currentUser.id),
+                        )
                     }
                 }.onFailure { error ->
                     _detailsUiState.update { it.copy(isLoading = false) }
@@ -129,7 +139,13 @@ class EventDetailsViewModel(
     }
 
     private fun updateEventInState(updatedEvent: Event) {
-        _detailsUiState.update { it.copy(event = updatedEvent) }
+        _detailsUiState.update {
+            it.copy(
+                event = updatedEvent,
+                isCurrentUserOrganizer = updatedEvent.organizerId == currentUser.id,
+                isCurrentUserParticipant = updatedEvent.participantsIds.contains(currentUser.id),
+            )
+        }
     }
 
     private suspend fun handleError(

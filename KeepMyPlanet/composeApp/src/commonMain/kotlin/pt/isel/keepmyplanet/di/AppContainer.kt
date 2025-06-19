@@ -22,8 +22,8 @@ import pt.isel.keepmyplanet.ui.map.MapViewModel
 import pt.isel.keepmyplanet.ui.register.RegisterViewModel
 import pt.isel.keepmyplanet.ui.user.UserProfileViewModel
 import pt.isel.keepmyplanet.ui.user.model.UserInfo
-import pt.isel.keepmyplanet.ui.zone.ReportZoneViewModel
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsViewModel
+import pt.isel.keepmyplanet.ui.zone.report.ReportZoneViewModel
 
 class AppContainer(
     engine: HttpClientEngineFactory<*>,
@@ -51,26 +51,26 @@ class AppContainer(
 
     val appViewModel: AppViewModel by lazy { AppViewModel(userSession) }
 
-    fun createLoginViewModel() = LoginViewModel(authApi, ::updateSession)
+    fun getLoginViewModel() = LoginViewModel(authApi, ::updateSession)
 
-    fun createRegisterViewModel() = RegisterViewModel(userApi)
+    fun getRegisterViewModel() = RegisterViewModel(userApi)
 
-    fun createEventListViewModel() = EventListViewModel(eventApi)
+    fun getEventListViewModel() = EventListViewModel(eventApi)
 
-    fun createEventDetailsViewModel() = EventDetailsViewModel(eventApi)
+    fun getEventDetailsViewModel(user: UserInfo) = EventDetailsViewModel(eventApi, user)
 
-    fun createEventFormViewModel() = EventFormViewModel(eventApi)
+    fun getEventFormViewModel() = EventFormViewModel(eventApi)
 
-    fun createMapViewModel() = MapViewModel(zoneApi)
+    fun getMapViewModel() = MapViewModel(zoneApi)
 
-    fun createZoneDetailsViewModel() = ZoneDetailsViewModel(zoneApi)
+    fun getZoneDetailsViewModel() = ZoneDetailsViewModel(zoneApi)
 
-    fun createReportZoneViewModel() = ReportZoneViewModel(zoneApi)
+    fun getReportZoneViewModel() = ReportZoneViewModel(zoneApi)
 
-    fun createUserProfileViewModel(user: UserInfo) = UserProfileViewModel(userApi, user)
+    fun getUserProfileViewModel(user: UserInfo) = UserProfileViewModel(userApi, user)
 
-    fun createChatViewModel(
+    fun getChatViewModel(
         user: UserInfo,
-        chatInfo: ChatInfo,
-    ) = ChatViewModel(chatApi, user, chatInfo)
+        chat: ChatInfo,
+    ): ChatViewModel = ChatViewModel(chatApi, user, chat)
 }

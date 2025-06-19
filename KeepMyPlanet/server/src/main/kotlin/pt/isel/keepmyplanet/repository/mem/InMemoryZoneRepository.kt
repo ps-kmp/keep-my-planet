@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.repository.mem
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
@@ -10,8 +12,6 @@ import pt.isel.keepmyplanet.errors.NotFoundException
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.util.calculateDistanceKm
 import pt.isel.keepmyplanet.util.now
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 class InMemoryZoneRepository : ZoneRepository {
     private val zones = ConcurrentHashMap<Id, Zone>()

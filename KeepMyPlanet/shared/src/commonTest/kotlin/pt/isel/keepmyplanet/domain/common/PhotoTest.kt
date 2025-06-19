@@ -1,9 +1,9 @@
 package pt.isel.keepmyplanet.domain.common
 
-import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.datetime.LocalDateTime
 
 class PhotoTest {
     private val validId = Id(1u)

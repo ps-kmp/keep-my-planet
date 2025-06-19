@@ -1,12 +1,12 @@
 package pt.isel.keepmyplanet.util
 
-import pt.isel.keepmyplanet.domain.common.Location
 import kotlin.math.PI
 import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
+import pt.isel.keepmyplanet.domain.common.Location
 
 private const val EARTH_RADIUS_KM = 6371.0
 

@@ -35,7 +35,6 @@ import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getStatusColor
 import pt.isel.keepmyplanet.ui.zone.components.getSeverityColor
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun ZoneDetailsScreen(
     viewModel: ZoneDetailsViewModel,

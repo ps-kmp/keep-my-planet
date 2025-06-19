@@ -11,6 +11,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.Email
@@ -21,12 +27,6 @@ import pt.isel.keepmyplanet.dto.user.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 import pt.isel.keepmyplanet.service.UserService
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class UserWebApiTest : BaseWebApiTest() {
     private val userService = UserService(fakeUserRepository, fakeEventRepository, passwordHasher)
@@ -443,7 +443,7 @@ class UserWebApiTest : BaseWebApiTest() {
         }
 
     @Test
-    fun `PATCH users password - should fail with 400 Bad Request when new password is same as old`() =
+    fun `PATCH users password - should fail with 400 Bad Request when new password is the old`() =
         testApp({ userWebApi(userService) }) {
             val oldPassword = "OldPassword1!"
             val user = createTestUser(password = Password(oldPassword))

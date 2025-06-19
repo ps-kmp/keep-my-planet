@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.event.forms.model.EventFormUiState
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun EventForm(
     formUiState: EventFormUiState,

@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package pt.isel.keepmyplanet
 
 import androidx.compose.runtime.remember

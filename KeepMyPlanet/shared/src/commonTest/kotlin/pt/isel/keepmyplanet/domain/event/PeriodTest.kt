@@ -1,9 +1,9 @@
 package pt.isel.keepmyplanet.domain.event
 
-import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.datetime.LocalDateTime
 
 class PeriodTest {
     private val now = LocalDateTime(2000, 1, 1, 1, 1)

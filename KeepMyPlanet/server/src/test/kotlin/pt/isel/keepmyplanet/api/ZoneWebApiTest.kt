@@ -12,6 +12,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
@@ -24,12 +30,6 @@ import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.dto.zone.ZoneResponse
 import pt.isel.keepmyplanet.service.ZoneService
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class ZoneWebApiTest : BaseWebApiTest() {
     private val zoneService =

@@ -1,5 +1,3 @@
-@file:Suppress("ktlint:standard:function-naming")
-
 package pt.isel.keepmyplanet.ui.components
 
 import androidx.compose.foundation.layout.size

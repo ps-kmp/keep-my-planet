@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.domain.user
 
-import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.Serializable
 
 @Serializable
 @JvmInline

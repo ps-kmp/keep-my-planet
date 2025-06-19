@@ -8,7 +8,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun ConfirmActionDialog(
     showDialog: androidx.compose.runtime.MutableState<Boolean>,

@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
 
-@Suppress("ktlint:standard:function-naming")
 @Composable
 fun DeleteAccountSection(
     uiState: UserProfileUiState,
@@ -35,7 +34,10 @@ fun DeleteAccountSection(
                         showDeleteConfirmDialog.value = false
                         onConfirmDelete()
                     },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            backgroundColor = MaterialTheme.colors.error,
+                        ),
                 ) {
                     Text("Delete")
                 }

@@ -4,11 +4,11 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import io.ktor.server.config.ApplicationConfig
-import pt.isel.keepmyplanet.domain.common.Id
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
+import pt.isel.keepmyplanet.domain.common.Id
 
 class JwtService(
     config: ApplicationConfig,

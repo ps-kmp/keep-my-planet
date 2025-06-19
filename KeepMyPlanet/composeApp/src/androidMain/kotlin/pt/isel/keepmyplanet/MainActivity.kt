@@ -4,11 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import io.ktor.client.engine.android.Android
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import pt.isel.keepmyplanet.di.AppContainer
 
 class MainActivity : ComponentActivity() {
@@ -26,12 +24,4 @@ class MainActivity : ComponentActivity() {
             App(container)
         }
     }
-}
-
-@Suppress("ktlint:standard:function-naming")
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    val appViewModel = AppContainer(Android)
-    App(appViewModel)
 }
