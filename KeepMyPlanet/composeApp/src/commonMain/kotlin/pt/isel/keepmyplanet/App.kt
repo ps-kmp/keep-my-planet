@@ -29,7 +29,7 @@ import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsScreen
 import pt.isel.keepmyplanet.ui.zone.report.ReportZoneScreen
 
 @Composable
-fun App(container: AppContainer) {
+fun App(container: AppContainer = remember { AppContainer() }) {
     val appViewModel = container.appViewModel
     val currRoute by appViewModel.currentRoute.collectAsState()
     val userSession by appViewModel.userSession.collectAsState()
@@ -102,7 +102,11 @@ fun App(container: AppContainer) {
                     eventId = route.eventId,
                     onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
                     onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(it)) },
-                    onNavigateToManageAttendance = { appViewModel.navigate(AppRoute.ManageAttendance(it)) },
+                    onNavigateToManageAttendance = {
+                        appViewModel.navigate(
+                            AppRoute.ManageAttendance(it),
+                        )
+                    },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
             }

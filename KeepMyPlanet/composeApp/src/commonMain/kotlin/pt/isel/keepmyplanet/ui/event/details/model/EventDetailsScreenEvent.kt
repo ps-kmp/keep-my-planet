@@ -12,6 +12,6 @@ sealed class EventDetailsScreenEvent {
     object EventDeleted : EventDetailsScreenEvent()
 
     data class NavigateTo(
-        val destination: EventDetailsViewModel.QrNavigation
+        val destination: EventDetailsViewModel.QrNavigation,
     ) : EventDetailsScreenEvent()
 }

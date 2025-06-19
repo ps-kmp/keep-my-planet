@@ -319,53 +319,55 @@ class EventService(
         eventId: Id,
         userIdToCheckIn: Id,
         actingUserId: Id,
-    ): Result<Unit> = runCatching {
-        val event = findEventOrFail(eventId)
+    ): Result<Unit> =
+        runCatching {
+            val event = findEventOrFail(eventId)
 
-        ensureOrganizerOrFail(event, actingUserId)
+            ensureOrganizerOrFail(event, actingUserId)
 
-        if (event.status != EventStatus.IN_PROGRESS) {
-            throw ConflictException(
-                "Cannot check in user. Event must be 'IN_PROGRESS', but is '${event.status}'."
+            if (event.status != EventStatus.IN_PROGRESS) {
+                throw ConflictException(
+                    "Cannot check in user. Event must be 'IN_PROGRESS', but is '${event.status}'.",
+                )
+            }
+
+            findUserOrFail(userIdToCheckIn)
+
+            if (userIdToCheckIn !in event.participantsIds) {
+                throw ValidationException(
+                    "User '$userIdToCheckIn' is not registered for this event.",
+                )
+            }
+
+            val alreadyAttended = eventRepository.hasAttended(eventId, userIdToCheckIn)
+            if (alreadyAttended) {
+                throw ConflictException(
+                    "User '$userIdToCheckIn' has already checked in to this event.",
+                )
+            }
+
+            eventRepository.addAttendance(
+                eventId = eventId,
+                userId = userIdToCheckIn,
+                checkedInAt = now(),
             )
         }
 
-        findUserOrFail(userIdToCheckIn)
-
-        if (userIdToCheckIn !in event.participantsIds) {
-            throw ValidationException(
-                "User '$userIdToCheckIn' is not registered for this event."
-            )
+    suspend fun getEventAttendees(eventId: Id): Result<List<User>> =
+        runCatching {
+            findEventOrFail(eventId)
+            val attendeeIds = eventRepository.getAttendeesIds(eventId)
+            attendeeIds.mapNotNull { userRepository.getById(it) }
         }
-
-        val alreadyAttended = eventRepository.hasAttended(eventId, userIdToCheckIn)
-        if (alreadyAttended) {
-            throw ConflictException(
-                "User '$userIdToCheckIn' has already checked in to this event."
-            )
-        }
-
-        eventRepository.addAttendance(
-            eventId = eventId,
-            userId = userIdToCheckIn,
-            checkedInAt = now()
-        )
-
-    }
-
-    suspend fun getEventAttendees(eventId: Id): Result<List<User>> = runCatching {
-        findEventOrFail(eventId)
-        val attendeeIds = eventRepository.getAttendeesIds(eventId)
-        attendeeIds.mapNotNull { userRepository.getById(it) }
-    }
 
     suspend fun getEventsAttendedBy(
         userId: Id,
         limit: Int,
         offset: Int,
-    ): Result<List<Event>> = runCatching {
-        findUserOrFail(userId)
+    ): Result<List<Event>> =
+        runCatching {
+            findUserOrFail(userId)
 
-        eventRepository.findEventsAttendedByUser(userId, limit, offset)
-    }
+            eventRepository.findEventsAttendedByUser(userId, limit, offset)
+        }
 }

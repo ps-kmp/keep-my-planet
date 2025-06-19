@@ -71,8 +71,11 @@ fun EventDetailsScreen(
 
                 is EventDetailsScreenEvent.NavigateTo -> {
                     when (val dest = event.destination) {
-                        is EventDetailsViewModel.QrNavigation.ToScanner -> onNavigateToManageAttendance(dest.eventId)
-                        is EventDetailsViewModel.QrNavigation.ToMyCode -> onNavigateToMyQrCode(dest.userId)
+                        is EventDetailsViewModel.QrNavigation.ToScanner ->
+                            onNavigateToManageAttendance(dest.eventId)
+
+                        is EventDetailsViewModel.QrNavigation.ToMyCode ->
+                            onNavigateToMyQrCode(dest.userId)
                     }
                 }
 
@@ -95,103 +98,106 @@ fun EventDetailsScreen(
                     if (uiState.canUseQrFeature()) {
                         QrCodeIconButton(
                             onClick = viewModel::onQrCodeIconClicked,
-                            contentDescription = "Open QR Code Feature"
+                            contentDescription = "Open QR Code Feature",
                         )
                     }
-                }
+                },
             )
         },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            if (uiState.isLoading) {
-                FullScreenLoading()
-            } else if (uiState.event == null || uiState.error != null) {
-                ErrorState(message = uiState.error ?: "Failed to load event.") {
-                    viewModel.loadEventDetails(eventId)
-                }
-            } else if (event != null) {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    Text(
-                        text = event.title.value,
-                        style = MaterialTheme.typography.h5,
-                    )
-
-                    DetailCard(title = "Description") {
-                        Text(
-                            text = event.description.value,
-                            style = MaterialTheme.typography.body1,
-                        )
+            when {
+                uiState.isLoading -> FullScreenLoading()
+                uiState.error != null -> {
+                    ErrorState(message = uiState.error!!) {
+                        viewModel.loadEventDetails(eventId)
                     }
+                }
 
-                    DetailCard(title = "Information") {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            InfoRow(
-                                icon = Icons.Default.Schedule,
-                                text = "Starts: ${event.period.start.toFormattedString()}",
+                event != null -> {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Text(
+                            text = event.title.value,
+                            style = MaterialTheme.typography.h5,
+                        )
+
+                        DetailCard(title = "Description") {
+                            Text(
+                                text = event.description.value,
+                                style = MaterialTheme.typography.body1,
                             )
-                            event.period.end?.let {
+                        }
+
+                        DetailCard(title = "Information") {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 InfoRow(
                                     icon = Icons.Default.Schedule,
-                                    text = "Ends: ${it.toFormattedString()}",
+                                    text = "Starts: ${event.period.start.toFormattedString()}",
                                 )
-                            }
-                            InfoRow(icon = Icons.Default.Flag, text = "Status: ${event.status}")
-                            event.maxParticipants?.let {
-                                InfoRow(
-                                    icon = Icons.Default.People,
-                                    text = "Participants: ${event.participantsIds.size}/$it",
-                                )
-                            }
-                        }
-                    }
-                    if (uiState.participants.isNotEmpty()) {
-                        DetailCard("Participants (${uiState.participants.size})") {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                uiState.participants.forEach { participant ->
-                                    ParticipantRow(participant)
+                                event.period.end?.let {
+                                    InfoRow(
+                                        icon = Icons.Default.Schedule,
+                                        text = "Ends: ${it.toFormattedString()}",
+                                    )
+                                }
+                                InfoRow(icon = Icons.Default.Flag, text = "Status: ${event.status}")
+                                event.maxParticipants?.let {
+                                    InfoRow(
+                                        icon = Icons.Default.People,
+                                        text = "Participants: ${event.participantsIds.size}/$it",
+                                    )
                                 }
                             }
                         }
-                    }
-
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            text = "Created: ${event.createdAt.toFormattedString()}",
-                            style = MaterialTheme.typography.caption,
-                        )
-                        Text(
-                            text = "Last update: ${event.updatedAt.toFormattedString()}",
-                            style = MaterialTheme.typography.caption,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    if (uiState.canManageAttendance()) {
-                        ManageAttendanceButton {
-                            onNavigateToManageAttendance(event.id)
+                        if (uiState.participants.isNotEmpty()) {
+                            DetailCard("Participants (${uiState.participants.size})") {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    uiState.participants.forEach { participant ->
+                                        ParticipantRow(participant)
+                                    }
+                                }
+                            }
                         }
+
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = "Created: ${event.createdAt.toFormattedString()}",
+                                style = MaterialTheme.typography.caption,
+                            )
+                            Text(
+                                text = "Last update: ${event.updatedAt.toFormattedString()}",
+                                style = MaterialTheme.typography.caption,
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        if (uiState.canManageAttendance()) {
+                            ManageAttendanceButton {
+                                onNavigateToManageAttendance(event.id)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        EventActions(
+                            uiState = uiState,
+                            onJoinEvent = viewModel::joinEvent,
+                            onLeaveEvent = viewModel::leaveEvent,
+                            onNavigateToChat = onNavigateToChat,
+                            onNavigateToEditEvent = { onNavigateToEditEvent(event.id) },
+                            onCancelEvent = viewModel::cancelEvent,
+                            onCompleteEvent = viewModel::completeEvent,
+                            onDeleteEvent = viewModel::deleteEvent,
+                        )
                     }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    EventActions(
-                        uiState = uiState,
-                        onJoinEvent = viewModel::joinEvent,
-                        onLeaveEvent = viewModel::leaveEvent,
-                        onNavigateToChat = onNavigateToChat,
-                        onNavigateToEditEvent = { onNavigateToEditEvent(event.id) },
-                        onCancelEvent = viewModel::cancelEvent,
-                        onCompleteEvent = viewModel::completeEvent,
-                        onDeleteEvent = viewModel::deleteEvent,
-                    )
                 }
             }
         }

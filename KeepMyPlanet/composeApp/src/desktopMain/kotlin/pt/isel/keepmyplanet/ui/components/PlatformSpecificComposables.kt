@@ -7,13 +7,19 @@ import androidx.compose.ui.Modifier
 actual fun ManageAttendanceButton(onClick: () -> Unit) {}
 
 @Composable
-actual fun QrCodeScannerView(modifier: Modifier, onQrCodeScanned: (String) -> Unit) {}
+actual fun QrCodeScannerView(
+    modifier: Modifier,
+    onQrCodeScanned: (String) -> Unit,
+) {}
 
 @Composable
-actual fun QrCodeDisplay(data: String, modifier: Modifier) {}
+actual fun QrCodeDisplay(
+    data: String,
+    modifier: Modifier,
+) {}
 
 @Composable
 actual fun QrCodeIconButton(
     onClick: () -> Unit,
-    contentDescription: String
+    contentDescription: String,
 ) {}

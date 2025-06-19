@@ -30,8 +30,13 @@ class EventDetailsViewModel(
     val events: Flow<EventDetailsScreenEvent> = _events.receiveAsFlow()
 
     sealed class QrNavigation {
-        data class ToScanner(val eventId: Id) : QrNavigation()
-        data class ToMyCode(val userId: Id) : QrNavigation()
+        data class ToScanner(
+            val eventId: Id,
+        ) : QrNavigation()
+
+        data class ToMyCode(
+            val userId: Id,
+        ) : QrNavigation()
     }
 
     fun loadEventDetails(eventId: Id) {
@@ -51,9 +56,9 @@ class EventDetailsViewModel(
                         )
                     }
                 }.onFailure { error ->
-                    _detailsUiState.update { it.copy(isLoading = false) }
                     handleError("Failed to load event details", error)
                 }
+            _detailsUiState.update { it.copy(isLoading = false) }
         }
     }
 
@@ -175,7 +180,9 @@ class EventDetailsViewModel(
             if (state.isCurrentUserOrganizer) {
                 _events.send(EventDetailsScreenEvent.NavigateTo(QrNavigation.ToScanner(eventId)))
             } else {
-                _events.send(EventDetailsScreenEvent.NavigateTo(QrNavigation.ToMyCode(currentUser.id)))
+                _events.send(
+                    EventDetailsScreenEvent.NavigateTo(QrNavigation.ToMyCode(currentUser.id)),
+                )
             }
         }
     }

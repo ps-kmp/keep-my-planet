@@ -100,59 +100,57 @@ fun UserProfileScreenContent(
         topBar = { AppTopBar(title = "User Profile", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            if (uiState.isLoading) {
-                FullScreenLoading()
-            } else if (uiState.error != null) {
-                ErrorState(message = uiState.error, onRetry = onRetry)
-            } else if (uiState.userDetails == null) {
-                Text(
-                    text = "Failed to load user profile.",
-                    modifier = Modifier.align(Alignment.Center).padding(16.dp),
-                )
-            } else {
-                Column(
-                    modifier =
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile Picture",
-                        modifier = Modifier.size(100.dp),
-                    )
-
-                    ProfileInfoSection(
-                        uiState = uiState,
-                        onNameChanged = onNameChanged,
-                        onEmailChanged = onEmailChanged,
-                        onEditProfileToggled = onEditProfileToggled,
-                        onSaveProfileClicked = onSaveProfileClicked,
-                    )
-
-                    Divider()
-
-                    PasswordChangeSection(
-                        uiState = uiState,
-                        onOldPasswordChanged = onOldPasswordChanged,
-                        onNewPasswordChanged = onNewPasswordChanged,
-                        onConfirmPasswordChanged = onConfirmPasswordChanged,
-                        onChangePasswordClicked = onChangePasswordClicked,
-                    )
-                    Button(
-                        onClick = onPasswordChangeToggled,
-                        modifier = Modifier.fillMaxWidth(),
+            when {
+                uiState.isLoading -> FullScreenLoading()
+                uiState.error != null -> ErrorState(message = uiState.error, onRetry = onRetry)
+                uiState.userDetails != null -> {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        Text(
-                            if (uiState.showPasswordChangeSection) {
-                                "Cancel Password Change"
-                            } else {
-                                "Change Password"
-                            },
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.size(100.dp),
                         )
-                    }
 
-                    DeleteAccountSection(uiState, onConfirmDeleteAccount)
+                        ProfileInfoSection(
+                            uiState = uiState,
+                            onNameChanged = onNameChanged,
+                            onEmailChanged = onEmailChanged,
+                            onEditProfileToggled = onEditProfileToggled,
+                            onSaveProfileClicked = onSaveProfileClicked,
+                        )
+
+                        Divider()
+
+                        PasswordChangeSection(
+                            uiState = uiState,
+                            onOldPasswordChanged = onOldPasswordChanged,
+                            onNewPasswordChanged = onNewPasswordChanged,
+                            onConfirmPasswordChanged = onConfirmPasswordChanged,
+                            onChangePasswordClicked = onChangePasswordClicked,
+                        )
+                        Button(
+                            onClick = onPasswordChangeToggled,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                if (uiState.showPasswordChangeSection) {
+                                    "Cancel Password Change"
+                                } else {
+                                    "Change Password"
+                                },
+                            )
+                        }
+
+                        DeleteAccountSection(uiState, onConfirmDeleteAccount)
+                    }
                 }
             }
         }

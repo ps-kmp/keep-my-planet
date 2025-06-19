@@ -3,28 +3,23 @@ package pt.isel.keepmyplanet.ui.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
-
 @Composable
-expect fun ManageAttendanceButton(
-    onClick: () -> Unit
-)
-
+expect fun ManageAttendanceButton(onClick: () -> Unit)
 
 @Composable
 expect fun QrCodeScannerView(
     modifier: Modifier,
-    onQrCodeScanned: (String) -> Unit
+    onQrCodeScanned: (String) -> Unit,
 )
-
 
 @Composable
 expect fun QrCodeDisplay(
     data: String,
-    modifier: Modifier
+    modifier: Modifier,
 )
 
 @Composable
 expect fun QrCodeIconButton(
     onClick: () -> Unit,
-    contentDescription: String
+    contentDescription: String,
 )

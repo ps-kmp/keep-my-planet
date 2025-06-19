@@ -7,7 +7,7 @@ import pt.isel.keepmyplanet.util.now
 data class Attendance(
     val eventId: Id,
     val userId: Id,
-    val checkInTime: LocalDateTime
+    val checkInTime: LocalDateTime,
 ) {
     init {
         require(checkInTime <= now()) {

@@ -202,7 +202,10 @@ fun Route.eventWebApi(
                     eventService
                         .checkInUserToEvent(eventId, userIdToCheckIn, actingUserId)
                         .onSuccess {
-                            call.respond(HttpStatusCode.OK, mapOf("message" to "User checked in successfully."))
+                            call.respond(
+                                HttpStatusCode.OK,
+                                mapOf("message" to "User checked in successfully."),
+                            )
                         }
                         .onFailure { throw it }
                 }

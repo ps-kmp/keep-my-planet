@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CheckInRequest(
-    val userId: UInt
+    val userId: UInt,
 )

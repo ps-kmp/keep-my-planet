@@ -25,6 +25,7 @@ import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
 class UserProfileViewModel(
     private val userService: UserApi,
     private val user: UserInfo,
+    private val onProfileUpdated: (UserInfo) -> Unit,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState(userDetails = user))
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
@@ -113,6 +114,7 @@ class UserProfileViewModel(
             result
                 .onSuccess { updatedUserResponse ->
                     val updatedUser = updatedUserResponse.toUserInfo()
+                    onProfileUpdated(updatedUser)
                     _uiState.update {
                         it.copy(
                             isUpdatingProfile = false,

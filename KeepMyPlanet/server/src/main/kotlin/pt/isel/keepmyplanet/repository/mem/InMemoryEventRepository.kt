@@ -23,7 +23,6 @@ class InMemoryEventRepository : EventRepository {
     private val nextId = AtomicInteger(1)
     private val attendances = ConcurrentHashMap<Id, MutableMap<Id, LocalDateTime>>()
 
-
     init {
         val period =
             Period(
@@ -103,7 +102,7 @@ class InMemoryEventRepository : EventRepository {
     override suspend fun addAttendance(
         eventId: Id,
         userId: Id,
-        checkedInAt: LocalDateTime
+        checkedInAt: LocalDateTime,
     ) {
         events[eventId] ?: throw NotFoundException("Event '$eventId' not found.")
         attendances.computeIfAbsent(eventId) { ConcurrentHashMap() }[userId] = checkedInAt
@@ -111,18 +110,16 @@ class InMemoryEventRepository : EventRepository {
 
     override suspend fun hasAttended(
         eventId: Id,
-        userId: Id
-    ): Boolean =
-        attendances[eventId]?.containsKey(userId) == true
+        userId: Id,
+    ): Boolean = attendances[eventId]?.containsKey(userId) == true
 
     override suspend fun getAttendeesIds(eventId: Id): Set<Id> =
         attendances[eventId]?.keys?.toSet() ?: emptySet()
 
-
     override suspend fun findEventsAttendedByUser(
         userId: Id,
         limit: Int,
-        offset: Int
+        offset: Int,
     ): List<Event> {
         val attendedEventIds = attendances.filter { it.value.containsKey(userId) }.keys
         return attendedEventIds

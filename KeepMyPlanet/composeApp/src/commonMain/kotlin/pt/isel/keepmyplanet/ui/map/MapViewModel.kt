@@ -28,6 +28,14 @@ class MapViewModel(
         loadZones()
     }
 
+    fun enterReportingMode() {
+        _uiState.update { it.copy(isReportingMode = true) }
+    }
+
+    fun exitReportingMode() {
+        _uiState.update { it.copy(isReportingMode = false) }
+    }
+
     fun loadZones() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {

@@ -1,7 +1,6 @@
 package pt.isel.keepmyplanet.data.http
 
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -19,11 +18,8 @@ import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.BASE_URL
 import pt.isel.keepmyplanet.session.SessionManager
 
-fun createHttpClient(
-    engine: HttpClientEngineFactory<*>,
-    sessionManager: SessionManager,
-): HttpClient =
-    HttpClient(engine) {
+fun createHttpClient(sessionManager: SessionManager): HttpClient =
+    HttpClient {
         defaultRequest {
             url(BASE_URL)
             contentType(ContentType.Application.Json)

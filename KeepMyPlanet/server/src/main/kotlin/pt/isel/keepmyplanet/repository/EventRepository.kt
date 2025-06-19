@@ -54,12 +54,12 @@ interface EventRepository : Repository<Event, Id> {
     suspend fun addAttendance(
         eventId: Id,
         userId: Id,
-        checkedInAt: LocalDateTime
+        checkedInAt: LocalDateTime,
     )
 
     suspend fun hasAttended(
         eventId: Id,
-        userId: Id
+        userId: Id,
     ): Boolean
 
     suspend fun getAttendeesIds(eventId: Id): Set<Id>
@@ -67,6 +67,6 @@ interface EventRepository : Repository<Event, Id> {
     suspend fun findEventsAttendedByUser(
         userId: Id,
         limit: Int,
-        offset: Int
+        offset: Int,
     ): List<Event>
 }

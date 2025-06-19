@@ -214,21 +214,30 @@ class DatabaseEventRepository(
             .executeAsList()
             .map { getEventWithParticipants(it) }
 
-    override suspend fun addAttendance(eventId: Id, userId: Id, checkedInAt: LocalDateTime) {
+    override suspend fun addAttendance(
+        eventId: Id,
+        userId: Id,
+        checkedInAt: LocalDateTime,
+    ) {
         eventQueries.addAttendance(eventId, userId, checkedInAt)
     }
 
-    override suspend fun hasAttended(eventId: Id, userId: Id): Boolean =
+    override suspend fun hasAttended(
+        eventId: Id,
+        userId: Id,
+    ): Boolean =
         eventQueries.getAttendanceByEventAndUser(eventId, userId).executeAsOneOrNull() != null
-
 
     override suspend fun getAttendeesIds(eventId: Id): Set<Id> =
         eventQueries.getAttendeesIdsForEvent(eventId).executeAsList().toSet()
 
-    override suspend fun findEventsAttendedByUser(userId: Id, limit: Int, offset: Int): List<Event> =
+    override suspend fun findEventsAttendedByUser(
+        userId: Id,
+        limit: Int,
+        offset: Int,
+    ): List<Event> =
         eventQueries
             .findEventsAttendedByUser(userId, limit.toLong(), offset.toLong())
             .executeAsList()
             .map { getEventWithParticipants(it) }
-
 }

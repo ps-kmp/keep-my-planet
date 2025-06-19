@@ -6,11 +6,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import io.ktor.client.engine.android.Android
 import pt.isel.keepmyplanet.di.AppContainer
 
 class MainActivity : ComponentActivity() {
-    private val container by lazy { AppContainer(Android) }
+    private val container by lazy { AppContainer() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

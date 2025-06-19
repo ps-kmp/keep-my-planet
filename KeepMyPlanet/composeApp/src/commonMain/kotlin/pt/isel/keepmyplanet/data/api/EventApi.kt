@@ -154,14 +154,20 @@ class EventApi(
             url(Endpoints.getAttendees(eventId))
         }
 
-    suspend fun checkInUser(eventId: UInt, request: CheckInRequest): Result<Unit> =
+    suspend fun checkInUser(
+        eventId: UInt,
+        request: CheckInRequest,
+    ): Result<Unit> =
         httpClient.executeRequestUnit {
             method = HttpMethod.Post
             url(Endpoints.checkInUser(eventId))
             setBody(request)
         }
 
-    suspend fun getAttendedEvents(limit: Int, offset: Int): Result<List<EventResponse>> =
+    suspend fun getAttendedEvents(
+        limit: Int,
+        offset: Int,
+    ): Result<List<EventResponse>> =
         httpClient.executeRequest {
             method = HttpMethod.Get
             url(Endpoints.attendedEvents())

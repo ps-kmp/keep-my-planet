@@ -61,7 +61,7 @@ class EventListViewModel(
 
     fun onFilterChanged(filterType: EventFilterType) {
         if (_listUiState.value.filter == filterType) return
-        _listUiState.update { it.copy(filter = filterType, query = "") }
+        _listUiState.update { it.copy(filter = filterType) }
         loadEvents(isRefresh = true)
     }
 

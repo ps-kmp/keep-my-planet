@@ -42,14 +42,14 @@ sealed class AppRoute {
     data object UserProfile : AppRoute()
 
     data class ManageAttendance(
-        val eventId: Id
+        val eventId: Id,
     ) : AppRoute()
 
     data class MyQrCode(
-        val userId: Id
+        val userId: Id,
     ) : AppRoute()
 
     data class UserStats(
-        val userId: Id
+        val userId: Id,
     ) : AppRoute()
 }

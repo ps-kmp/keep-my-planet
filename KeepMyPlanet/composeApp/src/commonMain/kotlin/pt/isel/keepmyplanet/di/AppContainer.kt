@@ -1,7 +1,6 @@
 package pt.isel.keepmyplanet.di
 
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.HttpClientEngineFactory
 import kotlinx.coroutines.flow.StateFlow
 import pt.isel.keepmyplanet.AppViewModel
 import pt.isel.keepmyplanet.data.api.AuthApi
@@ -28,9 +27,7 @@ import pt.isel.keepmyplanet.ui.user.stats.UserStatsViewModel
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsViewModel
 import pt.isel.keepmyplanet.ui.zone.report.ReportZoneViewModel
 
-class AppContainer(
-    engine: HttpClientEngineFactory<*>,
-) {
+class AppContainer {
     private val sessionManager = SessionManager()
     val userSession: StateFlow<UserSession?> = sessionManager.userSession
 
@@ -42,8 +39,15 @@ class AppContainer(
         sessionManager.clearSession()
     }
 
+    private fun onProfileUpdated(updatedUserInfo: UserInfo) {
+        val currentSession = userSession.value
+        if (currentSession != null) {
+            sessionManager.saveSession(currentSession.copy(userInfo = updatedUserInfo))
+        }
+    }
+
     private val httpClient: HttpClient by lazy {
-        createHttpClient(engine, sessionManager)
+        createHttpClient(sessionManager)
     }
 
     private val authApi: AuthApi by lazy { AuthApi(httpClient) }
@@ -70,7 +74,8 @@ class AppContainer(
 
     fun getReportZoneViewModel() = ReportZoneViewModel(zoneApi)
 
-    fun getUserProfileViewModel(user: UserInfo) = UserProfileViewModel(userApi, user)
+    fun getUserProfileViewModel(user: UserInfo) =
+        UserProfileViewModel(userApi, user, ::onProfileUpdated)
 
     fun getChatViewModel(
         user: UserInfo,
