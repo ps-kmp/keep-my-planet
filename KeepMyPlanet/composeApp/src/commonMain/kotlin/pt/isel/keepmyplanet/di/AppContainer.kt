@@ -10,10 +10,12 @@ import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.createHttpClient
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.session.model.UserSession
 import pt.isel.keepmyplanet.ui.chat.ChatViewModel
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
+import pt.isel.keepmyplanet.ui.event.attendance.ManageAttendanceViewModel
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsViewModel
 import pt.isel.keepmyplanet.ui.event.forms.EventFormViewModel
 import pt.isel.keepmyplanet.ui.event.list.EventListViewModel
@@ -22,6 +24,7 @@ import pt.isel.keepmyplanet.ui.map.MapViewModel
 import pt.isel.keepmyplanet.ui.register.RegisterViewModel
 import pt.isel.keepmyplanet.ui.user.UserProfileViewModel
 import pt.isel.keepmyplanet.ui.user.model.UserInfo
+import pt.isel.keepmyplanet.ui.user.stats.UserStatsViewModel
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsViewModel
 import pt.isel.keepmyplanet.ui.zone.report.ReportZoneViewModel
 
@@ -73,4 +76,8 @@ class AppContainer(
         user: UserInfo,
         chat: ChatInfo,
     ): ChatViewModel = ChatViewModel(chatApi, user, chat)
+
+    fun getManageAttendanceViewModel(eventId: Id) = ManageAttendanceViewModel(eventApi, eventId)
+
+    fun getUserStatsViewModel(userId: Id) = UserStatsViewModel(eventApi, userId)
 }

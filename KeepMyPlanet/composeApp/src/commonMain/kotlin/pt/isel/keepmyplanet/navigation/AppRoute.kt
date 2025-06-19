@@ -40,4 +40,16 @@ sealed class AppRoute {
     data object Map : AppRoute()
 
     data object UserProfile : AppRoute()
+
+    data class ManageAttendance(
+        val eventId: Id
+    ) : AppRoute()
+
+    data class MyQrCode(
+        val userId: Id
+    ) : AppRoute()
+
+    data class UserStats(
+        val userId: Id
+    ) : AppRoute()
 }

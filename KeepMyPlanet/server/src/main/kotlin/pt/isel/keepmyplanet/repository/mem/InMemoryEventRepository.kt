@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
@@ -20,6 +21,8 @@ import pt.isel.keepmyplanet.util.now
 class InMemoryEventRepository : EventRepository {
     private val events = ConcurrentHashMap<Id, Event>()
     private val nextId = AtomicInteger(1)
+    private val attendances = ConcurrentHashMap<Id, MutableMap<Id, LocalDateTime>>()
+
 
     init {
         val period =
@@ -96,6 +99,38 @@ class InMemoryEventRepository : EventRepository {
         events.values
             .filter { it.zoneId == zoneId && it.title.value.contains(name, ignoreCase = true) }
             .sortedBy { it.period.start }
+
+    override suspend fun addAttendance(
+        eventId: Id,
+        userId: Id,
+        checkedInAt: LocalDateTime
+    ) {
+        events[eventId] ?: throw NotFoundException("Event '$eventId' not found.")
+        attendances.computeIfAbsent(eventId) { ConcurrentHashMap() }[userId] = checkedInAt
+    }
+
+    override suspend fun hasAttended(
+        eventId: Id,
+        userId: Id
+    ): Boolean =
+        attendances[eventId]?.containsKey(userId) == true
+
+    override suspend fun getAttendeesIds(eventId: Id): Set<Id> =
+        attendances[eventId]?.keys?.toSet() ?: emptySet()
+
+
+    override suspend fun findEventsAttendedByUser(
+        userId: Id,
+        limit: Int,
+        offset: Int
+    ): List<Event> {
+        val attendedEventIds = attendances.filter { it.value.containsKey(userId) }.keys
+        return attendedEventIds
+            .mapNotNull { events[it] }
+            .sortedByDescending { it.period.start }
+            .drop(offset)
+            .take(limit)
+    }
 
     override suspend fun create(entity: Event): Event {
         val newId = Id(nextId.getAndIncrement().toUInt())

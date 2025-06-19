@@ -19,6 +19,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
+import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.errors.ValidationException
@@ -65,6 +66,18 @@ fun Route.eventWebApi(
                 val query = call.getQueryStringParameter("name")
                 eventService
                     .getEventsOrganizedBy(userId, query, limit, offset)
+                    .onSuccess { events ->
+                        call.respond(HttpStatusCode.OK, events.map { it.toResponse() })
+                    }.onFailure { throw it }
+            }
+
+            get("/attended") {
+                val userId = call.getCurrentUserId()
+                val limit = call.getQueryIntParameter("limit", default = 10)
+                val offset = call.getQueryIntParameter("offset", default = 0)
+
+                eventService
+                    .getEventsAttendedBy(userId, limit, offset)
                     .onSuccess { events ->
                         call.respond(HttpStatusCode.OK, events.map { it.toResponse() })
                     }.onFailure { throw it }
@@ -118,6 +131,16 @@ fun Route.eventWebApi(
                     .onFailure { throw it }
             }
 
+            get("/attendees") {
+                val eventId = call.getEventId()
+
+                eventService
+                    .getEventAttendees(eventId)
+                    .onSuccess { users ->
+                        call.respond(HttpStatusCode.OK, users.map { it.toResponse() })
+                    }.onFailure { throw it }
+            }
+
             authenticate("auth-jwt") {
                 // Update Event Details
                 patch {
@@ -167,6 +190,20 @@ fun Route.eventWebApi(
                     eventService
                         .cancelEvent(eventId, userId)
                         .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                        .onFailure { throw it }
+                }
+
+                post("/check-in") {
+                    val eventId = call.getEventId()
+                    val actingUserId = call.getCurrentUserId()
+                    val request = call.receive<CheckInRequest>()
+                    val userIdToCheckIn = Id(request.userId)
+
+                    eventService
+                        .checkInUserToEvent(eventId, userIdToCheckIn, actingUserId)
+                        .onSuccess {
+                            call.respond(HttpStatusCode.OK, mapOf("message" to "User checked in successfully."))
+                        }
                         .onFailure { throw it }
                 }
 

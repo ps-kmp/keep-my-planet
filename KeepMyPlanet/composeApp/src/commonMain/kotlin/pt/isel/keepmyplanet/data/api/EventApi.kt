@@ -7,6 +7,7 @@ import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
 import pt.isel.keepmyplanet.data.http.executeRequest
 import pt.isel.keepmyplanet.data.http.executeRequestUnit
+import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
@@ -41,6 +42,12 @@ class EventApi(
         fun leaveEvent(eventId: UInt) = "${eventById(eventId)}/leave"
 
         fun getParticipants(eventId: UInt) = "${eventById(eventId)}/participants"
+
+        fun getAttendees(eventId: UInt) = "${eventById(eventId)}/attendees"
+
+        fun checkInUser(eventId: UInt) = "${eventById(eventId)}/check-in"
+
+        fun attendedEvents() = "$EVENTS_BASE/attended"
     }
 
     suspend fun searchAllEvents(
@@ -139,5 +146,26 @@ class EventApi(
         httpClient.executeRequest {
             method = HttpMethod.Get
             url(Endpoints.getParticipants(eventId))
+        }
+
+    suspend fun getEventAttendees(eventId: UInt): Result<List<UserResponse>> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.getAttendees(eventId))
+        }
+
+    suspend fun checkInUser(eventId: UInt, request: CheckInRequest): Result<Unit> =
+        httpClient.executeRequestUnit {
+            method = HttpMethod.Post
+            url(Endpoints.checkInUser(eventId))
+            setBody(request)
+        }
+
+    suspend fun getAttendedEvents(limit: Int, offset: Int): Result<List<EventResponse>> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.attendedEvents())
+            parameter("limit", limit)
+            parameter("offset", offset)
         }
 }

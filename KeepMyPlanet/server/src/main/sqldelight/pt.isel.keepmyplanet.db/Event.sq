@@ -26,6 +26,33 @@ CREATE TABLE event_participants (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE event_attendances (
+    event_id BIGINT AS Id NOT NULL,
+    user_id BIGINT AS Id NOT NULL,
+    checked_in_at TEXT AS LocalDateTime NOT NULL,
+    PRIMARY KEY (event_id, user_id),
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+addAttendance:
+INSERT INTO event_attendances(event_id, user_id, checked_in_at)
+VALUES (:event_id, :user_id, CAST(:checked_in_at AS TIMESTAMP));
+
+getAttendanceByEventAndUser:
+SELECT 1 FROM event_attendances WHERE event_id = :event_id AND user_id = :user_id;
+
+getAttendeesIdsForEvent:
+SELECT user_id FROM event_attendances WHERE event_id = :event_id;
+
+findEventsAttendedByUser:
+SELECT e.*
+FROM events e
+JOIN event_attendances ea ON e.id = ea.event_id
+WHERE ea.user_id = :user_id
+ORDER BY e.start_datetime DESC
+LIMIT :limit OFFSET :offset;
+
 insert:
 INSERT INTO events(title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, created_at, updated_at)
 VALUES (

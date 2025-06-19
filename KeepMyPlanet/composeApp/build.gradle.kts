@@ -104,6 +104,9 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.maplibre.compose)
                 implementation(libs.ktor.client.android)
+                implementation("io.github.g0dkar:qrcode-kotlin:4.4.1")
+                implementation("com.gigamole.compose-qr-code-scanner:core:0.0.3")
+                implementation("com.gigamole.compose-qr-code-scanner:camera:0.0.3")
             }
         }
         val desktopMain by getting {

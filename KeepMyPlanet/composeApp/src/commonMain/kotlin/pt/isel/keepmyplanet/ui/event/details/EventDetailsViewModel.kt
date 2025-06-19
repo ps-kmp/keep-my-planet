@@ -29,6 +29,11 @@ class EventDetailsViewModel(
     private val _events = Channel<EventDetailsScreenEvent>(Channel.BUFFERED)
     val events: Flow<EventDetailsScreenEvent> = _events.receiveAsFlow()
 
+    sealed class QrNavigation {
+        data class ToScanner(val eventId: Id) : QrNavigation()
+        data class ToMyCode(val userId: Id) : QrNavigation()
+    }
+
     fun loadEventDetails(eventId: Id) {
         viewModelScope.launch {
             _detailsUiState.update { it.copy(isLoading = true) }
@@ -158,5 +163,20 @@ class EventDetailsViewModel(
                 else -> "$prefix: ${error.message ?: "Unknown error"}"
             }
         _events.send(EventDetailsScreenEvent.ShowSnackbar(message))
+    }
+
+    fun onQrCodeIconClicked() {
+        val state = _detailsUiState.value
+        if (!state.canUseQrFeature()) return
+
+        val eventId = state.event?.id ?: return
+
+        viewModelScope.launch {
+            if (state.isCurrentUserOrganizer) {
+                _events.send(EventDetailsScreenEvent.NavigateTo(QrNavigation.ToScanner(eventId)))
+            } else {
+                _events.send(EventDetailsScreenEvent.NavigateTo(QrNavigation.ToMyCode(currentUser.id)))
+            }
+        }
     }
 }

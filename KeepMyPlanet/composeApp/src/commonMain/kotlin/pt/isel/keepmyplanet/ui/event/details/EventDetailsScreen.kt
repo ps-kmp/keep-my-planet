@@ -34,6 +34,8 @@ import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.InfoRow
+import pt.isel.keepmyplanet.ui.components.ManageAttendanceButton
+import pt.isel.keepmyplanet.ui.components.QrCodeIconButton
 import pt.isel.keepmyplanet.ui.components.toFormattedString
 import pt.isel.keepmyplanet.ui.event.details.components.EventActions
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
@@ -45,6 +47,8 @@ fun EventDetailsScreen(
     eventId: Id,
     onNavigateToChat: (ChatInfo) -> Unit,
     onNavigateToEditEvent: (Id) -> Unit,
+    onNavigateToManageAttendance: (Id) -> Unit,
+    onNavigateToMyQrCode: (Id) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.detailsUiState.collectAsState()
@@ -65,6 +69,13 @@ fun EventDetailsScreen(
                     onNavigateBack()
                 }
 
+                is EventDetailsScreenEvent.NavigateTo -> {
+                    when (val dest = event.destination) {
+                        is EventDetailsViewModel.QrNavigation.ToScanner -> onNavigateToManageAttendance(dest.eventId)
+                        is EventDetailsViewModel.QrNavigation.ToMyCode -> onNavigateToMyQrCode(dest.userId)
+                    }
+                }
+
                 else -> {}
             }
         }
@@ -80,6 +91,14 @@ fun EventDetailsScreen(
             AppTopBar(
                 title = event?.title?.value ?: "Event Details",
                 onNavigateBack = onNavigateBack,
+                actions = {
+                    if (uiState.canUseQrFeature()) {
+                        QrCodeIconButton(
+                            onClick = viewModel::onQrCodeIconClicked,
+                            contentDescription = "Open QR Code Feature"
+                        )
+                    }
+                }
             )
         },
     ) { paddingValues ->
@@ -151,6 +170,14 @@ fun EventDetailsScreen(
                             text = "Last update: ${event.updatedAt.toFormattedString()}",
                             style = MaterialTheme.typography.caption,
                         )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    if (uiState.canManageAttendance()) {
+                        ManageAttendanceButton {
+                            onNavigateToManageAttendance(event.id)
+                        }
                     }
 
                     Spacer(modifier = Modifier.weight(1f))

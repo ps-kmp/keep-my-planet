@@ -61,4 +61,12 @@ data class EventDetailsUiState(
             !isDeleting &&
             isCurrentUserOrganizer &&
             event.status in listOf(EventStatus.PLANNED, EventStatus.CANCELLED)
+
+    fun canManageAttendance(): Boolean =
+        event != null && isCurrentUserOrganizer && event.status == EventStatus.IN_PROGRESS
+
+    fun canUseQrFeature(): Boolean =
+        event != null &&
+            event.status == EventStatus.IN_PROGRESS &&
+            (isCurrentUserOrganizer || isCurrentUserParticipant)
 }

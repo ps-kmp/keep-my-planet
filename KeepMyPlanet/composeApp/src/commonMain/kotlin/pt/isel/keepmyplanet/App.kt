@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import pt.isel.keepmyplanet.di.AppContainer
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
+import pt.isel.keepmyplanet.ui.event.attendance.ManageAttendanceScreen
+import pt.isel.keepmyplanet.ui.event.attendance.MyQrCodeScreen
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.event.forms.CreateEventScreen
 import pt.isel.keepmyplanet.ui.event.forms.UpdateEventScreen
@@ -22,6 +24,7 @@ import pt.isel.keepmyplanet.ui.login.LoginScreen
 import pt.isel.keepmyplanet.ui.map.MapScreen
 import pt.isel.keepmyplanet.ui.register.RegisterScreen
 import pt.isel.keepmyplanet.ui.user.UserProfileScreen
+import pt.isel.keepmyplanet.ui.user.stats.UserStatsScreen
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsScreen
 import pt.isel.keepmyplanet.ui.zone.report.ReportZoneScreen
 
@@ -99,6 +102,7 @@ fun App(container: AppContainer) {
                     eventId = route.eventId,
                     onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
                     onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(it)) },
+                    onNavigateToManageAttendance = { appViewModel.navigate(AppRoute.ManageAttendance(it)) },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
             }
@@ -132,6 +136,20 @@ fun App(container: AppContainer) {
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
             }
+        }
+
+        is AppRoute.ManageAttendance -> {
+            val viewModel = remember { container.getManageAttendanceViewModel(route.eventId) }
+            ManageAttendanceScreen(viewModel = viewModel)
+        }
+
+        is AppRoute.MyQrCode -> {
+            MyQrCodeScreen(userId = route.userId, onNavigateBack = { appViewModel.navigateBack() })
+        }
+
+        is AppRoute.UserStats -> {
+            val viewModel = remember { container.getUserStatsViewModel(route.userId) }
+            UserStatsScreen(viewModel = viewModel)
         }
 
         is AppRoute.Map -> {

@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.repository
 
+import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
@@ -48,5 +49,24 @@ interface EventRepository : Repository<Event, Id> {
     suspend fun findByZoneAndName(
         zoneId: Id,
         name: String,
+    ): List<Event>
+
+    suspend fun addAttendance(
+        eventId: Id,
+        userId: Id,
+        checkedInAt: LocalDateTime
+    )
+
+    suspend fun hasAttended(
+        eventId: Id,
+        userId: Id
+    ): Boolean
+
+    suspend fun getAttendeesIds(eventId: Id): Set<Id>
+
+    suspend fun findEventsAttendedByUser(
+        userId: Id,
+        limit: Int,
+        offset: Int
     ): List<Event>
 }
