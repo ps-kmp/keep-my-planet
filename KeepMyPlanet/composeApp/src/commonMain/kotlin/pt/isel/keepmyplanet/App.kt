@@ -108,6 +108,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
                         )
                     },
                     onNavigateBack = { appViewModel.navigateBack() },
+                    onNavigateToMyQrCode = { appViewModel.navigate(AppRoute.MyQrCode(user.id)) },
                 )
             }
         }
@@ -144,7 +145,10 @@ fun App(container: AppContainer = remember { AppContainer() }) {
 
         is AppRoute.ManageAttendance -> {
             val viewModel = remember { container.getManageAttendanceViewModel(route.eventId) }
-            ManageAttendanceScreen(viewModel = viewModel)
+            ManageAttendanceScreen(
+                viewModel = viewModel,
+                onNavigateBack = { appViewModel.navigateBack() }
+            )
         }
 
         is AppRoute.MyQrCode -> {
@@ -153,7 +157,11 @@ fun App(container: AppContainer = remember { AppContainer() }) {
 
         is AppRoute.UserStats -> {
             val viewModel = remember { container.getUserStatsViewModel(route.userId) }
-            UserStatsScreen(viewModel = viewModel)
+            UserStatsScreen(
+                viewModel = viewModel,
+                onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
+                onNavigateBack = { appViewModel.navigateBack() }
+            )
         }
 
         is AppRoute.Map -> {

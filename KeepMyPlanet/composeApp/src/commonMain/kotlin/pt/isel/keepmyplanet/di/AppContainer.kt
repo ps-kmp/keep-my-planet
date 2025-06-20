@@ -84,5 +84,5 @@ class AppContainer {
 
     fun getManageAttendanceViewModel(eventId: Id) = ManageAttendanceViewModel(eventApi, eventId)
 
-    fun getUserStatsViewModel(userId: Id) = UserStatsViewModel(eventApi, userId)
+    fun getUserStatsViewModel(userId: Id) = UserStatsViewModel(eventApi)
 }

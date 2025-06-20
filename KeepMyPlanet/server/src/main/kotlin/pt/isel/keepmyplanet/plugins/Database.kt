@@ -17,6 +17,7 @@ import pt.isel.keepmyplanet.db.PasswordHashAdapter
 import pt.isel.keepmyplanet.db.TitleAdapter
 import pt.isel.keepmyplanet.db.ZoneSeverityAdapter
 import pt.isel.keepmyplanet.db.ZoneStatusAdapter
+import ptiselkeepmyplanetdb.Event_attendances
 import ptiselkeepmyplanetdb.Event_participants
 import ptiselkeepmyplanetdb.Events
 import ptiselkeepmyplanetdb.Messages
@@ -109,6 +110,12 @@ fun Application.configureDatabase() {
                 Zone_photos.Adapter(
                     zone_idAdapter = IdAdapter,
                     photo_idAdapter = IdAdapter,
+                ),
+            event_attendancesAdapter =
+                Event_attendances.Adapter(
+                    event_idAdapter = IdAdapter,
+                    user_idAdapter = IdAdapter,
+                    checked_in_atAdapter = LocalDateTimeAdapter,
                 ),
         )
 }
