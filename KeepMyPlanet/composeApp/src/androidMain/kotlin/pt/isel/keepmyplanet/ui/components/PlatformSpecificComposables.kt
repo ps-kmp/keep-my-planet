@@ -21,6 +21,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.asImageBitmap
@@ -64,6 +65,7 @@ actual fun QrCodeScannerView(
     if (cameraPermissionState.status.isGranted) {
         // AndroidView hosts a PreviewView of CameraX
         AndroidView(
+            modifier = modifier.background(androidx.compose.ui.graphics.Color.Cyan),
             factory = { ctx ->
                 val previewView = PreviewView(ctx).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -87,6 +89,7 @@ actual fun QrCodeScannerView(
                         .build()
                         .also {
                             it.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
+                                println("Freamunde: ImageAnalyzer está a analisar um frame!")
                                 val mediaImage = imageProxy.image
                                 if (mediaImage != null) {
                                     val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
@@ -94,14 +97,17 @@ actual fun QrCodeScannerView(
 
                                     scanner.process(image)
                                         .addOnSuccessListener { barcodes ->
+                                            println("Freamunde: ML Kit Success. Barcodes encontrados: ${barcodes.size}")
                                             if (barcodes.isNotEmpty()) {
                                                 barcodes.firstNotNullOfOrNull { it.rawValue }?.let { result ->
+                                                    println("Freamunde: QR Code DECODIFICADO: $result")
                                                     onQrCodeScanned(result)
                                                     cameraProvider.unbindAll()
                                                 }
                                             }
                                         }
-                                        .addOnFailureListener {
+                                        .addOnFailureListener {e ->
+                                            println("Freamunde: ML Kit FALHOU: ${e.message}")
                                             //Handle processing failures
                                         }
                                         .addOnCompleteListener {
@@ -119,7 +125,9 @@ actual fun QrCodeScannerView(
                             preview,
                             imageAnalyzer
                         )
+                        println("Freamunde: Camera bindToLifecycle BEM-SUCEDIDO")
                     } catch (exc: Exception) {
+                        println("Freamunde: Camera bindToLifecycle FALHOU: ${exc.message}")
                         // Handle errors
                     }
 
@@ -127,7 +135,6 @@ actual fun QrCodeScannerView(
 
                 previewView
             },
-            modifier = modifier
         )
     } else {
 
@@ -151,8 +158,10 @@ actual fun QrCodeDisplay(data: String, modifier: Modifier) {
                     bmp.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
                 }
             }
+            println("Freamunde: Geração de QR bem-sucedida!")
             bmp
         } catch (e: Exception) {
+            println("Freamunde: ERRO na geração do QR: ${e.message}")
             e.printStackTrace()
             null
         }
@@ -166,7 +175,10 @@ actual fun QrCodeDisplay(data: String, modifier: Modifier) {
         )
     } else {
         // Change to CircularProgressIndicator or any placeholder
-        Box(modifier)
+        //Box(modifier)
+        Box(modifier.background(androidx.compose.ui.graphics.Color.Magenta)) {
+            Text("Falha ao gerar QR Code")
+        }
     }
 }
 

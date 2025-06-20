@@ -113,6 +113,7 @@ kotlin {
                 implementation("com.google.zxing:core:3.5.2")
                 implementation("com.google.mlkit:barcode-scanning:17.2.0")
                 implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+                implementation(libs.androidx.camera.camera2)
 
             }
         }

@@ -30,6 +30,7 @@ sqldelight = "2.1.0"
 cameraCore = "1.4.2"
 cameraLifecycle = "1.4.2"
 cameraView = "1.4.2"
+camera2 = "1.4.2"
 
 [libraries]
 android-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "androidSdk" }
@@ -85,6 +86,7 @@ ktor-server-cors = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "kto
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "cameraLifecycle" }
 androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraView" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camera2" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

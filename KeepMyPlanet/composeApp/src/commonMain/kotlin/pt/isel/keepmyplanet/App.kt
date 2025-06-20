@@ -144,6 +144,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.ManageAttendance -> {
+            println("Freamunde: Rota ManageAttendance atingida!")
             val viewModel = remember { container.getManageAttendanceViewModel(route.eventId) }
             ManageAttendanceScreen(
                 viewModel = viewModel,
@@ -152,6 +153,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.MyQrCode -> {
+            println("Freamunde: Rota MyQrCode atingida!")
             MyQrCodeScreen(userId = route.userId, onNavigateBack = { appViewModel.navigateBack() })
         }
 

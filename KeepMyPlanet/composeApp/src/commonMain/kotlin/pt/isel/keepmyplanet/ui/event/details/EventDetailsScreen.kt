@@ -57,6 +57,7 @@ fun EventDetailsScreen(
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
+            println("Freamunde: Evento recebido na UI: $event")
             when (event) {
                 is EventDetailsScreenEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
@@ -70,6 +71,7 @@ fun EventDetailsScreen(
                 }
 
                 is EventDetailsScreenEvent.NavigateTo -> {
+                    println("Freamunde: Processando evento de navegação...")
                     when (val dest = event.destination) {
                         is EventDetailsViewModel.QrNavigation.ToScanner ->
                             onNavigateToManageAttendance(dest.eventId)

@@ -171,15 +171,21 @@ class EventDetailsViewModel(
     }
 
     fun onQrCodeIconClicked() {
+        println("Freamunde: onQrCodeIconClicked - INICIO")
         val state = _detailsUiState.value
-        if (!state.canUseQrFeature()) return
+        if (!state.canUseQrFeature()){
+            println("Freamunde: onQrCodeIconClicked - canUseQrFeature é FALSO")
+            return
+        }
 
         val eventId = state.event?.id ?: return
 
         viewModelScope.launch {
             if (state.isCurrentUserOrganizer) {
+                println("Freamunde: Navegando para Scanner (Organizador)")
                 _events.send(EventDetailsScreenEvent.NavigateTo(QrNavigation.ToScanner(eventId)))
             } else {
+                println("Freamunde: Navegando para MyCode (Participante)")
                 _events.send(
                     EventDetailsScreenEvent.NavigateTo(QrNavigation.ToMyCode(currentUser.id)),
                 )
