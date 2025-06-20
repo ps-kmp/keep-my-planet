@@ -104,9 +104,16 @@ kotlin {
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.ktor.client.android)
+
                 implementation(libs.qrcode.kotlin)
-                implementation(libs.core)
-                implementation(libs.camera)
+
+                implementation(libs.androidx.camera.core)
+                implementation(libs.androidx.camera.lifecycle)
+                implementation(libs.androidx.camera.view)
+                implementation("com.google.zxing:core:3.5.2")
+                implementation("com.google.mlkit:barcode-scanning:17.2.0")
+                implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+
             }
         }
         val desktopMain by getting {
