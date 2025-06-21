@@ -35,11 +35,7 @@ class ManageAttendanceViewModel(
             val attendeesResult = eventApi.getEventAttendees(eventId.value)
 
             detailsResult.onFailure {
-                _uiState.update { s ->
-                    s.copy(
-                        error = "Failed to load event details",
-                    )
-                }
+                _uiState.update { it.copy(error = "Failed to load event details") }
             }
             participantsResult.onFailure {
                 _uiState.update { it.copy(error = "Failed to load participants") }
@@ -53,17 +49,32 @@ class ManageAttendanceViewModel(
                     isLoading = false,
                     event = detailsResult.getOrNull()?.toEvent(),
                     participants =
-                        participantsResult.getOrNull()?.map { p -> p.toUserInfo() }
-                            ?: emptyList(),
+                        participantsResult.getOrNull()?.map { p -> p.toUserInfo() } ?: emptyList(),
                     attendees =
-                        attendeesResult.getOrNull()?.map { a -> a.toUserInfo() }
-                            ?: emptyList(),
+                        attendeesResult.getOrNull()?.map { a -> a.toUserInfo() } ?: emptyList(),
                 )
             }
         }
     }
 
-    fun checkInUser(scannedUserId: Id) {
+    fun onQrCodeScanned(qrData: String) {
+        val userId =
+            try {
+                Id(qrData.toUInt())
+            } catch (_: NumberFormatException) {
+                null
+            }
+
+        if (userId != null) {
+            checkInUser(userId)
+        } else {
+            _uiState.update {
+                it.copy(checkInStatusMessage = "Invalid QR code scanned.")
+            }
+        }
+    }
+
+    private fun checkInUser(scannedUserId: Id) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(

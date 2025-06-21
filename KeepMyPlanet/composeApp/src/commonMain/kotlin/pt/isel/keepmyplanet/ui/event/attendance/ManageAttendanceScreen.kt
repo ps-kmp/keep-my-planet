@@ -16,7 +16,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.QrCodeScannerView
 
@@ -43,18 +42,7 @@ fun ManageAttendanceScreen(
             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f)) {
                 QrCodeScannerView(
                     modifier = Modifier.fillMaxSize(),
-                    onQrCodeScanned = { qrData ->
-                        val userId =
-                            try {
-                                Id(qrData.toUInt())
-                            } catch (_: Exception) {
-                                null
-                            }
-
-                        if (userId != null) {
-                            viewModel.checkInUser(userId)
-                        }
-                    },
+                    onQrCodeScanned = viewModel::onQrCodeScanned,
                 )
             }
 

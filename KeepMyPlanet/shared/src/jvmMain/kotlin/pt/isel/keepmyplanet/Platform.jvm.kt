@@ -5,3 +5,5 @@ class JVMPlatform : Platform {
 }
 
 actual fun getPlatform(): Platform = JVMPlatform()
+
+actual val BASE_URL: String = "http://localhost:$SERVER_PORT"

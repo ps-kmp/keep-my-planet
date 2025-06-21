@@ -7,3 +7,5 @@ class AndroidPlatform : Platform {
 }
 
 actual fun getPlatform(): Platform = AndroidPlatform()
+
+actual val BASE_URL: String = "http://localhost:$SERVER_PORT"

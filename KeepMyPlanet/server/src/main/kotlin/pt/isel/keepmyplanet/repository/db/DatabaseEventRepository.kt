@@ -134,9 +134,22 @@ class DatabaseEventRepository(
                         updated_at = now(),
                     ).executeAsOne()
 
-            eventQueries.removeAllParticipantsFromEvent(entity.id)
-            entity.participantsIds.forEach { eventQueries.addParticipantToEvent(entity.id, it) }
-            dbEvent.toDomainEvent(entity.participantsIds)
+            val currentParticipantIds =
+                eventQueries.getParticipantIdsForEvent(entity.id).executeAsList().toSet()
+            val newParticipantIds = entity.participantsIds
+
+            val participantsToAdd = newParticipantIds - currentParticipantIds
+            val participantsToRemove = currentParticipantIds - newParticipantIds
+
+            participantsToAdd.forEach { userId ->
+                eventQueries.addParticipantToEvent(entity.id, userId)
+            }
+
+            participantsToRemove.forEach { userId ->
+                eventQueries.removeParticipantFromEvent(entity.id, userId)
+            }
+
+            dbEvent.toDomainEvent(newParticipantIds)
         }
     }
 

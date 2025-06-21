@@ -11,14 +11,12 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
-import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
-import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
@@ -226,18 +224,6 @@ fun Route.eventWebApi(
                     eventService
                         .leaveEvent(eventId, userId)
                         .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
-                        .onFailure { throw it }
-                }
-
-                // Change Event Status
-                put("/status") {
-                    val eventId = call.getEventId()
-                    val userId = call.getCurrentUserId()
-                    val request = call.receive<ChangeEventStatusRequest>()
-
-                    eventStateChangeService
-                        .changeEventStatus(eventId, request.newStatus, userId)
-                        .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }
             }
