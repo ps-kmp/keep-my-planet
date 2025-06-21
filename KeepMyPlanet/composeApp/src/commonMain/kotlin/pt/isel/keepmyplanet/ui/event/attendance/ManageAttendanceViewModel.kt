@@ -42,16 +42,10 @@ class ManageAttendanceViewModel(
                 }
             }
             participantsResult.onFailure {
-                _uiState.update {
-                        s ->
-                    s.copy(error = "Failed to load participants")
-                }
+                _uiState.update { it.copy(error = "Failed to load participants") }
             }
             attendeesResult.onFailure {
-                _uiState.update {
-                        s ->
-                    s.copy(error = "Failed to load attendees")
-                }
+                _uiState.update { it.copy(error = "Failed to load attendees") }
             }
 
             _uiState.update {
@@ -78,16 +72,17 @@ class ManageAttendanceViewModel(
             }
 
             val request = CheckInRequest(userId = scannedUserId.value)
-            eventApi.checkInUser(eventId.value, request)
+            eventApi
+                .checkInUser(eventId.value, request)
                 .onSuccess {
                     _uiState.update {
                         it.copy(
-                            checkInStatusMessage = "User ${scannedUserId.value} checked in successfully!",
+                            checkInStatusMessage =
+                                "User ${scannedUserId.value} checked in successfully!",
                         )
                     }
                     refreshAttendees()
-                }
-                .onFailure { error ->
+                }.onFailure { error ->
                     val errorMessage = (error as? ApiException)?.error?.message ?: "Check-in failed"
                     _uiState.update { it.copy(checkInStatusMessage = "Error: $errorMessage") }
                 }

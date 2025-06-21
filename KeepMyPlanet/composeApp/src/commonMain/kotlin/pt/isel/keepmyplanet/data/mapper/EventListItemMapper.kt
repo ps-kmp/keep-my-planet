@@ -30,5 +30,5 @@ fun Event.toListItem(): EventListItem =
         period = this.period,
         status = this.status,
         participantCount = this.participantsIds.size,
-        maxParticipants = this.maxParticipants
+        maxParticipants = this.maxParticipants,
     )

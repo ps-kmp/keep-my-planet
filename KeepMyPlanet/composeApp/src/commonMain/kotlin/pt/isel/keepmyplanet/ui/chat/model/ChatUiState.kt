@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.chat.model
 
 import pt.isel.keepmyplanet.domain.message.Message
-import pt.isel.keepmyplanet.ui.user.model.UserInfo
+import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 data class ChatUiState(
     val user: UserInfo,

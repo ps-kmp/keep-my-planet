@@ -118,6 +118,9 @@ SELECT * FROM events WHERE status = :status ORDER BY start_datetime;
 getParticipantIdsForEvent:
 SELECT user_id FROM event_participants WHERE event_id = :event_id;
 
+getParticipantIdsForEvents:
+SELECT event_id, user_id FROM event_participants WHERE event_id IN :eventIds;
+
 addParticipantToEvent:
 INSERT INTO event_participants(event_id, user_id)
 VALUES (:event_id, :user_id)

@@ -29,7 +29,9 @@ class ZoneDetailsViewModel(
                     val errorMessage =
                         when (error) {
                             is ApiException -> error.error.message
-                            else -> "Failed to load zone details: ${error.message ?: "Unknown error"}"
+                            else ->
+                                "Failed to load zone details: " +
+                                    (error.message ?: "Unknown error")
                         }
                     _uiState.update { it.copy(isLoading = false, error = errorMessage) }
                 }

@@ -68,7 +68,9 @@ fun EventItem(
                             modifier = Modifier.padding(end = 4.dp),
                         )
                         Text(
-                            text = "${event.participantCount}${event.maxParticipants?.let { "/$it" } ?: ""}",
+                            text =
+                                "${event.participantCount}" +
+                                    (event.maxParticipants?.let { "/$it" } ?: ""),
                             style = MaterialTheme.typography.caption,
                         )
                     }

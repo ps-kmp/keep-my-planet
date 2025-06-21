@@ -23,12 +23,12 @@ import pt.isel.keepmyplanet.ui.event.list.components.EventItem
 fun UserStatsScreen(
     viewModel: UserStatsViewModel,
     onEventSelected: (Event) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = { AppTopBar(title = "My Attended Events", onNavigateBack = onNavigateBack) }
+        topBar = { AppTopBar(title = "My Attended Events", onNavigateBack = onNavigateBack) },
     ) { padding ->
         if (uiState.isLoading) {
             FullScreenLoading()
@@ -38,12 +38,12 @@ fun UserStatsScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(uiState.attendedEvents, key = { it.id.value }) { event ->
+                items(uiState.attendedEvents, key = { it.id.value.toString() }) { event ->
                     EventItem(
                         event = event.toListItem(),
-                        onClick = { onEventSelected(event) }
+                        onClick = { onEventSelected(event) },
                     )
                 }
             }

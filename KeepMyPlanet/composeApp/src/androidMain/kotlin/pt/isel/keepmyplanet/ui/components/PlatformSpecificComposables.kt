@@ -1,6 +1,16 @@
 package pt.isel.keepmyplanet.ui.components
 
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.view.ViewGroup
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
@@ -9,24 +19,16 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import android.graphics.Bitmap
-import android.graphics.Color
-import android.view.ViewGroup
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
-import androidx.compose.foundation.background
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -35,7 +37,8 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import java.util.concurrent.Executors
-import androidx.compose.runtime.produceState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 actual fun ManageAttendanceButton(onClick: () -> Unit) {
@@ -44,15 +47,15 @@ actual fun ManageAttendanceButton(onClick: () -> Unit) {
     }
 }
 
+@ExperimentalGetImage
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 actual fun QrCodeScannerView(
     modifier: Modifier,
-    onQrCodeScanned: (String) -> Unit
+    onQrCodeScanned: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
@@ -67,77 +70,100 @@ actual fun QrCodeScannerView(
         AndroidView(
             modifier = modifier.background(androidx.compose.ui.graphics.Color.Cyan),
             factory = { ctx ->
-                val previewView = PreviewView(ctx).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                }
+                val previewView =
+                    PreviewView(ctx).apply {
+                        layoutParams =
+                            ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                            )
+                    }
                 val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
 
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
+                cameraProviderFuture.addListener(
+                    {
+                        val cameraProvider = cameraProviderFuture.get()
 
-                    // Configure preview
-                    val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
-
-                    // Configure ImageAnalysis to ML Kit
-                    val imageAnalyzer = ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                        .also {
-                            it.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
-                                println("Freamunde: ImageAnalyzer está a analisar um frame!")
-                                val mediaImage = imageProxy.image
-                                if (mediaImage != null) {
-                                    val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-                                    val scanner = BarcodeScanning.getClient()
-
-                                    scanner.process(image)
-                                        .addOnSuccessListener { barcodes ->
-                                            println("Freamunde: ML Kit Success. Barcodes encontrados: ${barcodes.size}")
-                                            if (barcodes.isNotEmpty()) {
-                                                barcodes.firstNotNullOfOrNull { it.rawValue }?.let { result ->
-                                                    println("Freamunde: QR Code DECODIFICADO: $result")
-                                                    onQrCodeScanned(result)
-                                                    cameraProvider.unbindAll()
-                                                }
-                                            }
-                                        }
-                                        .addOnFailureListener {e ->
-                                            println("Freamunde: ML Kit FALHOU: ${e.message}")
-                                            //Handle processing failures
-                                        }
-                                        .addOnCompleteListener {
-                                            imageProxy.close()
-                                        }
-                                }
+                        // Configure preview
+                        val preview =
+                            Preview.Builder().build().also {
+                                it.setSurfaceProvider(previewView.surfaceProvider)
                             }
+
+                        // Configure ImageAnalysis to ML Kit
+                        val imageAnalyzer =
+                            ImageAnalysis
+                                .Builder()
+                                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                .build()
+                                .also {
+                                    it.setAnalyzer(
+                                        Executors.newSingleThreadExecutor(),
+                                    ) { imageProxy ->
+                                        println(
+                                            "Freamunde: ImageAnalyzer está a analisar um frame!",
+                                        )
+                                        val mediaImage = imageProxy.image
+                                        if (mediaImage != null) {
+                                            val image =
+                                                InputImage.fromMediaImage(
+                                                    mediaImage,
+                                                    imageProxy.imageInfo.rotationDegrees,
+                                                )
+                                            val scanner = BarcodeScanning.getClient()
+
+                                            scanner
+                                                .process(image)
+                                                .addOnSuccessListener { barcodes ->
+                                                    println(
+                                                        "Freamunde: ML Kit Success. Barcodes " +
+                                                            "encontrados: ${barcodes.size}",
+                                                    )
+                                                    if (barcodes.isNotEmpty()) {
+                                                        barcodes
+                                                            .firstNotNullOfOrNull { it.rawValue }
+                                                            ?.let { result ->
+                                                                println(
+                                                                    "Freamunde: QR Code " +
+                                                                        "DECODIFICADO: $result",
+                                                                )
+                                                                onQrCodeScanned(result)
+                                                                cameraProvider.unbindAll()
+                                                            }
+                                                    }
+                                                }.addOnFailureListener { e ->
+                                                    println(
+                                                        "Freamunde: ML Kit FALHOU: ${e.message}",
+                                                    )
+                                                    // Handle processing failures
+                                                }.addOnCompleteListener {
+                                                    imageProxy.close()
+                                                }
+                                        }
+                                    }
+                                }
+
+                        try {
+                            cameraProvider.unbindAll() // No previous bindings
+                            cameraProvider.bindToLifecycle(
+                                lifecycleOwner,
+                                CameraSelector.DEFAULT_BACK_CAMERA,
+                                preview,
+                                imageAnalyzer,
+                            )
+                            println("Freamunde: Camera bindToLifecycle BEM-SUCEDIDO")
+                        } catch (exc: Exception) {
+                            println("Freamunde: Camera bindToLifecycle FALHOU: ${exc.message}")
+                            // Handle errors
                         }
-
-                    try {
-                        cameraProvider.unbindAll() // No previous bindings
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            CameraSelector.DEFAULT_BACK_CAMERA,
-                            preview,
-                            imageAnalyzer
-                        )
-                        println("Freamunde: Camera bindToLifecycle BEM-SUCEDIDO")
-                    } catch (exc: Exception) {
-                        println("Freamunde: Camera bindToLifecycle FALHOU: ${exc.message}")
-                        // Handle errors
-                    }
-
-                }, ContextCompat.getMainExecutor(ctx))
+                    },
+                    ContextCompat.getMainExecutor(ctx),
+                )
 
                 previewView
             },
         )
     } else {
-
         Box(modifier) {
             Text("Camera permission is required to scan QR codes.")
         }
@@ -145,37 +171,43 @@ actual fun QrCodeScannerView(
 }
 
 @Composable
-actual fun QrCodeDisplay(data: String, modifier: Modifier) {
+actual fun QrCodeDisplay(
+    data: String,
+    modifier: Modifier,
+) {
     val qrBitmap by produceState<Bitmap?>(initialValue = null, key1 = data) {
-        value = try {
-            val writer = QRCodeWriter()
-            val bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, 512, 512)
-            val width = bitMatrix.width
-            val height = bitMatrix.height
-            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
-            for (x in 0 until width) {
-                for (y in 0 until height) {
-                    bmp.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+        value =
+            withContext(Dispatchers.Default) {
+                try {
+                    val writer = QRCodeWriter()
+                    val bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, 512, 512)
+                    val width = bitMatrix.width
+                    val height = bitMatrix.height
+                    val bmp = createBitmap(width, height, Bitmap.Config.RGB_565)
+                    for (x in 0 until width) {
+                        for (y in 0 until height) {
+                            bmp[x, y] = if (bitMatrix[x, y]) Color.BLACK else Color.WHITE
+                        }
+                    }
+                    println("Freamunde: Geração de QR bem-sucedida!")
+                    bmp
+                } catch (e: Exception) {
+                    println("Freamunde: ERRO na geração do QR: ${e.message}")
+                    e.printStackTrace()
+                    null
                 }
             }
-            println("Freamunde: Geração de QR bem-sucedida!")
-            bmp
-        } catch (e: Exception) {
-            println("Freamunde: ERRO na geração do QR: ${e.message}")
-            e.printStackTrace()
-            null
-        }
     }
 
     if (qrBitmap != null) {
         Image(
             bitmap = qrBitmap!!.asImageBitmap(),
             contentDescription = "User QR Code",
-            modifier = modifier
+            modifier = modifier,
         )
     } else {
         // Change to CircularProgressIndicator or any placeholder
-        //Box(modifier)
+        // Box(modifier)
         Box(modifier.background(androidx.compose.ui.graphics.Color.Magenta)) {
             Text("Falha ao gerar QR Code")
         }

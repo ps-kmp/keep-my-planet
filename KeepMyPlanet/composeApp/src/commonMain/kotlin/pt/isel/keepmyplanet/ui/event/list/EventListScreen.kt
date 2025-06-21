@@ -115,7 +115,7 @@ fun EventListScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        items(uiState.events, key = { it.id.value.toInt() }) { event ->
+                        items(uiState.events, key = { it.id.value.toString() }) { event ->
                             EventItem(event = event, onClick = { onEventSelected(event) })
                         }
                         if (uiState.isAddingMore) {

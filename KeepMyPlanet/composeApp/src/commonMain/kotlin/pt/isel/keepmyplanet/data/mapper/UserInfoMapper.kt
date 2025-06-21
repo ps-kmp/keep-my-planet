@@ -4,7 +4,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.dto.user.UserResponse
-import pt.isel.keepmyplanet.ui.user.model.UserInfo
+import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 fun UserResponse.toUserInfo(): UserInfo =
     UserInfo(

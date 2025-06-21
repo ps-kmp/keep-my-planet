@@ -147,7 +147,8 @@ private suspend fun determineZoneResult(
     } else {
         Result.failure(
             ValidationException(
-                "Query parameters 'lat', 'lon', and 'radius' must all be provided together for location filtering.",
+                "Query parameters 'lat', 'lon', and 'radius' " +
+                    "must all be provided together for location filtering.",
             ),
         )
     }

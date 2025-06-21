@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.user.model
+package pt.isel.keepmyplanet.ui.user.profile.model
 
 sealed interface UserProfileEvent {
     data class ShowSnackbar(

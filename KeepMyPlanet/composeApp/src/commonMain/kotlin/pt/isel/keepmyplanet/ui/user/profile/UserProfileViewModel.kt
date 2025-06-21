@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.user
+package pt.isel.keepmyplanet.ui.user.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,9 +18,9 @@ import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
-import pt.isel.keepmyplanet.ui.user.model.UserInfo
-import pt.isel.keepmyplanet.ui.user.model.UserProfileEvent
-import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
+import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
+import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileEvent
+import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 
 class UserProfileViewModel(
     private val userService: UserApi,

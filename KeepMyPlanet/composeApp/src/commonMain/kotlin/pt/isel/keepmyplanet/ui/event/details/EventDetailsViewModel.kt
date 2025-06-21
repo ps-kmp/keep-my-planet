@@ -17,7 +17,7 @@ import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.mapper.event.toEvent
 import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsScreenEvent
 import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsUiState
-import pt.isel.keepmyplanet.ui.user.model.UserInfo
+import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 class EventDetailsViewModel(
     private val eventApi: EventApi,
@@ -173,7 +173,7 @@ class EventDetailsViewModel(
     fun onQrCodeIconClicked() {
         println("Freamunde: onQrCodeIconClicked - INICIO")
         val state = _detailsUiState.value
-        if (!state.canUseQrFeature()){
+        if (!state.canUseQrFeature()) {
             println("Freamunde: onQrCodeIconClicked - canUseQrFeature é FALSO")
             return
         }

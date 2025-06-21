@@ -10,14 +10,22 @@ actual fun ManageAttendanceButton(onClick: () -> Unit) {
 @Composable
 actual fun QrCodeScannerView(
     modifier: Modifier,
-    onQrCodeScanned: (String) -> Unit
+    onQrCodeScanned: (String) -> Unit,
 ) {
+    FeatureNotAvailable(modifier, "QR Code display is not available on Web.")
 }
 
 @Composable
-actual fun QrCodeDisplay(data: String, modifier: Modifier) {
+actual fun QrCodeDisplay(
+    data: String,
+    modifier: Modifier,
+) {
+    FeatureNotAvailable(modifier, "QR Code scanning is not available on Web.")
 }
 
 @Composable
-actual fun QrCodeIconButton(onClick: () -> Unit, contentDescription: String) {
+actual fun QrCodeIconButton(
+    onClick: () -> Unit,
+    contentDescription: String,
+) {
 }

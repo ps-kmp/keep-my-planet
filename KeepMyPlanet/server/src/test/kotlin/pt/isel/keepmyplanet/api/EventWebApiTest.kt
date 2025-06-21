@@ -338,14 +338,12 @@ class EventWebApiTest : BaseWebApiTest() {
             val newDescription = "Updated description."
             val newMaxParticipants = 100
             val newStartDate = futureStart.plus(1.days).toString()
-            val newEndDate = futureEnd.plus(1.days).toString()
 
             val requestBody =
                 UpdateEventRequest(
                     title = newTitle,
                     description = newDescription,
                     startDate = newStartDate,
-                    endDate = newEndDate,
                     maxParticipants = newMaxParticipants,
                 )
 
@@ -361,7 +359,6 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(newTitle, responseBody.title)
             assertEquals(newDescription, responseBody.description)
             assertEquals(newStartDate, responseBody.startDate)
-            assertEquals(newEndDate, responseBody.endDate)
             assertEquals(newMaxParticipants, responseBody.maxParticipants)
 
             val updatedEvent = fakeEventRepository.getById(event.id)

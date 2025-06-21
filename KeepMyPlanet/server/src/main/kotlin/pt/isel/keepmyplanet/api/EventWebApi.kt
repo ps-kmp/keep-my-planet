@@ -22,7 +22,6 @@ import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
-import pt.isel.keepmyplanet.errors.ValidationException
 import pt.isel.keepmyplanet.mapper.event.toResponse
 import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.service.EventService
@@ -150,19 +149,7 @@ fun Route.eventWebApi(
 
                     val title = request.title?.let { Title(it) }
                     val description = request.description?.let { Description(it) }
-                    val period =
-                        if (request.startDate != null && request.endDate != null) {
-                            Period(
-                                LocalDateTime.parse(request.startDate!!),
-                                LocalDateTime.parse(request.endDate!!),
-                            )
-                        } else if (request.startDate == null && request.endDate != null) {
-                            throw ValidationException(
-                                "Both startDate and endDate must be provided if endDate is present.",
-                            )
-                        } else {
-                            null
-                        }
+                    val period = request.startDate?.let { Period(LocalDateTime.parse(it), null) }
                     val max = request.maxParticipants
 
                     eventService
@@ -206,8 +193,7 @@ fun Route.eventWebApi(
                                 HttpStatusCode.OK,
                                 mapOf("message" to "User checked in successfully."),
                             )
-                        }
-                        .onFailure { throw it }
+                        }.onFailure { throw it }
                 }
 
                 // Complete Event

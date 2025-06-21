@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.user.components
+package pt.isel.keepmyplanet.ui.user.profile.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -14,7 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
+import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 
 @Composable
 fun DeleteAccountSection(

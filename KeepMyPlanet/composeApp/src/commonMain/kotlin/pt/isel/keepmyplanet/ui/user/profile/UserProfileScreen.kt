@@ -1,46 +1,31 @@
-package pt.isel.keepmyplanet.ui.user
+package pt.isel.keepmyplanet.ui.user.profile
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
-import pt.isel.keepmyplanet.ui.user.components.DeleteAccountSection
-import pt.isel.keepmyplanet.ui.user.components.PasswordChangeSection
-import pt.isel.keepmyplanet.ui.user.components.ProfileInfoSection
-import pt.isel.keepmyplanet.ui.user.model.UserProfileEvent
-import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
+import pt.isel.keepmyplanet.ui.user.profile.components.UserProfileDetails
+import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileEvent
+import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 
 @Composable
 fun UserProfileScreen(
     viewModel: UserProfileViewModel,
     onAccountDeleted: () -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToStats: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -75,6 +60,7 @@ fun UserProfileScreen(
         onChangePasswordClicked = viewModel::onChangePasswordClicked,
         onConfirmDeleteAccount = viewModel::onDeleteAccountClicked,
         onRetry = viewModel::loadUserProfile,
+        onNavigateToStats = onNavigateToStats,
     )
 }
 
@@ -93,6 +79,7 @@ fun UserProfileScreenContent(
     onPasswordChangeToggled: () -> Unit,
     onChangePasswordClicked: () -> Unit,
     onConfirmDeleteAccount: () -> Unit,
+    onNavigateToStats: () -> Unit,
     onRetry: () -> Unit,
 ) {
     Scaffold(
@@ -104,53 +91,20 @@ fun UserProfileScreenContent(
                 uiState.isLoading -> FullScreenLoading()
                 uiState.error != null -> ErrorState(message = uiState.error, onRetry = onRetry)
                 uiState.userDetails != null -> {
-                    Column(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState())
-                                .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier.size(100.dp),
-                        )
-
-                        ProfileInfoSection(
-                            uiState = uiState,
-                            onNameChanged = onNameChanged,
-                            onEmailChanged = onEmailChanged,
-                            onEditProfileToggled = onEditProfileToggled,
-                            onSaveProfileClicked = onSaveProfileClicked,
-                        )
-
-                        Divider()
-
-                        PasswordChangeSection(
-                            uiState = uiState,
-                            onOldPasswordChanged = onOldPasswordChanged,
-                            onNewPasswordChanged = onNewPasswordChanged,
-                            onConfirmPasswordChanged = onConfirmPasswordChanged,
-                            onChangePasswordClicked = onChangePasswordClicked,
-                        )
-                        Button(
-                            onClick = onPasswordChangeToggled,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(
-                                if (uiState.showPasswordChangeSection) {
-                                    "Cancel Password Change"
-                                } else {
-                                    "Change Password"
-                                },
-                            )
-                        }
-
-                        DeleteAccountSection(uiState, onConfirmDeleteAccount)
-                    }
+                    UserProfileDetails(
+                        uiState = uiState,
+                        onNameChanged = onNameChanged,
+                        onEmailChanged = onEmailChanged,
+                        onOldPasswordChanged = onOldPasswordChanged,
+                        onNewPasswordChanged = onNewPasswordChanged,
+                        onConfirmPasswordChanged = onConfirmPasswordChanged,
+                        onEditProfileToggled = onEditProfileToggled,
+                        onSaveProfileClicked = onSaveProfileClicked,
+                        onPasswordChangeToggled = onPasswordChangeToggled,
+                        onChangePasswordClicked = onChangePasswordClicked,
+                        onConfirmDeleteAccount = onConfirmDeleteAccount,
+                        onNavigateToStats = onNavigateToStats,
+                    )
                 }
             }
         }

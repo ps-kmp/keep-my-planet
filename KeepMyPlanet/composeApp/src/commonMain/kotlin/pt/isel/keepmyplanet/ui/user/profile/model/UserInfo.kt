@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.user.model
+package pt.isel.keepmyplanet.ui.user.profile.model
 
 import kotlinx.serialization.Serializable
 import pt.isel.keepmyplanet.domain.common.Id

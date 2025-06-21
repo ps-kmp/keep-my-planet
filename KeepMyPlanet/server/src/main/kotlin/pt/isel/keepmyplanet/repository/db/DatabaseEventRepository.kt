@@ -29,18 +29,30 @@ private fun Events.toDomainEvent(participantIds: Set<Id>): Event =
 class DatabaseEventRepository(
     private val eventQueries: EventQueries,
 ) : EventRepository {
-    private fun getEventWithParticipants(dbEvent: Events): Event {
+    private fun mapEventsToDomain(dbEvents: List<Events>): List<Event> {
+        if (dbEvents.isEmpty()) return emptyList()
+
+        val eventIds = dbEvents.map { it.id }
+        val participantsByEventId =
+            eventQueries
+                .getParticipantIdsForEvents(eventIds)
+                .executeAsList()
+                .groupBy({ it.event_id }, { it.user_id })
+
+        return dbEvents.map { dbEvent ->
+            val participantIds = participantsByEventId[dbEvent.id]?.toSet() ?: emptySet()
+            dbEvent.toDomainEvent(participantIds)
+        }
+    }
+
+    private fun getEventWithParticipants(eventId: Id): Event? {
+        val dbEvent = eventQueries.getById(eventId).executeAsOneOrNull() ?: return null
         val participantIds =
             eventQueries
                 .getParticipantIdsForEvent(dbEvent.id)
                 .executeAsList()
                 .toSet()
         return dbEvent.toDomainEvent(participantIds)
-    }
-
-    private fun getEventWithParticipants(eventId: Id): Event? {
-        val dbEvent = eventQueries.getById(eventId).executeAsOneOrNull() ?: return null
-        return getEventWithParticipants(dbEvent)
     }
 
     override suspend fun create(entity: Event): Event {
@@ -88,11 +100,13 @@ class DatabaseEventRepository(
     override suspend fun getAll(
         limit: Int,
         offset: Int,
-    ): List<Event> =
-        eventQueries
-            .getAll(limit.toLong(), offset.toLong())
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    ): List<Event> {
+        val dbEvents =
+            eventQueries
+                .getAll(limit.toLong(), offset.toLong())
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
     override suspend fun update(entity: Event): Event {
         eventQueries.getById(entity.id).executeAsOneOrNull()
@@ -139,80 +153,98 @@ class DatabaseEventRepository(
         name: String,
         limit: Int,
         offset: Int,
-    ): List<Event> =
-        eventQueries
-            .findByName(name, limit.toLong(), offset.toLong())
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    ): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findByName(name, limit.toLong(), offset.toLong())
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
     override suspend fun findByZoneAndName(
         zoneId: Id,
         name: String,
-    ): List<Event> =
-        eventQueries
-            .findByZoneAndName(zoneId, name)
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    ): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findByZoneAndName(zoneId, name)
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
     override suspend fun findByOrganizerId(
         organizerId: Id,
         limit: Int,
         offset: Int,
-    ): List<Event> =
-        eventQueries
-            .findByOrganizerId(organizerId, limit.toLong(), offset.toLong())
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    ): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findByOrganizerId(organizerId, limit.toLong(), offset.toLong())
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
     override suspend fun findByNameAndOrganizerId(
         organizerId: Id,
         name: String,
         limit: Int,
         offset: Int,
-    ): List<Event> =
-        eventQueries
-            .findByNameAndOrganizerId(organizerId, name, limit.toLong(), offset.toLong())
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    ): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findByNameAndOrganizerId(organizerId, name, limit.toLong(), offset.toLong())
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
-    override suspend fun findByZoneId(zoneId: Id): List<Event> =
-        eventQueries
-            .findByZoneId(zoneId)
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    override suspend fun findByZoneId(zoneId: Id): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findByZoneId(zoneId)
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
     override suspend fun findByParticipantId(
         participantId: Id,
         limit: Int,
         offset: Int,
-    ): List<Event> =
-        eventQueries
-            .findByParticipantId(participantId, limit.toLong(), offset.toLong())
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    ): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findByParticipantId(participantId, limit.toLong(), offset.toLong())
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
     override suspend fun findByNameAndParticipantId(
         participantId: Id,
         name: String,
         limit: Int,
         offset: Int,
-    ): List<Event> =
-        eventQueries
-            .findByNameAndParticipantId(participantId, name, limit.toLong(), offset.toLong())
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    ): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findByNameAndParticipantId(participantId, name, limit.toLong(), offset.toLong())
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
-    override suspend fun findByStatus(status: EventStatus): List<Event> =
-        eventQueries
-            .findByStatus(status)
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    override suspend fun findByStatus(status: EventStatus): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findByStatus(status)
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
-    override suspend fun findEventsByZoneIds(zoneIds: List<Id>): List<Event> =
-        eventQueries
-            .findEventsByZoneIds(zoneIds)
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    override suspend fun findEventsByZoneIds(zoneIds: List<Id>): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findEventsByZoneIds(zoneIds)
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 
     override suspend fun addAttendance(
         eventId: Id,
@@ -235,9 +267,11 @@ class DatabaseEventRepository(
         userId: Id,
         limit: Int,
         offset: Int,
-    ): List<Event> =
-        eventQueries
-            .findEventsAttendedByUser(userId, limit.toLong(), offset.toLong())
-            .executeAsList()
-            .map { getEventWithParticipants(it) }
+    ): List<Event> {
+        val dbEvents =
+            eventQueries
+                .findEventsAttendedByUser(userId, limit.toLong(), offset.toLong())
+                .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 }

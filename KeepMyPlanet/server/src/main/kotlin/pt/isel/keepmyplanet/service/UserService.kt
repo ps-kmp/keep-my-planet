@@ -139,7 +139,8 @@ class UserService(
     ) {
         if (targetUserId != actingUserId) {
             throw AuthorizationException(
-                "User '$actingUserId' is not authorized to $actionDescription for user '$targetUserId'.",
+                "User '$actingUserId' is not authorized to " +
+                    "$actionDescription for user '$targetUserId'.",
             )
         }
     }

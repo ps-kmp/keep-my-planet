@@ -151,7 +151,12 @@ class EventFormViewModel(
         val stateWithErrors =
             formState.copy(
                 titleError = if (formState.title.isBlank()) "Title cannot be empty" else null,
-                descriptionError = if (formState.description.isBlank()) "Description cannot be empty" else null,
+                descriptionError =
+                    if (formState.description.isBlank()) {
+                        "Description cannot be empty"
+                    } else {
+                        null
+                    },
                 startDateError =
                     try {
                         LocalDateTime.parse(formState.startDate)
@@ -161,13 +166,23 @@ class EventFormViewModel(
                     },
                 maxParticipantsError =
                     if (formState.maxParticipants.isNotEmpty()) {
-                        formState.maxParticipants.toUIntOrNull()?.let {
-                            if (it <= 0U) "Must be a positive number" else null
-                        } ?: "Must be a valid number"
+                        val number = formState.maxParticipants.toIntOrNull()
+                        if (number == null) {
+                            "Must be a valid number"
+                        } else if (number <= 0) {
+                            "Must be a positive number"
+                        } else {
+                            null
+                        }
                     } else {
                         null
                     },
-                zoneIdError = if (isCreate && formState.zoneId.toUIntOrNull() == null) "Invalid Zone ID" else null,
+                zoneIdError =
+                    if (isCreate && formState.zoneId.toUIntOrNull() == null) {
+                        "Invalid Zone ID"
+                    } else {
+                        null
+                    },
             )
         _formUiState.update { stateWithErrors }
         return !stateWithErrors.hasErrors

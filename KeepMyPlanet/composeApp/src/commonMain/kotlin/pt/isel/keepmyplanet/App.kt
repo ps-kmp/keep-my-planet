@@ -23,7 +23,7 @@ import pt.isel.keepmyplanet.ui.home.HomeScreen
 import pt.isel.keepmyplanet.ui.login.LoginScreen
 import pt.isel.keepmyplanet.ui.map.MapScreen
 import pt.isel.keepmyplanet.ui.register.RegisterScreen
-import pt.isel.keepmyplanet.ui.user.UserProfileScreen
+import pt.isel.keepmyplanet.ui.user.profile.UserProfileScreen
 import pt.isel.keepmyplanet.ui.user.stats.UserStatsScreen
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsScreen
 import pt.isel.keepmyplanet.ui.zone.report.ReportZoneScreen
@@ -139,6 +139,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
                     viewModel = viewModel,
                     onAccountDeleted = { container.logout() },
                     onNavigateBack = { appViewModel.navigateBack() },
+                    onNavigateToStats = { appViewModel.navigate(AppRoute.UserStats(user.id)) },
                 )
             }
         }
@@ -148,7 +149,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
             val viewModel = remember { container.getManageAttendanceViewModel(route.eventId) }
             ManageAttendanceScreen(
                 viewModel = viewModel,
-                onNavigateBack = { appViewModel.navigateBack() }
+                onNavigateBack = { appViewModel.navigateBack() },
             )
         }
 
@@ -158,11 +159,11 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.UserStats -> {
-            val viewModel = remember { container.getUserStatsViewModel(route.userId) }
+            val viewModel = remember { container.getUserStatsViewModel() }
             UserStatsScreen(
                 viewModel = viewModel,
                 onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
-                onNavigateBack = { appViewModel.navigateBack() }
+                onNavigateBack = { appViewModel.navigateBack() },
             )
         }
 

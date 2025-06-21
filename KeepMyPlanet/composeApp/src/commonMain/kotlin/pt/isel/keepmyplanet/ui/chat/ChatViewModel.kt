@@ -19,7 +19,7 @@ import pt.isel.keepmyplanet.mapper.message.toMessage
 import pt.isel.keepmyplanet.ui.chat.model.ChatEvent
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 import pt.isel.keepmyplanet.ui.chat.model.ChatUiState
-import pt.isel.keepmyplanet.ui.user.model.UserInfo
+import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 class ChatViewModel(
     private val chatApi: ChatApi,

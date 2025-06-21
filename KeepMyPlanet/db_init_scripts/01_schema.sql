@@ -82,6 +82,16 @@ CREATE TABLE IF NOT EXISTS event_participants (
     CONSTRAINT fk_ep_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Table: event_attendances
+CREATE TABLE IF NOT EXISTS event_attendances (
+    event_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    checked_in_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (event_id, user_id),
+    CONSTRAINT fk_ea_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ea_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Join Table: zone_photos
 CREATE TABLE IF NOT EXISTS zone_photos (
     zone_id BIGINT NOT NULL,

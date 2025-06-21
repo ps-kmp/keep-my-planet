@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.user.model
+package pt.isel.keepmyplanet.ui.user.profile.model
 
 data class UserProfileUiState(
     val userDetails: UserInfo? = null,

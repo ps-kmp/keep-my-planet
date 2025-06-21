@@ -21,8 +21,8 @@ import pt.isel.keepmyplanet.ui.event.list.EventListViewModel
 import pt.isel.keepmyplanet.ui.login.LoginViewModel
 import pt.isel.keepmyplanet.ui.map.MapViewModel
 import pt.isel.keepmyplanet.ui.register.RegisterViewModel
-import pt.isel.keepmyplanet.ui.user.UserProfileViewModel
-import pt.isel.keepmyplanet.ui.user.model.UserInfo
+import pt.isel.keepmyplanet.ui.user.profile.UserProfileViewModel
+import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 import pt.isel.keepmyplanet.ui.user.stats.UserStatsViewModel
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsViewModel
 import pt.isel.keepmyplanet.ui.zone.report.ReportZoneViewModel
@@ -84,5 +84,5 @@ class AppContainer {
 
     fun getManageAttendanceViewModel(eventId: Id) = ManageAttendanceViewModel(eventApi, eventId)
 
-    fun getUserStatsViewModel(userId: Id) = UserStatsViewModel(eventApi)
+    fun getUserStatsViewModel() = UserStatsViewModel(eventApi)
 }

@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.user.components
+package pt.isel.keepmyplanet.ui.user.profile.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +12,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
-import pt.isel.keepmyplanet.ui.user.model.UserProfileUiState
+import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 
 @Composable
 fun PasswordChangeSection(
