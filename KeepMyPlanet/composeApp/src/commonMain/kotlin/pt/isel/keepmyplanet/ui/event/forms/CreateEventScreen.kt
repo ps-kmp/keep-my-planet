@@ -22,7 +22,8 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.event.forms.components.EventForm
-import pt.isel.keepmyplanet.ui.event.forms.model.EventFormScreenEvent
+import pt.isel.keepmyplanet.ui.event.forms.model.EventFormEvent
+import pt.isel.keepmyplanet.ui.event.forms.model.EventFormUiState
 
 @Composable
 fun CreateEventScreen(
@@ -31,8 +32,9 @@ fun CreateEventScreen(
     onEventCreated: (eventId: Id) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    val formUiState by viewModel.formUiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val isActionInProgress = uiState.actionState is EventFormUiState.ActionState.Submitting
 
     LaunchedEffect(Unit) {
         viewModel.prepareForCreate(zoneId)
@@ -41,11 +43,11 @@ fun CreateEventScreen(
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is EventFormScreenEvent.EventCreated -> onEventCreated(event.eventId)
-                is EventFormScreenEvent.ShowSnackbar ->
+                is EventFormEvent.EventCreated -> onEventCreated(event.eventId)
+                is EventFormEvent.ShowSnackbar ->
                     snackbarHostState.showSnackbar(event.message, duration = SnackbarDuration.Short)
 
-                else -> {}
+                is EventFormEvent.NavigateBack -> { /* Not used in create screen */ }
             }
         }
     }
@@ -59,7 +61,7 @@ fun CreateEventScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             EventForm(
-                formUiState = formUiState,
+                formUiState = uiState,
                 onTitleChanged = viewModel::onTitleChanged,
                 onDescriptionChanged = viewModel::onDescriptionChanged,
                 onStartDateChanged = viewModel::onStartDateChanged,
@@ -73,8 +75,8 @@ fun CreateEventScreen(
 
             LoadingButton(
                 onClick = viewModel::submit,
-                enabled = !formUiState.isSubmitting,
-                isLoading = formUiState.isSubmitting,
+                enabled = !isActionInProgress,
+                isLoading = isActionInProgress,
                 text = "Create Event",
                 modifier = Modifier.fillMaxWidth(),
             )

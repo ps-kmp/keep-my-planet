@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.session.model.UserSession
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.login.model.LoginEvent
@@ -32,18 +34,23 @@ import pt.isel.keepmyplanet.ui.login.model.LoginUiState
 fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
+    onLoginSuccess: (UserSession) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(viewModel, snackbarHostState) {
-        viewModel.events.collect { event ->
+    LaunchedEffect(viewModel.events) {
+        viewModel.events.collectLatest { event ->
             when (event) {
                 is LoginEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         message = event.message,
                         duration = SnackbarDuration.Short,
                     )
+                }
+
+                is LoginEvent.LoginSuccess -> {
+                    onLoginSuccess(event.userSession)
                 }
             }
         }
@@ -75,22 +82,21 @@ private fun LoginContent(
     onLoginClicked: () -> Unit,
     onNavigateToRegister: () -> Unit,
 ) {
+    val isActionInProgress = uiState.actionState is LoginUiState.ActionState.LoggingIn
+
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = "Login",
-            style = MaterialTheme.typography.h4,
-        )
+        Text(text = "Login", style = MaterialTheme.typography.h4)
 
         FormField(
             value = uiState.email,
             onValueChange = onEmailChanged,
             label = "Email",
             singleLine = true,
-            enabled = !uiState.isLoading,
+            enabled = !isActionInProgress,
             errorText = uiState.emailError,
         )
 
@@ -99,14 +105,14 @@ private fun LoginContent(
             onValueChange = onPasswordChanged,
             label = "Password",
             singleLine = true,
-            enabled = !uiState.isLoading,
+            enabled = !isActionInProgress,
             visualTransformation = PasswordVisualTransformation(),
         )
 
         LoadingButton(
             onClick = onLoginClicked,
             enabled = uiState.isLoginEnabled,
-            isLoading = uiState.isLoading,
+            isLoading = isActionInProgress,
             text = "Login",
             modifier = Modifier.fillMaxWidth().height(48.dp),
         )

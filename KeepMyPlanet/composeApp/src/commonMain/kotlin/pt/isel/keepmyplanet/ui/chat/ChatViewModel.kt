@@ -32,8 +32,12 @@ class ChatViewModel(
     private val _events = Channel<ChatEvent>(Channel.BUFFERED)
     val events: Flow<ChatEvent> = _events.receiveAsFlow()
 
+    companion object {
+        const val MAX_MESSAGE_LENGTH = 1000
+    }
+
     init {
-        loadInitialMessages()
+        loadMessages()
         startListeningToMessages()
     }
 
@@ -47,7 +51,13 @@ class ChatViewModel(
         if (!currentState.isSendEnabled) return
 
         val messageContent = currentState.messageInput.trim()
-        _uiState.update { it.copy(isSending = true, messageInput = "", messageInputError = null) }
+        _uiState.update {
+            it.copy(
+                actionState = ChatUiState.ActionState.Sending,
+                messageInput = "",
+                messageInputError = null,
+            )
+        }
 
         viewModelScope.launch {
             val result =
@@ -55,26 +65,21 @@ class ChatViewModel(
 
             result
                 .onSuccess {
-                    _uiState.update { it.copy(isSending = false) }
+                    _uiState.update { it.copy(actionState = ChatUiState.ActionState.Idle) }
                 }.onFailure { exception ->
-                    _uiState.update { it.copy(isSending = false, messageInput = messageContent) }
+                    _uiState.update {
+                        it.copy(
+                            actionState = ChatUiState.ActionState.Idle,
+                            messageInput = messageContent,
+                        )
+                    }
                     handleError("Failed to send message", exception)
                 }
         }
     }
 
-    private fun validateMessage(content: String): String? =
-        try {
-            if (content.isNotBlank()) {
-                MessageContent(content)
-            }
-            null
-        } catch (e: IllegalArgumentException) {
-            e.message
-        }
-
-    private fun loadInitialMessages() {
-        _uiState.update { it.copy(isLoading = true) }
+    fun loadMessages() {
+        _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             val result = chatApi.getMessages(_uiState.value.chatInfo.eventId.value)
 
@@ -83,15 +88,30 @@ class ChatViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            messages = messages.map { dto -> dto.toMessage() },
+                            messages = messages.map { dto -> dto.toMessage() }.reversed(),
                         )
                     }
                     if (messages.isNotEmpty()) _events.send(ChatEvent.ScrollToBottom)
                 }.onFailure { exception ->
-                    handleError("Failed to load messages", exception)
+                    val errorMsg = getErrorMessage("Failed to load messages", exception)
+                    _uiState.update { it.copy(isLoading = false, error = errorMsg) }
                 }
         }
     }
+
+    private fun validateMessage(content: String): String? =
+        try {
+            if (content.length > MAX_MESSAGE_LENGTH) {
+                "Message exceeds maximum length of $MAX_MESSAGE_LENGTH characters."
+            } else if (content.isNotBlank()) {
+                MessageContent(content)
+                null
+            } else {
+                null
+            }
+        } catch (e: IllegalArgumentException) {
+            e.message
+        }
 
     private fun startListeningToMessages() {
         viewModelScope.launch {
@@ -118,22 +138,27 @@ class ChatViewModel(
                 currentState
             } else {
                 wasAdded = true
-                currentState.copy(messages = currentState.messages + newMessage)
+                currentState.copy(messages = listOf(newMessage) + currentState.messages)
             }
         }
         return wasAdded
     }
 
+    private fun getErrorMessage(
+        prefix: String,
+        exception: Throwable,
+    ): String =
+        when (exception) {
+            is ApiException -> exception.error.message
+            else -> "$prefix: ${exception.message ?: "Unknown error"}"
+        }
+
     private suspend fun handleError(
         prefix: String,
         exception: Throwable,
     ) {
-        val errorMsg =
-            when (exception) {
-                is ApiException -> exception.error.message
-                else -> "$prefix: ${exception.message ?: "Unknown error"}"
-            }
-        _uiState.update { it.copy(isLoading = false, isSending = false) }
+        val errorMsg = getErrorMessage(prefix, exception)
+        _uiState.update { it.copy(isLoading = false, actionState = ChatUiState.ActionState.Idle) }
         _events.send(ChatEvent.ShowSnackbar(errorMsg))
     }
 }

@@ -63,8 +63,9 @@ import ovh.plrapps.mapcompose.ui.state.MapState
 import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
-import pt.isel.keepmyplanet.ui.map.model.MapScreenEvent
+import pt.isel.keepmyplanet.ui.map.model.MapEvent
 import pt.isel.keepmyplanet.ui.map.model.getTileStreamProvider
 import pt.isel.keepmyplanet.ui.map.model.latToY
 import pt.isel.keepmyplanet.ui.map.model.lonToX
@@ -101,8 +102,7 @@ fun MapScreen(
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is MapScreenEvent.NavigateToZoneDetails -> onNavigateToZoneDetails(event.zoneId)
-                is MapScreenEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is MapEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
@@ -240,12 +240,12 @@ fun MapScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            if (!uiState.isReportingMode) {
+            if (!uiState.isReportingMode && uiState.error == null) {
                 AppTopBar(title = "Map", onNavigateBack = onNavigateBack)
             }
         },
         floatingActionButton = {
-            if (!uiState.isReportingMode) {
+            if (!uiState.isReportingMode && uiState.error == null) {
                 FloatingActionButton(onClick = { viewModel.enterReportingMode() }) {
                     Icon(Icons.Default.Add, contentDescription = "Report Zone")
                 }
@@ -256,60 +256,66 @@ fun MapScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             contentAlignment = Alignment.Center,
         ) {
-            MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
-            if (uiState.isLoading) {
-                FullScreenLoading()
-            }
-            if (uiState.isReportingMode) {
-                Icon(
-                    imageVector = Icons.Default.GpsFixed,
-                    contentDescription = "Reporting Pin",
-                    modifier = Modifier.size(36.dp).align(Alignment.Center),
-                    tint = MaterialTheme.colors.primary,
-                )
+            if (uiState.error != null) {
+                ErrorState(message = uiState.error!!, onRetry = viewModel::loadZones)
+            } else {
+                MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
 
-                Surface(
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(horizontal = 16.dp, vertical = 24.dp)
-                            .shadow(8.dp, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                if (uiState.isLoading) {
+                    FullScreenLoading()
+                }
+
+                if (uiState.isReportingMode) {
+                    Icon(
+                        imageVector = Icons.Default.GpsFixed,
+                        contentDescription = "Reporting Pin",
+                        modifier = Modifier.size(36.dp).align(Alignment.Center),
+                        tint = MaterialTheme.colors.primary,
+                    )
+
+                    Surface(
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(horizontal = 16.dp, vertical = 24.dp)
+                                .shadow(8.dp, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
                     ) {
-                        Text(
-                            text = "Report Polluted Zone",
-                            style = MaterialTheme.typography.h6,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            text = "Move the map to position the pin on the polluted area.",
-                            style = MaterialTheme.typography.body2,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically,
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            TextButton(
-                                onClick = { viewModel.exitReportingMode() },
-                            ) { Text("CANCEL") }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    val lon = xToLon(mapState.centroidX)
-                                    val lat = yToLat(mapState.centroidY)
-                                    onNavigateToReportZone(lat, lon)
-                                    viewModel.exitReportingMode()
-                                },
-                            ) { Text("CONFIRM") }
+                            Text(
+                                text = "Report Polluted Zone",
+                                style = MaterialTheme.typography.h6,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "Move the map to position the pin on the polluted area.",
+                                style = MaterialTheme.typography.body2,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                TextButton(
+                                    onClick = { viewModel.exitReportingMode() },
+                                ) { Text("CANCEL") }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = {
+                                        val lon = xToLon(mapState.centroidX)
+                                        val lat = yToLat(mapState.centroidY)
+                                        onNavigateToReportZone(lat, lon)
+                                        viewModel.exitReportingMode()
+                                    },
+                                ) { Text("CONFIRM") }
+                            }
                         }
                     }
                 }

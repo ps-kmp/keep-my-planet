@@ -23,9 +23,8 @@ import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileEvent
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 
 class UserProfileViewModel(
-    private val userService: UserApi,
+    private val userApi: UserApi,
     private val user: UserInfo,
-    private val onProfileUpdated: (UserInfo) -> Unit,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UserProfileUiState(userDetails = user))
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
@@ -109,15 +108,16 @@ class UserProfileViewModel(
         val request = UpdateProfileRequest(nameToUpdate, emailToUpdate, profilePictureId = null)
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isUpdatingProfile = true) }
-            val result = userService.updateUserProfile(user.id.value, request)
+            _uiState.update {
+                it.copy(actionState = UserProfileUiState.ActionState.UPDATING_PROFILE)
+            }
+            val result = userApi.updateUserProfile(user.id.value, request)
             result
                 .onSuccess { updatedUserResponse ->
                     val updatedUser = updatedUserResponse.toUserInfo()
-                    onProfileUpdated(updatedUser)
+                    _events.send(UserProfileEvent.ProfileUpdated(updatedUser))
                     _uiState.update {
                         it.copy(
-                            isUpdatingProfile = false,
                             isEditingProfile = false,
                             userDetails = updatedUser,
                             nameInput = updatedUser.name.value,
@@ -128,7 +128,11 @@ class UserProfileViewModel(
                 }.onFailure { e ->
                     handleError("Failed to update profile", e)
                 }
-            _uiState.update { it.copy(isUpdatingProfile = false) }
+            _uiState.update {
+                it.copy(
+                    actionState = UserProfileUiState.ActionState.IDLE,
+                )
+            }
         }
     }
 
@@ -138,34 +142,50 @@ class UserProfileViewModel(
         val currentState = _uiState.value
         if (!currentState.isChangePasswordEnabled) return
 
+        if (currentState.newPasswordInput == currentState.oldPasswordInput) {
+            viewModelScope.launch {
+                _events.send(
+                    UserProfileEvent.ShowSnackbar(
+                        "New password cannot be the same as the old one.",
+                    ),
+                )
+            }
+            return
+        }
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isChangingPassword = true) }
+            _uiState.update {
+                it.copy(actionState = UserProfileUiState.ActionState.CHANGING_PASSWORD)
+            }
             val request =
                 ChangePasswordRequest(currentState.oldPasswordInput, currentState.newPasswordInput)
-            val result = userService.changePassword(user.id.value, request)
+            val result = userApi.changePassword(user.id.value, request)
 
             result
                 .onSuccess {
-                    _uiState.update {
-                        it.copy(
-                            showPasswordChangeSection = false,
-                        )
-                    } // Hide on success
+                    _uiState.update { it.copy(showPasswordChangeSection = false) }
                     _events.send(UserProfileEvent.ShowSnackbar("Password changed successfully"))
                 }.onFailure { e ->
                     handleError("Failed to change password", e)
                 }
-            _uiState.update { it.copy(isChangingPassword = false) }
+            _uiState.update {
+                it.copy(
+                    actionState = UserProfileUiState.ActionState.IDLE,
+                )
+            }
         }
     }
 
     fun loadUserProfile() {
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            val result = userService.getUserDetails(user.id.value)
+            val result = userApi.getUserDetails(user.id.value)
             result
                 .onSuccess { userResponse ->
                     val updatedUser = userResponse.toUserInfo()
+                    if (updatedUser != _uiState.value.userDetails) {
+                        _events.send(UserProfileEvent.ProfileUpdated(updatedUser))
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -177,11 +197,7 @@ class UserProfileViewModel(
                         )
                     }
                 }.onFailure { e ->
-                    val errorMessage =
-                        when (e) {
-                            is ApiException -> e.error.message
-                            else -> "Failed to load profile: ${e.message ?: "Unknown error"}"
-                        }
+                    val errorMessage = getErrorMessage("Failed to load profile", e)
                     _uiState.update { it.copy(isLoading = false, error = errorMessage) }
                 }
         }
@@ -191,10 +207,14 @@ class UserProfileViewModel(
         val currentState = _uiState.value
         if (!currentState.isDeleteAccountEnabled) return
 
-        _uiState.update { it.copy(isDeletingAccount = true) }
+        _uiState.update {
+            it.copy(
+                actionState = UserProfileUiState.ActionState.DELETING_ACCOUNT,
+            )
+        }
 
         viewModelScope.launch {
-            val result = userService.deleteUser(user.id.value)
+            val result = userApi.deleteUser(user.id.value)
 
             result
                 .onSuccess {
@@ -205,6 +225,15 @@ class UserProfileViewModel(
                 }
         }
     }
+
+    private fun getErrorMessage(
+        prefix: String,
+        error: Throwable,
+    ): String =
+        when (error) {
+            is ApiException -> error.error.message
+            else -> "$prefix: ${error.message ?: "Unknown error"}"
+        }
 
     private fun validateProfileForm(): Boolean {
         val state = _uiState.value
@@ -242,16 +271,6 @@ class UserProfileViewModel(
             if (state.newPasswordInput != state.confirmPasswordInput) {
                 confirmPasswordError = "Passwords do not match"
             }
-            if (state.newPasswordInput == state.oldPasswordInput) {
-                viewModelScope.launch {
-                    _events.send(
-                        UserProfileEvent.ShowSnackbar(
-                            "New password cannot be the same as the old one.",
-                        ),
-                    )
-                }
-                return false
-            }
         }
 
         _uiState.update {
@@ -267,17 +286,11 @@ class UserProfileViewModel(
         prefix: String,
         exception: Throwable,
     ) {
-        val errorMsg =
-            when (exception) {
-                is ApiException -> exception.error.message
-                else -> "$prefix: ${exception.message ?: "Unknown error"}"
-            }
+        val errorMsg = getErrorMessage(prefix, exception)
         _uiState.update {
             it.copy(
                 isLoading = false,
-                isUpdatingProfile = false,
-                isChangingPassword = false,
-                isDeletingAccount = false,
+                actionState = UserProfileUiState.ActionState.IDLE,
             )
         }
         _events.send(UserProfileEvent.ShowSnackbar(errorMsg))

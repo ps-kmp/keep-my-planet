@@ -16,7 +16,7 @@ import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.data.mapper.toListItem
 import pt.isel.keepmyplanet.ui.event.list.model.EventFilterType
-import pt.isel.keepmyplanet.ui.event.list.model.EventListScreenEvent
+import pt.isel.keepmyplanet.ui.event.list.model.EventListEvent
 import pt.isel.keepmyplanet.ui.event.list.model.EventListUiState
 
 private const val SEARCH_DEBOUNCE_DELAY_MS = 500L
@@ -24,11 +24,11 @@ private const val SEARCH_DEBOUNCE_DELAY_MS = 500L
 class EventListViewModel(
     private val eventApi: EventApi,
 ) : ViewModel() {
-    private val _listUiState = MutableStateFlow(EventListUiState())
-    val listUiState: StateFlow<EventListUiState> = _listUiState.asStateFlow()
+    private val _uiState = MutableStateFlow(EventListUiState())
+    val uiState: StateFlow<EventListUiState> = _uiState.asStateFlow()
 
-    private val _events = Channel<EventListScreenEvent>(Channel.BUFFERED)
-    val events: Flow<EventListScreenEvent> = _events.receiveAsFlow()
+    private val _events = Channel<EventListEvent>(Channel.BUFFERED)
+    val events: Flow<EventListEvent> = _events.receiveAsFlow()
 
     private var searchJob: Job? = null
 
@@ -37,12 +37,12 @@ class EventListViewModel(
     }
 
     fun refreshEvents() {
-        _listUiState.update { it.copy(error = null) }
+        _uiState.update { it.copy(error = null) }
         loadEvents(isRefresh = true)
     }
 
     fun loadNextPage() {
-        val currentState = _listUiState.value
+        val currentState = _uiState.value
         if (currentState.isLoading || currentState.isAddingMore || !currentState.hasMorePages) {
             return
         }
@@ -50,7 +50,7 @@ class EventListViewModel(
     }
 
     fun onSearchQueryChanged(query: String) {
-        _listUiState.update { it.copy(query = query) }
+        _uiState.update { it.copy(query = query) }
         searchJob?.cancel()
         searchJob =
             viewModelScope.launch {
@@ -60,19 +60,19 @@ class EventListViewModel(
     }
 
     fun onFilterChanged(filterType: EventFilterType) {
-        if (_listUiState.value.filter == filterType) return
-        _listUiState.update { it.copy(filter = filterType) }
+        if (_uiState.value.filter == filterType) return
+        _uiState.update { it.copy(filter = filterType) }
         loadEvents(isRefresh = true)
     }
 
     private fun loadEvents(isRefresh: Boolean = false) {
-        val currentState = _listUiState.value
+        val currentState = _uiState.value
         val offset = if (isRefresh) 0 else currentState.offset
 
         if (isRefresh.not() && (currentState.isLoading || currentState.isAddingMore)) return
 
         viewModelScope.launch {
-            _listUiState.update { it.copy(isLoading = isRefresh, isAddingMore = !isRefresh) }
+            _uiState.update { it.copy(isLoading = isRefresh, isAddingMore = !isRefresh) }
 
             val result =
                 when (currentState.filter) {
@@ -100,7 +100,7 @@ class EventListViewModel(
 
             result
                 .onSuccess { newEvents ->
-                    _listUiState.update {
+                    _uiState.update {
                         val currentEvents = if (isRefresh) emptyList() else it.events
                         it.copy(
                             events =
@@ -115,7 +115,7 @@ class EventListViewModel(
                     handleError("Failed to load events", error)
                 }
 
-            _listUiState.update { it.copy(isLoading = false, isAddingMore = false) }
+            _uiState.update { it.copy(isLoading = false, isAddingMore = false) }
         }
     }
 
@@ -128,10 +128,10 @@ class EventListViewModel(
                 is ApiException -> error.error.message
                 else -> "$prefix: ${error.message ?: "Unknown error"}"
             }
-        if (listUiState.value.events.isEmpty()) {
-            _listUiState.update { it.copy(error = message) }
+        if (uiState.value.events.isEmpty()) {
+            _uiState.update { it.copy(error = message) }
         } else {
-            _events.send(EventListScreenEvent.ShowSnackbar(message))
+            _events.send(EventListEvent.ShowSnackbar(message))
         }
     }
 }

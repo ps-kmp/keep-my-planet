@@ -13,8 +13,8 @@ import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
+import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneEvent
 import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneFormState
-import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneScreenEvent
 import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneUiState
 
 class ReportZoneViewModel(
@@ -23,7 +23,7 @@ class ReportZoneViewModel(
     private val _uiState = MutableStateFlow(ReportZoneUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _events = Channel<ReportZoneScreenEvent>()
+    private val _events = Channel<ReportZoneEvent>()
     val events = _events.receiveAsFlow()
 
     fun prepareReportForm(
@@ -53,10 +53,10 @@ class ReportZoneViewModel(
         if (!validateForm()) return
 
         val formState = _uiState.value.form
-        if (!formState.canSubmit) return
+        if (!_uiState.value.canSubmit) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(form = it.form.copy(isSubmitting = true)) }
+            _uiState.update { it.copy(actionState = ReportZoneUiState.ActionState.Submitting) }
 
             val request =
                 ReportZoneRequest(
@@ -70,13 +70,13 @@ class ReportZoneViewModel(
             zoneApi
                 .reportZone(request)
                 .onSuccess {
-                    _events.send(ReportZoneScreenEvent.ShowSnackbar("Zone reported successfully!"))
-                    _events.send(ReportZoneScreenEvent.ReportSuccessful)
+                    _events.send(ReportZoneEvent.ShowSnackbar("Zone reported successfully!"))
+                    _events.send(ReportZoneEvent.ReportSuccessful)
                 }.onFailure { error ->
                     handleError("Failed to report zone", error)
                 }
 
-            _uiState.update { it.copy(form = it.form.copy(isSubmitting = false)) }
+            _uiState.update { it.copy(actionState = ReportZoneUiState.ActionState.Idle) }
         }
     }
 
@@ -106,6 +106,6 @@ class ReportZoneViewModel(
                 is ApiException -> error.error.message
                 else -> "$prefix: ${error.message ?: "Unknown error"}"
             }
-        _events.send(ReportZoneScreenEvent.ShowSnackbar(message))
+        _events.send(ReportZoneEvent.ShowSnackbar(message))
     }
 }

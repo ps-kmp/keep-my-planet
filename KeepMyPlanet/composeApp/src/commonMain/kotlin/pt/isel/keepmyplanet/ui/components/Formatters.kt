@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.ui.components
 
-import androidx.compose.runtime.Composable
 import kotlinx.datetime.LocalDateTime
 
 fun LocalDateTime.toFormattedString(): String {
@@ -13,7 +12,6 @@ fun LocalDateTime.toFormattedString(): String {
     return "$day/$month/$year $hour:$minute"
 }
 
-@Composable
 fun formatTimestamp(dateTime: LocalDateTime): String {
     val hour = dateTime.hour.toString().padStart(2, '0')
     val minute = dateTime.minute.toString().padStart(2, '0')

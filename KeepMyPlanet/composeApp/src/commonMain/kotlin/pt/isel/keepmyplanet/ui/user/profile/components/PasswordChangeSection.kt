@@ -22,6 +22,8 @@ fun PasswordChangeSection(
     onConfirmPasswordChanged: (String) -> Unit,
     onChangePasswordClicked: () -> Unit,
 ) {
+    val isActionInProgress = uiState.actionState != UserProfileUiState.ActionState.IDLE
+
     AnimatedVisibility(visible = uiState.showPasswordChangeSection) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -34,7 +36,7 @@ fun PasswordChangeSection(
                 label = "Old Password",
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
-                enabled = !uiState.isChangingPassword,
+                enabled = !isActionInProgress,
             )
             FormField(
                 value = uiState.newPasswordInput,
@@ -42,7 +44,7 @@ fun PasswordChangeSection(
                 label = "New Password",
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
-                enabled = !uiState.isChangingPassword,
+                enabled = !isActionInProgress,
                 errorText = uiState.newPasswordInputError,
             )
             FormField(
@@ -51,13 +53,13 @@ fun PasswordChangeSection(
                 label = "Confirm New Password",
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
-                enabled = !uiState.isChangingPassword,
+                enabled = !isActionInProgress,
                 errorText = uiState.confirmPasswordInputError,
             )
             LoadingButton(
                 onClick = onChangePasswordClicked,
                 enabled = uiState.isChangePasswordEnabled,
-                isLoading = uiState.isChangingPassword,
+                isLoading = uiState.actionState == UserProfileUiState.ActionState.CHANGING_PASSWORD,
                 text = "Confirm Password Change",
                 modifier = Modifier.fillMaxWidth(),
             )

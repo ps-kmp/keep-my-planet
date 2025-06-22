@@ -31,7 +31,7 @@ fun EventForm(
             onValueChange = onTitleChanged,
             label = "Title",
             errorText = formUiState.titleError,
-            enabled = !formUiState.isSubmitting,
+            enabled = formUiState.actionState == EventFormUiState.ActionState.Idle,
             singleLine = true,
         )
 
@@ -41,7 +41,7 @@ fun EventForm(
             label = "Description",
             minLines = 3,
             errorText = formUiState.descriptionError,
-            enabled = !formUiState.isSubmitting,
+            enabled = formUiState.actionState == EventFormUiState.ActionState.Idle,
         )
 
         FormField(
@@ -49,7 +49,7 @@ fun EventForm(
             onValueChange = onStartDateChanged,
             label = "Start Date and Time (YYYY-MM-DDTHH:MM:SS)",
             errorText = formUiState.startDateError,
-            enabled = !formUiState.isSubmitting,
+            enabled = formUiState.actionState == EventFormUiState.ActionState.Idle,
             singleLine = true,
         )
 
@@ -59,7 +59,7 @@ fun EventForm(
             label = "Max Participants (Optional)",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             errorText = formUiState.maxParticipantsError,
-            enabled = !formUiState.isSubmitting,
+            enabled = formUiState.actionState == EventFormUiState.ActionState.Idle,
             singleLine = true,
         )
 
@@ -69,7 +69,9 @@ fun EventForm(
                 onValueChange = onZoneIdChanged,
                 label = "Zone ID",
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                enabled = !formUiState.isSubmitting && isZoneIdEditable,
+                enabled =
+                    formUiState.actionState == EventFormUiState.ActionState.Idle &&
+                        isZoneIdEditable,
                 singleLine = true,
                 errorText = formUiState.zoneIdError,
             )

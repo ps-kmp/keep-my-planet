@@ -35,8 +35,8 @@ import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.event.list.components.EmptyState
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
 import pt.isel.keepmyplanet.ui.event.list.components.SearchBarAndFilters
+import pt.isel.keepmyplanet.ui.event.list.model.EventListEvent
 import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
-import pt.isel.keepmyplanet.ui.event.list.model.EventListScreenEvent
 
 private const val PAGINATION_THRESHOLD = 3
 
@@ -48,7 +48,7 @@ fun EventListScreen(
     onNavigateBack: () -> Unit,
     onCreateEventClick: () -> Unit,
 ) {
-    val uiState by viewModel.listUiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.filter) {
@@ -57,7 +57,7 @@ fun EventListScreen(
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
-            if (event is EventListScreenEvent.ShowSnackbar) {
+            if (event is EventListEvent.ShowSnackbar) {
                 snackbarHostState.showSnackbar(
                     message = event.message,
                     duration = SnackbarDuration.Short,
@@ -107,7 +107,11 @@ fun EventListScreen(
                         onRetry = { viewModel.refreshEvents() },
                     )
                 } else if (uiState.events.isEmpty()) {
-                    EmptyState(onActionClick = onCreateEventClick)
+                    EmptyState(
+                        message = "No events found.",
+                        buttonText = "Create an Event",
+                        onActionClick = onCreateEventClick,
+                    )
                 } else {
                     LazyColumn(
                         state = listState,

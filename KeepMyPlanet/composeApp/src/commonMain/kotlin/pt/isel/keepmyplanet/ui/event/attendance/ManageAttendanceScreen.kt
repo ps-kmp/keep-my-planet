@@ -1,8 +1,8 @@
 package pt.isel.keepmyplanet.ui.event.attendance
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,9 +16,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.ErrorState
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.QrCodeScannerView
+import pt.isel.keepmyplanet.ui.event.attendance.model.ManageAttendanceEvent
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ManageAttendanceScreen(
     viewModel: ManageAttendanceViewModel,
@@ -27,10 +32,14 @@ fun ManageAttendanceScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.checkInStatusMessage) {
-        uiState.checkInStatusMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearStatusMessage()
+    LaunchedEffect(viewModel.events) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is ManageAttendanceEvent.ShowSnackbar -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
         }
     }
 
@@ -39,15 +48,28 @@ fun ManageAttendanceScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.5f)) {
-                QrCodeScannerView(
-                    modifier = Modifier.fillMaxSize(),
-                    onQrCodeScanned = viewModel::onQrCodeScanned,
-                )
-            }
+            when {
+                uiState.isLoading -> FullScreenLoading()
+                uiState.error != null ->
+                    ErrorState(
+                        message = uiState.error!!,
+                        onRetry = viewModel::loadInitialData,
+                    )
 
-            // TODO: List of "Attendees" and "Remaining"
-            Text("Attendees: ${uiState.attendees.size} / ${uiState.participants.size}")
+                else -> {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                            QrCodeScannerView(
+                                modifier = Modifier.fillMaxSize(),
+                                onQrCodeScanned = viewModel::onQrCodeScanned,
+                            )
+                        }
+
+                        // TODO: List of "Attendees" and "Remaining"
+                        Text("Attendees: ${uiState.attendees.size} / ${uiState.participants.size}")
+                    }
+                }
+            }
         }
     }
 }

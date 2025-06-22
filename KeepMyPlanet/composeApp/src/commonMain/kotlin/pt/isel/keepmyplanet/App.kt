@@ -50,6 +50,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
             LoginScreen(
                 viewModel = loginViewModel,
                 onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
+                onLoginSuccess = { container.updateSession(it) },
             )
         }
 
@@ -103,9 +104,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
                     onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
                     onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(it)) },
                     onNavigateToManageAttendance = {
-                        appViewModel.navigate(
-                            AppRoute.ManageAttendance(it),
-                        )
+                        appViewModel.navigate(AppRoute.ManageAttendance(it))
                     },
                     onNavigateBack = { appViewModel.navigateBack() },
                     onNavigateToMyQrCode = { appViewModel.navigate(AppRoute.MyQrCode(user.id)) },
@@ -140,12 +139,12 @@ fun App(container: AppContainer = remember { AppContainer() }) {
                     onAccountDeleted = { container.logout() },
                     onNavigateBack = { appViewModel.navigateBack() },
                     onNavigateToStats = { appViewModel.navigate(AppRoute.UserStats(user.id)) },
+                    onProfileUpdated = { container.onProfileUpdated(it) },
                 )
             }
         }
 
         is AppRoute.ManageAttendance -> {
-            println("Freamunde: Rota ManageAttendance atingida!")
             val viewModel = remember { container.getManageAttendanceViewModel(route.eventId) }
             ManageAttendanceScreen(
                 viewModel = viewModel,
@@ -154,7 +153,6 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.MyQrCode -> {
-            println("Freamunde: Rota MyQrCode atingida!")
             MyQrCodeScreen(userId = route.userId, onNavigateBack = { appViewModel.navigateBack() })
         }
 

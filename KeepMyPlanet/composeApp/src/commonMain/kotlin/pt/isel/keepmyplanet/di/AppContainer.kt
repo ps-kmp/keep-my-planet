@@ -39,7 +39,7 @@ class AppContainer {
         sessionManager.clearSession()
     }
 
-    private fun onProfileUpdated(updatedUserInfo: UserInfo) {
+    fun onProfileUpdated(updatedUserInfo: UserInfo) {
         val currentSession = userSession.value
         if (currentSession != null) {
             sessionManager.saveSession(currentSession.copy(userInfo = updatedUserInfo))
@@ -58,7 +58,7 @@ class AppContainer {
 
     val appViewModel: AppViewModel by lazy { AppViewModel(userSession) }
 
-    fun getLoginViewModel() = LoginViewModel(authApi, ::updateSession)
+    fun getLoginViewModel() = LoginViewModel(authApi)
 
     fun getRegisterViewModel() = RegisterViewModel(userApi)
 
@@ -74,8 +74,7 @@ class AppContainer {
 
     fun getReportZoneViewModel() = ReportZoneViewModel(zoneApi)
 
-    fun getUserProfileViewModel(user: UserInfo) =
-        UserProfileViewModel(userApi, user, ::onProfileUpdated)
+    fun getUserProfileViewModel(user: UserInfo) = UserProfileViewModel(userApi, user)
 
     fun getChatViewModel(
         user: UserInfo,

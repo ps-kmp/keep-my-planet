@@ -26,15 +26,18 @@ class ZoneDetailsViewModel(
                 .onSuccess { response ->
                     _uiState.update { it.copy(isLoading = false, zone = response.toZone()) }
                 }.onFailure { error ->
-                    val errorMessage =
-                        when (error) {
-                            is ApiException -> error.error.message
-                            else ->
-                                "Failed to load zone details: " +
-                                    (error.message ?: "Unknown error")
-                        }
+                    val errorMessage = getErrorMessage("Failed to load zone details", error)
                     _uiState.update { it.copy(isLoading = false, error = errorMessage) }
                 }
         }
     }
+
+    private fun getErrorMessage(
+        prefix: String,
+        error: Throwable,
+    ): String =
+        when (error) {
+            is ApiException -> error.error.message
+            else -> "$prefix: ${error.message ?: "Unknown error"}"
+        }
 }

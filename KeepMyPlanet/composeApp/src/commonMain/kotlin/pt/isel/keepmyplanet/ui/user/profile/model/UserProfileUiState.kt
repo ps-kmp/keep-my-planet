@@ -8,9 +8,7 @@ data class UserProfileUiState(
     val newPasswordInput: String = "",
     val confirmPasswordInput: String = "",
     val isLoading: Boolean = false,
-    val isUpdatingProfile: Boolean = false,
-    val isChangingPassword: Boolean = false,
-    val isDeletingAccount: Boolean = false,
+    val actionState: ActionState = ActionState.IDLE,
     val isEditingProfile: Boolean = false,
     val showPasswordChangeSection: Boolean = false,
     val nameInputError: String? = null,
@@ -19,24 +17,31 @@ data class UserProfileUiState(
     val confirmPasswordInputError: String? = null,
     val error: String? = null,
 ) {
+    enum class ActionState {
+        IDLE,
+        UPDATING_PROFILE,
+        CHANGING_PASSWORD,
+        DELETING_ACCOUNT,
+    }
+
     val hasProfileChanges: Boolean
         get() =
             userDetails != null &&
                 (nameInput != userDetails.name.value || emailInput != userDetails.email.value)
 
     val isSaveProfileEnabled: Boolean
-        get() = isEditingProfile && !isUpdatingProfile && hasProfileChanges
+        get() = isEditingProfile && actionState == ActionState.IDLE && hasProfileChanges
 
     val isChangePasswordEnabled: Boolean
         get() =
             showPasswordChangeSection &&
-                !isChangingPassword &&
+                actionState == ActionState.IDLE &&
                 oldPasswordInput.isNotBlank() &&
                 newPasswordInput.isNotBlank() &&
                 confirmPasswordInput.isNotBlank()
 
     val isDeleteAccountEnabled: Boolean
-        get() = !isDeletingAccount && userDetails != null
+        get() = actionState == ActionState.IDLE && userDetails != null
 
     val hasProfileErrors: Boolean
         get() = nameInputError != null || emailInputError != null

@@ -10,9 +10,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.ApiException
-import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.mapper.zone.toZone
-import pt.isel.keepmyplanet.ui.map.model.MapScreenEvent
+import pt.isel.keepmyplanet.ui.map.model.MapEvent
 import pt.isel.keepmyplanet.ui.map.model.MapUiState
 
 class MapViewModel(
@@ -21,7 +20,7 @@ class MapViewModel(
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _events = Channel<MapScreenEvent>()
+    private val _events = Channel<MapEvent>()
     val events = _events.receiveAsFlow()
 
     init {
@@ -37,7 +36,7 @@ class MapViewModel(
     }
 
     fun loadZones() {
-        _uiState.update { it.copy(isLoading = true) }
+        _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             zoneApi
                 .findAllZones()
@@ -49,27 +48,18 @@ class MapViewModel(
                         )
                     }
                 }.onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false) }
-                    handleError("Failed to load zones", error)
+                    val errorMessage = getErrorMessage("Failed to load zones", error)
+                    _uiState.update { it.copy(isLoading = false, error = errorMessage) }
                 }
         }
     }
 
-    fun onZoneSelected(zoneId: Id) {
-        viewModelScope.launch {
-            _events.send(MapScreenEvent.NavigateToZoneDetails(zoneId))
-        }
-    }
-
-    private suspend fun handleError(
+    private fun getErrorMessage(
         prefix: String,
         error: Throwable,
-    ) {
-        val message =
-            when (error) {
-                is ApiException -> error.error.message
-                else -> "$prefix: ${error.message ?: "Unknown error"}"
-            }
-        _events.send(MapScreenEvent.ShowSnackbar(message))
-    }
+    ): String =
+        when (error) {
+            is ApiException -> error.error.message
+            else -> "$prefix: ${error.message ?: "Unknown error"}"
+        }
 }

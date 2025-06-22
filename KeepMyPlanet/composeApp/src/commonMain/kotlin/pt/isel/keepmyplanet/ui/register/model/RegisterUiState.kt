@@ -5,15 +5,20 @@ data class RegisterUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
-    val isLoading: Boolean = false,
-    // Validation Errors
+    val actionState: ActionState = ActionState.Idle,
     val usernameError: String? = null,
     val emailError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null,
 ) {
+    sealed interface ActionState {
+        data object Idle : ActionState
+
+        data object Registering : ActionState
+    }
+
     val canAttemptRegister: Boolean
-        get() = !isLoading
+        get() = actionState == ActionState.Idle
 
     val hasErrors: Boolean
         get() =

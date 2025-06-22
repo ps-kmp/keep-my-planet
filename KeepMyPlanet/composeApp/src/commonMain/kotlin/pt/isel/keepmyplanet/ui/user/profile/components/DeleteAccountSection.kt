@@ -56,7 +56,7 @@ fun DeleteAccountSection(
         modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
     ) {
-        if (uiState.isDeletingAccount) {
+        if (uiState.actionState == UserProfileUiState.ActionState.DELETING_ACCOUNT) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
                 color = MaterialTheme.colors.error,

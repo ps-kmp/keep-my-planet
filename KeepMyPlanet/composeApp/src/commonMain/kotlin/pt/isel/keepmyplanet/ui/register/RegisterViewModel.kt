@@ -49,7 +49,7 @@ class RegisterViewModel(
 
         val currentState = _uiState.value
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(actionState = RegisterUiState.ActionState.Registering) }
             try {
                 val request =
                     RegisterRequest(
@@ -71,7 +71,7 @@ class RegisterViewModel(
             } catch (e: Exception) {
                 handleError("An unexpected error occurred", e)
             } finally {
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(actionState = RegisterUiState.ActionState.Idle) }
             }
         }
     }

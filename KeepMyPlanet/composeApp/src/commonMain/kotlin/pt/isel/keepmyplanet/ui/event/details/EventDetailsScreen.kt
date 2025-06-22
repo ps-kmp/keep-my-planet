@@ -3,12 +3,13 @@ package pt.isel.keepmyplanet.ui.event.details
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -34,12 +36,15 @@ import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.InfoRow
+import pt.isel.keepmyplanet.ui.components.LoadingButton
+import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.ManageAttendanceButton
 import pt.isel.keepmyplanet.ui.components.QrCodeIconButton
 import pt.isel.keepmyplanet.ui.components.toFormattedString
-import pt.isel.keepmyplanet.ui.event.details.components.EventActions
+import pt.isel.keepmyplanet.ui.event.details.components.ConfirmActionDialog
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
-import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsScreenEvent
+import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsEvent
+import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsUiState
 
 @Composable
 fun EventDetailsScreen(
@@ -51,37 +56,53 @@ fun EventDetailsScreen(
     onNavigateToMyQrCode: (Id) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    val uiState by viewModel.detailsUiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val event = uiState.event
     val snackbarHostState = remember { SnackbarHostState() }
+    val showCancelDialog = remember { mutableStateOf(false) }
+    val showDeleteDialog = remember { mutableStateOf(false) }
+    val isActionInProgress = uiState.actionState != EventDetailsUiState.ActionState.IDLE
+
+    if (showCancelDialog.value) {
+        ConfirmActionDialog(
+            showDialog = showCancelDialog,
+            onConfirm = viewModel::cancelEvent,
+            title = "Cancel Event?",
+            text = "Are you sure you want to cancel this event? This action cannot be undone.",
+        )
+    }
+    if (showDeleteDialog.value) {
+        ConfirmActionDialog(
+            showDialog = showDeleteDialog,
+            onConfirm = viewModel::deleteEvent,
+            title = "Delete Event?",
+            text =
+                "Are you sure you want to permanently delete this event? " +
+                    "All associated data, including chat history, will be lost.",
+        )
+    }
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
-            println("Freamunde: Evento recebido na UI: $event")
             when (event) {
-                is EventDetailsScreenEvent.ShowSnackbar -> {
+                is EventDetailsEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         message = event.message,
                         duration = SnackbarDuration.Short,
                     )
                 }
 
-                is EventDetailsScreenEvent.EventDeleted -> {
+                is EventDetailsEvent.EventDeleted -> {
                     onNavigateBack()
                 }
 
-                is EventDetailsScreenEvent.NavigateTo -> {
-                    println("Freamunde: Processando evento de navegação...")
-                    when (val dest = event.destination) {
-                        is EventDetailsViewModel.QrNavigation.ToScanner ->
-                            onNavigateToManageAttendance(dest.eventId)
-
-                        is EventDetailsViewModel.QrNavigation.ToMyCode ->
-                            onNavigateToMyQrCode(dest.userId)
-                    }
+                is EventDetailsEvent.NavigateToManageAttendance -> {
+                    onNavigateToManageAttendance(event.eventId)
                 }
 
-                else -> {}
+                is EventDetailsEvent.NavigateToMyQrCode -> {
+                    onNavigateToMyQrCode(event.userId)
+                }
             }
         }
     }
@@ -168,7 +189,126 @@ fun EventDetailsScreen(
                             }
                         }
 
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (uiState.canUserJoin() ||
+                            uiState.canUserLeave() ||
+                            uiState.canUserAccessChat()
+                        ) {
+                            DetailCard(title = "Actions") {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    if (uiState.canUserJoin()) {
+                                        LoadingButton(
+                                            onClick = viewModel::joinEvent,
+                                            isLoading =
+                                                uiState.actionState ==
+                                                    EventDetailsUiState.ActionState.JOINING,
+                                            enabled = !isActionInProgress,
+                                            text = "Join Event",
+                                            modifier = Modifier.fillMaxWidth(),
+                                        )
+                                    }
+                                    if (uiState.canUserLeave()) {
+                                        LoadingButton(
+                                            onClick = viewModel::leaveEvent,
+                                            isLoading =
+                                                uiState.actionState ==
+                                                    EventDetailsUiState.ActionState.LEAVING,
+                                            enabled = !isActionInProgress,
+                                            text = "Leave Event",
+                                            modifier = Modifier.fillMaxWidth(),
+                                        )
+                                    }
+                                    if (uiState.canUserAccessChat()) {
+                                        Button(
+                                            onClick = {
+                                                onNavigateToChat(
+                                                    ChatInfo(event.id, event.title),
+                                                )
+                                            },
+                                            enabled = !isActionInProgress,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            val chatButtonText =
+                                                if (uiState.isChatReadOnly) {
+                                                    "View Chat History"
+                                                } else {
+                                                    "Open Chat"
+                                                }
+                                            Text(chatButtonText)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (uiState.isCurrentUserOrganizer) {
+                            DetailCard(title = "Organizer Actions") {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (uiState.canUserEdit()) {
+                                        Button(
+                                            onClick = { onNavigateToEditEvent(event.id) },
+                                            enabled = !isActionInProgress,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) { Text("Edit Event Details") }
+                                    }
+                                    if (uiState.canManageAttendance()) {
+                                        ManageAttendanceButton {
+                                            viewModel.onManageAttendanceClicked()
+                                        }
+                                    }
+                                    if (uiState.canOrganizerComplete()) {
+                                        LoadingButton(
+                                            onClick = viewModel::completeEvent,
+                                            isLoading =
+                                                uiState.actionState ==
+                                                    EventDetailsUiState.ActionState.COMPLETING,
+                                            enabled = !isActionInProgress,
+                                            text = "Mark as Completed",
+                                            modifier = Modifier.fillMaxWidth(),
+                                        )
+                                    }
+                                    if (uiState.canOrganizerCancel()) {
+                                        LoadingOutlinedButton(
+                                            onClick = { showCancelDialog.value = true },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors =
+                                                ButtonDefaults.outlinedButtonColors(
+                                                    contentColor = MaterialTheme.colors.error,
+                                                ),
+                                            enabled = !isActionInProgress,
+                                            isLoading =
+                                                uiState.actionState ==
+                                                    EventDetailsUiState.ActionState.CANCELLING,
+                                            text = "Cancel Event",
+                                            loadingIndicatorColor = MaterialTheme.colors.error,
+                                        )
+                                    }
+                                    if (uiState.canOrganizerDelete()) {
+                                        LoadingOutlinedButton(
+                                            onClick = { showDeleteDialog.value = true },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors =
+                                                ButtonDefaults.outlinedButtonColors(
+                                                    contentColor = MaterialTheme.colors.error,
+                                                ),
+                                            enabled = !isActionInProgress,
+                                            isLoading =
+                                                uiState.actionState ==
+                                                    EventDetailsUiState.ActionState.DELETING,
+                                            text = "Delete Event",
+                                            loadingIndicatorColor = MaterialTheme.colors.error,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier.padding(top = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
                             Text(
                                 text = "Created: ${event.createdAt.toFormattedString()}",
                                 style = MaterialTheme.typography.caption,
@@ -178,27 +318,6 @@ fun EventDetailsScreen(
                                 style = MaterialTheme.typography.caption,
                             )
                         }
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        if (uiState.canManageAttendance()) {
-                            ManageAttendanceButton {
-                                onNavigateToManageAttendance(event.id)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        EventActions(
-                            uiState = uiState,
-                            onJoinEvent = viewModel::joinEvent,
-                            onLeaveEvent = viewModel::leaveEvent,
-                            onNavigateToChat = onNavigateToChat,
-                            onNavigateToEditEvent = { onNavigateToEditEvent(event.id) },
-                            onCancelEvent = viewModel::cancelEvent,
-                            onCompleteEvent = viewModel::completeEvent,
-                            onDeleteEvent = viewModel::deleteEvent,
-                        )
                     }
                 }
             }

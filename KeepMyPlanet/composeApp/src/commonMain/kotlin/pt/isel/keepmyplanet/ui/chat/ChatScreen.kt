@@ -27,7 +27,9 @@ import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.ui.chat.components.MessageInput
 import pt.isel.keepmyplanet.ui.chat.components.MessageItem
 import pt.isel.keepmyplanet.ui.chat.model.ChatEvent
+import pt.isel.keepmyplanet.ui.chat.model.ChatUiState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 
 @Composable
@@ -39,7 +41,6 @@ fun ChatScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val reversedMessages = remember(uiState.messages) { uiState.messages.reversed() }
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
@@ -71,32 +72,38 @@ fun ChatScreen(
         },
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            if (uiState.isLoading && uiState.messages.isEmpty()) {
-                FullScreenLoading()
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp),
-                    reverseLayout = true,
-                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
-                    contentPadding = PaddingValues(vertical = 8.dp),
-                ) {
-                    items(reversedMessages, key = { it.id.toString() }) { message ->
-                        MessageItem(
-                            message = message,
-                            currentUserId = uiState.user.id.value,
-                        )
-                    }
+            when {
+                uiState.isLoading && uiState.messages.isEmpty() -> {
+                    FullScreenLoading()
                 }
 
-                MessageInput(
-                    message = uiState.messageInput,
-                    onMessageChange = viewModel::onMessageChanged,
-                    onSendClick = viewModel::sendMessage,
-                    isSending = uiState.isSending,
-                    sendEnabled = uiState.isSendEnabled,
-                    errorText = uiState.messageInputError,
-                )
+                uiState.error != null && uiState.messages.isEmpty() -> {
+                    ErrorState(message = uiState.error!!, onRetry = viewModel::loadMessages)
+                }
+
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp),
+                        reverseLayout = true,
+                        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
+                        contentPadding = PaddingValues(vertical = 8.dp),
+                    ) {
+                        items(uiState.messages, key = { it.id.toString() }) { message ->
+                            MessageItem(message = message, currentUserId = uiState.user.id.value)
+                        }
+                    }
+
+                    MessageInput(
+                        message = uiState.messageInput,
+                        onMessageChange = viewModel::onMessageChanged,
+                        onSendClick = viewModel::sendMessage,
+                        isSending = uiState.actionState is ChatUiState.ActionState.Sending,
+                        sendEnabled = uiState.isSendEnabled,
+                        errorText = uiState.messageInputError,
+                        maxLength = ChatViewModel.MAX_MESSAGE_LENGTH,
+                    )
+                }
             }
         }
     }

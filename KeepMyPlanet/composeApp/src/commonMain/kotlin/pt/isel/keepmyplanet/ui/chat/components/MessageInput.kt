@@ -24,8 +24,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.LoadingIconButton
 
-private const val MAX_MESSAGE_LENGTH = 1000
-
 @Composable
 fun MessageInput(
     message: String,
@@ -33,6 +31,7 @@ fun MessageInput(
     onSendClick: () -> Unit,
     isSending: Boolean,
     sendEnabled: Boolean,
+    maxLength: Int,
     errorText: String? = null,
 ) {
     val isError = errorText != null
@@ -43,7 +42,7 @@ fun MessageInput(
             ) {
                 OutlinedTextField(
                     value = message,
-                    onValueChange = onMessageChange,
+                    onValueChange = { if (it.length <= maxLength) onMessageChange(it) },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Type a message...") },
                     enabled = !isSending,
@@ -52,13 +51,9 @@ fun MessageInput(
                     colors =
                         TextFieldDefaults.outlinedTextFieldColors(
                             focusedBorderColor =
-                                MaterialTheme.colors.primary.copy(
-                                    ContentAlpha.high,
-                                ),
+                                MaterialTheme.colors.primary.copy(ContentAlpha.high),
                             unfocusedBorderColor =
-                                MaterialTheme.colors.onSurface.copy(
-                                    ContentAlpha.disabled,
-                                ),
+                                MaterialTheme.colors.onSurface.copy(ContentAlpha.disabled),
                         ),
                     shape = MaterialTheme.shapes.medium,
                 )
@@ -95,11 +90,11 @@ fun MessageInput(
                     Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
-                    text = "${message.length} / $MAX_MESSAGE_LENGTH",
+                    text = "${message.length} / $maxLength",
                     style = MaterialTheme.typography.caption,
                     textAlign = TextAlign.End,
                     color =
-                        if (message.length > MAX_MESSAGE_LENGTH) {
+                        if (message.length > maxLength) {
                             MaterialTheme.colors.error
                         } else {
                             Color.Unspecified

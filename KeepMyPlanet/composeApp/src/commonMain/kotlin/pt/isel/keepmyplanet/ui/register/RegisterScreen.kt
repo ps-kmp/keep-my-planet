@@ -87,6 +87,7 @@ private fun RegisterContent(
     onRegisterClicked: () -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
+    val isActionInProgress = uiState.actionState is RegisterUiState.ActionState.Registering
     Column(
         modifier =
             Modifier
@@ -106,7 +107,7 @@ private fun RegisterContent(
             onValueChange = onUsernameChanged,
             label = "Username",
             singleLine = true,
-            enabled = !uiState.isLoading,
+            enabled = !isActionInProgress,
             errorText = uiState.usernameError,
         )
 
@@ -116,7 +117,7 @@ private fun RegisterContent(
             label = "Email",
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            enabled = !uiState.isLoading,
+            enabled = !isActionInProgress,
             errorText = uiState.emailError,
         )
 
@@ -125,7 +126,7 @@ private fun RegisterContent(
             onValueChange = onPasswordChanged,
             label = "Password",
             singleLine = true,
-            enabled = !uiState.isLoading,
+            enabled = !isActionInProgress,
             visualTransformation = PasswordVisualTransformation(),
             errorText = uiState.passwordError,
         )
@@ -135,7 +136,7 @@ private fun RegisterContent(
             onValueChange = onConfirmPasswordChanged,
             label = "Confirm Password",
             singleLine = true,
-            enabled = !uiState.isLoading,
+            enabled = !isActionInProgress,
             visualTransformation = PasswordVisualTransformation(),
             errorText = uiState.confirmPasswordError,
         )
@@ -143,7 +144,7 @@ private fun RegisterContent(
         LoadingButton(
             onClick = onRegisterClicked,
             enabled = uiState.canAttemptRegister,
-            isLoading = uiState.isLoading,
+            isLoading = isActionInProgress,
             text = "Register",
             modifier = Modifier.fillMaxWidth().height(48.dp).padding(top = 8.dp),
         )

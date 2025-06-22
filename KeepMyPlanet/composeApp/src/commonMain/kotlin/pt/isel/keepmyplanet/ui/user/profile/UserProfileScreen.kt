@@ -13,10 +13,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.user.profile.components.UserProfileDetails
+import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileEvent
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 
@@ -26,12 +28,13 @@ fun UserProfileScreen(
     onAccountDeleted: () -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToStats: () -> Unit,
+    onProfileUpdated: (UserInfo) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
+    LaunchedEffect(viewModel.events) {
+        viewModel.events.collectLatest { event ->
             when (event) {
                 is UserProfileEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
@@ -39,8 +42,8 @@ fun UserProfileScreen(
                         duration = SnackbarDuration.Short,
                     )
                 }
-
                 is UserProfileEvent.AccountDeleted -> onAccountDeleted()
+                is UserProfileEvent.ProfileUpdated -> onProfileUpdated(event.userInfo)
             }
         }
     }

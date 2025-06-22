@@ -26,6 +26,8 @@ fun ProfileInfoSection(
     onSaveProfileClicked: () -> Unit,
     onCancel: () -> Unit,
 ) {
+    val isActionInProgress = uiState.actionState != UserProfileUiState.ActionState.IDLE
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -35,7 +37,7 @@ fun ProfileInfoSection(
             onValueChange = onNameChanged,
             label = "Name",
             singleLine = true,
-            enabled = !uiState.isUpdatingProfile,
+            enabled = !isActionInProgress,
             errorText = uiState.nameInputError,
         )
 
@@ -45,7 +47,7 @@ fun ProfileInfoSection(
             label = "Email",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             singleLine = true,
-            enabled = !uiState.isUpdatingProfile,
+            enabled = !isActionInProgress,
             errorText = uiState.emailInputError,
         )
 
@@ -56,7 +58,7 @@ fun ProfileInfoSection(
         ) {
             TextButton(
                 onClick = onCancel,
-                enabled = !uiState.isUpdatingProfile,
+                enabled = !isActionInProgress,
             ) {
                 Text("Cancel")
             }
@@ -64,7 +66,7 @@ fun ProfileInfoSection(
             LoadingButton(
                 onClick = onSaveProfileClicked,
                 enabled = uiState.isSaveProfileEnabled,
-                isLoading = uiState.isUpdatingProfile,
+                isLoading = uiState.actionState == UserProfileUiState.ActionState.UPDATING_PROFILE,
                 text = "Save Changes",
             )
         }

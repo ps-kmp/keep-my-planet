@@ -26,7 +26,8 @@ import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
-import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneScreenEvent
+import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneEvent
+import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneUiState
 
 @Composable
 fun ReportZoneScreen(
@@ -38,6 +39,7 @@ fun ReportZoneScreen(
     val uiState by viewModel.uiState.collectAsState()
     val formState = uiState.form
     val snackbarHostState = remember { SnackbarHostState() }
+    val isActionInProgress = uiState.actionState is ReportZoneUiState.ActionState.Submitting
 
     LaunchedEffect(latitude, longitude) {
         viewModel.prepareReportForm(latitude, longitude)
@@ -46,11 +48,11 @@ fun ReportZoneScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is ReportZoneScreenEvent.ShowSnackbar ->
+                is ReportZoneEvent.ShowSnackbar ->
                     snackbarHostState.showSnackbar(
                         event.message,
                     )
-                is ReportZoneScreenEvent.ReportSuccessful -> onNavigateBack()
+                is ReportZoneEvent.ReportSuccessful -> onNavigateBack()
             }
         }
     }
@@ -77,7 +79,7 @@ fun ReportZoneScreen(
                 onValueChange = viewModel::onReportDescriptionChange,
                 label = "Description of the issue",
                 minLines = 4,
-                enabled = !formState.isSubmitting,
+                enabled = !isActionInProgress,
                 errorText = formState.descriptionError,
             )
 
@@ -94,7 +96,7 @@ fun ReportZoneScreen(
                         RadioButton(
                             selected = formState.severity == severity,
                             onClick = { viewModel.onReportSeverityChange(severity) },
-                            enabled = !formState.isSubmitting,
+                            enabled = !isActionInProgress,
                         )
                         Text(
                             text = severity.name,
@@ -108,8 +110,8 @@ fun ReportZoneScreen(
 
             LoadingButton(
                 onClick = viewModel::submitZoneReport,
-                isLoading = formState.isSubmitting,
-                enabled = formState.canSubmit,
+                isLoading = isActionInProgress,
+                enabled = uiState.canSubmit,
                 text = "Submit Report",
                 modifier = Modifier.fillMaxWidth(),
             )

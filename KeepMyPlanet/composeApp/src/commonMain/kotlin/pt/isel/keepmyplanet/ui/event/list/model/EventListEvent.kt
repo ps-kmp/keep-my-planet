@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.list.model
 
-sealed class EventListScreenEvent {
+sealed interface EventListEvent {
     data class ShowSnackbar(
         val message: String,
-    ) : EventListScreenEvent()
+    ) : EventListEvent
 }

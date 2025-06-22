@@ -9,9 +9,19 @@ data class ChatUiState(
     val messages: List<Message> = emptyList(),
     val messageInput: String = "",
     val messageInputError: String? = null,
+    val actionState: ActionState = ActionState.Idle,
     val isLoading: Boolean = false,
-    val isSending: Boolean = false,
+    val error: String? = null,
 ) {
+    sealed interface ActionState {
+        data object Idle : ActionState
+
+        data object Sending : ActionState
+    }
+
     val isSendEnabled: Boolean
-        get() = messageInput.isNotBlank() && !isSending && messageInputError == null
+        get() =
+            messageInput.isNotBlank() &&
+                actionState == ActionState.Idle &&
+                messageInputError == null
 }

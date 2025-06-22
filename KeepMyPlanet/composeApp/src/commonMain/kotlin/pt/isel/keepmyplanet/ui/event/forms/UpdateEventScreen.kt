@@ -23,7 +23,8 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.event.forms.components.EventForm
-import pt.isel.keepmyplanet.ui.event.forms.model.EventFormScreenEvent
+import pt.isel.keepmyplanet.ui.event.forms.model.EventFormEvent
+import pt.isel.keepmyplanet.ui.event.forms.model.EventFormUiState
 
 @Composable
 fun UpdateEventScreen(
@@ -31,8 +32,9 @@ fun UpdateEventScreen(
     eventId: Id,
     onNavigateBack: () -> Unit,
 ) {
-    val formUiState by viewModel.formUiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val isActionInProgress = uiState.actionState is EventFormUiState.ActionState.Submitting
 
     LaunchedEffect(eventId) {
         viewModel.prepareForEdit(eventId)
@@ -41,13 +43,10 @@ fun UpdateEventScreen(
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is EventFormScreenEvent.NavigateBack -> onNavigateBack()
-                is EventFormScreenEvent.ShowSnackbar ->
+                is EventFormEvent.NavigateBack -> onNavigateBack()
+                is EventFormEvent.ShowSnackbar ->
                     snackbarHostState.showSnackbar(event.message, duration = SnackbarDuration.Short)
-
-                is EventFormScreenEvent.EventUpdated -> {}
-
-                else -> {}
+                is EventFormEvent.EventCreated -> { /* Not used in update screen */ }
             }
         }
     }
@@ -56,7 +55,7 @@ fun UpdateEventScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { AppTopBar(title = "Edit Event", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
-        if (formUiState.isLoading) {
+        if (uiState.isLoading) {
             FullScreenLoading(modifier = Modifier.padding(paddingValues))
         } else {
             Column(
@@ -64,7 +63,7 @@ fun UpdateEventScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 EventForm(
-                    formUiState = formUiState,
+                    formUiState = uiState,
                     onTitleChanged = viewModel::onTitleChanged,
                     onDescriptionChanged = viewModel::onDescriptionChanged,
                     onStartDateChanged = viewModel::onStartDateChanged,
@@ -78,8 +77,8 @@ fun UpdateEventScreen(
                 LoadingButton(
                     onClick = viewModel::submit,
                     modifier = Modifier.fillMaxWidth(),
-                    isLoading = formUiState.isSubmitting,
-                    enabled = !formUiState.isSubmitting,
+                    isLoading = isActionInProgress,
+                    enabled = !isActionInProgress,
                     text = "Confirm",
                 )
             }
