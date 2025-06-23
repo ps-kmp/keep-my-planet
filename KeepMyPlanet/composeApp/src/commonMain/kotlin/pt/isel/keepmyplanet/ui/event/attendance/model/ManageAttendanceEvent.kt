@@ -1,6 +1,8 @@
 package pt.isel.keepmyplanet.ui.event.attendance.model
 
-sealed interface ManageAttendanceEvent {
+import pt.isel.keepmyplanet.ui.base.UiEvent
+
+sealed interface ManageAttendanceEvent : UiEvent {
     data class ShowSnackbar(
         val message: String,
     ) : ManageAttendanceEvent

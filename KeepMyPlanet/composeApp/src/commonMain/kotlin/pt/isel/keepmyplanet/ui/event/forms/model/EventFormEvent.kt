@@ -1,8 +1,9 @@
 package pt.isel.keepmyplanet.ui.event.forms.model
 
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.ui.base.UiEvent
 
-sealed interface EventFormEvent {
+sealed interface EventFormEvent : UiEvent {
     data class ShowSnackbar(
         val message: String,
     ) : EventFormEvent

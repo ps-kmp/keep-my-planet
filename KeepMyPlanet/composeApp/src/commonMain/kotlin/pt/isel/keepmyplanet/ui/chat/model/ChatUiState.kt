@@ -1,6 +1,7 @@
 package pt.isel.keepmyplanet.ui.chat.model
 
 import pt.isel.keepmyplanet.domain.message.Message
+import pt.isel.keepmyplanet.ui.base.UiState
 import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 data class ChatUiState(
@@ -12,7 +13,7 @@ data class ChatUiState(
     val actionState: ActionState = ActionState.Idle,
     val isLoading: Boolean = false,
     val error: String? = null,
-) {
+) : UiState {
     sealed interface ActionState {
         data object Idle : ActionState
 

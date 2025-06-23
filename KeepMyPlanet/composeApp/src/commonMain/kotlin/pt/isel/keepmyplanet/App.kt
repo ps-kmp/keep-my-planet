@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -34,6 +35,12 @@ fun App(container: AppContainer = remember { AppContainer() }) {
     val currRoute by appViewModel.currentRoute.collectAsState()
     val userSession by appViewModel.userSession.collectAsState()
 
+    DisposableEffect(appViewModel) {
+        onDispose {
+            appViewModel.onCleared()
+        }
+    }
+
     if (userSession == null && !(currRoute is AppRoute.Login || currRoute is AppRoute.Register)) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -46,26 +53,28 @@ fun App(container: AppContainer = remember { AppContainer() }) {
 
     when (val route = currRoute) {
         is AppRoute.Login -> {
-            val loginViewModel = remember { container.getLoginViewModel() }
+            val viewModel = remember { container.getLoginViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             LoginScreen(
-                viewModel = loginViewModel,
+                viewModel = viewModel,
                 onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
                 onLoginSuccess = { container.updateSession(it) },
             )
         }
 
         is AppRoute.Register -> {
-            val registerViewModel = remember { container.getRegisterViewModel() }
+            val viewModel = remember { container.getRegisterViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             RegisterScreen(
-                viewModel = registerViewModel,
+                viewModel = viewModel,
                 onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
             )
         }
 
         is AppRoute.Home -> {
-            currentUserInfo?.let { user ->
+            currentUserInfo?.let {
                 HomeScreen(
-                    user = user,
+                    user = it,
                     onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
                     onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
                     onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
@@ -75,9 +84,10 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.EventList -> {
-            val eventListViewModel = remember { container.getEventListViewModel() }
+            val viewModel = remember { container.getEventListViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             EventListScreen(
-                viewModel = eventListViewModel,
+                viewModel = viewModel,
                 listState = eventListState,
                 onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
                 onNavigateBack = { appViewModel.navigateBack() },
@@ -86,9 +96,10 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.CreateEvent -> {
-            val eventFormViewModel = remember { container.getEventFormViewModel() }
+            val viewModel = remember { container.getEventFormViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             CreateEventScreen(
-                viewModel = eventFormViewModel,
+                viewModel = viewModel,
                 zoneId = route.zoneId,
                 onEventCreated = { appViewModel.navigate(AppRoute.EventDetails(it)) },
                 onNavigateBack = { appViewModel.navigateBack() },
@@ -97,9 +108,10 @@ fun App(container: AppContainer = remember { AppContainer() }) {
 
         is AppRoute.EventDetails -> {
             currentUserInfo?.let { user ->
-                val eventDetailsViewModel = remember { container.getEventDetailsViewModel(user) }
+                val viewModel = remember(user) { container.getEventDetailsViewModel(user) }
+                DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
                 EventDetailsScreen(
-                    viewModel = eventDetailsViewModel,
+                    viewModel = viewModel,
                     eventId = route.eventId,
                     onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
                     onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(it)) },
@@ -113,9 +125,10 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.EditEvent -> {
-            val eventFormViewModel = remember { container.getEventFormViewModel() }
+            val viewModel = remember { container.getEventFormViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             UpdateEventScreen(
-                viewModel = eventFormViewModel,
+                viewModel = viewModel,
                 eventId = route.eventId,
                 onNavigateBack = { appViewModel.navigateBack() },
             )
@@ -124,6 +137,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         is AppRoute.Chat -> {
             currentUserInfo?.let { user ->
                 val vm = remember(route.info) { container.getChatViewModel(user, route.info) }
+                DisposableEffect(vm) { onDispose { vm.onCleared() } }
                 ChatScreen(
                     viewModel = vm,
                     onNavigateBack = { appViewModel.navigateBack() },
@@ -134,6 +148,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         is AppRoute.UserProfile -> {
             currentUserInfo?.let { user ->
                 val viewModel = remember(user.id) { container.getUserProfileViewModel(user) }
+                DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
                 UserProfileScreen(
                     viewModel = viewModel,
                     onAccountDeleted = { container.logout() },
@@ -145,19 +160,25 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.ManageAttendance -> {
-            val viewModel = remember { container.getManageAttendanceViewModel(route.eventId) }
+            val vm =
+                remember(route.eventId) { container.getManageAttendanceViewModel(route.eventId) }
+            DisposableEffect(vm) { onDispose { vm.onCleared() } }
             ManageAttendanceScreen(
-                viewModel = viewModel,
+                viewModel = vm,
                 onNavigateBack = { appViewModel.navigateBack() },
             )
         }
 
         is AppRoute.MyQrCode -> {
-            MyQrCodeScreen(userId = route.userId, onNavigateBack = { appViewModel.navigateBack() })
+            MyQrCodeScreen(
+                userId = route.userId,
+                onNavigateBack = { appViewModel.navigateBack() },
+            )
         }
 
         is AppRoute.UserStats -> {
             val viewModel = remember { container.getUserStatsViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             UserStatsScreen(
                 viewModel = viewModel,
                 onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
@@ -166,9 +187,10 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.Map -> {
-            val mapViewModel = remember { container.getMapViewModel() }
+            val viewModel = remember { container.getMapViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             MapScreen(
-                viewModel = mapViewModel,
+                viewModel = viewModel,
                 onNavigateToZoneDetails = { appViewModel.navigate(AppRoute.ZoneDetails(it)) },
                 onNavigateToReportZone = { lat, lon ->
                     appViewModel.navigate(AppRoute.ReportZone(lat, lon))
@@ -178,9 +200,10 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.ZoneDetails -> {
-            val zoneDetailsViewModel = remember { container.getZoneDetailsViewModel() }
+            val viewModel = remember { container.getZoneDetailsViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             ZoneDetailsScreen(
-                viewModel = zoneDetailsViewModel,
+                viewModel = viewModel,
                 zoneId = route.zoneId,
                 onNavigateToCreateEvent = { appViewModel.navigate(AppRoute.CreateEvent(it)) },
                 onNavigateToEventDetails = { appViewModel.navigate(AppRoute.EventDetails(it)) },
@@ -189,9 +212,10 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.ReportZone -> {
-            val reportZoneViewModel = remember { container.getReportZoneViewModel() }
+            val viewModel = remember { container.getReportZoneViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
             ReportZoneScreen(
-                viewModel = reportZoneViewModel,
+                viewModel = viewModel,
                 latitude = route.latitude,
                 longitude = route.longitude,
                 onNavigateBack = { appViewModel.navigateBack() },

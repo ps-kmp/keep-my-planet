@@ -1,6 +1,8 @@
 package pt.isel.keepmyplanet.ui.chat.model
 
-sealed interface ChatEvent {
+import pt.isel.keepmyplanet.ui.base.UiEvent
+
+sealed interface ChatEvent : UiEvent {
     data class ShowSnackbar(
         val message: String,
     ) : ChatEvent

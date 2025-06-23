@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.ui.register.model
 
+import pt.isel.keepmyplanet.ui.base.UiState
+
 data class RegisterUiState(
     val username: String = "",
     val email: String = "",
@@ -10,7 +12,7 @@ data class RegisterUiState(
     val emailError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null,
-) {
+) : UiState {
     sealed interface ActionState {
         data object Idle : ActionState
 

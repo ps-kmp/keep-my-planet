@@ -1,7 +1,5 @@
 package pt.isel.keepmyplanet
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.session.model.UserSession
+import pt.isel.keepmyplanet.ui.base.ViewModel
 
 class AppViewModel(
     val userSession: StateFlow<UserSession?>,

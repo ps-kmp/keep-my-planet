@@ -1,6 +1,8 @@
 package pt.isel.keepmyplanet.ui.map.model
 
-sealed interface MapEvent {
+import pt.isel.keepmyplanet.ui.base.UiEvent
+
+sealed interface MapEvent : UiEvent {
     data class ShowSnackbar(
         val message: String,
     ) : MapEvent

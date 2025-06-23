@@ -57,7 +57,7 @@ kotlin {
                         static =
                             (static ?: mutableListOf()).apply {
                                 // Serve sources to debug inside browser
-                                add(rootDirPath)
+                                // add(rootDirPath)
                                 add(projectDirPath)
                             }
                     }
@@ -78,9 +78,6 @@ kotlin {
                 // compose utilities
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
-
-                // lifecycle / viewmodel
-                implementation(libs.androidx.lifecycle.viewmodel)
 
                 // projects
                 implementation(projects.shared)
@@ -114,7 +111,6 @@ kotlin {
                 implementation("com.google.mlkit:barcode-scanning:17.2.0")
                 implementation("com.google.accompanist:accompanist-permissions:0.34.0")
                 implementation(libs.androidx.camera.camera2)
-
             }
         }
         val desktopMain by getting {

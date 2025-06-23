@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.ui.user.profile.model
 
+import pt.isel.keepmyplanet.ui.base.UiState
+
 data class UserProfileUiState(
     val userDetails: UserInfo? = null,
     val nameInput: String = "",
@@ -16,7 +18,7 @@ data class UserProfileUiState(
     val newPasswordInputError: String? = null,
     val confirmPasswordInputError: String? = null,
     val error: String? = null,
-) {
+) : UiState {
     enum class ActionState {
         IDLE,
         UPDATING_PROFILE,

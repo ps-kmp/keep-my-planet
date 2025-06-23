@@ -1,6 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.forms.model
 
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class EventFormUiState(
     val title: String = "",
@@ -17,7 +18,7 @@ data class EventFormUiState(
     val startDateError: String? = null,
     val maxParticipantsError: String? = null,
     val zoneIdError: String? = null,
-) {
+) : UiState {
     sealed interface ActionState {
         data object Idle : ActionState
 

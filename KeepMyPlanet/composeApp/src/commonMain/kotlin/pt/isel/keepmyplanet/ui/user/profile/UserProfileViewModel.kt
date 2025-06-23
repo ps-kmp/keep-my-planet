@@ -1,23 +1,13 @@
 package pt.isel.keepmyplanet.ui.user.profile
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.UserApi
-import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.data.mapper.toUserInfo
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileEvent
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
@@ -25,48 +15,46 @@ import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 class UserProfileViewModel(
     private val userApi: UserApi,
     private val user: UserInfo,
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(UserProfileUiState(userDetails = user))
-    val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
-
-    private val _events = Channel<UserProfileEvent>(Channel.BUFFERED)
-    val events: Flow<UserProfileEvent> = _events.receiveAsFlow()
-
+) : BaseViewModel<UserProfileUiState>(UserProfileUiState(user)) {
     init {
         loadUserProfile()
     }
 
-    fun onNameChanged(newName: String) {
-        _uiState.update { it.copy(nameInput = newName, nameInputError = null) }
+    override fun handleErrorWithMessage(message: String) {
+        setState { copy(isLoading = false, actionState = UserProfileUiState.ActionState.IDLE) }
+        sendEvent(UserProfileEvent.ShowSnackbar(message))
     }
 
-    fun onEmailChanged(newEmail: String) {
-        _uiState.update { it.copy(emailInput = newEmail.trim(), emailInputError = null) }
-    }
+    fun onNameChanged(newName: String) =
+        setState { copy(nameInput = newName, nameInputError = null) }
 
-    fun onOldPasswordChanged(password: String) {
-        _uiState.update { it.copy(oldPasswordInput = password) }
-    }
-
-    fun onNewPasswordChanged(password: String) {
-        _uiState.update { it.copy(newPasswordInput = password, newPasswordInputError = null) }
-    }
-
-    fun onConfirmPasswordChanged(password: String) {
-        _uiState.update {
-            it.copy(confirmPasswordInput = password, confirmPasswordInputError = null)
+    fun onEmailChanged(newEmail: String) =
+        setState {
+            copy(emailInput = newEmail.trim(), emailInputError = null)
         }
-    }
+
+    fun onOldPasswordChanged(password: String) =
+        setState {
+            copy(oldPasswordInput = password)
+        }
+
+    fun onNewPasswordChanged(password: String) =
+        setState {
+            copy(newPasswordInput = password, newPasswordInputError = null)
+        }
+
+    fun onConfirmPasswordChanged(password: String) =
+        setState {
+            copy(confirmPasswordInput = password, confirmPasswordInputError = null)
+        }
 
     fun onEditProfileToggled() {
-        val currentState = _uiState.value
         val isNowEditing = !currentState.isEditingProfile
-        _uiState.update {
-            it.copy(
+        setState {
+            copy(
                 isEditingProfile = isNowEditing,
-                nameInput = if (isNowEditing) it.userDetails?.name?.value ?: "" else it.nameInput,
-                emailInput =
-                    if (isNowEditing) it.userDetails?.email?.value ?: "" else it.emailInput,
+                nameInput = if (isNowEditing) userDetails?.name?.value ?: "" else nameInput,
+                emailInput = if (isNowEditing) userDetails?.email?.value ?: "" else emailInput,
                 nameInputError = null,
                 emailInputError = null,
             )
@@ -74,10 +62,9 @@ class UserProfileViewModel(
     }
 
     fun onPasswordChangeToggled() {
-        _uiState.update {
-            val show = !it.showPasswordChangeSection
-            it.copy(
-                showPasswordChangeSection = show,
+        setState {
+            copy(
+                showPasswordChangeSection = !showPasswordChangeSection,
                 oldPasswordInput = "",
                 newPasswordInput = "",
                 confirmPasswordInput = "",
@@ -87,12 +74,30 @@ class UserProfileViewModel(
         }
     }
 
+    fun loadUserProfile() {
+        launchWithResult(
+            onStart = { copy(isLoading = true, error = null) },
+            onFinally = { copy(isLoading = false) },
+            block = { userApi.getUserDetails(user.id.value) },
+            onSuccess = { userResponse ->
+                val updatedUser = userResponse.toUserInfo()
+                if (updatedUser != currentState.userDetails) {
+                    sendEvent(UserProfileEvent.ProfileUpdated(updatedUser))
+                }
+                setState {
+                    copy(
+                        userDetails = updatedUser,
+                        nameInput = if (isEditingProfile) nameInput else updatedUser.name.value,
+                        emailInput = if (isEditingProfile) emailInput else updatedUser.email.value,
+                    )
+                }
+            },
+            onError = { setState { copy(error = getErrorMessage("Failed to load profile", it)) } },
+        )
+    }
+
     fun onSaveProfileClicked() {
-        if (!validateProfileForm()) return
-
-        val currentState = _uiState.value
-        if (!currentState.isSaveProfileEnabled) return
-
+        if (!validateProfileForm() || !currentState.isSaveProfileEnabled) return
         val nameToUpdate =
             if (currentState.nameInput != currentState.userDetails?.name?.value) {
                 currentState.nameInput
@@ -105,194 +110,107 @@ class UserProfileViewModel(
             } else {
                 null
             }
-        val request = UpdateProfileRequest(nameToUpdate, emailToUpdate, profilePictureId = null)
+        val request = UpdateProfileRequest(nameToUpdate, emailToUpdate, null)
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(actionState = UserProfileUiState.ActionState.UPDATING_PROFILE)
-            }
-            val result = userApi.updateUserProfile(user.id.value, request)
-            result
-                .onSuccess { updatedUserResponse ->
-                    val updatedUser = updatedUserResponse.toUserInfo()
-                    _events.send(UserProfileEvent.ProfileUpdated(updatedUser))
-                    _uiState.update {
-                        it.copy(
-                            isEditingProfile = false,
-                            userDetails = updatedUser,
-                            nameInput = updatedUser.name.value,
-                            emailInput = updatedUser.email.value,
-                        )
-                    }
-                    _events.send(UserProfileEvent.ShowSnackbar("Profile updated successfully"))
-                }.onFailure { e ->
-                    handleError("Failed to update profile", e)
+        launchWithResult(
+            onStart = { copy(actionState = UserProfileUiState.ActionState.UPDATING_PROFILE) },
+            onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
+            block = { userApi.updateUserProfile(user.id.value, request) },
+            onSuccess = { updatedUserResponse ->
+                val updatedUser = updatedUserResponse.toUserInfo()
+                sendEvent(UserProfileEvent.ProfileUpdated(updatedUser))
+                setState {
+                    copy(
+                        isEditingProfile = false,
+                        userDetails = updatedUser,
+                        nameInput = updatedUser.name.value,
+                        emailInput = updatedUser.email.value,
+                    )
                 }
-            _uiState.update {
-                it.copy(
-                    actionState = UserProfileUiState.ActionState.IDLE,
-                )
-            }
-        }
+                sendEvent(UserProfileEvent.ShowSnackbar("Profile updated successfully"))
+            },
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to update profile", it)) },
+        )
     }
 
     fun onChangePasswordClicked() {
-        if (!validatePasswordChangeForm()) return
-
-        val currentState = _uiState.value
-        if (!currentState.isChangePasswordEnabled) return
-
+        if (!validatePasswordChangeForm() || !currentState.isChangePasswordEnabled) return
         if (currentState.newPasswordInput == currentState.oldPasswordInput) {
-            viewModelScope.launch {
-                _events.send(
-                    UserProfileEvent.ShowSnackbar(
-                        "New password cannot be the same as the old one.",
-                    ),
-                )
-            }
+            sendEvent(
+                UserProfileEvent.ShowSnackbar("New password cannot be the same as the old one."),
+            )
             return
         }
+        val request =
+            ChangePasswordRequest(currentState.oldPasswordInput, currentState.newPasswordInput)
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(actionState = UserProfileUiState.ActionState.CHANGING_PASSWORD)
-            }
-            val request =
-                ChangePasswordRequest(currentState.oldPasswordInput, currentState.newPasswordInput)
-            val result = userApi.changePassword(user.id.value, request)
-
-            result
-                .onSuccess {
-                    _uiState.update { it.copy(showPasswordChangeSection = false) }
-                    _events.send(UserProfileEvent.ShowSnackbar("Password changed successfully"))
-                }.onFailure { e ->
-                    handleError("Failed to change password", e)
-                }
-            _uiState.update {
-                it.copy(
-                    actionState = UserProfileUiState.ActionState.IDLE,
-                )
-            }
-        }
-    }
-
-    fun loadUserProfile() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
-        viewModelScope.launch {
-            val result = userApi.getUserDetails(user.id.value)
-            result
-                .onSuccess { userResponse ->
-                    val updatedUser = userResponse.toUserInfo()
-                    if (updatedUser != _uiState.value.userDetails) {
-                        _events.send(UserProfileEvent.ProfileUpdated(updatedUser))
-                    }
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            userDetails = updatedUser,
-                            nameInput =
-                                if (it.isEditingProfile) it.nameInput else updatedUser.name.value,
-                            emailInput =
-                                if (it.isEditingProfile) it.emailInput else updatedUser.email.value,
-                        )
-                    }
-                }.onFailure { e ->
-                    val errorMessage = getErrorMessage("Failed to load profile", e)
-                    _uiState.update { it.copy(isLoading = false, error = errorMessage) }
-                }
-        }
+        launchWithResult(
+            onStart = { copy(actionState = UserProfileUiState.ActionState.CHANGING_PASSWORD) },
+            onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
+            block = { userApi.changePassword(user.id.value, request) },
+            onSuccess = {
+                setState { copy(showPasswordChangeSection = false) }
+                sendEvent(UserProfileEvent.ShowSnackbar("Password changed successfully"))
+            },
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to change password", it)) },
+        )
     }
 
     fun onDeleteAccountClicked() {
-        val currentState = _uiState.value
         if (!currentState.isDeleteAccountEnabled) return
 
-        _uiState.update {
-            it.copy(
-                actionState = UserProfileUiState.ActionState.DELETING_ACCOUNT,
-            )
-        }
-
-        viewModelScope.launch {
-            val result = userApi.deleteUser(user.id.value)
-
-            result
-                .onSuccess {
-                    _events.send(UserProfileEvent.ShowSnackbar("Account deleted successfully"))
-                    _events.send(UserProfileEvent.AccountDeleted)
-                }.onFailure { e ->
-                    handleError("Failed to delete account", e)
-                }
-        }
+        launchWithResult(
+            onStart = { copy(actionState = UserProfileUiState.ActionState.DELETING_ACCOUNT) },
+            block = { userApi.deleteUser(user.id.value) },
+            onSuccess = {
+                sendEvent(UserProfileEvent.ShowSnackbar("Account deleted successfully"))
+                sendEvent(UserProfileEvent.AccountDeleted)
+            },
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to delete account", it)) },
+        )
     }
 
-    private fun getErrorMessage(
-        prefix: String,
-        error: Throwable,
-    ): String =
-        when (error) {
-            is ApiException -> error.error.message
-            else -> "$prefix: ${error.message ?: "Unknown error"}"
-        }
-
     private fun validateProfileForm(): Boolean {
-        val state = _uiState.value
         val nameError =
             try {
-                Name(state.nameInput)
+                Name(currentState.nameInput)
                 null
             } catch (e: IllegalArgumentException) {
                 e.message
             }
         val emailError =
             try {
-                Email(state.emailInput)
+                Email(currentState.emailInput)
                 null
             } catch (e: IllegalArgumentException) {
                 e.message
             }
-
-        _uiState.update { it.copy(nameInputError = nameError, emailInputError = emailError) }
-        return !_uiState.value.hasProfileErrors
+        setState { copy(nameInputError = nameError, emailInputError = emailError) }
+        return !currentState.hasProfileErrors
     }
 
     private fun validatePasswordChangeForm(): Boolean {
-        val state = _uiState.value
         val newPasswordError =
             try {
-                Password(state.newPasswordInput)
+                Password(currentState.newPasswordInput)
                 null
             } catch (e: IllegalArgumentException) {
                 e.message
             }
-        var confirmPasswordError: String? = null
-
-        if (newPasswordError == null) {
-            if (state.newPasswordInput != state.confirmPasswordInput) {
-                confirmPasswordError = "Passwords do not match"
+        val confirmPasswordError =
+            if (newPasswordError == null &&
+                currentState.newPasswordInput != currentState.confirmPasswordInput
+            ) {
+                "Passwords do not match"
+            } else {
+                null
             }
-        }
-
-        _uiState.update {
-            it.copy(
+        setState {
+            copy(
                 newPasswordInputError = newPasswordError,
                 confirmPasswordInputError = confirmPasswordError,
             )
         }
-        return !_uiState.value.hasPasswordErrors
-    }
-
-    private suspend fun handleError(
-        prefix: String,
-        exception: Throwable,
-    ) {
-        val errorMsg = getErrorMessage(prefix, exception)
-        _uiState.update {
-            it.copy(
-                isLoading = false,
-                actionState = UserProfileUiState.ActionState.IDLE,
-            )
-        }
-        _events.send(UserProfileEvent.ShowSnackbar(errorMsg))
+        return !currentState.hasPasswordErrors
     }
 }

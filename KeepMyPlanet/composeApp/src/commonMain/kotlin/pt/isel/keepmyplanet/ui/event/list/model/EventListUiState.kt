@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.list.model
 
+import pt.isel.keepmyplanet.ui.base.UiState
+
 data class EventListUiState(
     val events: List<EventListItem> = emptyList(),
     val isLoading: Boolean = false,
@@ -10,4 +12,4 @@ data class EventListUiState(
     val offset: Int = 0,
     val hasMorePages: Boolean = true,
     val error: String? = null,
-)
+) : UiState

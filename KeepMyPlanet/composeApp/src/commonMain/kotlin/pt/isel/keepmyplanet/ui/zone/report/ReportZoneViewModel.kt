@@ -1,111 +1,69 @@
 package pt.isel.keepmyplanet.ui.zone.report
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ZoneApi
-import pt.isel.keepmyplanet.data.http.ApiException
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneEvent
 import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneFormState
 import pt.isel.keepmyplanet.ui.zone.report.model.ReportZoneUiState
 
 class ReportZoneViewModel(
     private val zoneApi: ZoneApi,
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(ReportZoneUiState())
-    val uiState = _uiState.asStateFlow()
-
-    private val _events = Channel<ReportZoneEvent>()
-    val events = _events.receiveAsFlow()
+) : BaseViewModel<ReportZoneUiState>(ReportZoneUiState()) {
+    override fun handleErrorWithMessage(message: String) {
+        sendEvent(ReportZoneEvent.ShowSnackbar(message))
+    }
 
     fun prepareReportForm(
         latitude: Double,
         longitude: Double,
     ) {
-        _uiState.update {
-            it.copy(form = ReportZoneFormState(latitude = latitude, longitude = longitude))
-        }
+        setState { copy(form = ReportZoneFormState(latitude = latitude, longitude = longitude)) }
     }
 
     fun onReportDescriptionChange(description: String) {
-        _uiState.update {
-            it.copy(
-                form = it.form.copy(description = description, descriptionError = null),
-            )
-        }
+        setState { copy(form = form.copy(description = description, descriptionError = null)) }
     }
 
     fun onReportSeverityChange(severity: ZoneSeverity) {
-        _uiState.update {
-            it.copy(form = it.form.copy(severity = severity))
-        }
+        setState { copy(form = form.copy(severity = severity)) }
     }
 
     fun submitZoneReport() {
-        if (!validateForm()) return
+        if (!validateForm() || !currentState.canSubmit) return
 
-        val formState = _uiState.value.form
-        if (!_uiState.value.canSubmit) return
+        val request =
+            ReportZoneRequest(
+                latitude = currentState.form.latitude,
+                longitude = currentState.form.longitude,
+                description = currentState.form.description,
+                severity = currentState.form.severity.name,
+                photoIds = emptySet(),
+            )
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(actionState = ReportZoneUiState.ActionState.Submitting) }
-
-            val request =
-                ReportZoneRequest(
-                    latitude = formState.latitude,
-                    longitude = formState.longitude,
-                    description = formState.description,
-                    severity = formState.severity.name,
-                    photoIds = emptySet(),
-                )
-
-            zoneApi
-                .reportZone(request)
-                .onSuccess {
-                    _events.send(ReportZoneEvent.ShowSnackbar("Zone reported successfully!"))
-                    _events.send(ReportZoneEvent.ReportSuccessful)
-                }.onFailure { error ->
-                    handleError("Failed to report zone", error)
-                }
-
-            _uiState.update { it.copy(actionState = ReportZoneUiState.ActionState.Idle) }
-        }
+        launchWithResult(
+            onStart = { copy(actionState = ReportZoneUiState.ActionState.Submitting) },
+            onFinally = { copy(actionState = ReportZoneUiState.ActionState.Idle) },
+            block = { zoneApi.reportZone(request) },
+            onSuccess = {
+                sendEvent(ReportZoneEvent.ShowSnackbar("Zone reported successfully!"))
+                sendEvent(ReportZoneEvent.ReportSuccessful)
+            },
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to report zone", it)) },
+        )
     }
 
     private fun validateForm(): Boolean {
-        val formState = _uiState.value.form
         val descriptionError =
             try {
-                Description(formState.description)
+                Description(currentState.form.description)
                 null
             } catch (e: IllegalArgumentException) {
                 e.message
             }
-
-        _uiState.update {
-            it.copy(form = it.form.copy(descriptionError = descriptionError))
-        }
-
-        return !uiState.value.form.hasError
-    }
-
-    private suspend fun handleError(
-        prefix: String,
-        error: Throwable,
-    ) {
-        val message =
-            when (error) {
-                is ApiException -> error.error.message
-                else -> "$prefix: ${error.message ?: "Unknown error"}"
-            }
-        _events.send(ReportZoneEvent.ShowSnackbar(message))
+        setState { copy(form = form.copy(descriptionError = descriptionError)) }
+        return !currentState.form.hasError
     }
 }

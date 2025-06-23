@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.ui.event.details.model
 
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.ui.base.UiState
 import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 data class EventDetailsUiState(
@@ -12,7 +13,7 @@ data class EventDetailsUiState(
     val error: String? = null,
     val isCurrentUserOrganizer: Boolean = false,
     val isCurrentUserParticipant: Boolean = false,
-) {
+) : UiState {
     enum class ActionState {
         IDLE,
         JOINING,

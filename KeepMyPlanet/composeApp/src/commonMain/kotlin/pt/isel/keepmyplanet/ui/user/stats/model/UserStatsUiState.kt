@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.ui.user.stats.model
 
+import pt.isel.keepmyplanet.ui.base.UiState
 import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
 
 data class UserStatsUiState(
@@ -10,4 +11,4 @@ data class UserStatsUiState(
     val limit: Int = 20,
     val hasMorePages: Boolean = true,
     val error: String? = null,
-)
+) : UiState
