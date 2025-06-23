@@ -20,6 +20,10 @@ sealed class AppRoute {
         val eventId: Id,
     ) : AppRoute()
 
+    data class EventStatusHistory(
+        val eventId: Id,
+    ) : AppRoute()
+
     data class CreateEvent(
         val zoneId: Id? = null,
     ) : AppRoute()

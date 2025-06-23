@@ -57,9 +57,9 @@ class DatabaseEventRepository(
 
     override suspend fun create(entity: Event): Event {
         val currentTime = now()
-        val participants = entity.participantsIds + entity.organizerId
+
         entity.maxParticipants?.let {
-            require(participants.size <= it) {
+            require(entity.participantsIds.size <= it) {
                 "Number of participants exceeds maxParticipants limit."
             }
         }
@@ -80,8 +80,8 @@ class DatabaseEventRepository(
                         updated_at = currentTime,
                     ).executeAsOne()
 
-            participants.forEach { eventQueries.addParticipantToEvent(dbEvent.id, it) }
-            dbEvent.toDomainEvent(participants)
+            entity.participantsIds.forEach { eventQueries.addParticipantToEvent(dbEvent.id, it) }
+            dbEvent.toDomainEvent(entity.participantsIds)
         }
     }
 

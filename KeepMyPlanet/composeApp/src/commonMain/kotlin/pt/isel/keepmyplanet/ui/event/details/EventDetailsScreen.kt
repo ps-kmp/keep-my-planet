@@ -55,6 +55,7 @@ fun EventDetailsScreen(
     onNavigateToManageAttendance: (Id) -> Unit,
     onNavigateToMyQrCode: (Id) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToStatusHistory: (Id) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val event = uiState.event
@@ -170,7 +171,16 @@ fun EventDetailsScreen(
                                         text = "Ends: ${it.toFormattedString()}",
                                     )
                                 }
-                                InfoRow(icon = Icons.Default.Flag, text = "Status: ${event.status}")
+
+                                InfoRow(
+                                    icon = Icons.Default.Flag,
+                                    text = "Status: ${event.status}",
+                                    onClick = {
+                                        onNavigateToStatusHistory(event.id)
+                                    },
+                                    isClickable = true,
+                                )
+
                                 event.maxParticipants?.let {
                                     InfoRow(
                                         icon = Icons.Default.People,

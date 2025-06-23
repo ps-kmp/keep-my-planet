@@ -17,6 +17,7 @@ import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.chat.ChatViewModel
 import pt.isel.keepmyplanet.ui.event.attendance.ManageAttendanceViewModel
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsViewModel
+import pt.isel.keepmyplanet.ui.event.details.history.EventStatusHistoryViewModel
 import pt.isel.keepmyplanet.ui.event.forms.EventFormViewModel
 import pt.isel.keepmyplanet.ui.event.list.EventListViewModel
 import pt.isel.keepmyplanet.ui.login.LoginViewModel
@@ -65,6 +66,8 @@ class AppContainer {
     val eventListViewModel: EventListViewModel by lazy { EventListViewModel(eventApi) }
 
     fun getEventDetailsViewModel(user: UserInfo) = EventDetailsViewModel(eventApi, user)
+
+    fun getEventStatusHistoryViewModel() = EventStatusHistoryViewModel(eventApi)
 
     fun getEventFormViewModel() = EventFormViewModel(eventApi)
 

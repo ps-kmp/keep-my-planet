@@ -16,6 +16,7 @@ import pt.isel.keepmyplanet.ui.chat.ChatScreen
 import pt.isel.keepmyplanet.ui.event.attendance.ManageAttendanceScreen
 import pt.isel.keepmyplanet.ui.event.attendance.MyQrCodeScreen
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
+import pt.isel.keepmyplanet.ui.event.details.history.EventStatusHistoryScreen
 import pt.isel.keepmyplanet.ui.event.forms.CreateEventScreen
 import pt.isel.keepmyplanet.ui.event.forms.UpdateEventScreen
 import pt.isel.keepmyplanet.ui.event.list.EventListScreen
@@ -115,8 +116,19 @@ fun App(container: AppContainer = remember { AppContainer() }) {
                     },
                     onNavigateBack = { appViewModel.navigateBack() },
                     onNavigateToMyQrCode = { appViewModel.navigate(AppRoute.MyQrCode(user.id)) },
+                    onNavigateToStatusHistory = { appViewModel.navigate(AppRoute.EventStatusHistory(it)) },
                 )
             }
+        }
+
+        is AppRoute.EventStatusHistory -> {
+            val viewModel = remember { container.getEventStatusHistoryViewModel() }
+            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
+            EventStatusHistoryScreen(
+                viewModel = viewModel,
+                eventId = route.eventId,
+                onNavigateBack = { appViewModel.navigateBack() }
+            )
         }
 
         is AppRoute.EditEvent -> {

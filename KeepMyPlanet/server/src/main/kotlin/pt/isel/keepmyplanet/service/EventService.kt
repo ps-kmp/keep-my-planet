@@ -46,6 +46,10 @@ class EventService(
                 throw ValidationException("Event start date must be in the future.")
             }
 
+            if (maxParticipants != null && maxParticipants < 1) {
+                throw ValidationException("Max participants must be at least 1.")
+            }
+
             val currentTime = now()
             val event =
                 Event(
@@ -55,6 +59,7 @@ class EventService(
                     period = period,
                     zoneId = zoneId,
                     organizerId = organizerId,
+                    participantsIds = setOf(organizerId),
                     maxParticipants = maxParticipants,
                     createdAt = currentTime,
                     updatedAt = currentTime,
@@ -213,9 +218,6 @@ class EventService(
                     "Cannot join an event that is not 'PLANNED'. " +
                         "Current status: '${event.status}'.",
                 )
-            }
-            if (userId == event.organizerId) {
-                throw ConflictException("Organizer cannot join their own event as a participant.")
             }
             if (userId in event.participantsIds) {
                 throw ConflictException("User '$userId' is already a participant in this event.")
