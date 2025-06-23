@@ -96,6 +96,10 @@ class InMemoryUserRepository : UserRepository {
         users.values
             .find { it.name == name }
 
+    override suspend fun findByIds(ids: List<Id>): List<User> =
+        if(ids.isEmpty()) emptyList()
+        else users.filterKeys { it in ids }.values.toList()
+
     fun clear() {
         users.clear()
         nextId.set(1)

@@ -65,11 +65,11 @@ private fun StatusHistoryItem(item: EventStateChangeResponse) {
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "Status: ${item.newStatus}",
+                text = "Changed to: ${item.newStatus}",
                 style = MaterialTheme.typography.h6,
             )
             Text(
-                text = "Changed by User ID: ${item.changedBy}",
+                text = "Changed by: ${item.changedBy.name}",
                 style = MaterialTheme.typography.body2,
             )
             Text(

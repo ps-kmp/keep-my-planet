@@ -259,7 +259,7 @@ fun Route.eventWebApi(
                 eventStateChangeService
                     .getEventStateChanges(eventId)
                     .onSuccess { changes ->
-                        call.respond(HttpStatusCode.OK, changes.map { it.toResponse() })
+                        call.respond(HttpStatusCode.OK, changes)
                     }.onFailure { throw it }
             }
         }

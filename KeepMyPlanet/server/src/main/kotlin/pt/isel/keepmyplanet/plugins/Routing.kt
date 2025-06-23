@@ -45,7 +45,7 @@ fun Application.configureRouting() {
     val eventService =
         EventService(eventRepository, zoneRepository, userRepository, messageRepository)
     val eventStateChangeService =
-        EventStateChangeService(eventRepository, zoneRepository,eventStateChangeRepository)
+        EventStateChangeService(eventRepository, zoneRepository,eventStateChangeRepository, userRepository)
     val messageService =
         MessageService(messageRepository, eventRepository, userRepository, chatSseService)
 

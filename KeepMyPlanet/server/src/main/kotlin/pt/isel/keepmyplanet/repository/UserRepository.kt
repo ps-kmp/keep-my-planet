@@ -9,4 +9,6 @@ interface UserRepository : Repository<User, Id> {
     suspend fun findByEmail(email: Email): User?
 
     suspend fun findByName(name: Name): User?
+
+    suspend fun findByIds(ids: List<Id>): List<User>
 }

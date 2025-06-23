@@ -56,6 +56,11 @@ class DatabaseUserRepository(
             .executeAsList()
             .map { it.toDomainUser() }
 
+    override suspend fun findByIds(ids: List<Id>): List<User> {
+        if (ids.isEmpty()) return emptyList()
+        return userQueries.findByIds(ids).executeAsList().map { it.toDomainUser() }
+    }
+
     override suspend fun update(entity: User): User {
         val existingUser =
             getById(entity.id)

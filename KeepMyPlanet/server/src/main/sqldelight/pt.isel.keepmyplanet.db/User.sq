@@ -25,6 +25,9 @@ SELECT * FROM users WHERE id = :id;
 getAll:
 SELECT * FROM users ORDER BY id LIMIT :limit OFFSET :offset;
 
+findByIds:
+SELECT * FROM users WHERE id IN :ids;
+
 updateUser:
 UPDATE users
 SET name = :name,

@@ -8,6 +8,12 @@ data class EventStateChangeResponse(
     val id: UInt,
     val eventId: UInt,
     val newStatus: EventStatus,
-    val changedBy: UInt,
+    val changedBy: UserInfoSummaryResponse,
     val changeTime: String,
+)
+
+@Serializable
+data class UserInfoSummaryResponse(
+    val id: UInt,
+    val name: String,
 )
