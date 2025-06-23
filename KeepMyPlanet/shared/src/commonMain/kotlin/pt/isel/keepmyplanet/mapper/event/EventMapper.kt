@@ -36,7 +36,7 @@ fun EventResponse.toEvent(): Event =
                 start = LocalDateTime.parse(startDate),
                 end = endDate?.let { LocalDateTime.parse(it) },
             ),
-        status = safeValueOf<EventStatus>(status) ?: EventStatus.UNKNOWN,
+        persistedStatus = safeValueOf<EventStatus>(status) ?: EventStatus.UNKNOWN,
         maxParticipants = maxParticipants,
         organizerId = Id(organizerId),
         participantsIds = participantsIds.map { Id(it) }.toSet(),
