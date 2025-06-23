@@ -1,0 +1,26 @@
+import kotlinx.datetime.LocalDateTime;
+import pt.isel.keepmyplanet.domain.common.Id;
+import pt.isel.keepmyplanet.domain.event.EventStatus;
+
+CREATE TABLE event_state_changes (
+    id BIGINT AS Id PRIMARY KEY,
+    event_id BIGINT AS Id NOT NULL,
+    new_status TEXT AS EventStatus NOT NULL,
+    changed_by BIGINT AS Id NOT NULL,
+    change_time TEXT AS LocalDateTime NOT NULL,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+insert:
+INSERT INTO event_state_changes (event_id, new_status, changed_by, change_time)
+VALUES (:event_id, :new_status, :changed_by, CAST(:change_time AS TIMESTAMP))
+RETURNING *;
+
+findByEventId:
+SELECT * FROM event_state_changes
+WHERE event_id = :eventId
+ORDER BY change_time DESC;
+
+getById:
+SELECT * FROM event_state_changes WHERE id = :id;

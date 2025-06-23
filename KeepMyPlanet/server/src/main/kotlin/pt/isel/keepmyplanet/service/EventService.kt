@@ -154,7 +154,7 @@ class EventService(
             if (updatedEvent != event) eventRepository.update(updatedEvent) else event
         }
 
-    suspend fun cancelEvent(
+/*    suspend fun cancelEvent(
         eventId: Id,
         userId: Id,
     ): Result<Event> =
@@ -198,7 +198,7 @@ class EventService(
                 zoneRepository.update(updatedZone)
             }
             updatedEvent
-        }
+        }*/
 
     suspend fun joinEvent(
         eventId: Id,

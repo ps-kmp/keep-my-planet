@@ -1,5 +1,6 @@
 BEGIN;
 
+DELETE FROM event_state_changes;
 DELETE FROM messages;
 DELETE FROM event_participants;
 DELETE FROM zone_photos;
@@ -11,6 +12,7 @@ ALTER SEQUENCE users_id_seq RESTART WITH 1;
 ALTER SEQUENCE zones_id_seq RESTART WITH 1;
 ALTER SEQUENCE events_id_seq RESTART WITH 1;
 ALTER SEQUENCE messages_id_seq RESTART WITH 1;
+ALTER SEQUENCE event_state_changes_id_seq RESTART WITH 1;
 
 -- Seed Users
 INSERT INTO users (name, email, password_hash, profile_picture_id, created_at, updated_at) VALUES
@@ -48,7 +50,7 @@ INSERT INTO events (title, description, start_datetime, end_datetime, zone_id, o
    NULL,
    2,
    2,
-   'IN_PROGRESS',
+   'PLANNED',
    15,
    CURRENT_TIMESTAMP,
    CURRENT_TIMESTAMP
@@ -65,44 +67,6 @@ INSERT INTO events (title, description, start_datetime, end_datetime, zone_id, o
    CURRENT_TIMESTAMP,
    CURRENT_TIMESTAMP
 );
-
--- Add 30 new events
-DO $$
-DECLARE
-i INT;
-    state TEXT;
-    zone_id INT;
-BEGIN
-FOR i IN 4..33 LOOP
-        IF MOD(i, 3) = 0 THEN
-            state := 'COMPLETED';
-        ELSIF MOD(i, 3) = 1 THEN
-            state := 'IN_PROGRESS';
-ELSE
-            state := 'CANCELLED';
-END IF;
-
-        zone_id := (i % 4) + 1;
-
-        -- Inserir evento
-INSERT INTO events (title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, created_at, updated_at)
-VALUES (
-           'Event ' || i,
-           'Description for event ' || i,
-           CURRENT_TIMESTAMP + (i || ' days')::INTERVAL,
-           CASE
-               WHEN state IN ('COMPLETED', 'CANCELLED') THEN CURRENT_TIMESTAMP + (i || ' days')::INTERVAL + INTERVAL '4 hours'
-                ELSE NULL
-            END,
-           zone_id,
-           (i % 5) + 1,
-           state,
-           10 + (i % 20),
-           CURRENT_TIMESTAMP,
-           CURRENT_TIMESTAMP
-       );
-END LOOP;
-END $$;
 
 -- Atualizar sequências
 DO $$
@@ -125,6 +89,12 @@ END IF;
 SELECT MAX(id) INTO max_id FROM events;
 IF max_id IS NOT NULL THEN
         EXECUTE format('ALTER SEQUENCE events_id_seq RESTART WITH %s;', max_id + 1);
+END IF;
+
+    -- Atualizar sequência de event_state_changes
+SELECT MAX(id) INTO max_id FROM event_state_changes;
+IF max_id IS NOT NULL THEN
+        EXECUTE format('ALTER SEQUENCE event_state_changes_id_seq RESTART WITH %s;', max_id + 1);
 END IF;
 
     -- Atualizar sequência de messages
@@ -150,6 +120,18 @@ INSERT INTO event_participants (event_id, user_id) VALUES
 (3, 1),
 (3, 3),
 (3, 4);
+
+-- Seed Event State Changes
+INSERT INTO event_state_changes (event_id, new_status, changed_by, change_time) VALUES
+-- Evento 1 (id=1) foi criado como PLANNED
+(1, 'PLANNED', 1, CURRENT_TIMESTAMP),
+
+-- Evento 2 (id=2) foi criado como PLANNED
+(2, 'PLANNED', 2, CURRENT_TIMESTAMP),
+
+-- Evento 3 (id=3) foi criado como PLANNED e depois movido para COMPLETED
+(3, 'PLANNED', 3, CURRENT_TIMESTAMP - INTERVAL '6 days'),
+(3, 'COMPLETED', 3, CURRENT_TIMESTAMP - INTERVAL '5 days' + INTERVAL '4 hours');
 
 -- Update Zone
 UPDATE zones SET status = 'CLEANING_SCHEDULED' WHERE id = 1;

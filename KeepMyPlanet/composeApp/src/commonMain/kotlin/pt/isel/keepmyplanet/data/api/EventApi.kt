@@ -7,9 +7,11 @@ import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
 import pt.isel.keepmyplanet.data.http.executeRequest
 import pt.isel.keepmyplanet.data.http.executeRequestUnit
+import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
+import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 
@@ -33,9 +35,13 @@ class EventApi(
 
         fun deleteEvent(eventId: UInt) = eventById(eventId)
 
-        fun cancelEvent(eventId: UInt) = "${eventById(eventId)}/cancel"
+        fun changeStatus(eventId: UInt) = "${eventById(eventId)}/status"
 
-        fun completeEvent(eventId: UInt) = "${eventById(eventId)}/complete"
+        fun getStatusHistory(eventId: UInt) = "${eventById(eventId)}/status/history"
+
+        /*fun cancelEvent(eventId: UInt) = "${eventById(eventId)}/cancel"
+
+        fun completeEvent(eventId: UInt) = "${eventById(eventId)}/complete"*/
 
         fun joinEvent(eventId: UInt) = "${eventById(eventId)}/join"
 
@@ -118,7 +124,23 @@ class EventApi(
             url(Endpoints.deleteEvent(eventId))
         }
 
-    suspend fun cancelEvent(eventId: UInt): Result<EventResponse> =
+    suspend fun changeEventStatus(
+        eventId: UInt,
+        request: ChangeEventStatusRequest,
+    ): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Put
+            url(Endpoints.changeStatus(eventId))
+            setBody(request)
+        }
+
+    suspend fun getEventStatusHistory(eventId: UInt): Result<List<EventStateChangeResponse>> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.getStatusHistory(eventId))
+        }
+
+/*    suspend fun cancelEvent(eventId: UInt): Result<EventResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Post
             url(Endpoints.cancelEvent(eventId))
@@ -128,7 +150,7 @@ class EventApi(
         httpClient.executeRequest {
             method = HttpMethod.Post
             url(Endpoints.completeEvent(eventId))
-        }
+        }*/
 
     suspend fun joinEvent(eventId: UInt): Result<EventResponse> =
         httpClient.executeRequest {

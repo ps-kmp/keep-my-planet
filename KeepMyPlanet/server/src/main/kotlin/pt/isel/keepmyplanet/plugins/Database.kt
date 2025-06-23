@@ -19,6 +19,7 @@ import pt.isel.keepmyplanet.db.ZoneSeverityAdapter
 import pt.isel.keepmyplanet.db.ZoneStatusAdapter
 import ptiselkeepmyplanetdb.Event_attendances
 import ptiselkeepmyplanetdb.Event_participants
+import ptiselkeepmyplanetdb.Event_state_changes
 import ptiselkeepmyplanetdb.Events
 import ptiselkeepmyplanetdb.Messages
 import ptiselkeepmyplanetdb.Photos
@@ -116,6 +117,14 @@ fun Application.configureDatabase() {
                     event_idAdapter = IdAdapter,
                     user_idAdapter = IdAdapter,
                     checked_in_atAdapter = LocalDateTimeAdapter,
+                ),
+            event_state_changesAdapter =
+                Event_state_changes.Adapter(
+                    idAdapter = IdAdapter,
+                    event_idAdapter = IdAdapter,
+                    new_statusAdapter = EventStatusAdapter,
+                    changed_byAdapter = IdAdapter,
+                    change_timeAdapter = LocalDateTimeAdapter,
                 ),
         )
 }

@@ -23,6 +23,9 @@ CREATE INDEX IF NOT EXISTS idx_events_start_datetime ON events(start_datetime);
 CREATE INDEX IF NOT EXISTS idx_events_title_trgm ON events USING GIN (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_events_status_start_datetime ON events(status, start_datetime);
 
+CREATE INDEX IF NOT EXISTS idx_esc_event_id_change_time ON event_state_changes(event_id, change_time DESC);
+CREATE INDEX IF NOT EXISTS idx_esc_changed_by ON event_state_changes(changed_by);
+
 -- Indexes for messages table
 CREATE INDEX IF NOT EXISTS idx_messages_event_id_chat_position ON messages(event_id, chat_position);
 CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id);

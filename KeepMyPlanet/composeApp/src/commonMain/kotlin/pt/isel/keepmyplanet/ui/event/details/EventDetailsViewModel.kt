@@ -7,6 +7,8 @@ import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.data.mapper.toUserInfo
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
+import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.mapper.event.toEvent
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsEvent
@@ -89,7 +91,35 @@ class EventDetailsViewModel(
             eventApi.leaveEvent(it).map { eventResponse -> eventResponse.toEvent() }
         }
 
-    fun cancelEvent() =
+    fun changeEventStatus(newStatus: EventStatus) {
+        val actionState = when (newStatus) {
+            EventStatus.CANCELLED -> EventDetailsUiState.ActionState.CANCELLING
+            EventStatus.COMPLETED -> EventDetailsUiState.ActionState.COMPLETING
+            else -> EventDetailsUiState.ActionState.IDLE
+        }
+        val successMessage = when (newStatus) {
+            EventStatus.CANCELLED -> "Event has been cancelled"
+            EventStatus.COMPLETED -> "Event marked as complete"
+            else -> "Event status updated"
+        }
+        val errorMessagePrefix = when (newStatus) {
+            EventStatus.CANCELLED -> "Failed to cancel event"
+            EventStatus.COMPLETED -> "Failed to complete event"
+            else -> "Failed to update event status"
+        }
+
+        performAction(
+            actionState = actionState,
+            successMessage = successMessage,
+            errorMessagePrefix = errorMessagePrefix,
+            apiCall = { eventId ->
+                val request = ChangeEventStatusRequest(newStatus)
+                eventApi.changeEventStatus(eventId, request).map { it.toEvent() }
+            }
+        )
+    }
+
+/*    fun cancelEvent() =
         performAction(
             EventDetailsUiState.ActionState.CANCELLING,
             "Event has been cancelled",
@@ -105,7 +135,7 @@ class EventDetailsViewModel(
             "Failed to complete event",
         ) {
             eventApi.completeEvent(it).map { eventResponse -> eventResponse.toEvent() }
-        }
+        }*/
 
     fun deleteEvent() {
         val eventId = getEventId() ?: return
@@ -119,10 +149,6 @@ class EventDetailsViewModel(
             },
             onError = { handleErrorWithMessage(getErrorMessage("Failed to delete event", it)) },
         )
-    }
-
-    fun onManageAttendanceClicked() {
-        getEventId()?.let { sendEvent(EventDetailsEvent.NavigateToManageAttendance(it)) }
     }
 
     fun onQrCodeIconClicked() {

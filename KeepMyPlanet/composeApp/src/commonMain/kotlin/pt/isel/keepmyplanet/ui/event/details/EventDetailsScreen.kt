@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.DetailCard
@@ -66,7 +67,7 @@ fun EventDetailsScreen(
     if (showCancelDialog.value) {
         ConfirmActionDialog(
             showDialog = showCancelDialog,
-            onConfirm = viewModel::cancelEvent,
+            onConfirm = { viewModel.changeEventStatus(EventStatus.CANCELLED) },
             title = "Cancel Event?",
             text = "Are you sure you want to cancel this event? This action cannot be undone.",
         )
@@ -253,14 +254,9 @@ fun EventDetailsScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                         ) { Text("Edit Event Details") }
                                     }
-                                    if (uiState.canManageAttendance()) {
-                                        ManageAttendanceButton {
-                                            viewModel.onManageAttendanceClicked()
-                                        }
-                                    }
                                     if (uiState.canOrganizerComplete()) {
                                         LoadingButton(
-                                            onClick = viewModel::completeEvent,
+                                            onClick = { viewModel.changeEventStatus(EventStatus.COMPLETED) },
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.COMPLETING,
