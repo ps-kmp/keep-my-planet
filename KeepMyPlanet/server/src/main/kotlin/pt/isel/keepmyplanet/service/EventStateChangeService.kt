@@ -40,8 +40,7 @@ class EventStateChangeService(
 
             val updatedEvent =
                 event.copy(
-                    status = newStatus,
-                    updatedAt = now,
+                    persistedStatus = newStatus,
                 )
             eventRepository.update(updatedEvent)
 
@@ -88,7 +87,7 @@ class EventStateChangeService(
         to: EventStatus,
     ): Boolean =
         when (from) {
-            EventStatus.PLANNED -> to in listOf(EventStatus.IN_PROGRESS, EventStatus.CANCELLED)
+            EventStatus.PLANNED -> to == EventStatus.CANCELLED
             EventStatus.IN_PROGRESS -> to in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
             EventStatus.COMPLETED, EventStatus.CANCELLED, EventStatus.UNKNOWN -> false
         }
