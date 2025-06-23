@@ -9,8 +9,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.dto.user.UserInfo
 import pt.isel.keepmyplanet.ui.components.InfoRow
-import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 @Composable
 fun ProfileInfoDisplay(user: UserInfo) {

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import pt.isel.keepmyplanet.session.model.UserSession
+import pt.isel.keepmyplanet.dto.user.UserSession
 
 class SessionManager {
     private val settings: Settings = Settings()

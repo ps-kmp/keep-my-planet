@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.chat.model
+package pt.isel.keepmyplanet.dto.message
 
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Title

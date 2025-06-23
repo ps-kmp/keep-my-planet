@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -35,17 +36,24 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.math.pow
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import ovh.plrapps.mapcompose.api.ExperimentalClusteringApi
 import ovh.plrapps.mapcompose.api.addCallout
@@ -54,11 +62,21 @@ import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.centroidX
 import ovh.plrapps.mapcompose.api.centroidY
+import ovh.plrapps.mapcompose.api.enableRotation
+import ovh.plrapps.mapcompose.api.getLayoutSize
+import ovh.plrapps.mapcompose.api.idleStateFlow
+import ovh.plrapps.mapcompose.api.maxScale
+import ovh.plrapps.mapcompose.api.minScale
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.removeCallout
 import ovh.plrapps.mapcompose.api.removeMarker
+import ovh.plrapps.mapcompose.api.scale
+import ovh.plrapps.mapcompose.api.scroll
+import ovh.plrapps.mapcompose.api.setScroll
+import ovh.plrapps.mapcompose.api.visibleBoundingBox
 import ovh.plrapps.mapcompose.ui.MapUI
+import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
 import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
 import pt.isel.keepmyplanet.domain.common.Id
@@ -66,11 +84,11 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.map.model.MapEvent
-import pt.isel.keepmyplanet.ui.map.model.getTileStreamProvider
-import pt.isel.keepmyplanet.ui.map.model.latToY
-import pt.isel.keepmyplanet.ui.map.model.lonToX
-import pt.isel.keepmyplanet.ui.map.model.xToLon
-import pt.isel.keepmyplanet.ui.map.model.yToLat
+import pt.isel.keepmyplanet.ui.map.util.getTileStreamProvider
+import pt.isel.keepmyplanet.ui.map.util.latToY
+import pt.isel.keepmyplanet.ui.map.util.lonToX
+import pt.isel.keepmyplanet.ui.map.util.xToLon
+import pt.isel.keepmyplanet.ui.map.util.yToLat
 import pt.isel.keepmyplanet.ui.zone.components.getSeverityColor
 
 private const val TILE_SIZE = 256
@@ -80,7 +98,7 @@ private val MAP_DIMENSION = TILE_SIZE * 2.0.pow(MAX_ZOOM - 1).toInt()
 private const val LISBON_LAT = 38.7223
 private const val LISBON_LON = -9.1393
 
-@OptIn(ExperimentalResourceApi::class, ExperimentalClusteringApi::class)
+@OptIn(ExperimentalResourceApi::class, ExperimentalClusteringApi::class, FlowPreview::class)
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
@@ -90,19 +108,44 @@ fun MapScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     val mapState =
         remember {
             MapState(MAX_ZOOM, MAP_DIMENSION, MAP_DIMENSION) {
-                scale(1.0 / TILE_SIZE)
+                scale(12.5)
                 scroll(lonToX(LISBON_LON), latToY(LISBON_LAT))
+                minimumScaleMode(Forced(0.2))
             }
         }
+
+    val isMapReady by produceState(initialValue = false, mapState) {
+        mapState.getLayoutSize()
+        value = true
+    }
+
+    LaunchedEffect(isMapReady, viewModel) {
+        if (isMapReady) {
+            mapState
+                .idleStateFlow()
+                .debounce(500L)
+                .collectLatest { isIdle ->
+                    if (isIdle) {
+                        coroutineScope.launch {
+                            viewModel.onMapIdle(mapState.visibleBoundingBox())
+                        }
+                    }
+                }
+        }
+    }
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is MapEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is MapEvent.ShowSnackbar -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(event.message)
+                }
             }
         }
     }
@@ -110,6 +153,7 @@ fun MapScreen(
     LaunchedEffect(Unit) {
         val tileStreamProvider = getTileStreamProvider()
         mapState.addLayer(tileStreamProvider)
+        mapState.enableRotation()
 
         mapState.addClusterer("zone-clusterer") { clusterIds ->
             {
@@ -196,11 +240,15 @@ fun MapScreen(
                 autoDismiss = false,
             ) {
                 Card(
-                    modifier = Modifier.padding(10.dp).shadow(4.dp, RoundedCornerShape(8.dp)),
+                    modifier =
+                        Modifier
+                            .padding(10.dp)
+                            .shadow(4.dp, RoundedCornerShape(8.dp))
+                            .widthIn(max = 240.dp),
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Column(
-                        modifier = Modifier.padding(10.dp).widthIn(max = 220.dp),
+                        modifier = Modifier.padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
@@ -218,12 +266,7 @@ fun MapScreen(
                             modifier = Modifier.fillMaxWidth(),
                             contentAlignment = Alignment.CenterEnd,
                         ) {
-                            TextButton(
-                                onClick = {
-                                    dismissCallout()
-                                    onNavigateToZoneDetails(zone.id)
-                                },
-                            ) {
+                            TextButton(onClick = { onNavigateToZoneDetails(zone.id) }) {
                                 Text("VIEW DETAILS")
                             }
                         }
@@ -253,23 +296,79 @@ fun MapScreen(
         },
     ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                if (event.type == PointerEventType.Scroll) {
+                                    val scrollDelta =
+                                        event.changes
+                                            .first()
+                                            .scrollDelta.y
+                                    val centroid = event.changes.first().position
+                                    val zoomFactor = 1.1f
+                                    val scaleMultiplier = zoomFactor.pow(-scrollDelta)
+
+                                    coroutineScope.launch {
+                                        val newScale =
+                                            (mapState.scale * scaleMultiplier).coerceIn(
+                                                mapState.minScale,
+                                                mapState.maxScale,
+                                            )
+                                        val scaleRatio = newScale / mapState.scale
+                                        val scroll = mapState.scroll
+                                        val newScrollX =
+                                            (scroll.x + centroid.x) * scaleRatio - centroid.x
+                                        val newScrollY =
+                                            (scroll.y + centroid.y) * scaleRatio - centroid.y
+                                        mapState.scale = newScale
+                                        mapState.setScroll(newScrollX, newScrollY)
+                                    }
+                                    event.changes.first().consume()
+                                }
+                            }
+                        }
+                    },
             contentAlignment = Alignment.Center,
         ) {
-            if (uiState.error != null) {
-                ErrorState(message = uiState.error!!, onRetry = viewModel::loadZones)
-            } else {
-                MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
+            MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
 
+            if (uiState.isLoading && uiState.zones.isEmpty()) {
+                FullScreenLoading()
+            } else if (uiState.error != null && uiState.zones.isEmpty()) {
+                ErrorState(message = uiState.error!!) {
+                    coroutineScope.launch { viewModel.onMapIdle(mapState.visibleBoundingBox()) }
+                }
+            } else {
                 if (uiState.isLoading) {
-                    FullScreenLoading()
+                    Surface(
+                        modifier = Modifier.align(Alignment.TopCenter).padding(top = 16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = 4.dp,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Loading zones...", style = MaterialTheme.typography.body2)
+                        }
+                    }
                 }
 
                 if (uiState.isReportingMode) {
                     Icon(
                         imageVector = Icons.Default.GpsFixed,
                         contentDescription = "Reporting Pin",
-                        modifier = Modifier.size(36.dp).align(Alignment.Center),
+                        modifier = Modifier.size(40.dp),
                         tint = MaterialTheme.colors.primary,
                     )
 
@@ -303,9 +402,9 @@ fun MapScreen(
                                 horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                TextButton(
-                                    onClick = { viewModel.exitReportingMode() },
-                                ) { Text("CANCEL") }
+                                TextButton(onClick = { viewModel.exitReportingMode() }) {
+                                    Text("CANCEL")
+                                }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Button(
                                     onClick = {

@@ -1,10 +1,10 @@
-package pt.isel.keepmyplanet.data.mapper
+package pt.isel.keepmyplanet.mapper.user
 
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
+import pt.isel.keepmyplanet.dto.user.UserInfo
 import pt.isel.keepmyplanet.dto.user.UserResponse
-import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 fun UserResponse.toUserInfo(): UserInfo =
     UserInfo(

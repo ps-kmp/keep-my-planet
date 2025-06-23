@@ -4,10 +4,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.EventApi
-import pt.isel.keepmyplanet.data.mapper.toUserInfo
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.mapper.event.toEvent
+import pt.isel.keepmyplanet.mapper.user.toUserInfo
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.event.attendance.model.ManageAttendanceEvent
 import pt.isel.keepmyplanet.ui.event.attendance.model.ManageAttendanceUiState

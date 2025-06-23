@@ -1,14 +1,14 @@
 package pt.isel.keepmyplanet.ui.user.profile
 
 import pt.isel.keepmyplanet.data.api.UserApi
-import pt.isel.keepmyplanet.data.mapper.toUserInfo
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
+import pt.isel.keepmyplanet.dto.user.UserInfo
+import pt.isel.keepmyplanet.mapper.user.toUserInfo
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
-import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileEvent
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 

@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.data.mapper
+package pt.isel.keepmyplanet.mapper.event
 
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
@@ -7,8 +7,8 @@ import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
+import pt.isel.keepmyplanet.dto.event.EventListItem
 import pt.isel.keepmyplanet.dto.event.EventResponse
-import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
 import pt.isel.keepmyplanet.util.safeValueOf
 
 fun EventResponse.toListItem(): EventListItem =

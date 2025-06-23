@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStatus
-import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
+import pt.isel.keepmyplanet.dto.message.ChatInfo
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
@@ -39,7 +39,6 @@ import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.InfoRow
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
-import pt.isel.keepmyplanet.ui.components.ManageAttendanceButton
 import pt.isel.keepmyplanet.ui.components.QrCodeIconButton
 import pt.isel.keepmyplanet.ui.components.toFormattedString
 import pt.isel.keepmyplanet.ui.event.details.components.ConfirmActionDialog
@@ -256,7 +255,11 @@ fun EventDetailsScreen(
                                     }
                                     if (uiState.canOrganizerComplete()) {
                                         LoadingButton(
-                                            onClick = { viewModel.changeEventStatus(EventStatus.COMPLETED) },
+                                            onClick = {
+                                                viewModel.changeEventStatus(
+                                                    EventStatus.COMPLETED,
+                                                )
+                                            },
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.COMPLETING,

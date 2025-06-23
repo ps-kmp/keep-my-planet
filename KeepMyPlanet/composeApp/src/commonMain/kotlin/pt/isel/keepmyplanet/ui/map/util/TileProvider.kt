@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.map.model
+package pt.isel.keepmyplanet.ui.map.util
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

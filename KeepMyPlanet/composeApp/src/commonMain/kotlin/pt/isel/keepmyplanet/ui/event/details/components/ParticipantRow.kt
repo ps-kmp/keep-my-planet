@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
+import pt.isel.keepmyplanet.dto.user.UserInfo
 
 @Composable
 fun ParticipantRow(

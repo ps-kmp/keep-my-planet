@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
+import pt.isel.keepmyplanet.dto.user.UserInfo
 
 @Composable
 fun Avatar(

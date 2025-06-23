@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.FloatingActionButton
@@ -23,12 +22,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.dto.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
@@ -36,24 +37,20 @@ import pt.isel.keepmyplanet.ui.event.list.components.EmptyState
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
 import pt.isel.keepmyplanet.ui.event.list.components.SearchBarAndFilters
 import pt.isel.keepmyplanet.ui.event.list.model.EventListEvent
-import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
 
 private const val PAGINATION_THRESHOLD = 3
 
 @Composable
 fun EventListScreen(
     viewModel: EventListViewModel,
-    listState: LazyListState,
     onEventSelected: (event: EventListItem) -> Unit,
     onNavigateBack: () -> Unit,
     onCreateEventClick: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(uiState.filter) {
-        viewModel.refreshEvents()
-    }
+    val listStates = viewModel.listStates
+    val currentListState = listStates[uiState.filter]!!
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
@@ -66,9 +63,9 @@ fun EventListScreen(
         }
     }
 
-    LaunchedEffect(listState) {
+    LaunchedEffect(currentListState) {
         snapshotFlow {
-            listState.layoutInfo.visibleItemsInfo
+            currentListState.layoutInfo.visibleItemsInfo
                 .lastOrNull()
                 ?.index
         }.collect { lastVisibleItemIndex ->
@@ -113,22 +110,24 @@ fun EventListScreen(
                         onActionClick = onCreateEventClick,
                     )
                 } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(uiState.events, key = { it.id.value.toString() }) { event ->
-                            EventItem(event = event, onClick = { onEventSelected(event) })
-                        }
-                        if (uiState.isAddingMore) {
-                            item {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    CircularProgressIndicator()
+                    key(uiState.filter) {
+                        LazyColumn(
+                            state = currentListState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(uiState.events, key = { it.id.value.toString() }) { event ->
+                                EventItem(event = event, onClick = { onEventSelected(event) })
+                            }
+                            if (uiState.isAddingMore) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
                                 }
                             }
                         }

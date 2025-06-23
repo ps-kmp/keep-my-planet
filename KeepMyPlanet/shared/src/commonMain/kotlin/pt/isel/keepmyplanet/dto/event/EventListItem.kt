@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.event.list.model
+package pt.isel.keepmyplanet.dto.event
 
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id

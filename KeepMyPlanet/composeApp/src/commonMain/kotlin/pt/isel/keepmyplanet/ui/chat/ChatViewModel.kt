@@ -5,12 +5,12 @@ import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ChatApi
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
+import pt.isel.keepmyplanet.dto.message.ChatInfo
+import pt.isel.keepmyplanet.dto.user.UserInfo
 import pt.isel.keepmyplanet.mapper.message.toMessage
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.chat.model.ChatEvent
-import pt.isel.keepmyplanet.ui.chat.model.ChatInfo
 import pt.isel.keepmyplanet.ui.chat.model.ChatUiState
-import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 class ChatViewModel(
     private val chatApi: ChatApi,

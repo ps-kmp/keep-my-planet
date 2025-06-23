@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pt.isel.keepmyplanet.dto.user.UserSession
 import pt.isel.keepmyplanet.navigation.AppRoute
-import pt.isel.keepmyplanet.session.model.UserSession
 import pt.isel.keepmyplanet.ui.base.ViewModel
 
 class AppViewModel(
@@ -35,6 +35,13 @@ class AppViewModel(
         val resolvedRoute = resolveRoute(route, userSession.value)
         if (_navStack.value.lastOrNull() != resolvedRoute) {
             _navStack.update { it + resolvedRoute }
+        }
+    }
+
+    fun navigateAndReplace(route: AppRoute) {
+        val resolvedRoute = resolveRoute(route, userSession.value)
+        if (_navStack.value.lastOrNull() != resolvedRoute) {
+            _navStack.update { it.dropLast(1) + resolvedRoute }
         }
     }
 

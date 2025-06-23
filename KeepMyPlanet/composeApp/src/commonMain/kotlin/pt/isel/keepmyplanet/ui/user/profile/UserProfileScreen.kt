@@ -14,11 +14,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.dto.user.UserInfo
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.user.profile.components.UserProfileDetails
-import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileEvent
 import pt.isel.keepmyplanet.ui.user.profile.model.UserProfileUiState
 

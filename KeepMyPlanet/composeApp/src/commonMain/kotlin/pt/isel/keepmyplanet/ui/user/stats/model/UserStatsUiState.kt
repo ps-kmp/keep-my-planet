@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.user.stats.model
 
+import pt.isel.keepmyplanet.dto.event.EventListItem
 import pt.isel.keepmyplanet.ui.base.UiState
-import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
 
 data class UserStatsUiState(
     val attendedEvents: List<EventListItem> = emptyList(),

@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.user.stats
 
 import pt.isel.keepmyplanet.data.api.EventApi
-import pt.isel.keepmyplanet.data.mapper.toListItem
+import pt.isel.keepmyplanet.mapper.event.toListItem
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.user.stats.model.UserStatsEvent
 import pt.isel.keepmyplanet.ui.user.stats.model.UserStatsUiState

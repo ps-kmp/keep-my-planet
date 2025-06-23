@@ -1,7 +1,7 @@
-package pt.isel.keepmyplanet.data.mapper
+package pt.isel.keepmyplanet.mapper.user
 
 import pt.isel.keepmyplanet.dto.auth.LoginResponse
-import pt.isel.keepmyplanet.session.model.UserSession
+import pt.isel.keepmyplanet.dto.user.UserSession
 
 fun LoginResponse.toUserSession(): UserSession =
     UserSession(

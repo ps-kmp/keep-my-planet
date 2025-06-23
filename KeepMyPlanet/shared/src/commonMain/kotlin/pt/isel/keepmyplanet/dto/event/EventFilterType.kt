@@ -1,3 +1,3 @@
-package pt.isel.keepmyplanet.ui.event.list.model
+package pt.isel.keepmyplanet.dto.event
 
 enum class EventFilterType { ALL, ORGANIZED, JOINED }

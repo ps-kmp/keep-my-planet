@@ -24,12 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.dto.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.event.list.components.EmptyState
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
-import pt.isel.keepmyplanet.ui.event.list.model.EventListItem
 import pt.isel.keepmyplanet.ui.user.stats.model.UserStatsEvent
 
 private const val PAGINATION_THRESHOLD = 3

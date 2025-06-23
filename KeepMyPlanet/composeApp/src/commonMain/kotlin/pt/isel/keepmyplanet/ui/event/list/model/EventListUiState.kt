@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.list.model
 
+import pt.isel.keepmyplanet.dto.event.EventFilterType
+import pt.isel.keepmyplanet.dto.event.EventListItem
 import pt.isel.keepmyplanet.ui.base.UiState
 
 data class EventListUiState(

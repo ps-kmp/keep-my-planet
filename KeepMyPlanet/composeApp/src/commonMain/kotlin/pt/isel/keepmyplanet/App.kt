@@ -2,7 +2,6 @@ package pt.isel.keepmyplanet
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -49,8 +48,6 @@ fun App(container: AppContainer = remember { AppContainer() }) {
     }
 
     val currentUserInfo = userSession?.userInfo
-    val eventListState = rememberLazyListState()
-
     when (val route = currRoute) {
         is AppRoute.Login -> {
             val viewModel = remember { container.getLoginViewModel() }
@@ -84,11 +81,9 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         }
 
         is AppRoute.EventList -> {
-            val viewModel = remember { container.getEventListViewModel() }
-            DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
+            val viewModel = container.eventListViewModel
             EventListScreen(
                 viewModel = viewModel,
-                listState = eventListState,
                 onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
                 onNavigateBack = { appViewModel.navigateBack() },
                 onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent()) },
@@ -101,7 +96,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
             CreateEventScreen(
                 viewModel = viewModel,
                 zoneId = route.zoneId,
-                onEventCreated = { appViewModel.navigate(AppRoute.EventDetails(it)) },
+                onEventCreated = { appViewModel.navigateAndReplace(AppRoute.EventDetails(it)) },
                 onNavigateBack = { appViewModel.navigateBack() },
             )
         }

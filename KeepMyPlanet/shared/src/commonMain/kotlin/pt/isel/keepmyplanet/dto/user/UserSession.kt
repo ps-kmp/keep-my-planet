@@ -1,7 +1,6 @@
-package pt.isel.keepmyplanet.session.model
+package pt.isel.keepmyplanet.dto.user
 
 import kotlinx.serialization.Serializable
-import pt.isel.keepmyplanet.ui.user.profile.model.UserInfo
 
 @Serializable
 data class UserSession(

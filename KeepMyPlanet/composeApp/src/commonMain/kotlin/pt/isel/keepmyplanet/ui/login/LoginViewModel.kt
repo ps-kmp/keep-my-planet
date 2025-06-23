@@ -1,9 +1,9 @@
 package pt.isel.keepmyplanet.ui.login
 
 import pt.isel.keepmyplanet.data.api.AuthApi
-import pt.isel.keepmyplanet.data.mapper.toUserSession
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
+import pt.isel.keepmyplanet.mapper.user.toUserSession
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.login.model.LoginEvent
 import pt.isel.keepmyplanet.ui.login.model.LoginUiState
