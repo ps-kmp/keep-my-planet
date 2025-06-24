@@ -213,10 +213,10 @@ class EventService(
             val event = findEventOrFail(eventId)
             findUserOrFail(userId)
 
-            if (event.status != EventStatus.PLANNED) {
+            if (event.status !in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)) {
                 throw ConflictException(
-                    "Cannot join an event that is not 'PLANNED'. " +
-                        "Current status: '${event.status}'.",
+                    "Can only join events that are 'PLANNED' or 'IN_PROGRESS'. " +
+                        "Current status: '${event.status}'."
                 )
             }
             if (userId in event.participantsIds) {
@@ -327,6 +327,10 @@ class EventService(
 
             ensureOrganizerOrFail(event, actingUserId)
 
+            if (userIdToCheckIn == event.organizerId) {
+                throw ConflictException("The organizer is automatically considered present and cannot be checked in manually.")
+            }
+
             if (event.status != EventStatus.IN_PROGRESS) {
                 throw ConflictException(
                     "Cannot check in user. Event must be 'IN_PROGRESS', but is '${event.status}'.",
@@ -357,9 +361,14 @@ class EventService(
 
     suspend fun getEventAttendees(eventId: Id): Result<List<User>> =
         runCatching {
-            findEventOrFail(eventId)
-            val attendeeIds = eventRepository.getAttendeesIds(eventId)
-            attendeeIds.mapNotNull { userRepository.getById(it) }
+            val event = findEventOrFail(eventId)
+            val attendeeIdsFromDb  = eventRepository.getAttendeesIds(eventId)
+            val finalAttendeeIds = if (event.status != EventStatus.PLANNED) { //Started or completed
+                attendeeIdsFromDb + event.organizerId // Include organizer in attendees
+            } else {
+                attendeeIdsFromDb
+            }
+            finalAttendeeIds.distinct().mapNotNull { userRepository.getById(it) } //distinct to avoid duplicates
         }
 
     suspend fun getEventsAttendedBy(
