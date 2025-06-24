@@ -116,7 +116,7 @@ class EventTest {
                 period = validPeriod,
                 zoneId = validZoneId,
                 organizerId = validOrganizerId,
-                persistedStatus =  EventStatus.COMPLETED,
+                persistedStatus = EventStatus.COMPLETED,
                 maxParticipants = 30,
                 participantsIds = participants,
                 createdAt = validDateTime,

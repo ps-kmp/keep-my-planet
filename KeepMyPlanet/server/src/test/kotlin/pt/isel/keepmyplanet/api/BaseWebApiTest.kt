@@ -16,7 +16,6 @@ import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.event.Event
-import pt.isel.keepmyplanet.domain.event.EventStateChange
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.event.Title
@@ -136,7 +135,7 @@ abstract class BaseWebApiTest {
                 title = Title(title),
                 description = Description(description),
                 period = period,
-                status = status,
+                persistedStatus = status,
                 participantsIds = participantsIds,
                 maxParticipants = maxParticipants,
                 createdAt = now(),
@@ -144,20 +143,20 @@ abstract class BaseWebApiTest {
             ),
         )
 
-    protected suspend fun createTestEventStateChange(
-        eventId: Id = Id(0U),
-        newStatus: EventStatus = EventStatus.PLANNED,
-        changedBy: Id = Id(0U),
-    ): EventStateChange =
-        fakeEventStateChangeRepository.create(
-            EventStateChange(
-                id = Id(0U),
-                eventId = eventId,
-                newStatus = newStatus,
-                changedBy = changedBy,
-                changeTime = now(),
-            ),
-        )
+//    protected suspend fun createTestEventStateChange(
+//        eventId: Id = Id(0U),
+//        newStatus: EventStatus = EventStatus.PLANNED,
+//        changedBy: Id = Id(0U),
+//    ): EventStateChange =
+//        fakeEventStateChangeRepository.create(
+//            EventStateChange(
+//                id = Id(0U),
+//                eventId = eventId,
+//                newStatus = newStatus,
+//                changedBy = changedBy,
+//                changeTime = now(),
+//            ),
+//        )
 
     protected suspend fun linkEventToZone(
         zoneId: Id,

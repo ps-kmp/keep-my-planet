@@ -1,10 +1,22 @@
 package pt.isel.keepmyplanet.ui.event.details.history
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.common.Id
@@ -27,20 +39,21 @@ fun EventStatusHistoryScreen(
     }
 
     Scaffold(
-        topBar = {
-            AppTopBar(
-                title = "Status History",
-                onNavigateBack = onNavigateBack,
-            )
-        },
+        topBar = { AppTopBar(title = "Status History", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when {
                 uiState.isLoading -> FullScreenLoading()
-                uiState.error != null -> ErrorState(message = uiState.error!!) {
-                    viewModel.loadHistory(eventId)
-                }
-                uiState.history.isEmpty() -> EmptyState(message = "No status changes have been recorded.")
+                uiState.error != null ->
+                    ErrorState(message = uiState.error!!) {
+                        viewModel.loadHistory(eventId)
+                    }
+
+                uiState.history.isEmpty() ->
+                    EmptyState(
+                        message = "No status changes have been recorded.",
+                    )
+
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -63,7 +76,10 @@ private fun StatusHistoryItem(item: EventStateChangeResponse) {
         modifier = Modifier.fillMaxWidth(),
         elevation = 2.dp,
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             Text(
                 text = "Changed to: ${item.newStatus}",
                 style = MaterialTheme.typography.h6,

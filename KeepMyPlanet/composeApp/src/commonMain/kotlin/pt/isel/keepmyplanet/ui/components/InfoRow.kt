@@ -1,7 +1,6 @@
 package pt.isel.keepmyplanet.ui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,11 +24,12 @@ fun InfoRow(
     isClickable: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
-    val rowModifier = if (isClickable && onClick != null) {
-        modifier.clickable(onClick = onClick)
-    } else {
-        modifier
-    }
+    val rowModifier =
+        if (isClickable && onClick != null) {
+            modifier.clickable(onClick = onClick)
+        } else {
+            modifier
+        }
     Row(
         modifier = rowModifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -43,7 +43,7 @@ fun InfoRow(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "View details",
-                tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
             )
         }
     }

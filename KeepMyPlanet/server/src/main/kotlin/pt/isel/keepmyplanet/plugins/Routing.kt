@@ -11,10 +11,10 @@ import pt.isel.keepmyplanet.api.messageWebApi
 import pt.isel.keepmyplanet.api.userWebApi
 import pt.isel.keepmyplanet.api.zoneWebApi
 import pt.isel.keepmyplanet.repository.db.DatabaseEventRepository
+import pt.isel.keepmyplanet.repository.db.DatabaseEventStateChangeRepository
 import pt.isel.keepmyplanet.repository.db.DatabaseMessageRepository
 import pt.isel.keepmyplanet.repository.db.DatabaseUserRepository
 import pt.isel.keepmyplanet.repository.db.DatabaseZoneRepository
-import pt.isel.keepmyplanet.repository.db.DatabaseEventStateChangeRepository
 import pt.isel.keepmyplanet.service.AuthService
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.EventService
@@ -30,7 +30,8 @@ fun Application.configureRouting() {
     val userRepository = DatabaseUserRepository(database.userQueries)
     val zoneRepository = DatabaseZoneRepository(database.zoneQueries)
     val eventRepository = DatabaseEventRepository(database.eventQueries)
-    val eventStateChangeRepository = DatabaseEventStateChangeRepository(database.eventStateChangeQueries)
+    val eventStateChangeRepository =
+        DatabaseEventStateChangeRepository(database.eventStateChangeQueries)
     val messageRepository = DatabaseMessageRepository(database.messageQueries)
 
     // Components
@@ -45,7 +46,12 @@ fun Application.configureRouting() {
     val eventService =
         EventService(eventRepository, zoneRepository, userRepository, messageRepository)
     val eventStateChangeService =
-        EventStateChangeService(eventRepository, zoneRepository,eventStateChangeRepository, userRepository)
+        EventStateChangeService(
+            eventRepository,
+            zoneRepository,
+            eventStateChangeRepository,
+            userRepository,
+        )
     val messageService =
         MessageService(messageRepository, eventRepository, userRepository, chatSseService)
 

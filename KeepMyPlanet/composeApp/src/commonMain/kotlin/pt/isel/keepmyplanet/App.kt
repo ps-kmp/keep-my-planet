@@ -116,7 +116,11 @@ fun App(container: AppContainer = remember { AppContainer() }) {
                     },
                     onNavigateBack = { appViewModel.navigateBack() },
                     onNavigateToMyQrCode = { appViewModel.navigate(AppRoute.MyQrCode(user.id)) },
-                    onNavigateToStatusHistory = { appViewModel.navigate(AppRoute.EventStatusHistory(it)) },
+                    onNavigateToStatusHistory = {
+                        appViewModel.navigate(
+                            AppRoute.EventStatusHistory(it),
+                        )
+                    },
                 )
             }
         }
@@ -127,7 +131,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
             EventStatusHistoryScreen(
                 viewModel = viewModel,
                 eventId = route.eventId,
-                onNavigateBack = { appViewModel.navigateBack() }
+                onNavigateBack = { appViewModel.navigateBack() },
             )
         }
 

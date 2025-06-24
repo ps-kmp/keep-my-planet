@@ -63,17 +63,24 @@ class EventStateChangeService(
             updatedEvent
         }
 
-    private suspend fun handleZoneStatusChange(event: Event, newStatus: EventStatus) {
-        val zone = zoneRepository.getById(event.zoneId)
-            ?: throw NotFoundException("Zone '${event.zoneId}' associated with event not found.")
+    private suspend fun handleZoneStatusChange(
+        event: Event,
+        newStatus: EventStatus,
+    ) {
+        val zone =
+            zoneRepository.getById(event.zoneId)
+                ?: throw NotFoundException(
+                    "Zone '${event.zoneId}' associated with event not found.",
+                )
 
         if (zone.eventId != event.id) return
 
-        val updatedZone = when (newStatus) {
-            EventStatus.CANCELLED -> zone.copy(eventId = null, status = ZoneStatus.REPORTED)
-            EventStatus.COMPLETED -> zone.copy(eventId = null, status = ZoneStatus.CLEANED)
-            else -> null
-        }
+        val updatedZone =
+            when (newStatus) {
+                EventStatus.CANCELLED -> zone.copy(eventId = null, status = ZoneStatus.REPORTED)
+                EventStatus.COMPLETED -> zone.copy(eventId = null, status = ZoneStatus.CLEANED)
+                else -> null
+            }
 
         updatedZone?.let {
             zoneRepository.update(it)
@@ -91,8 +98,10 @@ class EventStateChangeService(
 
             val userIds = changes.map { it.changedBy }.distinct()
 
-            val usersMap = userRepository.findByIds(userIds)
-                .associateBy { it.id }
+            val usersMap =
+                userRepository
+                    .findByIds(userIds)
+                    .associateBy { it.id }
 
             changes.map { change ->
                 val user = usersMap[change.changedBy]
@@ -100,11 +109,12 @@ class EventStateChangeService(
                     id = change.id.value,
                     eventId = change.eventId.value,
                     newStatus = change.newStatus,
-                    changedBy = UserInfoSummaryResponse(
-                        id = change.changedBy.value,
-                        name = user?.name?.value ?: "Unknown User"
-                    ),
-                    changeTime = change.changeTime.toString()
+                    changedBy =
+                        UserInfoSummaryResponse(
+                            id = change.changedBy.value,
+                            name = user?.name?.value ?: "Unknown User",
+                        ),
+                    changeTime = change.changeTime.toString(),
                 )
             }
         }

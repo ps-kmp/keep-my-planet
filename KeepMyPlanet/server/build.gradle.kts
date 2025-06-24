@@ -1,11 +1,8 @@
 plugins {
-    // core
-    alias(libs.plugins.kotlinJvm)
+    alias(libs.plugins.kotlin.jvm)
     application
-
-    // feature
     alias(libs.plugins.ktor)
-    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.sqldelight)
     alias(libs.plugins.ktlint)
 }
@@ -20,10 +17,15 @@ application {
 }
 
 ktlint {
+    android.set(true)
     filter {
-        exclude { element ->
-            @Suppress("DEPRECATION")
-            element.file.path.contains(project.buildDir.path)
+        exclude {
+            it.file.toPath().startsWith(
+                project.layout.buildDirectory
+                    .get()
+                    .asFile
+                    .toPath(),
+            )
         }
     }
 }
@@ -32,11 +34,10 @@ dependencies {
     // project dependencies
     implementation(projects.shared)
 
-    // ktor core
+    // ktor
+    implementation(platform(libs.ktor.bom))
     implementation(libs.ktor.server.core.jvm)
     implementation(libs.ktor.server.netty.jvm)
-
-    // ktor features
     implementation(libs.ktor.server.call.logging.jvm)
     implementation(libs.ktor.server.status.pages.jvm)
     implementation(libs.ktor.server.content.negotiation)
@@ -47,10 +48,8 @@ dependencies {
 
     // database
     implementation(libs.sqldelight.runtime)
-    implementation(libs.jdbc.driver)
+    implementation(libs.sqldelight.jdbc.driver)
     implementation(libs.postgresql)
-
-    // connection pool
     implementation(libs.hikaricp)
 
     // serialization
@@ -68,7 +67,7 @@ sqldelight {
     databases {
         create("Database") {
             packageName.set("pt.isel.keepmyplanet.db")
-            dialect(libs.postgresql.dialect)
+            dialect(libs.sqldelight.postgresql.dialect)
         }
     }
 }

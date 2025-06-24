@@ -5,20 +5,24 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
 }
 
 ktlint {
     android.set(true)
     filter {
-        exclude { element ->
-            @Suppress("DEPRECATION")
-            element.file.path.contains(project.buildDir.path)
+        exclude {
+            it.file.toPath().startsWith(
+                project.layout.buildDirectory
+                    .get()
+                    .asFile
+                    .toPath(),
+            )
         }
     }
 }
@@ -27,20 +31,9 @@ kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
-
-//    listOf(
-//        iosX64(),
-//        iosArm64(),
-//        iosSimulatorArm64(),
-//    ).forEach { iosTarget ->
-//        iosTarget.binaries.framework {
-//            baseName = "ComposeApp"
-//            isStatic = true
-//        }
-//    }
 
     jvm("desktop")
 
@@ -56,8 +49,7 @@ kotlin {
                     (devServer ?: KotlinWebpackConfig.DevServer()).apply {
                         static =
                             (static ?: mutableListOf()).apply {
-                                // Serve sources to debug inside browser
-                                // add(rootDirPath)
+                                add(rootDirPath)
                                 add(projectDirPath)
                             }
                     }
@@ -83,14 +75,15 @@ kotlin {
                 implementation(projects.shared)
 
                 // ktor
+                implementation(project.dependencies.platform(libs.ktor.bom))
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.client.logging)
-                implementation(libs.ktor.sse)
+                implementation(libs.ktor.client.sse)
 
-                implementation(libs.multiplatform.settings)
+                implementation(libs.multiplatform.settings.no.arg)
                 implementation(libs.multiplatform.settings.coroutines)
                 implementation(libs.mapcompose.mp)
             }
@@ -102,15 +95,11 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.ktor.client.android)
 
-                implementation(libs.qrcode.kotlin)
-
-                implementation(libs.androidx.camera.core)
-                implementation(libs.androidx.camera.lifecycle)
-                implementation(libs.androidx.camera.view)
-                implementation("com.google.zxing:core:3.5.2")
-                implementation("com.google.mlkit:barcode-scanning:17.2.0")
-                implementation("com.google.accompanist:accompanist-permissions:0.34.0")
-                implementation(libs.androidx.camera.camera2)
+                // barcode and qr code scanning
+                implementation(libs.zxing.core)
+                implementation(libs.mlkit.barcode.scanning)
+                implementation(libs.accompanist.permissions)
+                implementation(libs.bundles.androidx.camera)
             }
         }
         val desktopMain by getting {
@@ -158,8 +147,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

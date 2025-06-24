@@ -9,7 +9,6 @@ import pt.isel.keepmyplanet.ui.event.details.model.EventStatusHistoryUiState
 class EventStatusHistoryViewModel(
     private val eventApi: EventApi,
 ) : BaseViewModel<EventStatusHistoryUiState>(EventStatusHistoryUiState()) {
-
     fun loadHistory(eventId: Id) {
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
