@@ -29,7 +29,7 @@ data class EventDetailsUiState(
     fun canUserJoin(): Boolean =
         event != null &&
             actionState == ActionState.IDLE &&
-            event.status == EventStatus.PLANNED &&
+            event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS) &&
             !event.isFull &&
             !isCurrentUserOrganizer &&
             !isCurrentUserParticipant
