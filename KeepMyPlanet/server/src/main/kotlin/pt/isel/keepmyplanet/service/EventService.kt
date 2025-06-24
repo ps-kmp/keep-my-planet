@@ -216,7 +216,7 @@ class EventService(
             if (event.status !in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)) {
                 throw ConflictException(
                     "Can only join events that are 'PLANNED' or 'IN_PROGRESS'. " +
-                        "Current status: '${event.status}'."
+                        "Current status: '${event.status}'.",
                 )
             }
             if (userId in event.participantsIds) {
@@ -328,7 +328,10 @@ class EventService(
             ensureOrganizerOrFail(event, actingUserId)
 
             if (userIdToCheckIn == event.organizerId) {
-                throw ConflictException("The organizer is automatically considered present and cannot be checked in manually.")
+                throw ConflictException(
+                    "The organizer is automatically considered " +
+                        "present and cannot be checked in manually.",
+                )
             }
 
             if (event.status != EventStatus.IN_PROGRESS) {
@@ -362,13 +365,16 @@ class EventService(
     suspend fun getEventAttendees(eventId: Id): Result<List<User>> =
         runCatching {
             val event = findEventOrFail(eventId)
-            val attendeeIdsFromDb  = eventRepository.getAttendeesIds(eventId)
-            val finalAttendeeIds = if (event.status != EventStatus.PLANNED) { //Started or completed
-                attendeeIdsFromDb + event.organizerId // Include organizer in attendees
-            } else {
-                attendeeIdsFromDb
-            }
-            finalAttendeeIds.distinct().mapNotNull { userRepository.getById(it) } //distinct to avoid duplicates
+            val attendeeIdsFromDb = eventRepository.getAttendeesIds(eventId)
+            val finalAttendeeIds =
+                if (event.status != EventStatus.PLANNED) { // Started or completed
+                    attendeeIdsFromDb + event.organizerId // Include organizer in attendees
+                } else {
+                    attendeeIdsFromDb
+                }
+            finalAttendeeIds.distinct().mapNotNull {
+                userRepository.getById(it)
+            } // distinct to avoid duplicates
         }
 
     suspend fun getEventsAttendedBy(
