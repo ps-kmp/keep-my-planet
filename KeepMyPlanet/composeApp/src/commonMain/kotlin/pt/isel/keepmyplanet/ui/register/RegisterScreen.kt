@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
@@ -127,7 +126,7 @@ private fun RegisterContent(
             label = "Password",
             singleLine = true,
             enabled = !isActionInProgress,
-            visualTransformation = PasswordVisualTransformation(),
+            isPasswordField = true,
             errorText = uiState.passwordError,
         )
 
@@ -137,7 +136,7 @@ private fun RegisterContent(
             label = "Confirm Password",
             singleLine = true,
             enabled = !isActionInProgress,
-            visualTransformation = PasswordVisualTransformation(),
+            isPasswordField = true,
             errorText = uiState.confirmPasswordError,
         )
 

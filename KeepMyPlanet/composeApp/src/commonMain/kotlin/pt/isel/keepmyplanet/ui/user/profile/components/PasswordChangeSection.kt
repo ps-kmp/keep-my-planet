@@ -8,7 +8,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
@@ -34,7 +33,7 @@ fun PasswordChangeSection(
                 value = uiState.oldPasswordInput,
                 onValueChange = onOldPasswordChanged,
                 label = "Old Password",
-                visualTransformation = PasswordVisualTransformation(),
+                isPasswordField = true,
                 singleLine = true,
                 enabled = !isActionInProgress,
             )
@@ -42,7 +41,7 @@ fun PasswordChangeSection(
                 value = uiState.newPasswordInput,
                 onValueChange = onNewPasswordChanged,
                 label = "New Password",
-                visualTransformation = PasswordVisualTransformation(),
+                isPasswordField = true,
                 singleLine = true,
                 enabled = !isActionInProgress,
                 errorText = uiState.newPasswordInputError,
@@ -51,7 +50,7 @@ fun PasswordChangeSection(
                 value = uiState.confirmPasswordInput,
                 onValueChange = onConfirmPasswordChanged,
                 label = "Confirm New Password",
-                visualTransformation = PasswordVisualTransformation(),
+                isPasswordField = true,
                 singleLine = true,
                 enabled = !isActionInProgress,
                 errorText = uiState.confirmPasswordInputError,

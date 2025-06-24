@@ -21,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.dto.user.UserSession
@@ -106,7 +105,7 @@ private fun LoginContent(
             label = "Password",
             singleLine = true,
             enabled = !isActionInProgress,
-            visualTransformation = PasswordVisualTransformation(),
+            isPasswordField = true,
         )
 
         LoadingButton(
