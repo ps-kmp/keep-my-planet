@@ -9,6 +9,7 @@ data class ManageAttendanceUiState(
     val participants: List<UserInfo> = emptyList(),
     val attendees: List<UserInfo> = emptyList(),
     val isLoading: Boolean = true,
+    val isCheckingIn: Boolean = false,
     val error: String? = null,
 ) : UiState {
     val remainingParticipants: List<UserInfo>

@@ -72,8 +72,11 @@ class ManageAttendanceViewModel(
     }
 
     private fun checkInUser(scannedUserId: Id) {
+        if (currentState.isCheckingIn) return
         val request = CheckInRequest(userId = scannedUserId.value)
         launchWithResult(
+            onStart = { copy(isCheckingIn = true) },
+            onFinally = { copy(isCheckingIn = false) },
             block = { eventApi.checkInUser(eventId.value, request) },
             onSuccess = {
                 sendEvent(
@@ -91,6 +94,11 @@ class ManageAttendanceViewModel(
         launchWithResult(
             block = { eventApi.getEventAttendees(eventId.value) },
             onSuccess = { setState { copy(attendees = it.map { a -> a.toUserInfo() }) } },
+            onError = {
+                handleErrorWithMessage(
+                    getErrorMessage("Failed to refresh attendee list", it),
+                )
+            },
         )
     }
 }
