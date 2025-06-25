@@ -3,12 +3,12 @@ package pt.isel.keepmyplanet.mapper.zone
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
+import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.ZoneResponse
-import pt.isel.keepmyplanet.util.safeValueOf
+import pt.isel.keepmyplanet.utils.safeValueOf
 
 fun Zone.toResponse(): ZoneResponse =
     ZoneResponse(

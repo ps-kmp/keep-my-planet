@@ -80,16 +80,16 @@ import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
 import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.ui.common.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
-import pt.isel.keepmyplanet.ui.components.FullScreenLoading
-import pt.isel.keepmyplanet.ui.map.model.MapEvent
-import pt.isel.keepmyplanet.ui.map.util.getTileStreamProvider
-import pt.isel.keepmyplanet.ui.map.util.latToY
-import pt.isel.keepmyplanet.ui.map.util.lonToX
-import pt.isel.keepmyplanet.ui.map.util.xToLon
-import pt.isel.keepmyplanet.ui.map.util.yToLat
-import pt.isel.keepmyplanet.ui.zone.components.getSeverityColor
+import pt.isel.keepmyplanet.ui.components.getSeverityColor
+import pt.isel.keepmyplanet.ui.map.states.MapEvent
+import pt.isel.keepmyplanet.utils.getTileStreamProvider
+import pt.isel.keepmyplanet.utils.latToY
+import pt.isel.keepmyplanet.utils.lonToX
+import pt.isel.keepmyplanet.utils.xToLon
+import pt.isel.keepmyplanet.utils.yToLat
 
 private const val TILE_SIZE = 256
 private const val MAX_ZOOM = 18

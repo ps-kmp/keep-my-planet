@@ -6,15 +6,15 @@ import pt.isel.keepmyplanet.domain.event.EventStateChange
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
-import pt.isel.keepmyplanet.dto.event.UserInfoSummaryResponse
-import pt.isel.keepmyplanet.errors.AuthorizationException
-import pt.isel.keepmyplanet.errors.ConflictException
-import pt.isel.keepmyplanet.errors.NotFoundException
+import pt.isel.keepmyplanet.dto.user.UserInfoSummaryResponse
+import pt.isel.keepmyplanet.exception.AuthorizationException
+import pt.isel.keepmyplanet.exception.ConflictException
+import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.EventStateChangeRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
-import pt.isel.keepmyplanet.util.now
+import pt.isel.keepmyplanet.utils.now
 
 class EventStateChangeService(
     private val eventRepository: EventRepository,

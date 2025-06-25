@@ -3,9 +3,7 @@ package pt.isel.keepmyplanet.domain.event
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.util.isAfter
-import pt.isel.keepmyplanet.util.isBefore
-import pt.isel.keepmyplanet.util.now
+import pt.isel.keepmyplanet.utils.now
 
 data class Event(
     val id: Id,
@@ -26,8 +24,8 @@ data class Event(
                 return persistedStatus
             }
             val now = now()
-            if (now.isAfter(period.start)) {
-                if (period.end == null || now.isBefore(period.end)) {
+            if (now > period.start) {
+                if (period.end == null || now < period.end) {
                     return EventStatus.IN_PROGRESS
                 }
             }

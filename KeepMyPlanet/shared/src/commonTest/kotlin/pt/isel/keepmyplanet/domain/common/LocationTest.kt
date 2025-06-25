@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.domain.common
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import pt.isel.keepmyplanet.domain.zone.Location
 
 class LocationTest {
     @Test

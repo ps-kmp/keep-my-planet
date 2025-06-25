@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.navigation
 
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.dto.message.ChatInfo
+import pt.isel.keepmyplanet.domain.message.ChatInfo
 
 sealed class AppRoute {
     data object Login : AppRoute()

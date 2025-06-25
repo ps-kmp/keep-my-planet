@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 
 class ZoneTest {
     private val validId = Id(1u)

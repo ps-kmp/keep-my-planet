@@ -23,11 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
-import pt.isel.keepmyplanet.dto.user.UserSession
+import pt.isel.keepmyplanet.domain.user.UserSession
+import pt.isel.keepmyplanet.ui.common.LoadingButton
 import pt.isel.keepmyplanet.ui.components.FormField
-import pt.isel.keepmyplanet.ui.components.LoadingButton
-import pt.isel.keepmyplanet.ui.login.model.LoginEvent
-import pt.isel.keepmyplanet.ui.login.model.LoginUiState
+import pt.isel.keepmyplanet.ui.login.states.LoginEvent
+import pt.isel.keepmyplanet.ui.login.states.LoginUiState
 
 @Composable
 fun LoginScreen(

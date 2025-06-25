@@ -19,11 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.ui.common.LoadingButton
 import pt.isel.keepmyplanet.ui.components.AppTopBar
-import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.event.forms.components.EventForm
-import pt.isel.keepmyplanet.ui.event.forms.model.EventFormEvent
-import pt.isel.keepmyplanet.ui.event.forms.model.EventFormUiState
+import pt.isel.keepmyplanet.ui.event.forms.states.EventFormEvent
+import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
 
 @Composable
 fun CreateEventScreen(

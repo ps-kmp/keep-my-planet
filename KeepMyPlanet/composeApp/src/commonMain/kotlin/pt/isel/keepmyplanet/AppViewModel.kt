@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.dto.user.UserSession
+import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.navigation.AppRoute
-import pt.isel.keepmyplanet.ui.base.ViewModel
+import pt.isel.keepmyplanet.ui.viewmodel.ViewModel
 
 class AppViewModel(
     val userSession: StateFlow<UserSession?>,

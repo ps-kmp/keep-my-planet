@@ -26,10 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.common.LoadingButton
 import pt.isel.keepmyplanet.ui.components.FormField
-import pt.isel.keepmyplanet.ui.components.LoadingButton
-import pt.isel.keepmyplanet.ui.register.model.RegisterEvent
-import pt.isel.keepmyplanet.ui.register.model.RegisterUiState
+import pt.isel.keepmyplanet.ui.register.states.RegisterEvent
+import pt.isel.keepmyplanet.ui.register.states.RegisterUiState
 
 @Composable
 fun RegisterScreen(

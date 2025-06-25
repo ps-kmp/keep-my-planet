@@ -4,12 +4,12 @@ import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.visibleBoundingBox
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.mapper.zone.toZone
-import pt.isel.keepmyplanet.ui.base.BaseViewModel
-import pt.isel.keepmyplanet.ui.map.model.MapEvent
-import pt.isel.keepmyplanet.ui.map.model.MapUiState
-import pt.isel.keepmyplanet.ui.map.util.haversineDistance
-import pt.isel.keepmyplanet.ui.map.util.xToLon
-import pt.isel.keepmyplanet.ui.map.util.yToLat
+import pt.isel.keepmyplanet.ui.map.states.MapEvent
+import pt.isel.keepmyplanet.ui.map.states.MapUiState
+import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
+import pt.isel.keepmyplanet.utils.haversineDistance
+import pt.isel.keepmyplanet.utils.xToLon
+import pt.isel.keepmyplanet.utils.yToLat
 
 class MapViewModel(
     private val zoneApi: ZoneApi,

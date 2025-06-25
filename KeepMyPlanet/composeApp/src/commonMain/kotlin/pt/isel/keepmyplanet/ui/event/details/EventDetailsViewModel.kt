@@ -7,13 +7,13 @@ import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
-import pt.isel.keepmyplanet.dto.user.UserInfo
 import pt.isel.keepmyplanet.mapper.event.toEvent
 import pt.isel.keepmyplanet.mapper.user.toUserInfo
-import pt.isel.keepmyplanet.ui.base.BaseViewModel
-import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsEvent
-import pt.isel.keepmyplanet.ui.event.details.model.EventDetailsUiState
+import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
+import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
+import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class EventDetailsViewModel(
     private val eventApi: EventApi,

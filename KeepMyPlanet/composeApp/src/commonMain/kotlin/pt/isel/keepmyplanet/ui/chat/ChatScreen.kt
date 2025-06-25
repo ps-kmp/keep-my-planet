@@ -26,11 +26,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.ui.chat.components.MessageInput
 import pt.isel.keepmyplanet.ui.chat.components.MessageItem
-import pt.isel.keepmyplanet.ui.chat.model.ChatEvent
-import pt.isel.keepmyplanet.ui.chat.model.ChatUiState
+import pt.isel.keepmyplanet.ui.chat.states.ChatEvent
+import pt.isel.keepmyplanet.ui.chat.states.ChatUiState
+import pt.isel.keepmyplanet.ui.common.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
-import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 
 @Composable
 fun ChatScreen(

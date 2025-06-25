@@ -4,10 +4,10 @@ import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
-import pt.isel.keepmyplanet.dto.user.RegisterRequest
-import pt.isel.keepmyplanet.ui.base.BaseViewModel
-import pt.isel.keepmyplanet.ui.register.model.RegisterEvent
-import pt.isel.keepmyplanet.ui.register.model.RegisterUiState
+import pt.isel.keepmyplanet.dto.auth.RegisterRequest
+import pt.isel.keepmyplanet.ui.register.states.RegisterEvent
+import pt.isel.keepmyplanet.ui.register.states.RegisterUiState
+import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class RegisterViewModel(
     private val userApi: UserApi,

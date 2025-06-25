@@ -14,7 +14,6 @@ import kotlin.test.BeforeTest
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
@@ -25,21 +24,22 @@ import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.domain.user.User
+import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
-import pt.isel.keepmyplanet.errors.NotFoundException
+import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.plugins.configureAuthentication
 import pt.isel.keepmyplanet.plugins.configureSerialization
 import pt.isel.keepmyplanet.plugins.configureStatusPages
-import pt.isel.keepmyplanet.repository.mem.InMemoryEventRepository
-import pt.isel.keepmyplanet.repository.mem.InMemoryEventStateChangeRepository
-import pt.isel.keepmyplanet.repository.mem.InMemoryMessageRepository
-import pt.isel.keepmyplanet.repository.mem.InMemoryUserRepository
-import pt.isel.keepmyplanet.repository.mem.InMemoryZoneRepository
+import pt.isel.keepmyplanet.repository.memory.InMemoryEventRepository
+import pt.isel.keepmyplanet.repository.memory.InMemoryEventStateChangeRepository
+import pt.isel.keepmyplanet.repository.memory.InMemoryMessageRepository
+import pt.isel.keepmyplanet.repository.memory.InMemoryUserRepository
+import pt.isel.keepmyplanet.repository.memory.InMemoryZoneRepository
+import pt.isel.keepmyplanet.security.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.service.ChatSseService
-import pt.isel.keepmyplanet.util.Pbkdf2PasswordHasher
-import pt.isel.keepmyplanet.util.now
+import pt.isel.keepmyplanet.utils.now
 
 abstract class BaseWebApiTest {
     protected val fakeUserRepository = InMemoryUserRepository()

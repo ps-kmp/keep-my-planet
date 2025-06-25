@@ -7,14 +7,14 @@ import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import org.slf4j.LoggerFactory
-import pt.isel.keepmyplanet.dto.common.ErrorResponse
-import pt.isel.keepmyplanet.errors.AppException
-import pt.isel.keepmyplanet.errors.AuthenticationException
-import pt.isel.keepmyplanet.errors.AuthorizationException
-import pt.isel.keepmyplanet.errors.ConflictException
-import pt.isel.keepmyplanet.errors.InternalServerException
-import pt.isel.keepmyplanet.errors.NotFoundException
-import pt.isel.keepmyplanet.errors.ValidationException
+import pt.isel.keepmyplanet.dto.error.ErrorResponse
+import pt.isel.keepmyplanet.exception.AppException
+import pt.isel.keepmyplanet.exception.AuthenticationException
+import pt.isel.keepmyplanet.exception.AuthorizationException
+import pt.isel.keepmyplanet.exception.ConflictException
+import pt.isel.keepmyplanet.exception.InternalServerException
+import pt.isel.keepmyplanet.exception.NotFoundException
+import pt.isel.keepmyplanet.exception.ValidationException
 
 fun Application.configureStatusPages() {
     install(StatusPages) {

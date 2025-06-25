@@ -6,7 +6,7 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.request
 import kotlinx.serialization.json.Json
-import pt.isel.keepmyplanet.dto.common.ErrorResponse
+import pt.isel.keepmyplanet.dto.error.ErrorResponse
 
 suspend inline fun <reified T> HttpClient.executeRequest(
     block: HttpRequestBuilder.() -> Unit,

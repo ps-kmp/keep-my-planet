@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.data.http
 
-import pt.isel.keepmyplanet.dto.common.ErrorResponse
+import pt.isel.keepmyplanet.dto.error.ErrorResponse
 
 class ApiException(
     val error: ErrorResponse,

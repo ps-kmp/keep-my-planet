@@ -9,15 +9,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.dto.event.EventFilterType
+import pt.isel.keepmyplanet.domain.event.EventFilterType
 
 @Composable
 fun SearchBarAndFilters(
@@ -54,5 +57,28 @@ fun SearchBarAndFilters(
                 onFilterChange(EventFilterType.JOINED)
             }
         }
+    }
+}
+
+@Composable
+private fun FilterButton(
+    text: String,
+    isActive: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    TextButton(
+        onClick = onClick,
+        enabled = enabled,
+    ) {
+        Text(
+            text = text,
+            color =
+                if (isActive) {
+                    MaterialTheme.colors.primary
+                } else {
+                    MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium)
+                },
+        )
     }
 }

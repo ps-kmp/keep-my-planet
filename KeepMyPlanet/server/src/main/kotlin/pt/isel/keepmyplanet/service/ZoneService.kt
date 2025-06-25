@@ -2,20 +2,20 @@ package pt.isel.keepmyplanet.service
 
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.user.User
+import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
-import pt.isel.keepmyplanet.errors.AuthorizationException
-import pt.isel.keepmyplanet.errors.ConflictException
-import pt.isel.keepmyplanet.errors.InternalServerException
-import pt.isel.keepmyplanet.errors.NotFoundException
-import pt.isel.keepmyplanet.errors.ValidationException
+import pt.isel.keepmyplanet.exception.AuthorizationException
+import pt.isel.keepmyplanet.exception.ConflictException
+import pt.isel.keepmyplanet.exception.InternalServerException
+import pt.isel.keepmyplanet.exception.NotFoundException
+import pt.isel.keepmyplanet.exception.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
-import pt.isel.keepmyplanet.util.now
+import pt.isel.keepmyplanet.utils.now
 
 class ZoneService(
     private val zoneRepository: ZoneRepository,

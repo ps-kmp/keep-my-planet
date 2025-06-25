@@ -10,23 +10,23 @@ import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.createHttpClient
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.dto.message.ChatInfo
-import pt.isel.keepmyplanet.dto.user.UserInfo
-import pt.isel.keepmyplanet.dto.user.UserSession
+import pt.isel.keepmyplanet.domain.message.ChatInfo
+import pt.isel.keepmyplanet.domain.user.UserInfo
+import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.session.SessionManager
+import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceViewModel
 import pt.isel.keepmyplanet.ui.chat.ChatViewModel
-import pt.isel.keepmyplanet.ui.event.attendance.ManageAttendanceViewModel
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsViewModel
-import pt.isel.keepmyplanet.ui.event.details.history.EventStatusHistoryViewModel
 import pt.isel.keepmyplanet.ui.event.forms.EventFormViewModel
+import pt.isel.keepmyplanet.ui.event.history.EventStatusHistoryViewModel
 import pt.isel.keepmyplanet.ui.event.list.EventListViewModel
 import pt.isel.keepmyplanet.ui.login.LoginViewModel
 import pt.isel.keepmyplanet.ui.map.MapViewModel
+import pt.isel.keepmyplanet.ui.profile.UserProfileViewModel
 import pt.isel.keepmyplanet.ui.register.RegisterViewModel
-import pt.isel.keepmyplanet.ui.user.profile.UserProfileViewModel
-import pt.isel.keepmyplanet.ui.user.stats.UserStatsViewModel
-import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsViewModel
-import pt.isel.keepmyplanet.ui.zone.report.ReportZoneViewModel
+import pt.isel.keepmyplanet.ui.report.ReportZoneViewModel
+import pt.isel.keepmyplanet.ui.stats.UserStatsViewModel
+import pt.isel.keepmyplanet.ui.zone.ZoneDetailsViewModel
 
 class AppContainer {
     private val sessionManager = SessionManager()

@@ -9,16 +9,16 @@ import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
-import pt.isel.keepmyplanet.errors.AuthorizationException
-import pt.isel.keepmyplanet.errors.ConflictException
-import pt.isel.keepmyplanet.errors.InternalServerException
-import pt.isel.keepmyplanet.errors.NotFoundException
-import pt.isel.keepmyplanet.errors.ValidationException
+import pt.isel.keepmyplanet.exception.AuthorizationException
+import pt.isel.keepmyplanet.exception.ConflictException
+import pt.isel.keepmyplanet.exception.InternalServerException
+import pt.isel.keepmyplanet.exception.NotFoundException
+import pt.isel.keepmyplanet.exception.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.MessageRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
-import pt.isel.keepmyplanet.util.now
+import pt.isel.keepmyplanet.utils.now
 
 class EventService(
     private val eventRepository: EventRepository,

@@ -4,10 +4,10 @@ import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
 import pt.isel.keepmyplanet.dto.auth.LoginResponse
-import pt.isel.keepmyplanet.errors.AuthenticationException
+import pt.isel.keepmyplanet.exception.AuthenticationException
 import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.repository.UserRepository
-import pt.isel.keepmyplanet.util.PasswordHasher
+import pt.isel.keepmyplanet.security.PasswordHasher
 
 class AuthService(
     private val userRepository: UserRepository,

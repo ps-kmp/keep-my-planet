@@ -22,8 +22,8 @@ import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
-import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
-import pt.isel.keepmyplanet.dto.user.RegisterRequest
+import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
+import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 import pt.isel.keepmyplanet.service.UserService

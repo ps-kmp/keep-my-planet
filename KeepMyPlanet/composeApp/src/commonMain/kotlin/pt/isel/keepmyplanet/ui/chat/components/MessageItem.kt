@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.message.Message
-import pt.isel.keepmyplanet.ui.components.formatTimestamp
+import pt.isel.keepmyplanet.utils.formatTimestamp
 
 @Composable
 fun MessageItem(

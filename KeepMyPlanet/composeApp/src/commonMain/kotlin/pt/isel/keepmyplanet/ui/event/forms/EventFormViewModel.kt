@@ -5,9 +5,9 @@ import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
-import pt.isel.keepmyplanet.ui.base.BaseViewModel
-import pt.isel.keepmyplanet.ui.event.forms.model.EventFormEvent
-import pt.isel.keepmyplanet.ui.event.forms.model.EventFormUiState
+import pt.isel.keepmyplanet.ui.event.forms.states.EventFormEvent
+import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
+import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class EventFormViewModel(
     private val eventApi: EventApi,

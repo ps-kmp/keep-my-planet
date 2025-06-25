@@ -6,8 +6,8 @@ import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
 import pt.isel.keepmyplanet.data.http.executeRequest
 import pt.isel.keepmyplanet.data.http.executeRequestUnit
-import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
-import pt.isel.keepmyplanet.dto.user.RegisterRequest
+import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
+import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 

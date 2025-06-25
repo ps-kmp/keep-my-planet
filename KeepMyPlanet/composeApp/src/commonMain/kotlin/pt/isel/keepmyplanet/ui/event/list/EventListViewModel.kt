@@ -5,12 +5,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.EventApi
-import pt.isel.keepmyplanet.dto.event.EventFilterType
+import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.mapper.event.toListItem
-import pt.isel.keepmyplanet.ui.base.BaseViewModel
-import pt.isel.keepmyplanet.ui.event.list.model.EventListEvent
-import pt.isel.keepmyplanet.ui.event.list.model.EventListUiState
+import pt.isel.keepmyplanet.ui.event.list.states.EventListEvent
+import pt.isel.keepmyplanet.ui.event.list.states.EventListUiState
+import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 private const val SEARCH_DEBOUNCE_DELAY_MS = 500L
 

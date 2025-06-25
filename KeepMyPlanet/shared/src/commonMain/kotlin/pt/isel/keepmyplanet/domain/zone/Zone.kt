@@ -3,7 +3,6 @@ package pt.isel.keepmyplanet.domain.zone
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 
 data class Zone(
     val id: Id,

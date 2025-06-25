@@ -10,11 +10,12 @@ import pt.isel.keepmyplanet.api.eventWebApi
 import pt.isel.keepmyplanet.api.messageWebApi
 import pt.isel.keepmyplanet.api.userWebApi
 import pt.isel.keepmyplanet.api.zoneWebApi
-import pt.isel.keepmyplanet.repository.db.DatabaseEventRepository
-import pt.isel.keepmyplanet.repository.db.DatabaseEventStateChangeRepository
-import pt.isel.keepmyplanet.repository.db.DatabaseMessageRepository
-import pt.isel.keepmyplanet.repository.db.DatabaseUserRepository
-import pt.isel.keepmyplanet.repository.db.DatabaseZoneRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseEventRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseEventStateChangeRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseMessageRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseUserRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseZoneRepository
+import pt.isel.keepmyplanet.security.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.service.AuthService
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.EventService
@@ -23,7 +24,6 @@ import pt.isel.keepmyplanet.service.JwtService
 import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.service.UserService
 import pt.isel.keepmyplanet.service.ZoneService
-import pt.isel.keepmyplanet.util.Pbkdf2PasswordHasher
 
 fun Application.configureRouting() {
     // Data Access Layer

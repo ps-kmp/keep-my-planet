@@ -15,13 +15,13 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
-import pt.isel.keepmyplanet.dto.user.ChangePasswordRequest
-import pt.isel.keepmyplanet.dto.user.RegisterRequest
+import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
+import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.service.UserService
-import pt.isel.keepmyplanet.util.getCurrentUserId
-import pt.isel.keepmyplanet.util.getPathUIntId
+import pt.isel.keepmyplanet.utils.getCurrentUserId
+import pt.isel.keepmyplanet.utils.getPathUIntId
 
 fun Route.userWebApi(userService: UserService) {
     route("/users") {

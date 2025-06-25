@@ -13,20 +13,20 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
+import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
-import pt.isel.keepmyplanet.errors.ValidationException
+import pt.isel.keepmyplanet.exception.ValidationException
 import pt.isel.keepmyplanet.mapper.zone.toResponse
 import pt.isel.keepmyplanet.service.ZoneService
-import pt.isel.keepmyplanet.util.getCurrentUserId
-import pt.isel.keepmyplanet.util.getPathUIntId
-import pt.isel.keepmyplanet.util.getQueryDoubleParameter
-import pt.isel.keepmyplanet.util.safeValueOf
+import pt.isel.keepmyplanet.utils.getCurrentUserId
+import pt.isel.keepmyplanet.utils.getPathUIntId
+import pt.isel.keepmyplanet.utils.getQueryDoubleParameter
+import pt.isel.keepmyplanet.utils.safeValueOf
 
 fun Route.zoneWebApi(zoneService: ZoneService) {
     route("/zones") {

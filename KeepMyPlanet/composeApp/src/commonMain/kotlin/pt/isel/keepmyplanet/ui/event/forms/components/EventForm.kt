@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.FormField
-import pt.isel.keepmyplanet.ui.event.forms.model.EventFormUiState
+import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
 
 @Composable
 fun EventForm(

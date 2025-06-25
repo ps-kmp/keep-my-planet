@@ -26,10 +26,10 @@ import pt.isel.keepmyplanet.mapper.event.toResponse
 import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
-import pt.isel.keepmyplanet.util.getCurrentUserId
-import pt.isel.keepmyplanet.util.getPathUIntId
-import pt.isel.keepmyplanet.util.getQueryIntParameter
-import pt.isel.keepmyplanet.util.getQueryStringParameter
+import pt.isel.keepmyplanet.utils.getCurrentUserId
+import pt.isel.keepmyplanet.utils.getPathUIntId
+import pt.isel.keepmyplanet.utils.getQueryIntParameter
+import pt.isel.keepmyplanet.utils.getQueryStringParameter
 
 fun Route.eventWebApi(
     eventService: EventService,

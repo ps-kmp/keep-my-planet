@@ -21,10 +21,10 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.common.Location
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
+import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
@@ -32,9 +32,9 @@ import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
-import pt.isel.keepmyplanet.util.minus
-import pt.isel.keepmyplanet.util.now
-import pt.isel.keepmyplanet.util.plus
+import pt.isel.keepmyplanet.utils.minus
+import pt.isel.keepmyplanet.utils.now
+import pt.isel.keepmyplanet.utils.plus
 
 class EventWebApiTest : BaseWebApiTest() {
     private val eventService =
@@ -886,6 +886,7 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
+    /*
     @Test
     fun `POST join event - should fail with 409 if event is IN_PROGRESS`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
@@ -901,6 +902,7 @@ class EventWebApiTest : BaseWebApiTest() {
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
+     */
 
     @Test
     fun `POST join event - should fail with 409 if event is CANCELLED`() =

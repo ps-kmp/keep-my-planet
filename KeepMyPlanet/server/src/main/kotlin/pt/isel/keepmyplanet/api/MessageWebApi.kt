@@ -19,9 +19,9 @@ import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.mapper.message.toResponse
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.MessageService
-import pt.isel.keepmyplanet.util.getCurrentUserId
-import pt.isel.keepmyplanet.util.getPathIntParameter
-import pt.isel.keepmyplanet.util.getPathUIntId
+import pt.isel.keepmyplanet.utils.getCurrentUserId
+import pt.isel.keepmyplanet.utils.getPathIntParameter
+import pt.isel.keepmyplanet.utils.getPathUIntId
 
 fun Route.messageWebApi(
     messageService: MessageService,
