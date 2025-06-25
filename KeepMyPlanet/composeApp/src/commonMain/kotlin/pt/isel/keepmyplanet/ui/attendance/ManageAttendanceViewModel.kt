@@ -73,6 +73,11 @@ class ManageAttendanceViewModel(
 
     private fun checkInUser(scannedUserId: Id) {
         if (currentState.isCheckingIn) return
+        val participantInfo = currentState.participants.find { it.id == scannedUserId }
+        if (participantInfo == null) {
+            sendEvent(ManageAttendanceEvent.ShowSnackbar("User is not registered for this event."))
+            return
+        }
         val request = CheckInRequest(userId = scannedUserId.value)
         launchWithResult(
             onStart = { copy(isCheckingIn = true) },
@@ -81,7 +86,7 @@ class ManageAttendanceViewModel(
             onSuccess = {
                 sendEvent(
                     ManageAttendanceEvent.ShowSnackbar(
-                        "User ${scannedUserId.value} checked in successfully!",
+                        "User ${participantInfo.name.value} checked in successfully!",
                     ),
                 )
                 refreshAttendees()

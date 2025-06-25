@@ -157,12 +157,19 @@ class EventDetailsViewModel(
     fun onQrCodeIconClicked() {
         val state = currentState
         if (!state.canUseQrFeature()) return
-        val eventId = state.event?.id ?: return
+        val event = state.event ?: return
 
         if (state.isCurrentUserOrganizer) {
-            sendEvent(EventDetailsEvent.NavigateToManageAttendance(eventId))
+            sendEvent(EventDetailsEvent.NavigateToManageAttendance(event.id))
         } else {
-            sendEvent(EventDetailsEvent.NavigateToMyQrCode(currentUser.id))
+            val organizerInfo = state.participants.find { it.id == event.organizerId }
+            val organizerName = organizerInfo?.name?.value
+
+            if (organizerName != null) {
+                sendEvent(EventDetailsEvent.NavigateToMyQrCode(currentUser.id, organizerName))
+            } else {
+                handleErrorWithMessage("Could not retrieve organizer's name.")
+            }
         }
     }
 

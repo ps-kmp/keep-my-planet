@@ -53,7 +53,7 @@ fun EventDetailsScreen(
     onNavigateToChat: (ChatInfo) -> Unit,
     onNavigateToEditEvent: (Id) -> Unit,
     onNavigateToManageAttendance: (Id) -> Unit,
-    onNavigateToMyQrCode: (Id) -> Unit,
+    onNavigateToMyQrCode: (userId: Id, organizerName: String) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToStatusHistory: (Id) -> Unit,
 ) {
@@ -102,7 +102,7 @@ fun EventDetailsScreen(
                 }
 
                 is EventDetailsEvent.NavigateToMyQrCode -> {
-                    onNavigateToMyQrCode(event.userId)
+                    onNavigateToMyQrCode(event.userId, event.organizerName)
                 }
             }
         }

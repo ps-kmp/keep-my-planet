@@ -51,6 +51,7 @@ sealed class AppRoute {
 
     data class MyQrCode(
         val userId: Id,
+        val organizerName: String
     ) : AppRoute()
 
     data class UserStats(

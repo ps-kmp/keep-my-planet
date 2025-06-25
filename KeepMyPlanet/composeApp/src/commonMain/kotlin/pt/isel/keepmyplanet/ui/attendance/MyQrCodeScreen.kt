@@ -13,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
@@ -21,6 +22,7 @@ import pt.isel.keepmyplanet.ui.components.QrCodeDisplay
 @Composable
 fun MyQrCodeScreen(
     userId: Id,
+    organizerName: String,
     onNavigateBack: () -> Unit,
 ) {
     Scaffold(topBar = { AppTopBar("My Check-in Code", onNavigateBack) }) { padding ->
@@ -29,7 +31,11 @@ fun MyQrCodeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text("Show this code to the event organizer", style = MaterialTheme.typography.h6)
+            Text(
+                text = "Show this code to the organizer: $organizerName",
+                style = MaterialTheme.typography.h6,
+                textAlign = TextAlign.Center
+            )
             Spacer(Modifier.height(32.dp))
             QrCodeDisplay(data = userId.value.toString(), modifier = Modifier.size(250.dp))
         }

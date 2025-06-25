@@ -115,7 +115,8 @@ fun App(container: AppContainer = remember { AppContainer() }) {
                         appViewModel.navigate(AppRoute.ManageAttendance(it))
                     },
                     onNavigateBack = { appViewModel.navigateBack() },
-                    onNavigateToMyQrCode = { appViewModel.navigate(AppRoute.MyQrCode(user.id)) },
+                    onNavigateToMyQrCode = { userId, organizerName ->
+                        appViewModel.navigate(AppRoute.MyQrCode(userId, organizerName )) },
                     onNavigateToStatusHistory = {
                         appViewModel.navigate(
                             AppRoute.EventStatusHistory(it),
@@ -183,6 +184,7 @@ fun App(container: AppContainer = remember { AppContainer() }) {
         is AppRoute.MyQrCode -> {
             MyQrCodeScreen(
                 userId = route.userId,
+                organizerName = route.organizerName,
                 onNavigateBack = { appViewModel.navigateBack() },
             )
         }
