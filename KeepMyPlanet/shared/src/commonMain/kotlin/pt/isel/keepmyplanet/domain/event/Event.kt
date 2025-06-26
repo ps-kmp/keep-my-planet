@@ -17,7 +17,6 @@ data class Event(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {
-
     init {
         maxParticipants?.let {
             require(it > 0) { "Max participants must be positive if set" }

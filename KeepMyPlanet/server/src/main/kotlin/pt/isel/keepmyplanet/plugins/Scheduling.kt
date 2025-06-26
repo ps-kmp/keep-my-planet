@@ -1,12 +1,12 @@
 package pt.isel.keepmyplanet.plugins
 
 import io.ktor.server.application.*
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import pt.isel.keepmyplanet.service.EventStateChangeService
+import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
+import pt.isel.keepmyplanet.service.EventStateChangeService
 
 fun Application.configureScheduling() {
     val eventStateChangeService by inject<EventStateChangeService>()

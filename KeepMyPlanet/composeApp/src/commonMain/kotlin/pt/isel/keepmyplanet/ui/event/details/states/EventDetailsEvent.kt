@@ -16,6 +16,6 @@ sealed interface EventDetailsEvent : UiEvent {
 
     data class NavigateToMyQrCode(
         val userId: Id,
-        val organizerName: String
+        val organizerName: String,
     ) : EventDetailsEvent
 }

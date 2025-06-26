@@ -4,13 +4,13 @@ import io.ktor.server.application.Application
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import org.koin.ktor.ext.inject
 import pt.isel.keepmyplanet.Greeting
 import pt.isel.keepmyplanet.api.authWebApi
 import pt.isel.keepmyplanet.api.eventWebApi
 import pt.isel.keepmyplanet.api.messageWebApi
 import pt.isel.keepmyplanet.api.userWebApi
 import pt.isel.keepmyplanet.api.zoneWebApi
-import org.koin.ktor.ext.inject
 import pt.isel.keepmyplanet.service.AuthService
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.EventService

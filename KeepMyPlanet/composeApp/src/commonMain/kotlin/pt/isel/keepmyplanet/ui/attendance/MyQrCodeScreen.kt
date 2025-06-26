@@ -34,7 +34,7 @@ fun MyQrCodeScreen(
             Text(
                 text = "Show this code to the organizer: $organizerName",
                 style = MaterialTheme.typography.h6,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(32.dp))
             QrCodeDisplay(data = userId.value.toString(), modifier = Modifier.size(250.dp))

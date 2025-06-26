@@ -1,32 +1,5 @@
 package pt.isel.keepmyplanet.plugins
 
-import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.driver.jdbc.asJdbcDriver
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.application.Application
-import pt.isel.keepmyplanet.db.Database
-import pt.isel.keepmyplanet.repository.database.adapters.DescriptionAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.EmailAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.EventStatusAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.IdAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.LocalDateTimeAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.MessageContentAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.NameAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.PasswordHashAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.TitleAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.ZoneSeverityAdapter
-import pt.isel.keepmyplanet.repository.database.adapters.ZoneStatusAdapter
-import ptiselkeepmyplanetdb.Event_attendances
-import ptiselkeepmyplanetdb.Event_participants
-import ptiselkeepmyplanetdb.Event_state_changes
-import ptiselkeepmyplanetdb.Events
-import ptiselkeepmyplanetdb.Messages
-import ptiselkeepmyplanetdb.Photos
-import ptiselkeepmyplanetdb.Users
-import ptiselkeepmyplanetdb.Zone_photos
-import ptiselkeepmyplanetdb.Zones
-
 /*lateinit var database: Database
     private set
 
