@@ -31,6 +31,7 @@ class UserService(
     ): Result<User> =
         runCatching {
             ensureEmailIsAvailableOrFail(email)
+            ensureNameIsAvailableOrFail(name)
 
             val passwordHash = passwordHasher.hash(password)
             val currentTime = now()
@@ -70,6 +71,10 @@ class UserService(
 
             if (email != null && email != user.email) {
                 ensureEmailIsAvailableOrFail(email)
+            }
+
+            if (name != null && name != user.name) {
+                ensureNameIsAvailableOrFail(name)
             }
 
             if (profilePictureId != null && profilePictureId != user.profilePictureId) {
@@ -160,6 +165,12 @@ class UserService(
     private suspend fun ensureEmailIsAvailableOrFail(email: Email) {
         if (userRepository.findByEmail(email) != null) {
             throw ConflictException("Email '${email.value}' is already registered.")
+        }
+    }
+
+    private suspend fun ensureNameIsAvailableOrFail(name: Name) {
+        if (userRepository.findByName(name) != null) {
+            throw ConflictException("Username '${name.value}' is already taken.")
         }
     }
 

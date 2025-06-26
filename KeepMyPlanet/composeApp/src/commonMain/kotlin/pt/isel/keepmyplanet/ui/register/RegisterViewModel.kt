@@ -50,7 +50,21 @@ class RegisterViewModel(
                 sendEvent(RegisterEvent.ShowSnackbar("Registration successful! Please login."))
                 sendEvent(RegisterEvent.NavigateToLogin)
             },
-            onError = { handleErrorWithMessage(getErrorMessage("Registration failed", it)) },
+            onError = { error ->
+                val errorMessage = error.message ?: "An unknown error occurred"
+                when {
+                    errorMessage.contains("Username", ignoreCase = true) ||
+                        errorMessage.contains("name", ignoreCase = true) -> {
+                        setState { copy(usernameError = errorMessage.substringAfter("Registration failed: ")) }
+                    }
+                    errorMessage.contains("Email", ignoreCase = true) -> {
+                        setState { copy(emailError = errorMessage.substringAfter("Registration failed: ")) }
+                    }
+                    else -> {
+                        handleErrorWithMessage(getErrorMessage("Registration failed", error))
+                    }
+                }
+            },
         )
     }
 

@@ -237,7 +237,29 @@ class UserProfileViewModel(
                 }
                 sendEvent(UserProfileEvent.ShowSnackbar("Profile updated successfully"))
             },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to update profile", it)) },
+            onError = { error ->
+                if (isPhotoUpdate) {
+                    handleErrorWithMessage(getErrorMessage("Failed to update profile", error))
+                    return@launchWithResult
+                }
+
+                val errorMessage = error.message ?: "An unknown error occurred"
+
+                when {
+                    errorMessage.contains("Username", ignoreCase = true) ||
+                        errorMessage.contains("name", ignoreCase = true) -> {
+                        setState { copy(nameInputError = errorMessage) }
+                    }
+
+                    errorMessage.contains("Email", ignoreCase = true) -> {
+                        setState { copy(emailInputError = errorMessage) }
+                    }
+
+                    else -> {
+                        handleErrorWithMessage(getErrorMessage("Failed to update profile", error))
+                    }
+                }
+            },
         )
     }
 
