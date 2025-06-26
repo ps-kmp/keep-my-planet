@@ -18,6 +18,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
@@ -34,6 +35,7 @@ fun HomeScreen(
     onNavigateToEventList: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToMap: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     onLogout: () -> Unit,
 ) {
     Scaffold(
@@ -41,6 +43,12 @@ fun HomeScreen(
             AppTopBar(
                 title = "KeepMyPlanet",
                 actions = {
+                    IconButton(onClick = onNavigateToAbout) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "About Page",
+                        )
+                    }
                     IconButton(onClick = onNavigateToProfile) {
                         Icon(Icons.Default.Person, contentDescription = "Profile")
                     }

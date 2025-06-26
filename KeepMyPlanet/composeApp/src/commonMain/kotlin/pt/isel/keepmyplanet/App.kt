@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 import pt.isel.keepmyplanet.navigation.AppRoute
+import pt.isel.keepmyplanet.ui.about.AboutScreen
 import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceScreen
 import pt.isel.keepmyplanet.ui.attendance.MyQrCodeScreen
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
@@ -67,6 +68,7 @@ fun App() {
                     onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
                     onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
                     onLogout = { appViewModel.logout() },
+                    onNavigateToAbout = { appViewModel.navigate(AppRoute.About) },
                 )
             }
         }
@@ -197,6 +199,12 @@ fun App() {
                 viewModel = koinViewModel(),
                 latitude = route.latitude,
                 longitude = route.longitude,
+                onNavigateBack = { appViewModel.navigateBack() },
+            )
+        }
+
+        is AppRoute.About -> {
+            AboutScreen(
                 onNavigateBack = { appViewModel.navigateBack() },
             )
         }

@@ -1,0 +1,146 @@
+package pt.isel.keepmyplanet.ui.about
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.TrackChanges
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.components.AppTopBar
+
+private const val ABOUT_TEXT =
+    "A multiplatform system developed with Kotlin Multiplatform (KMP) that allows the " +
+        "identification and mapping of polluted zones, as well as organizing and participating in " +
+        "community cleanup events. The system provides an interactive interface where volunteers can " +
+        "report areas as polluted, share photos and descriptions of the conditions found, and " +
+        "create or join cleanup initiatives organized for these zones. KeepMyPlanet is the rallying " +
+        "point for community and environmental action, addressing a real and increasingly relevant " +
+        "and emerging problem."
+
+@Composable
+fun AboutScreen(onNavigateBack: () -> Unit) {
+    Scaffold(
+        topBar = { AppTopBar(title = "About KeepMyPlanet", onNavigateBack = onNavigateBack) },
+    ) { paddingValues ->
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(paddingValues)
+                    .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                modifier = Modifier.size(96.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "About Icon",
+                    modifier = Modifier.padding(20.dp),
+                    tint = MaterialTheme.colors.primary,
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = "Our Mission",
+                style = MaterialTheme.typography.h4,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = ABOUT_TEXT,
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+
+            Divider(modifier = Modifier.padding(vertical = 24.dp))
+
+            Text(
+                text = "Core Features",
+                style = MaterialTheme.typography.h5,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(Modifier.height(16.dp))
+
+            FeatureCard(
+                icon = Icons.Default.TrackChanges,
+                title = "Map & Report",
+                description = "Easily identify and report polluted zones on an interactive map.",
+            )
+            FeatureCard(
+                icon = Icons.Default.Groups,
+                title = "Organize & Participate",
+                description = "Create or join community cleanup events to make a real impact.",
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            Text(
+                text = "Thank You!",
+                style = MaterialTheme.typography.h4,
+                color = MaterialTheme.colors.primary,
+                modifier = Modifier.padding(top = 32.dp, bottom = 16.dp),
+            )
+
+            Text(
+                text = "for being part of the solution.",
+                style = MaterialTheme.typography.subtitle1,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FeatureCard(
+    icon: ImageVector,
+    title: String,
+    description: String,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        elevation = 2.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = MaterialTheme.colors.primary,
+                modifier = Modifier.size(40.dp),
+            )
+            Column {
+                Text(text = title, style = MaterialTheme.typography.h6)
+                Text(text = description, style = MaterialTheme.typography.body2, color = Color.Gray)
+            }
+        }
+    }
+}

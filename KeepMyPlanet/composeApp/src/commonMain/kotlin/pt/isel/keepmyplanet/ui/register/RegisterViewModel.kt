@@ -55,10 +55,20 @@ class RegisterViewModel(
                 when {
                     errorMessage.contains("Username", ignoreCase = true) ||
                         errorMessage.contains("name", ignoreCase = true) -> {
-                        setState { copy(usernameError = errorMessage.substringAfter("Registration failed: ")) }
+                        setState {
+                            copy(
+                                usernameError = errorMessage.substringAfter(
+                                    "Registration failed: ",
+                                ),
+                            )
+                        }
                     }
                     errorMessage.contains("Email", ignoreCase = true) -> {
-                        setState { copy(emailError = errorMessage.substringAfter("Registration failed: ")) }
+                        setState {
+                            copy(
+                                emailError = errorMessage.substringAfter("Registration failed: "),
+                            )
+                        }
                     }
                     else -> {
                         handleErrorWithMessage(getErrorMessage("Registration failed", error))

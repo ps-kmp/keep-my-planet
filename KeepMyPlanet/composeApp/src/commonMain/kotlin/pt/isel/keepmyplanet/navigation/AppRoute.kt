@@ -57,4 +57,6 @@ sealed class AppRoute {
     data class UserStats(
         val userId: Id,
     ) : AppRoute()
+
+    data object About : AppRoute()
 }
