@@ -8,4 +8,4 @@ class AndroidPlatform : Platform {
 
 actual fun getPlatform(): Platform = AndroidPlatform()
 
-actual val BASE_URL: String = "http://localhost:$SERVER_PORT"
+actual val BASE_URL: String = "http://10.0.2.2:$SERVER_PORT"

@@ -4,10 +4,15 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStateChange
+import pt.isel.keepmyplanet.domain.event.EventStateChangeDetails
+import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.repository.EventStateChangeRepository
+import pt.isel.keepmyplanet.repository.UserRepository
 
-class InMemoryEventStateChangeRepository : EventStateChangeRepository {
+class InMemoryEventStateChangeRepository(
+    private val userRepository: UserRepository,
+) : EventStateChangeRepository {
     private val changes = ConcurrentHashMap<Id, EventStateChange>()
     private val nextId = AtomicInteger(1)
 
@@ -40,6 +45,24 @@ class InMemoryEventStateChangeRepository : EventStateChangeRepository {
 
     override suspend fun findByEventId(eventId: Id): List<EventStateChange> =
         changes.values.filter { it.eventId == eventId }.sortedBy { it.changeTime }
+
+    override suspend fun findByEventIdWithDetails(eventId: Id): List<EventStateChangeDetails> {
+        val eventChanges =
+            changes.values
+                .filter { it.eventId == eventId }
+                .sortedByDescending { it.changeTime }
+
+        val userIds = eventChanges.map { it.changedBy }.distinct()
+        val users = userRepository.findByIds(userIds).associateBy { it.id }
+
+        return eventChanges.map { change ->
+            val userName = users[change.changedBy]?.name ?: Name("Unknown User")
+            EventStateChangeDetails(
+                stateChange = change,
+                changedByName = userName,
+            )
+        }
+    }
 
     override suspend fun save(eventStateChange: EventStateChange): EventStateChange =
         if (changes.containsKey(eventStateChange.id)) {

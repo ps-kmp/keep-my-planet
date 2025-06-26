@@ -49,7 +49,6 @@ class EventWebApiTest : BaseWebApiTest() {
             eventRepository = fakeEventRepository,
             zoneRepository = fakeZoneRepository,
             eventStateChangeRepository = fakeEventStateChangeRepository,
-            userRepository = fakeUserRepository,
         )
 
     private val futureStart = now().plus(7.days)

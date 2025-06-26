@@ -149,7 +149,13 @@ fun Route.eventWebApi(
 
                     val title = request.title?.let { Title(it) }
                     val description = request.description?.let { Description(it) }
-                    val period = request.startDate?.let { Period(LocalDateTime.parse(it), null) }
+                    val period =
+                        request.startDate?.let {
+                            Period(
+                                LocalDateTime.parse(it),
+                                request.endDate?.let { e -> LocalDateTime.parse(e) },
+                            )
+                        }
                     val max = request.maxParticipants
 
                     eventService

@@ -1,8 +1,6 @@
 package pt.isel.keepmyplanet.repository.database.adapters
 
 import app.cash.sqldelight.ColumnAdapter
-import java.time.format.DateTimeFormatterBuilder
-import java.time.temporal.ChronoField
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -41,22 +39,11 @@ object ZoneSeverityAdapter : ColumnAdapter<ZoneSeverity, String> {
     override fun encode(value: ZoneSeverity): String = value.name
 }
 
-object LocalDateTimeAdapter : ColumnAdapter<LocalDateTime, String> {
-    private val formatter =
-        DateTimeFormatterBuilder()
-            .appendPattern("yyyy-MM-dd HH:mm:ss")
-            .optionalStart()
-            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-            .optionalEnd()
-            .toFormatter()
+object LocalDateTimeAdapter : ColumnAdapter<LocalDateTime, java.time.LocalDateTime> {
+    override fun decode(databaseValue: java.time.LocalDateTime): LocalDateTime =
+        databaseValue.toKotlinLocalDateTime()
 
-    override fun decode(databaseValue: String): LocalDateTime {
-        val javaLdt = java.time.LocalDateTime.parse(databaseValue, formatter)
-        return javaLdt.toKotlinLocalDateTime()
-    }
-
-    override fun encode(value: LocalDateTime): String =
-        value.toJavaLocalDateTime().format(formatter)
+    override fun encode(value: LocalDateTime): java.time.LocalDateTime = value.toJavaLocalDateTime()
 }
 
 object TitleAdapter : ColumnAdapter<Title, String> {

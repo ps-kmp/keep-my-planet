@@ -119,7 +119,6 @@ fun appModule(application: Application) =
                         idAdapter = IdAdapter,
                         event_idAdapter = IdAdapter,
                         sender_idAdapter = IdAdapter,
-                        sender_nameAdapter = NameAdapter,
                         contentAdapter = MessageContentAdapter,
                         timestampAdapter = LocalDateTimeAdapter,
                     ),
@@ -179,7 +178,7 @@ fun appModule(application: Application) =
         single { UserService(get(), get(), get(), get()) }
         single { ZoneService(get(), get(), get(), get()) }
         single { EventService(get(), get(), get(), get()) }
-        single { EventStateChangeService(get(), get(), get(), get()) }
+        single { EventStateChangeService(get(), get(), get()) }
         single { MessageService(get(), get(), get(), get()) }
         single { PhotoService(get(), get(), get()) }
     }

@@ -18,7 +18,6 @@ import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
-import pt.isel.keepmyplanet.exception.AuthorizationException
 import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.service.UserService
 import pt.isel.keepmyplanet.utils.getCurrentUserId
@@ -98,16 +97,12 @@ fun Route.userWebApi(userService: UserService) {
                             call.respond(HttpStatusCode.OK, mapOf("message" to "Password updated."))
                         }.onFailure { throw it }
                 }
-            }
-            authenticate("auth-jwt") {
+
                 get("/stats") {
                     val userId = call.getUserId()
                     val actingUserId = call.getCurrentUserId()
-                    if (userId != actingUserId) {
-                        throw AuthorizationException("You can only view your own stats.")
-                    }
                     userService
-                        .getUserStats(userId)
+                        .getUserStats(userId, actingUserId)
                         .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }

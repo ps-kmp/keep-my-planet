@@ -4,6 +4,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.repository.MessageRepository
+import pt.isel.keepmyplanet.repository.database.mappers.toDomain
 import pt.isel.keepmyplanet.repository.database.mappers.toDomainMessage
 import pt.isel.keepmyplanet.utils.now
 import ptiselkeepmyplanetdb.MessageQueries
@@ -11,38 +12,29 @@ import ptiselkeepmyplanetdb.MessageQueries
 class DatabaseMessageRepository(
     private val messageQueries: MessageQueries,
 ) : MessageRepository {
-    override suspend fun create(entity: Message): Message =
-        messageQueries.transactionWithResult {
-            val maxPos =
-                messageQueries
-                    .getMaxChatPositionForEvent(entity.eventId)
-                    .executeAsOneOrNull()
-            val nextChatPosition = ((maxPos?.MAX ?: -1) + 1)
-
-            val currentTime = now()
+    override suspend fun create(entity: Message): Message {
+        val insertedDbMessage =
             messageQueries
-                .insert(
+                .insertAndGetMessage(
                     event_id = entity.eventId,
                     sender_id = entity.senderId,
-                    sender_name = entity.senderName,
                     content = entity.content,
-                    timestamp = currentTime,
-                    chat_position = nextChatPosition,
+                    timestamp = now(),
                 ).executeAsOne()
-                .toDomainMessage()
-        }
+        return insertedDbMessage.toDomainMessage(entity.senderName)
+    }
 
     override suspend fun getById(id: Id): Message? =
         messageQueries
             .getById(id)
             .executeAsOneOrNull()
-            ?.toDomainMessage()
+            ?.toDomain()
 
     override suspend fun getAllByEventId(eventId: Id): List<Message> =
         messageQueries
             .getAllByEventId(eventId)
             .executeAsList()
-            .map { it.toDomainMessage() }
+            .map { it.toDomain() }
 
     override suspend fun getSingleByEventIdAndSeqNum(
         eventId: Id,
@@ -51,7 +43,7 @@ class DatabaseMessageRepository(
         messageQueries
             .getSingleByEventIdAndSeqNum(eventId, sequenceNum)
             .executeAsOneOrNull()
-            ?.toDomainMessage()
+            ?.toDomain()
 
     override suspend fun deleteById(id: Id): Boolean =
         messageQueries
@@ -65,20 +57,21 @@ class DatabaseMessageRepository(
         messageQueries
             .getAll(limit.toLong(), offset.toLong())
             .executeAsList()
-            .map { it.toDomainMessage() }
+            .map { it.toDomain() }
 
     override suspend fun update(entity: Message): Message {
         messageQueries.getById(entity.id).executeAsOneOrNull()
             ?: throw NotFoundException("Message '${entity.id}' not found.")
 
         return messageQueries.transactionWithResult {
-            messageQueries
-                .updateMessage(
-                    id = entity.id,
-                    content = entity.content,
-                    timestamp = now(),
-                ).executeAsOne()
-                .toDomainMessage()
+            val updatedDbMessage =
+                messageQueries
+                    .updateMessage(
+                        id = entity.id,
+                        content = entity.content,
+                        timestamp = now(),
+                    ).executeAsOne()
+            updatedDbMessage.toDomainMessage(entity.senderName)
         }
     }
 
@@ -86,7 +79,7 @@ class DatabaseMessageRepository(
         messageQueries
             .getAllBySenderId(senderId)
             .executeAsList()
-            .map { it.toDomainMessage() }
+            .map { it.toDomain() }
 
     override suspend fun deleteAllByEventId(eventId: Id): Int =
         messageQueries

@@ -135,8 +135,12 @@ class UserService(
             Unit
         }
 
-    suspend fun getUserStats(userId: Id): Result<UserStats> =
+    suspend fun getUserStats(
+        userId: Id,
+        actingUserId: Id,
+    ): Result<UserStats> =
         runCatching {
+            ensureSelfActionOrFail(userId, actingUserId, "view stats")
             findUserOrFail(userId)
             val totalEvents = eventRepository.countAttendedEvents(userId)
             val totalSeconds = eventRepository.calculateTotalHoursVolunteered(userId)

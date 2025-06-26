@@ -5,13 +5,21 @@ import pt.isel.keepmyplanet.domain.common.Photo
 import pt.isel.keepmyplanet.domain.common.Url
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStateChange
+import pt.isel.keepmyplanet.domain.event.EventStateChangeDetails
 import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.message.Message
+import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import ptiselkeepmyplanetdb.Event_state_changes
 import ptiselkeepmyplanetdb.Events
+import ptiselkeepmyplanetdb.FindByEventIdWithUserName
+import ptiselkeepmyplanetdb.GetAll
+import ptiselkeepmyplanetdb.GetAllByEventId
+import ptiselkeepmyplanetdb.GetAllBySenderId
+import ptiselkeepmyplanetdb.GetById
+import ptiselkeepmyplanetdb.GetSingleByEventIdAndSeqNum
 import ptiselkeepmyplanetdb.Messages
 import ptiselkeepmyplanetdb.Photos
 import ptiselkeepmyplanetdb.Users
@@ -57,12 +65,67 @@ internal fun Events.toDomainEvent(participantIds: Set<Id>): Event =
         updatedAt = this.updated_at,
     )
 
-internal fun Messages.toDomainMessage(): Message =
+internal fun GetById.toDomain(): Message =
     Message(
         id = this.id,
         eventId = this.event_id,
         senderId = this.sender_id,
         senderName = this.sender_name,
+        content = this.content,
+        timestamp = this.timestamp,
+        chatPosition = this.chat_position,
+    )
+
+internal fun GetAllByEventId.toDomain(): Message =
+    Message(
+        id = this.id,
+        eventId = this.event_id,
+        senderId = this.sender_id,
+        senderName = this.sender_name,
+        content = this.content,
+        timestamp = this.timestamp,
+        chatPosition = this.chat_position,
+    )
+
+internal fun GetSingleByEventIdAndSeqNum.toDomain(): Message =
+    Message(
+        id = this.id,
+        eventId = this.event_id,
+        senderId = this.sender_id,
+        senderName = this.sender_name,
+        content = this.content,
+        timestamp = this.timestamp,
+        chatPosition = this.chat_position,
+    )
+
+internal fun GetAll.toDomain(): Message =
+    Message(
+        id = this.id,
+        eventId = this.event_id,
+        senderId = this.sender_id,
+        senderName = this.sender_name,
+        content = this.content,
+        timestamp = this.timestamp,
+        chatPosition = this.chat_position,
+    )
+
+internal fun GetAllBySenderId.toDomain(): Message =
+    Message(
+        id = this.id,
+        eventId = this.event_id,
+        senderId = this.sender_id,
+        senderName = this.sender_name,
+        content = this.content,
+        timestamp = this.timestamp,
+        chatPosition = this.chat_position,
+    )
+
+internal fun Messages.toDomainMessage(senderName: Name): Message =
+    Message(
+        id = this.id,
+        eventId = this.event_id,
+        senderId = this.sender_id,
+        senderName = senderName,
         content = this.content,
         timestamp = this.timestamp,
         chatPosition = this.chat_position,
@@ -75,6 +138,19 @@ internal fun Event_state_changes.toDomain(): EventStateChange =
         newStatus = this.new_status,
         changedBy = this.changed_by,
         changeTime = this.change_time,
+    )
+
+internal fun FindByEventIdWithUserName.toEventStateChangeDetails(): EventStateChangeDetails =
+    EventStateChangeDetails(
+        stateChange =
+            EventStateChange(
+                id = this.id,
+                eventId = this.event_id,
+                newStatus = this.new_status,
+                changedBy = this.changed_by,
+                changeTime = this.change_time,
+            ),
+        changedByName = this.changed_by_name,
     )
 
 internal fun Photos.toDomainPhoto(): Photo =

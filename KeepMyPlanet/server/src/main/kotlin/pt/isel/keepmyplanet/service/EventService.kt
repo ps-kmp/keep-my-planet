@@ -318,17 +318,9 @@ class EventService(
 
     suspend fun getEventAttendees(eventId: Id): Result<List<User>> =
         runCatching {
-            val event = findEventOrFail(eventId)
-            val attendeeIdsFromDb = eventRepository.getAttendeesIds(eventId)
-            val finalAttendeeIds =
-                if (event.status != EventStatus.PLANNED) { // Started or completed
-                    attendeeIdsFromDb + event.organizerId // Include organizer in attendees
-                } else {
-                    attendeeIdsFromDb
-                }
-            finalAttendeeIds.distinct().mapNotNull {
-                userRepository.getById(it)
-            } // distinct to avoid duplicates
+            findEventOrFail(eventId)
+            val attendeeIds = eventRepository.getAttendeesIds(eventId)
+            attendeeIds.mapNotNull { userRepository.getById(it) }
         }
 
     suspend fun getEventsAttendedBy(

@@ -285,6 +285,6 @@ class DatabaseEventRepository(
         eventQueries
             .calculateTotalHoursVolunteered(userId)
             .executeAsOneOrNull()
-            ?.total_hours
+            ?.total_seconds
             ?: 0.0
 }

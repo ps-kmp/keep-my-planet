@@ -30,11 +30,19 @@ class DatabasePhotoRepository(
     override suspend fun getAll(
         limit: Int,
         offset: Int,
-    ): List<Photo> = throw UnsupportedOperationException("Not yet implemented")
+    ): List<Photo> =
+        photoQueries
+            .getAll(
+                limit.toLong(),
+                offset.toLong(),
+            ).executeAsList()
+            .map { it.toDomainPhoto() }
 
     override suspend fun update(entity: Photo): Photo =
         throw UnsupportedOperationException("Photos are immutable in this system.")
 
-    override suspend fun deleteById(id: Id): Boolean =
-        throw UnsupportedOperationException("Not yet implemented")
+    override suspend fun deleteById(id: Id): Boolean {
+        val deletedId = photoQueries.deleteByIdReturningId(id).executeAsOneOrNull()
+        return deletedId != null
+    }
 }

@@ -12,7 +12,6 @@ import pt.isel.keepmyplanet.exception.ConflictException
 import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.EventStateChangeRepository
-import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.utils.now
 
@@ -20,7 +19,6 @@ class EventStateChangeService(
     private val eventRepository: EventRepository,
     private val zoneRepository: ZoneRepository,
     private val eventStateChangeRepository: EventStateChangeRepository,
-    private val userRepository: UserRepository,
 ) {
     suspend fun changeEventStatus(
         eventId: Id,
@@ -43,9 +41,16 @@ class EventStateChangeService(
             val now = now()
 
             val updatedEvent =
-                event.copy(
-                    status = newStatus,
-                )
+                if (newStatus == EventStatus.COMPLETED && event.period.end == null) {
+                    event.copy(
+                        status = newStatus,
+                        period = event.period.copy(end = now),
+                    )
+                } else {
+                    event.copy(
+                        status = newStatus,
+                    )
+                }
             eventRepository.update(updatedEvent)
 
             handleZoneStatusChange(event, newStatus)
@@ -90,31 +95,19 @@ class EventStateChangeService(
     suspend fun getEventStateChanges(eventId: Id): Result<List<EventStateChangeResponse>> =
         runCatching {
             findEventOrFail(eventId)
-            val changes = eventStateChangeRepository.findByEventId(eventId)
+            val changesWithDetails = eventStateChangeRepository.findByEventIdWithDetails(eventId)
 
-            if (changes.isEmpty()) {
-                return@runCatching emptyList()
-            }
-
-            val userIds = changes.map { it.changedBy }.distinct()
-
-            val usersMap =
-                userRepository
-                    .findByIds(userIds)
-                    .associateBy { it.id }
-
-            changes.map { change ->
-                val user = usersMap[change.changedBy]
+            changesWithDetails.map { details ->
                 EventStateChangeResponse(
-                    id = change.id.value,
-                    eventId = change.eventId.value,
-                    newStatus = change.newStatus,
+                    id = details.stateChange.id.value,
+                    eventId = details.stateChange.eventId.value,
+                    newStatus = details.stateChange.newStatus,
                     changedBy =
                         UserInfoSummaryResponse(
-                            id = change.changedBy.value,
-                            name = user?.name?.value ?: "Unknown User",
+                            id = details.stateChange.changedBy.value,
+                            name = details.changedByName.value,
                         ),
-                    changeTime = change.changeTime.toString(),
+                    changeTime = details.stateChange.changeTime.toString(),
                 )
             }
         }
@@ -132,9 +125,7 @@ class EventStateChangeService(
     private fun canUserChangeStatus(
         userId: Id,
         event: Event,
-    ): Boolean {
-        return userId == event.organizerId // Only organizer can change status
-    }
+    ): Boolean = userId == event.organizerId
 
     private suspend fun findEventOrFail(eventId: Id): Event =
         eventRepository.getById(eventId)
@@ -144,7 +135,18 @@ class EventStateChangeService(
         val eventsToStart = eventRepository.findEventsToStart()
         eventsToStart.forEach { event ->
             changeEventStatus(event.id, EventStatus.IN_PROGRESS, event.organizerId)
-                .onFailure {
+                .onSuccess {
+                    runCatching {
+                        if (!eventRepository.hasAttended(event.id, event.organizerId)) {
+                            eventRepository.addAttendance(event.id, event.organizerId, now())
+                        }
+                    }.onFailure { e ->
+                        println(
+                            "Failed to auto-check-in organizer ${event.organizerId} " +
+                                "for event ${event.id}: $e",
+                        )
+                    }
+                }.onFailure {
                     println("Failed to transition event ${event.id} to IN_PROGRESS: $it")
                 }
         }

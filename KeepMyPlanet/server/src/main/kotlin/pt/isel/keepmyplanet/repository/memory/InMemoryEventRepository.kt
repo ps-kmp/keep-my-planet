@@ -133,14 +133,16 @@ class InMemoryEventRepository : EventRepository {
     override suspend fun findEventsToStart(): List<Event> {
         val currentTime = now()
         return events.values
-            .filter {
-                it.period.start <= currentTime &&
-                    it.status == EventStatus.PLANNED
-            }.sortedBy { it.period.start }
+            .filter { it.period.start <= currentTime && it.status == EventStatus.PLANNED }
+            .sortedBy { it.period.start }
     }
 
-    override suspend fun countAttendedEvents(userId: Id): Long =
-        attendances.values.count { it.containsKey(userId) }.toLong()
+    override suspend fun countAttendedEvents(userId: Id): Long {
+        val attendedEventIds = attendances.filter { it.value.containsKey(userId) }.keys
+        return events.values
+            .count { it.id in attendedEventIds && it.status == EventStatus.COMPLETED }
+            .toLong()
+    }
 
     override suspend fun calculateTotalHoursVolunteered(userId: Id): Double {
         val attendedEventIds =

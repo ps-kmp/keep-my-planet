@@ -1,4 +1,3 @@
---- FILE: db_init_scripts/03_seed_data.sql ---
 BEGIN;
 
 -- CLEANUP
@@ -7,10 +6,8 @@ DELETE FROM messages;
 DELETE FROM event_attendances;
 DELETE FROM event_participants;
 DELETE FROM zone_photos;
-ALTER TABLE zones DROP CONSTRAINT IF EXISTS fk_zone_event;
 DELETE FROM events;
 DELETE FROM zones;
-ALTER TABLE users DROP CONSTRAINT IF EXISTS fk_user_profile_picture;
 DELETE FROM photos;
 DELETE FROM users;
 
@@ -24,12 +21,12 @@ ALTER SEQUENCE event_state_changes_id_seq RESTART WITH 1;
 
 -- SEED USERS
 INSERT INTO users (name, email, password_hash, created_at, updated_at) VALUES
-('Rafael', 'rafael@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Diogo', 'diogo@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Palex', 'palex@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Alice', 'alice@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Bob', 'bob@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Charlie', 'charlie@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('rafael', 'rafael@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('diogo', 'diogo@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('palex', 'palex@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('alice', 'alice@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('bob', 'bob@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('anon', 'anon@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- SEED ZONES
 INSERT INTO zones (latitude, longitude, description, reporter_id, status, zone_severity, created_at, updated_at) VALUES
@@ -49,7 +46,6 @@ INSERT INTO events (title, description, start_datetime, end_datetime, zone_id, o
 ('Figueirinha Beach Mega-Cleanup', 'Let''s tackle this high-priority zone together! We need all hands on deck.', CURRENT_TIMESTAMP + INTERVAL '14 days', NULL, 1, 1, 'PLANNED', 50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Update Zone status based on linked event
-ALTER TABLE zones ADD CONSTRAINT fk_zone_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE SET NULL;
 UPDATE zones SET event_id = 1, status = 'CLEANING_SCHEDULED' WHERE id = 2;
 UPDATE zones SET event_id = 2, status = 'CLEANED' WHERE id = 3;
 UPDATE zones SET event_id = 3, status = 'CLEANING_SCHEDULED' WHERE id = 4;
@@ -84,14 +80,14 @@ INSERT INTO event_state_changes (event_id, new_status, changed_by, change_time) 
 (5, 'PLANNED', 1, CURRENT_TIMESTAMP);
 
 -- SEED MESSAGES
-INSERT INTO messages (event_id, sender_id, sender_name, content, "timestamp", chat_position) VALUES
-(1, 2, 'Diogo', 'Hi team! Who is bringing snacks for the Porto cleanup?', CURRENT_TIMESTAMP - INTERVAL '1 day', 0),
-(1, 1, 'Rafael', 'I can bring some sandwiches!', CURRENT_TIMESTAMP - INTERVAL '23 hours', 1),
-(1, 6, 'Charlie', 'I will bring water and juice for everyone.', CURRENT_TIMESTAMP - INTERVAL '22 hours', 2),
-(3, 4, 'Alice', 'I am at the entrance of the trail now, where is everyone?', CURRENT_TIMESTAMP - INTERVAL '55 minutes', 0),
-(3, 1, 'Rafael', 'Almost there, 5 minutes away!', CURRENT_TIMESTAMP - INTERVAL '50 minutes', 1),
-(3, 5, 'Bob', 'I found a huge pile of tires. Need some help here when you arrive.', CURRENT_TIMESTAMP - INTERVAL '45 minutes', 2),
-(3, 4, 'Alice', 'Okay Bob, we will head your way once Rafael and Diogo get here.', CURRENT_TIMESTAMP - INTERVAL '44 minutes', 3);
+INSERT INTO messages (event_id, sender_id, content, "timestamp", chat_position) VALUES
+(1, 2, 'Hi team! Who is bringing snacks for the Porto cleanup?', CURRENT_TIMESTAMP - INTERVAL '1 day', 0),
+(1, 1, 'I can bring some sandwiches!', CURRENT_TIMESTAMP - INTERVAL '23 hours', 1),
+(1, 6, 'I will bring water and juice for everyone.', CURRENT_TIMESTAMP - INTERVAL '22 hours', 2),
+(3, 4, 'I am at the entrance of the trail now, where is everyone?', CURRENT_TIMESTAMP - INTERVAL '55 minutes', 0),
+(3, 1, 'Almost there, 5 minutes away!', CURRENT_TIMESTAMP - INTERVAL '50 minutes', 1),
+(3, 5, 'I found a huge pile of tires. Need some help here when you arrive.', CURRENT_TIMESTAMP - INTERVAL '45 minutes', 2),
+(3, 4, 'Okay Bob, we will head your way once Rafael and Diogo get here.', CURRENT_TIMESTAMP - INTERVAL '44 minutes', 3);
 
 -- UPDATE SEQUENCES
 DO $$
