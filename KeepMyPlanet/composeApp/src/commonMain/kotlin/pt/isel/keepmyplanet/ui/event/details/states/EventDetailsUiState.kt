@@ -23,53 +23,54 @@ data class EventDetailsUiState(
         DELETING,
     }
 
-    fun canUserEdit(): Boolean =
-        event != null && isCurrentUserOrganizer && event.status == EventStatus.PLANNED
+    val isActionInProgress: Boolean
+        get() = actionState != ActionState.IDLE
 
-    fun canUserJoin(): Boolean =
-        event != null &&
-            actionState == ActionState.IDLE &&
-            event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS) &&
-            !event.isFull &&
-            !isCurrentUserOrganizer &&
-            !isCurrentUserParticipant
+    val canUseQrFeature: Boolean
+        get() =
+            event != null &&
+                event.status == EventStatus.IN_PROGRESS &&
+                (isCurrentUserOrganizer || isCurrentUserParticipant)
 
-    fun canUserLeave(): Boolean =
-        event != null &&
-            actionState == ActionState.IDLE &&
-            event.status == EventStatus.PLANNED &&
-            isCurrentUserParticipant &&
-            !isCurrentUserOrganizer
+    val canUserJoin: Boolean
+        get() =
+            event != null &&
+                event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS) &&
+                !event.isFull &&
+                !isCurrentUserOrganizer &&
+                !isCurrentUserParticipant
 
-    fun canUserAccessChat(): Boolean =
-        event != null && (isCurrentUserOrganizer || isCurrentUserParticipant)
+    val canUserLeave: Boolean
+        get() =
+            event != null &&
+                event.status == EventStatus.PLANNED &&
+                isCurrentUserParticipant &&
+                !isCurrentUserOrganizer
+
+    val canUserAccessChat: Boolean
+        get() = event != null && (isCurrentUserOrganizer || isCurrentUserParticipant)
 
     val isChatReadOnly: Boolean
         get() = event?.status in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
 
-    fun canOrganizerCancel(): Boolean =
-        event != null &&
-            actionState == ActionState.IDLE &&
-            isCurrentUserOrganizer &&
-            event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
+    val canUserEdit: Boolean
+        get() = event != null && isCurrentUserOrganizer && event.status == EventStatus.PLANNED
 
-    fun canOrganizerComplete(): Boolean =
-        event != null &&
-            actionState == ActionState.IDLE &&
-            isCurrentUserOrganizer &&
-            event.status == EventStatus.IN_PROGRESS
+    val canOrganizerComplete: Boolean
+        get() =
+            event != null &&
+                isCurrentUserOrganizer &&
+                event.status == EventStatus.IN_PROGRESS
 
-    fun canOrganizerDelete(): Boolean =
-        event != null &&
-            actionState == ActionState.IDLE &&
-            isCurrentUserOrganizer &&
-            event.status in listOf(EventStatus.PLANNED, EventStatus.CANCELLED)
+    val canOrganizerCancel: Boolean
+        get() =
+            event != null &&
+                isCurrentUserOrganizer &&
+                event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
 
-    fun canManageAttendance(): Boolean =
-        event != null && isCurrentUserOrganizer && event.status == EventStatus.IN_PROGRESS
-
-    fun canUseQrFeature(): Boolean =
-        event != null &&
-            event.status == EventStatus.IN_PROGRESS &&
-            (isCurrentUserOrganizer || isCurrentUserParticipant)
+    val canOrganizerDelete: Boolean
+        get() =
+            event != null &&
+                isCurrentUserOrganizer &&
+                event.status in listOf(EventStatus.PLANNED, EventStatus.CANCELLED)
 }

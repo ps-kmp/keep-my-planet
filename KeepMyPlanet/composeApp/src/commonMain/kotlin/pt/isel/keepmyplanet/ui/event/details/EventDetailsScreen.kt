@@ -54,15 +54,14 @@ fun EventDetailsScreen(
     onNavigateToEditEvent: (Id) -> Unit,
     onNavigateToManageAttendance: (Id) -> Unit,
     onNavigateToMyQrCode: (userId: Id, organizerName: String) -> Unit,
-    onNavigateBack: () -> Unit,
     onNavigateToStatusHistory: (Id) -> Unit,
+    onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val event = uiState.event
     val snackbarHostState = remember { SnackbarHostState() }
     val showCancelDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf(false) }
-    val isActionInProgress = uiState.actionState != EventDetailsUiState.ActionState.IDLE
 
     if (showCancelDialog.value) {
         ConfirmActionDialog(
@@ -119,7 +118,7 @@ fun EventDetailsScreen(
                 title = event?.title?.value ?: "Event Details",
                 onNavigateBack = onNavigateBack,
                 actions = {
-                    if (uiState.canUseQrFeature()) {
+                    if (uiState.canUseQrFeature) {
                         QrCodeIconButton(
                             onClick = viewModel::onQrCodeIconClicked,
                             contentDescription = "Open QR Code Feature",
@@ -199,42 +198,42 @@ fun EventDetailsScreen(
                             }
                         }
 
-                        if (uiState.canUserJoin() ||
-                            uiState.canUserLeave() ||
-                            uiState.canUserAccessChat()
+                        if (uiState.canUserJoin ||
+                            uiState.canUserLeave ||
+                            uiState.canUserAccessChat
                         ) {
                             DetailCard(title = "Actions") {
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    if (uiState.canUserJoin()) {
+                                    if (uiState.canUserJoin) {
                                         LoadingButton(
                                             onClick = viewModel::joinEvent,
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.JOINING,
-                                            enabled = !isActionInProgress,
+                                            enabled = !uiState.isActionInProgress,
                                             text = "Join Event",
                                             modifier = Modifier.fillMaxWidth(),
                                         )
                                     }
-                                    if (uiState.canUserLeave()) {
+                                    if (uiState.canUserLeave) {
                                         LoadingButton(
                                             onClick = viewModel::leaveEvent,
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.LEAVING,
-                                            enabled = !isActionInProgress,
+                                            enabled = !uiState.isActionInProgress,
                                             text = "Leave Event",
                                             modifier = Modifier.fillMaxWidth(),
                                         )
                                     }
-                                    if (uiState.canUserAccessChat()) {
+                                    if (uiState.canUserAccessChat) {
                                         Button(
                                             onClick = {
                                                 onNavigateToChat(
                                                     ChatInfo(event.id, event.title),
                                                 )
                                             },
-                                            enabled = !isActionInProgress,
+                                            enabled = !uiState.isActionInProgress,
                                             modifier = Modifier.fillMaxWidth(),
                                         ) {
                                             val chatButtonText =
@@ -256,14 +255,14 @@ fun EventDetailsScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    if (uiState.canUserEdit()) {
+                                    if (uiState.canUserEdit) {
                                         Button(
                                             onClick = { onNavigateToEditEvent(event.id) },
-                                            enabled = !isActionInProgress,
+                                            enabled = !uiState.isActionInProgress,
                                             modifier = Modifier.fillMaxWidth(),
                                         ) { Text("Edit Event Details") }
                                     }
-                                    if (uiState.canOrganizerComplete()) {
+                                    if (uiState.canOrganizerComplete) {
                                         LoadingButton(
                                             onClick = {
                                                 viewModel.changeEventStatus(
@@ -273,12 +272,12 @@ fun EventDetailsScreen(
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.COMPLETING,
-                                            enabled = !isActionInProgress,
+                                            enabled = !uiState.isActionInProgress,
                                             text = "Mark as Completed",
                                             modifier = Modifier.fillMaxWidth(),
                                         )
                                     }
-                                    if (uiState.canOrganizerCancel()) {
+                                    if (uiState.canOrganizerCancel) {
                                         LoadingOutlinedButton(
                                             onClick = { showCancelDialog.value = true },
                                             modifier = Modifier.fillMaxWidth(),
@@ -286,7 +285,7 @@ fun EventDetailsScreen(
                                                 ButtonDefaults.outlinedButtonColors(
                                                     contentColor = MaterialTheme.colors.error,
                                                 ),
-                                            enabled = !isActionInProgress,
+                                            enabled = !uiState.isActionInProgress,
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.CANCELLING,
@@ -294,7 +293,7 @@ fun EventDetailsScreen(
                                             loadingIndicatorColor = MaterialTheme.colors.error,
                                         )
                                     }
-                                    if (uiState.canOrganizerDelete()) {
+                                    if (uiState.canOrganizerDelete) {
                                         LoadingOutlinedButton(
                                             onClick = { showDeleteDialog.value = true },
                                             modifier = Modifier.fillMaxWidth(),
@@ -302,7 +301,7 @@ fun EventDetailsScreen(
                                                 ButtonDefaults.outlinedButtonColors(
                                                     contentColor = MaterialTheme.colors.error,
                                                 ),
-                                            enabled = !isActionInProgress,
+                                            enabled = !uiState.isActionInProgress,
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.DELETING,

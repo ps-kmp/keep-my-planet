@@ -1,9 +1,15 @@
 package pt.isel.keepmyplanet.ui.report.states
 
+import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.ui.viewmodel.UiState
 
 data class ReportZoneUiState(
-    val form: ReportZoneFormState = ReportZoneFormState(),
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val description: String = "",
+    val severity: ZoneSeverity = ZoneSeverity.LOW,
+    val photos: List<SelectedImage> = emptyList(),
+    val descriptionError: String? = null,
     val actionState: ActionState = ActionState.Idle,
 ) : UiState {
     sealed interface ActionState {
@@ -14,4 +20,7 @@ data class ReportZoneUiState(
 
     val canSubmit: Boolean
         get() = actionState == ActionState.Idle
+
+    val hasError: Boolean
+        get() = descriptionError != null
 }

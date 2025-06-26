@@ -8,10 +8,10 @@ CREATE TABLE photos (
     uploaded_at TEXT AS LocalDateTime NOT NULL
 );
 
-getPhotoById:
+getById:
 SELECT * FROM photos WHERE id = :id;
 
-insertPhoto:
+insert:
 INSERT INTO photos(url, uploader_id, uploaded_at)
 VALUES(:url, :uploader_id, CAST(:uploaded_at AS TIMESTAMP))
 RETURNING *;

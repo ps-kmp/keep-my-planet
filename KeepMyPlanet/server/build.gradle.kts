@@ -52,6 +52,9 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.hikaricp)
 
+    // Cloudinary for image hosting
+    implementation(libs.cloudinary.http)
+
     // serialization
     implementation(libs.ktor.serialization.kotlinx.json)
 

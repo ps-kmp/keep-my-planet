@@ -277,4 +277,14 @@ class DatabaseEventRepository(
         val dbEvents = eventQueries.findEventsToStart(currentTime = now()).executeAsList()
         return mapEventsToDomain(dbEvents)
     }
+
+    override suspend fun countAttendedEvents(userId: Id): Long =
+        eventQueries.countAttendedEvents(userId).executeAsOne()
+
+    override suspend fun calculateTotalHoursVolunteered(userId: Id): Double =
+        eventQueries
+            .calculateTotalHoursVolunteered(userId)
+            .executeAsOneOrNull()
+            ?.total_hours
+            ?: 0.0
 }

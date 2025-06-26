@@ -13,6 +13,7 @@ import pt.isel.keepmyplanet.exception.InternalServerException
 import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.exception.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
+import pt.isel.keepmyplanet.repository.PhotoRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.utils.now
@@ -21,6 +22,7 @@ class ZoneService(
     private val zoneRepository: ZoneRepository,
     private val userRepository: UserRepository,
     private val eventRepository: EventRepository,
+    private val photoRepository: PhotoRepository,
 ) {
     suspend fun reportZone(
         location: Location,
@@ -31,6 +33,17 @@ class ZoneService(
     ): Result<Zone> =
         runCatching {
             findUserOrFail(reporterId)
+
+            photosIds.forEach { photoId ->
+                val photo =
+                    photoRepository.getById(photoId)
+                        ?: throw ValidationException("Photo with ID '$photoId' not found.")
+                if (photo.uploaderId != reporterId) {
+                    throw AuthorizationException(
+                        "Cannot use photo '$photoId' as it was not uploaded by you.",
+                    )
+                }
+            }
 
             val currentTime = now()
             val newZone =
@@ -112,6 +125,15 @@ class ZoneService(
         runCatching {
             val zone = findZoneOrFail(zoneId)
             hasPermissionsOrFail(zone, userId)
+
+            val photo =
+                photoRepository.getById(photoId)
+                    ?: throw ValidationException("Photo with ID '$photoId' not found.")
+            if (photo.uploaderId != userId) {
+                throw AuthorizationException(
+                    "Cannot use photo '$photoId' as it was not uploaded by you.",
+                )
+            }
 
             if (photoId in zone.photosIds) return@runCatching zone
 

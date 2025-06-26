@@ -1,6 +1,9 @@
 package pt.isel.keepmyplanet.ui.profile
 
+import kotlinx.coroutines.launch
+import pt.isel.keepmyplanet.data.api.PhotoApi
 import pt.isel.keepmyplanet.data.api.UserApi
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
@@ -8,15 +11,23 @@ import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 import pt.isel.keepmyplanet.mapper.user.toUserInfo
+import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileEvent
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileUiState
 import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class UserProfileViewModel(
     private val userApi: UserApi,
-    private val user: UserInfo,
-) : BaseViewModel<UserProfileUiState>(UserProfileUiState(user)) {
+    private val photoApi: PhotoApi,
+    private val sessionManager: SessionManager,
+) : BaseViewModel<UserProfileUiState>(UserProfileUiState()) {
+    private val user: UserInfo
+        get() =
+            sessionManager.userSession.value?.userInfo
+                ?: throw IllegalStateException("UserProfileViewModel requires a logged-in user.")
+
     init {
+        setState { copy(userDetails = user) }
         loadUserProfile()
     }
 
@@ -91,46 +102,64 @@ class UserProfileViewModel(
                         emailInput = if (isEditingProfile) emailInput else updatedUser.email.value,
                     )
                 }
+                updatedUser.profilePictureId?.let { fetchPhotoUrl(it) }
             },
             onError = { setState { copy(error = getErrorMessage("Failed to load profile", it)) } },
         )
     }
 
+    private fun fetchPhotoUrl(photoId: Id) {
+        viewModelScope.launch {
+            photoApi
+                .getPhotoById(photoId)
+                .onSuccess { photoResponse -> setState { copy(photoUrl = photoResponse.url) } }
+                .onFailure { setState { copy(photoUrl = null) } }
+        }
+    }
+
+    fun onProfilePictureSelected(
+        imageData: ByteArray,
+        filename: String,
+    ) {
+        if (!currentState.isEditingProfile) return
+
+        viewModelScope.launch {
+            setState { copy(actionState = UserProfileUiState.ActionState.UPDATING_PHOTO) }
+            photoApi
+                .createPhoto(imageData, filename)
+                .onSuccess { photoResponse ->
+                    val photoId = Id(photoResponse.id)
+                    val request = UpdateProfileRequest(profilePictureId = photoId.value)
+                    performProfileUpdate(request, isPhotoUpdate = true)
+                    setState { copy(photoUrl = photoResponse.url) }
+                }.onFailure {
+                    handleErrorWithMessage(getErrorMessage("Failed to upload photo", it))
+                    setState { copy(actionState = UserProfileUiState.ActionState.IDLE) }
+                }
+        }
+    }
+
     fun onSaveProfileClicked() {
         if (!validateProfileForm() || !currentState.isSaveProfileEnabled) return
+
         val nameToUpdate =
-            if (currentState.nameInput != currentState.userDetails?.name?.value) {
-                currentState.nameInput
-            } else {
-                null
+            currentState.nameInput.takeIf {
+                it !=
+                    currentState.userDetails?.name?.value
             }
         val emailToUpdate =
-            if (currentState.emailInput != currentState.userDetails?.email?.value) {
-                currentState.emailInput
-            } else {
-                null
+            currentState.emailInput.takeIf {
+                it !=
+                    currentState.userDetails?.email?.value
             }
-        val request = UpdateProfileRequest(nameToUpdate, emailToUpdate, null)
 
-        launchWithResult(
-            onStart = { copy(actionState = UserProfileUiState.ActionState.UPDATING_PROFILE) },
-            onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
-            block = { userApi.updateUserProfile(user.id.value, request) },
-            onSuccess = { updatedUserResponse ->
-                val updatedUser = updatedUserResponse.toUserInfo()
-                sendEvent(UserProfileEvent.ProfileUpdated(updatedUser))
-                setState {
-                    copy(
-                        isEditingProfile = false,
-                        userDetails = updatedUser,
-                        nameInput = updatedUser.name.value,
-                        emailInput = updatedUser.email.value,
-                    )
-                }
-                sendEvent(UserProfileEvent.ShowSnackbar("Profile updated successfully"))
-            },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to update profile", it)) },
-        )
+        if (nameToUpdate == null && emailToUpdate == null) {
+            setState { copy(isEditingProfile = false) }
+            return
+        }
+
+        val request = UpdateProfileRequest(nameToUpdate, emailToUpdate)
+        performProfileUpdate(request, isPhotoUpdate = false)
     }
 
     fun onChangePasswordClicked() {
@@ -149,7 +178,14 @@ class UserProfileViewModel(
             onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
             block = { userApi.changePassword(user.id.value, request) },
             onSuccess = {
-                setState { copy(showPasswordChangeSection = false) }
+                setState {
+                    copy(
+                        showPasswordChangeSection = false,
+                        oldPasswordInput = "",
+                        newPasswordInput = "",
+                        confirmPasswordInput = "",
+                    )
+                }
                 sendEvent(UserProfileEvent.ShowSnackbar("Password changed successfully"))
             },
             onError = { handleErrorWithMessage(getErrorMessage("Failed to change password", it)) },
@@ -161,12 +197,47 @@ class UserProfileViewModel(
 
         launchWithResult(
             onStart = { copy(actionState = UserProfileUiState.ActionState.DELETING_ACCOUNT) },
+            onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
             block = { userApi.deleteUser(user.id.value) },
             onSuccess = {
                 sendEvent(UserProfileEvent.ShowSnackbar("Account deleted successfully"))
                 sendEvent(UserProfileEvent.AccountDeleted)
             },
             onError = { handleErrorWithMessage(getErrorMessage("Failed to delete account", it)) },
+        )
+    }
+
+    private fun performProfileUpdate(
+        request: UpdateProfileRequest,
+        isPhotoUpdate: Boolean,
+    ) {
+        launchWithResult(
+            onStart = {
+                copy(
+                    actionState =
+                        if (isPhotoUpdate) {
+                            UserProfileUiState.ActionState.UPDATING_PHOTO
+                        } else {
+                            UserProfileUiState.ActionState.UPDATING_PROFILE
+                        },
+                )
+            },
+            onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
+            block = { userApi.updateUserProfile(user.id.value, request) },
+            onSuccess = { updatedUserResponse ->
+                val updatedUser = updatedUserResponse.toUserInfo()
+                sendEvent(UserProfileEvent.ProfileUpdated(updatedUser))
+                setState {
+                    copy(
+                        isEditingProfile = false,
+                        userDetails = updatedUser,
+                        nameInput = updatedUser.name.value,
+                        emailInput = updatedUser.email.value,
+                    )
+                }
+                sendEvent(UserProfileEvent.ShowSnackbar("Profile updated successfully"))
+            },
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to update profile", it)) },
         )
     }
 

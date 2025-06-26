@@ -1,6 +1,8 @@
 package pt.isel.keepmyplanet.repository.database.mappers
 
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.common.Photo
+import pt.isel.keepmyplanet.domain.common.Url
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStateChange
 import pt.isel.keepmyplanet.domain.event.Period
@@ -11,6 +13,7 @@ import pt.isel.keepmyplanet.domain.zone.Zone
 import ptiselkeepmyplanetdb.Event_state_changes
 import ptiselkeepmyplanetdb.Events
 import ptiselkeepmyplanetdb.Messages
+import ptiselkeepmyplanetdb.Photos
 import ptiselkeepmyplanetdb.Users
 import ptiselkeepmyplanetdb.Zones
 
@@ -72,4 +75,12 @@ internal fun Event_state_changes.toDomain(): EventStateChange =
         newStatus = this.new_status,
         changedBy = this.changed_by,
         changeTime = this.change_time,
+    )
+
+internal fun Photos.toDomainPhoto(): Photo =
+    Photo(
+        id = this.id,
+        url = Url(this.url),
+        uploaderId = this.uploader_id,
+        uploadedAt = this.uploaded_at,
     )

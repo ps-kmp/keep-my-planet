@@ -10,6 +10,7 @@ import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
+import pt.isel.keepmyplanet.dto.user.UserStatsResponse
 
 class UserApi(
     private val httpClient: HttpClient,
@@ -26,6 +27,8 @@ class UserApi(
         fun updateUser(userId: UInt) = userById(userId)
 
         fun deleteUser(userId: UInt) = userById(userId)
+
+        fun getUserStats(userId: UInt) = "${userById(userId)}/stats"
 
         fun changePassword(userId: UInt) = "${userById(userId)}/password"
     }
@@ -73,5 +76,11 @@ class UserApi(
             method = HttpMethod.Patch
             url(Endpoints.changePassword(userIdToUpdate))
             setBody(request)
+        }
+
+    suspend fun getUserStats(userId: UInt): Result<UserStatsResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.getUserStats(userId))
         }
 }

@@ -71,4 +71,8 @@ interface EventRepository : Repository<Event, Id> {
     ): List<Event>
 
     suspend fun findEventsToStart(): List<Event>
+
+    suspend fun countAttendedEvents(userId: Id): Long
+
+    suspend fun calculateTotalHoursVolunteered(userId: Id): Double
 }

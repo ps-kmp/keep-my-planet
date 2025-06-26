@@ -7,12 +7,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +32,8 @@ import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.ui.common.LoadingButton
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FormField
+import pt.isel.keepmyplanet.ui.components.rememberPhotoPicker
+import pt.isel.keepmyplanet.ui.report.components.ImageThumbnail
 import pt.isel.keepmyplanet.ui.report.states.ReportZoneEvent
 import pt.isel.keepmyplanet.ui.report.states.ReportZoneUiState
 
@@ -37,13 +45,17 @@ fun ReportZoneScreen(
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val formState = uiState.form
     val snackbarHostState = remember { SnackbarHostState() }
     val isActionInProgress = uiState.actionState is ReportZoneUiState.ActionState.Submitting
 
     LaunchedEffect(latitude, longitude) {
         viewModel.prepareReportForm(latitude, longitude)
     }
+
+    val launchPhotoPicker =
+        rememberPhotoPicker { imageData, filename ->
+            viewModel.onPhotoSelected(imageData, filename)
+        }
 
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
@@ -52,6 +64,7 @@ fun ReportZoneScreen(
                     snackbarHostState.showSnackbar(
                         event.message,
                     )
+
                 is ReportZoneEvent.ReportSuccessful -> onNavigateBack()
             }
         }
@@ -62,25 +75,21 @@ fun ReportZoneScreen(
         topBar = { AppTopBar(title = "Report Polluted Zone", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
         Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp),
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                "Reporting for location:\nLat: ${formState.latitude}, Lon: ${formState.longitude}",
+                "Reporting for location:\nLat: ${uiState.latitude}, Lon: ${uiState.longitude}",
                 style = MaterialTheme.typography.caption,
             )
 
             FormField(
-                value = formState.description,
+                value = uiState.description,
                 onValueChange = viewModel::onReportDescriptionChange,
                 label = "Description of the issue",
                 minLines = 4,
                 enabled = !isActionInProgress,
-                errorText = formState.descriptionError,
+                errorText = uiState.descriptionError,
             )
 
             Text("Severity:", style = MaterialTheme.typography.subtitle1)
@@ -94,13 +103,41 @@ fun ReportZoneScreen(
                         modifier = Modifier.weight(1f),
                     ) {
                         RadioButton(
-                            selected = formState.severity == severity,
+                            selected = uiState.severity == severity,
                             onClick = { viewModel.onReportSeverityChange(severity) },
                             enabled = !isActionInProgress,
                         )
                         Text(
                             text = severity.name,
                             modifier = Modifier.padding(start = 4.dp),
+                        )
+                    }
+                }
+            }
+
+            OutlinedButton(
+                onClick = launchPhotoPicker,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isActionInProgress && uiState.photos.size < 5,
+            ) {
+                Icon(
+                    Icons.Default.AddAPhoto,
+                    contentDescription = "Add Photo",
+                    modifier = Modifier.padding(end = 8.dp),
+                )
+                Text("Add Photo (${uiState.photos.size}/5)")
+            }
+
+            if (uiState.photos.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(uiState.photos, key = { it.hashCode() }) { image ->
+                        ImageThumbnail(
+                            image,
+                            { viewModel.onRemovePhoto(image) },
+                            !isActionInProgress,
                         )
                     }
                 }

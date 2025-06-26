@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.ui.zone
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,7 +8,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
+import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -23,7 +29,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.rememberAsyncImagePainter
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.ui.common.FullScreenLoading
@@ -96,6 +104,29 @@ fun ZoneDetailsScreen(
                                     backgroundColor = getSeverityColor(zone.zoneSeverity),
                                     icon = Icons.Default.ErrorOutline,
                                 )
+                            }
+                        }
+
+                        if (uiState.photoUrls.isNotEmpty()) {
+                            DetailCard(title = "Photos") {
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    items(uiState.photoUrls) { url ->
+                                        Card(
+                                            modifier = Modifier.size(120.dp),
+                                            shape = RoundedCornerShape(8.dp),
+                                            elevation = 2.dp,
+                                        ) {
+                                            Image(
+                                                painter = rememberAsyncImagePainter(model = url),
+                                                contentDescription = "Zone Photo",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize(),
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
 

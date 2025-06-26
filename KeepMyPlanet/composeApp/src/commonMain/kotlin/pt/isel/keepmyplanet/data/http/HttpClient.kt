@@ -37,7 +37,7 @@ fun createHttpClient(sessionManager: SessionManager): HttpClient =
         install(SSE)
         install(Logging) {
             logger = Logger.DEFAULT
-            level = LogLevel.HEADERS
+            level = LogLevel.INFO
         }
         install(Auth) {
             bearer {

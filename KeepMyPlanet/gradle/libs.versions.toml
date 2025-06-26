@@ -1,32 +1,34 @@
 [versions]
 # Project
-agp = "8.9.3"
-kotlin = "2.1.21"
+agp = "8.10.1"
+kotlin = "2.2.0"
 compose-multiplatform = "1.8.1"
-ktor = "3.1.3"
+ktor = "3.2.0"
 sqldelight = "2.1.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
 
 # Android
 android-compileSdk = "35"
-android-minSdk = "24"
+android-minSdk = "30"
 android-targetSdk = "35"
 androidx-activityCompose = "1.10.1"
-androidx-lifecycle = "2.9.0"
+androidx-lifecycle = "2.9.1"
 androidx-camera = "1.4.2"
-accompanist-permissions = "0.34.0"
+accompanist-permissions = "0.37.3"
 
 # Libraries
 multiplatform-settings = "1.3.0"
 cryptography = "0.4.0"
 hikaricp = "6.3.0"
-postgresql = "42.7.5"
+postgresql = "42.7.7"
 logback = "1.5.18"
 mapcompose-mp = "0.10.0"
-zxing-core = "3.5.2"
-mlkit-barcode-scanning = "17.2.0"
-koin = "4.0.3"
+zxing-core = "3.5.3"
+mlkit-barcode-scanning = "17.3.0"
+cloudinary = "1.39.0"
+coil = "3.2.0"
+koin = "4.1.0"
 
 # Tooling
 ktlint = "12.3.0"
@@ -39,7 +41,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 # Ktor - Bill of Materials (BOM)
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
 
-# Ktor - Client (versions managed by BOM)
+# Ktor - Client
 ktor-client-core = { module = "io.ktor:ktor-client-core" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth" }
@@ -50,7 +52,7 @@ ktor-client-js = { module = "io.ktor:ktor-client-js" }
 ktor-client-sse = { module = "io.ktor:ktor-sse" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
 
-# Ktor - Server (versions managed by BOM)
+# Ktor - Server
 ktor-server-core-jvm = { module = "io.ktor:ktor-server-core-jvm" }
 ktor-server-netty-jvm = { module = "io.ktor:ktor-server-netty-jvm" }
 ktor-server-call-logging-jvm = { module = "io.ktor:ktor-server-call-logging-jvm" }
@@ -66,7 +68,11 @@ ktor-server-test-host-jvm = { module = "io.ktor:ktor-server-test-host-jvm" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 
 # Koin
-koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin" }
+koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
+koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin"}
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
+koin-compose = { group = "io.insert-koin", name = "koin-compose", version.ref = "koin" }
 
 # AndroidX & Accompanist
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -89,12 +95,15 @@ zxing-core = { module = "com.google.zxing:core", version.ref = "zxing-core" }
 mlkit-barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlkit-barcode-scanning" }
 
 # Other Multiplatform
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 mapcompose-mp = { module = "ovh.plrapps:mapcompose-mp", version.ref = "mapcompose-mp" }
 multiplatform-settings-no-arg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatform-settings" }
 multiplatform-settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatform-settings" }
 cryptography-core = { module = "dev.whyoleg.cryptography:cryptography-core", version.ref = "cryptography" }
 cryptography-provider-jdk-jvm = { module = "dev.whyoleg.cryptography:cryptography-provider-jdk-jvm", version.ref = "cryptography" }
 cryptography-provider-webcrypto = { module = "dev.whyoleg.cryptography:cryptography-provider-webcrypto", version.ref = "cryptography" }
+cloudinary-http = { module = "com.cloudinary:cloudinary-http45", version.ref = "cloudinary" }
 
 # Logging
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

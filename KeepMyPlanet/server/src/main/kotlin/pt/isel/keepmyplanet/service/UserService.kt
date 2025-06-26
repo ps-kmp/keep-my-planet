@@ -6,12 +6,14 @@ import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.domain.user.User
+import pt.isel.keepmyplanet.domain.user.UserStats
 import pt.isel.keepmyplanet.exception.AuthorizationException
 import pt.isel.keepmyplanet.exception.ConflictException
 import pt.isel.keepmyplanet.exception.InternalServerException
 import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.exception.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
+import pt.isel.keepmyplanet.repository.PhotoRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.security.PasswordHasher
 import pt.isel.keepmyplanet.utils.now
@@ -20,6 +22,7 @@ class UserService(
     private val userRepository: UserRepository,
     private val eventRepository: EventRepository,
     private val passwordHasher: PasswordHasher,
+    private val photoRepository: PhotoRepository,
 ) {
     suspend fun registerUser(
         name: Name,
@@ -67,6 +70,16 @@ class UserService(
 
             if (email != null && email != user.email) {
                 ensureEmailIsAvailableOrFail(email)
+            }
+
+            if (profilePictureId != null && profilePictureId != user.profilePictureId) {
+                val photo =
+                    photoRepository.getById(profilePictureId)
+                        ?: throw ValidationException("Photo with ID '$profilePictureId' not found.")
+
+                if (photo.uploaderId != actingUserId) {
+                    throw AuthorizationException("Cannot use a photo that was not uploaded by you.")
+                }
             }
 
             val updatedUser =
@@ -120,6 +133,20 @@ class UserService(
             val deleted = userRepository.deleteById(userId)
             if (!deleted) throw InternalServerException("Failed to delete user '$userId'.")
             Unit
+        }
+
+    suspend fun getUserStats(userId: Id): Result<UserStats> =
+        runCatching {
+            findUserOrFail(userId)
+            val totalEvents = eventRepository.countAttendedEvents(userId)
+            val totalSeconds = eventRepository.calculateTotalHoursVolunteered(userId)
+
+            val totalHours = totalSeconds / 3600.0
+
+            UserStats(
+                totalEventsAttended = totalEvents.toInt(),
+                totalHoursVolunteered = totalHours,
+            )
         }
 
     private suspend fun findUserOrFail(userId: Id): User =

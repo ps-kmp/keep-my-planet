@@ -86,6 +86,10 @@ kotlin {
                 implementation(libs.multiplatform.settings.no.arg)
                 implementation(libs.multiplatform.settings.coroutines)
                 implementation(libs.mapcompose.mp)
+                implementation(libs.coil.compose)
+                implementation(libs.coil.network.ktor3)
+                implementation(libs.koin.core)
+                implementation(libs.koin.compose)
             }
         }
         val androidMain by getting {
@@ -93,6 +97,8 @@ kotlin {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
+                implementation(libs.koin.android)
+                implementation(libs.koin.androidx.compose)
                 implementation(libs.ktor.client.android)
 
                 // barcode and qr code scanning

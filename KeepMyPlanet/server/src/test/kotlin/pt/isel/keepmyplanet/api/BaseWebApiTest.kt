@@ -14,6 +14,8 @@ import kotlin.test.BeforeTest
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.common.Photo
+import pt.isel.keepmyplanet.domain.common.Url
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.event.Period
@@ -35,6 +37,7 @@ import pt.isel.keepmyplanet.plugins.configureStatusPages
 import pt.isel.keepmyplanet.repository.memory.InMemoryEventRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryEventStateChangeRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryMessageRepository
+import pt.isel.keepmyplanet.repository.memory.InMemoryPhotoRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryZoneRepository
 import pt.isel.keepmyplanet.security.Pbkdf2PasswordHasher
@@ -47,6 +50,7 @@ abstract class BaseWebApiTest {
     protected val fakeEventRepository = InMemoryEventRepository()
     protected val fakeEventStateChangeRepository = InMemoryEventStateChangeRepository()
     protected val fakeMessageRepository = InMemoryMessageRepository()
+    protected val fakePhotoRepository = InMemoryPhotoRepository()
     protected val chatSseService = ChatSseService()
     protected val passwordHasher = Pbkdf2PasswordHasher()
 
@@ -61,6 +65,7 @@ abstract class BaseWebApiTest {
         fakeZoneRepository.clear()
         fakeEventRepository.clear()
         fakeMessageRepository.clear()
+        fakePhotoRepository.clear()
     }
 
     protected fun generateTestToken(
@@ -143,20 +148,18 @@ abstract class BaseWebApiTest {
             ),
         )
 
-//    protected suspend fun createTestEventStateChange(
-//        eventId: Id = Id(0U),
-//        newStatus: EventStatus = EventStatus.PLANNED,
-//        changedBy: Id = Id(0U),
-//    ): EventStateChange =
-//        fakeEventStateChangeRepository.create(
-//            EventStateChange(
-//                id = Id(0U),
-//                eventId = eventId,
-//                newStatus = newStatus,
-//                changedBy = changedBy,
-//                changeTime = now(),
-//            ),
-//        )
+    protected suspend fun createTestPhoto(
+        uploaderId: Id,
+        url: String = "http://example.com/photo.jpg",
+    ): Photo =
+        fakePhotoRepository.create(
+            Photo(
+                id = Id(0U),
+                url = Url(url),
+                uploaderId = uploaderId,
+                uploadedAt = now(),
+            ),
+        )
 
     protected suspend fun linkEventToZone(
         zoneId: Id,

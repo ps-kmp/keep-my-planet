@@ -33,14 +33,28 @@ import pt.isel.keepmyplanet.service.ZoneService
 
 class ZoneWebApiTest : BaseWebApiTest() {
     private val zoneService =
-        ZoneService(fakeZoneRepository, fakeUserRepository, fakeEventRepository)
+        ZoneService(
+            fakeZoneRepository,
+            fakeUserRepository,
+            fakeEventRepository,
+            fakePhotoRepository,
+        )
 
     @Test
-    fun `POST zones - should create zone successfully`() {
+    fun `POST zones - should create zone successfully`() =
         testApp({ zoneWebApi(zoneService) }) {
             val user = createTestUser()
+            val photo1 = createTestPhoto(uploaderId = user.id)
+            val photo2 = createTestPhoto(uploaderId = user.id)
             val token = generateTestToken(user.id)
-            val requestBody = ReportZoneRequest(40.0, -75.0, "Park", setOf(10u, 11u), "HIGH")
+            val requestBody =
+                ReportZoneRequest(
+                    latitude = 40.0,
+                    longitude = -75.0,
+                    description = "Park",
+                    photoIds = setOf(photo1.id.value, photo2.id.value),
+                    severity = "HIGH",
+                )
 
             val response =
                 client.post("/zones") {
@@ -55,7 +69,7 @@ class ZoneWebApiTest : BaseWebApiTest() {
             assertEquals(requestBody.longitude, responseBody.longitude)
             assertEquals(requestBody.description, responseBody.description)
             assertEquals(ZoneSeverity.HIGH.name, responseBody.severity)
-            assertEquals(requestBody.photoIds.map { it }.sorted(), responseBody.photosIds.sorted())
+            assertEquals(requestBody.photoIds, responseBody.photosIds)
             assertEquals(user.id.value, responseBody.reporterId)
 
             val createdZone = fakeZoneRepository.getById(Id(responseBody.id))
@@ -65,7 +79,6 @@ class ZoneWebApiTest : BaseWebApiTest() {
             assertEquals(ZoneSeverity.HIGH, createdZone.zoneSeverity)
             assertEquals(requestBody.photoIds.map { Id(it) }.toSet(), createdZone.photosIds)
         }
-    }
 
     @Test
     fun `POST zones - should fail with 400 on invalid latitude`() =
@@ -489,11 +502,12 @@ class ZoneWebApiTest : BaseWebApiTest() {
     @Test
     fun `POST zone photos - should add photo successfully by reporter`() =
         testApp({ zoneWebApi(zoneService) }) {
-            val initialPhotos = setOf(Id(1u))
             val user = createTestUser()
-            val zone = createTestZone(reporterId = user.id, photosIds = initialPhotos)
-            val newPhotoId = Id(2u)
-            val requestBody = AddPhotoRequest(photoId = newPhotoId.value)
+            val initialPhoto = createTestPhoto(uploaderId = user.id)
+            val initialPhotosIds = setOf(initialPhoto.id)
+            val zone = createTestZone(reporterId = user.id, photosIds = initialPhotosIds)
+            val newPhoto = createTestPhoto(uploaderId = user.id)
+            val requestBody = AddPhotoRequest(photoId = newPhoto.id.value)
             val token = generateTestToken(user.id)
 
             val response =
@@ -505,13 +519,13 @@ class ZoneWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.OK, response.status)
 
             val responseBody = Json.decodeFromString<ZoneResponse>(response.bodyAsText())
-            assertTrue(responseBody.photosIds.contains(newPhotoId.value))
-            assertEquals(initialPhotos.size + 1, responseBody.photosIds.size)
+            assertTrue(responseBody.photosIds.contains(newPhoto.id.value))
+            assertEquals(initialPhotosIds.size + 1, responseBody.photosIds.size)
 
             val updatedZone = fakeZoneRepository.getById(zone.id)
             assertNotNull(updatedZone)
-            assertTrue(updatedZone.photosIds.contains(newPhotoId))
-            assertEquals(initialPhotos.size + 1, updatedZone.photosIds.size)
+            assertTrue(updatedZone.photosIds.contains(newPhoto.id))
+            assertEquals(initialPhotosIds.size + 1, updatedZone.photosIds.size)
         }
 
     @Test

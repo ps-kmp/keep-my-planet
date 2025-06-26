@@ -37,6 +37,7 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.InfoRow
+import pt.isel.keepmyplanet.ui.components.rememberPhotoPicker
 import pt.isel.keepmyplanet.ui.profile.components.DeleteAccountSection
 import pt.isel.keepmyplanet.ui.profile.components.PasswordChangeSection
 import pt.isel.keepmyplanet.ui.profile.components.ProfileHeader
@@ -56,12 +57,16 @@ fun UserProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val launchPhotoPicker =
+        rememberPhotoPicker { imageData, filename ->
+            viewModel.onProfilePictureSelected(imageData, filename)
+        }
+
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is UserProfileEvent.ShowSnackbar -> {
+                is UserProfileEvent.ShowSnackbar ->
                     snackbarHostState.showSnackbar(message = event.message)
-                }
 
                 is UserProfileEvent.AccountDeleted -> onAccountDeleted()
                 is UserProfileEvent.ProfileUpdated -> onProfileUpdated(event.userInfo)
@@ -70,7 +75,7 @@ fun UserProfileScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = { AppTopBar(title = "User Profile", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
@@ -94,7 +99,8 @@ fun UserProfileScreen(
                         onSaveProfileClicked = viewModel::onSaveProfileClicked,
                         onPasswordChangeToggled = viewModel::onPasswordChangeToggled,
                         onChangePasswordClicked = viewModel::onChangePasswordClicked,
-                        onConfirmDeleteAccount = viewModel::onDeleteAccountClicked,
+                        onDeleteAccountClicked = viewModel::onDeleteAccountClicked,
+                        onAvatarClick = { if (uiState.isEditingProfile) launchPhotoPicker() },
                         onNavigateToStats = onNavigateToStats,
                     )
                 }
@@ -115,7 +121,8 @@ private fun UserProfileDetails(
     onSaveProfileClicked: () -> Unit,
     onPasswordChangeToggled: () -> Unit,
     onChangePasswordClicked: () -> Unit,
-    onConfirmDeleteAccount: () -> Unit,
+    onDeleteAccountClicked: () -> Unit,
+    onAvatarClick: () -> Unit,
     onNavigateToStats: () -> Unit,
 ) {
     Column(
@@ -127,7 +134,12 @@ private fun UserProfileDetails(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        ProfileHeader(user = uiState.userDetails!!)
+        ProfileHeader(
+            user = uiState.userDetails!!,
+            photoUrl = uiState.photoUrl,
+            isUpdating = uiState.isUpdatingPhoto,
+            onAvatarClick = onAvatarClick,
+        )
 
         DetailCard(
             title = "Personal Information",
@@ -173,9 +185,7 @@ private fun UserProfileDetails(
                     onClick = onPasswordChangeToggled,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        if (uiState.showPasswordChangeSection) "Cancel" else "Change Password",
-                    )
+                    Text(if (uiState.showPasswordChangeSection) "Cancel" else "Change Password")
                 }
                 PasswordChangeSection(
                     uiState = uiState,
@@ -185,7 +195,7 @@ private fun UserProfileDetails(
                     onChangePasswordClicked = onChangePasswordClicked,
                 )
                 Divider()
-                DeleteAccountSection(uiState, onConfirmDeleteAccount)
+                DeleteAccountSection(uiState, onDeleteAccountClicked)
             }
         }
     }

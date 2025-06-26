@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.plugins
 
-import io.ktor.server.application.*
+import io.ktor.server.application.Application
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking

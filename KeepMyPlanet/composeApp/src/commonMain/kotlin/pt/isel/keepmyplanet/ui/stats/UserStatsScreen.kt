@@ -10,10 +10,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -22,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.event.EventListItem
@@ -30,6 +33,7 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.EmptyState
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
+import pt.isel.keepmyplanet.ui.stats.components.StatsSummaryCard
 import pt.isel.keepmyplanet.ui.stats.states.UserStatsEvent
 
 private const val PAGINATION_THRESHOLD = 3
@@ -37,6 +41,7 @@ private const val PAGINATION_THRESHOLD = 3
 @Composable
 fun UserStatsScreen(
     viewModel: UserStatsViewModel,
+    userName: String,
     onEventSelected: (EventListItem) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -72,7 +77,7 @@ fun UserStatsScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar(title = "My Attended Events", onNavigateBack = onNavigateBack) },
+        topBar = { AppTopBar(title = "$userName's Statistics", onNavigateBack = onNavigateBack) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -81,31 +86,49 @@ fun UserStatsScreen(
             } else if (uiState.error != null) {
                 ErrorState(
                     message = uiState.error!!,
-                    onRetry = { viewModel.loadAttendedEvents(isRefresh = true) },
+                    onRetry = { viewModel.loadInitialData() },
                 )
-            } else if (uiState.attendedEvents.isEmpty()) {
-                EmptyState(message = "You have not attended any events.")
             } else {
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    items(uiState.attendedEvents, key = { it.id.value.toString() }) { event ->
-                        EventItem(
-                            event = event,
-                            onClick = { onEventSelected(event) },
-                        )
+                    item {
+                        uiState.stats?.let { stats ->
+                            StatsSummaryCard(stats = stats)
+                        }
                     }
-                    if (uiState.isAddingMore) {
+
+                    if (uiState.attendedEvents.isNotEmpty()) {
                         item {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                CircularProgressIndicator()
+                            Text(
+                                text = "Attended Events History",
+                                style = MaterialTheme.typography.h6,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        }
+                        items(uiState.attendedEvents, key = { it.id.value.toString() }) { event ->
+                            EventItem(
+                                event = event,
+                                onClick = { onEventSelected(event) },
+                            )
+                        }
+                        if (uiState.isAddingMore) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator()
+                                }
                             }
+                        }
+                    } else {
+                        item {
+                            EmptyState(message = "You have not attended any events yet.")
                         }
                     }
                 }

@@ -1,26 +1,35 @@
 package pt.isel.keepmyplanet
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import pt.isel.keepmyplanet.di.AppContainer
+import org.koin.compose.koinInject
+import org.koin.core.context.startKoin
+import pt.isel.keepmyplanet.di.appModule
+
+class KeepMyPlanetApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        startKoin {
+            modules(appModule)
+        }
+    }
+}
 
 class MainActivity : ComponentActivity() {
-    private val container by lazy { AppContainer() }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val navStack by container.appViewModel.navStack.collectAsState()
-
+            val appViewModel: AppViewModel = koinInject()
+            val navStack by appViewModel.navStack.collectAsState()
             BackHandler(enabled = navStack.size > 1) {
-                container.appViewModel.navigateBack()
+                appViewModel.navigateBack()
             }
-
-            App(container)
+            App()
         }
     }
 }

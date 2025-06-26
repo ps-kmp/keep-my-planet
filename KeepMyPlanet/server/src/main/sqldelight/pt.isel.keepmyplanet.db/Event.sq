@@ -53,6 +53,21 @@ WHERE ea.user_id = :user_id
 ORDER BY e.start_datetime DESC
 LIMIT :limit OFFSET :offset;
 
+countAttendedEvents:
+SELECT COUNT(*) FROM event_attendances WHERE user_id = :userId;
+
+calculateTotalHoursVolunteered:
+SELECT
+  SUM(
+    EXTRACT(EPOCH FROM (CAST(e.end_datetime AS TIMESTAMP) - CAST(e.start_datetime AS TIMESTAMP)))
+  ) / 3600.0 AS total_hours
+FROM events AS e
+JOIN event_attendances AS ea
+  ON e.id = ea.event_id
+WHERE ea.user_id = :userId
+  AND e.status = 'COMPLETED'
+  AND e.end_datetime IS NOT NULL;
+
 insert:
 INSERT INTO events(title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, created_at, updated_at)
 VALUES (

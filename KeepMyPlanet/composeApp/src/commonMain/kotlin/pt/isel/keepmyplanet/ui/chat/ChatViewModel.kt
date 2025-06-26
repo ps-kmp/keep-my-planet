@@ -6,17 +6,24 @@ import pt.isel.keepmyplanet.data.api.ChatApi
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
-import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.mapper.message.toMessage
+import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.chat.states.ChatEvent
 import pt.isel.keepmyplanet.ui.chat.states.ChatUiState
 import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class ChatViewModel(
     private val chatApi: ChatApi,
-    user: UserInfo,
+    sessionManager: SessionManager,
     chatInfo: ChatInfo,
-) : BaseViewModel<ChatUiState>(ChatUiState(user, chatInfo)) {
+) : BaseViewModel<ChatUiState>(
+        ChatUiState(
+            user =
+                sessionManager.userSession.value?.userInfo
+                    ?: throw IllegalStateException("ChatViewModel requires a logged-in user."),
+            chatInfo = chatInfo,
+        ),
+    ) {
     companion object {
         const val MAX_MESSAGE_LENGTH = 1000
     }

@@ -12,13 +12,24 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.user.UserInfo
 
 @Composable
-fun ProfileHeader(user: UserInfo) {
+fun ProfileHeader(
+    user: UserInfo,
+    photoUrl: String?,
+    isUpdating: Boolean,
+    onAvatarClick: () -> Unit,
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Avatar(user = user, size = 120.dp)
+        Avatar(
+            user = user,
+            size = 120.dp,
+            photoUrl = photoUrl,
+            isUpdating = isUpdating,
+            onClick = onAvatarClick,
+        )
         Text(
             text = user.name.value,
             style = MaterialTheme.typography.h4,

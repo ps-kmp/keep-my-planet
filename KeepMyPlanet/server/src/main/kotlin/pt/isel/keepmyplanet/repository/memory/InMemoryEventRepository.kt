@@ -2,12 +2,12 @@ package pt.isel.keepmyplanet.repository.memory
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.text.compareTo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
@@ -136,8 +136,25 @@ class InMemoryEventRepository : EventRepository {
             .filter {
                 it.period.start <= currentTime &&
                     it.status == EventStatus.PLANNED
-            }
-            .sortedBy { it.period.start }
+            }.sortedBy { it.period.start }
+    }
+
+    override suspend fun countAttendedEvents(userId: Id): Long =
+        attendances.values.count { it.containsKey(userId) }.toLong()
+
+    override suspend fun calculateTotalHoursVolunteered(userId: Id): Double {
+        val attendedEventIds =
+            attendances
+                .filter { it.value.containsKey(userId) }
+                .keys
+
+        return events.values
+            .filter { it.id in attendedEventIds }
+            .filter { it.status == EventStatus.COMPLETED && it.period.end != null }
+            .sumOf {
+                (it.period.end!!.toInstant(TimeZone.UTC) - it.period.start.toInstant(TimeZone.UTC))
+                    .inWholeSeconds
+            }.toDouble()
     }
 
     override suspend fun create(entity: Event): Event {

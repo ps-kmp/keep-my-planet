@@ -11,14 +11,20 @@ import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.mapper.event.toEvent
 import pt.isel.keepmyplanet.mapper.user.toUserInfo
+import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
 import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class EventDetailsViewModel(
     private val eventApi: EventApi,
-    private val currentUser: UserInfo,
+    private val sessionManager: SessionManager,
 ) : BaseViewModel<EventDetailsUiState>(EventDetailsUiState()) {
+    private val currentUser: UserInfo
+        get() =
+            sessionManager.userSession.value?.userInfo
+                ?: throw IllegalStateException("EventDetailsViewModel requires a logged-in user.")
+
     override fun handleErrorWithMessage(message: String) {
         sendEvent(EventDetailsEvent.ShowSnackbar(message))
     }
@@ -122,24 +128,6 @@ class EventDetailsViewModel(
         )
     }
 
-/*    fun cancelEvent() =
-        performAction(
-            EventDetailsUiState.ActionState.CANCELLING,
-            "Event has been cancelled",
-            "Failed to cancel event",
-        ) {
-            eventApi.cancelEvent(it).map { eventResponse -> eventResponse.toEvent() }
-        }
-
-    fun completeEvent() =
-        performAction(
-            EventDetailsUiState.ActionState.COMPLETING,
-            "Event marked as complete",
-            "Failed to complete event",
-        ) {
-            eventApi.completeEvent(it).map { eventResponse -> eventResponse.toEvent() }
-        }*/
-
     fun deleteEvent() {
         val eventId = getEventId() ?: return
         launchWithResult(
@@ -156,7 +144,7 @@ class EventDetailsViewModel(
 
     fun onQrCodeIconClicked() {
         val state = currentState
-        if (!state.canUseQrFeature()) return
+        if (!state.canUseQrFeature) return
         val event = state.event ?: return
 
         if (state.isCurrentUserOrganizer) {

@@ -29,7 +29,8 @@ import pt.isel.keepmyplanet.dto.user.UserResponse
 import pt.isel.keepmyplanet.service.UserService
 
 class UserWebApiTest : BaseWebApiTest() {
-    private val userService = UserService(fakeUserRepository, fakeEventRepository, passwordHasher)
+    private val userService =
+        UserService(fakeUserRepository, fakeEventRepository, passwordHasher, fakePhotoRepository)
 
     @Test
     fun `POST users - should register user successfully`() =

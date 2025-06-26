@@ -3,18 +3,19 @@ package pt.isel.keepmyplanet.di
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.application.*
-import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.application.Application
 import org.koin.dsl.module
 import pt.isel.keepmyplanet.db.Database
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.EventStateChangeRepository
 import pt.isel.keepmyplanet.repository.MessageRepository
+import pt.isel.keepmyplanet.repository.PhotoRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseEventRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseEventStateChangeRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseMessageRepository
+import pt.isel.keepmyplanet.repository.database.DatabasePhotoRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseUserRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseZoneRepository
 import pt.isel.keepmyplanet.repository.database.adapters.DescriptionAdapter
@@ -34,8 +35,11 @@ import pt.isel.keepmyplanet.service.AuthService
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
+import pt.isel.keepmyplanet.service.FileStorageService
 import pt.isel.keepmyplanet.service.JwtService
+import pt.isel.keepmyplanet.service.LocalFileStorageService
 import pt.isel.keepmyplanet.service.MessageService
+import pt.isel.keepmyplanet.service.PhotoService
 import pt.isel.keepmyplanet.service.UserService
 import pt.isel.keepmyplanet.service.ZoneService
 import ptiselkeepmyplanetdb.Event_attendances
@@ -52,16 +56,12 @@ fun appModule(application: Application) =
     module {
         single { application.environment.config }
 
-        single { JwtService(get()) }
-        single<PasswordHasher> { Pbkdf2PasswordHasher() }
-        single { ChatSseService() }
-
         single<Database> {
-            val config: ApplicationConfig = get()
-            val driverClassName = config.property("storage.driverClassName").getString()
-            val jdbcURL = config.property("storage.jdbcURL").getString()
-            val user = config.property("storage.user").getString()
-            val password = config.property("storage.password").getString()
+            val appConfig = application.environment.config
+            val driverClassName = appConfig.property("storage.driverClassName").getString()
+            val jdbcURL = appConfig.property("storage.jdbcURL").getString()
+            val user = appConfig.property("storage.user").getString()
+            val password = appConfig.property("storage.password").getString()
 
             val hikariConfig =
                 HikariConfig().apply {
@@ -163,15 +163,23 @@ fun appModule(application: Application) =
             DatabaseEventStateChangeRepository(get<Database>().eventStateChangeQueries)
         }
         single<MessageRepository> { DatabaseMessageRepository(get<Database>().messageQueries) }
+        single<PhotoRepository> { DatabasePhotoRepository(get<Database>().photoQueries) }
 
         single { JwtService(get()) }
         single<PasswordHasher> { Pbkdf2PasswordHasher() }
         single { ChatSseService() }
+        // single<FileStorageService> { CloudinaryStorageService(get()) }
+        single<FileStorageService> {
+            val appConfig = get<io.ktor.server.config.ApplicationConfig>()
+            val baseUrl = appConfig.property("server.baseUrl").getString()
+            LocalFileStorageService(baseUrl = baseUrl)
+        }
 
         single { AuthService(get(), get(), get()) }
-        single { UserService(get(), get(), get()) }
-        single { ZoneService(get(), get(), get()) }
+        single { UserService(get(), get(), get(), get()) }
+        single { ZoneService(get(), get(), get(), get()) }
         single { EventService(get(), get(), get(), get()) }
         single { EventStateChangeService(get(), get(), get(), get()) }
         single { MessageService(get(), get(), get(), get()) }
+        single { PhotoService(get(), get(), get()) }
     }

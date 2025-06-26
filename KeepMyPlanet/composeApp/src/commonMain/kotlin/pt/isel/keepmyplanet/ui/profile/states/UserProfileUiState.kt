@@ -18,6 +18,7 @@ data class UserProfileUiState(
     val emailInputError: String? = null,
     val newPasswordInputError: String? = null,
     val confirmPasswordInputError: String? = null,
+    val photoUrl: String? = null,
     val error: String? = null,
 ) : UiState {
     enum class ActionState {
@@ -25,7 +26,11 @@ data class UserProfileUiState(
         UPDATING_PROFILE,
         CHANGING_PASSWORD,
         DELETING_ACCOUNT,
+        UPDATING_PHOTO,
     }
+
+    val isUpdatingPhoto: Boolean
+        get() = actionState == ActionState.UPDATING_PHOTO
 
     val hasProfileChanges: Boolean
         get() =
