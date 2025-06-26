@@ -69,4 +69,6 @@ interface EventRepository : Repository<Event, Id> {
         limit: Int,
         offset: Int,
     ): List<Event>
+
+    suspend fun findEventsToStart(): List<Event>
 }

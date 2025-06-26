@@ -135,7 +135,7 @@ abstract class BaseWebApiTest {
                 title = Title(title),
                 description = Description(description),
                 period = period,
-                persistedStatus = status,
+                status = status,
                 participantsIds = participantsIds,
                 maxParticipants = maxParticipants,
                 createdAt = now(),

@@ -1,10 +1,29 @@
-package pt.isel.keepmyplanet.plugins
+package pt.isel.keepmyplanet.di
 
-import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.application.Application
+import org.koin.dsl.module
+import pt.isel.keepmyplanet.repository.EventRepository
+import pt.isel.keepmyplanet.repository.EventStateChangeRepository
+import pt.isel.keepmyplanet.repository.MessageRepository
+import pt.isel.keepmyplanet.repository.UserRepository
+import pt.isel.keepmyplanet.repository.ZoneRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseEventRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseEventStateChangeRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseMessageRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseUserRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseZoneRepository
+import pt.isel.keepmyplanet.security.PasswordHasher
+import pt.isel.keepmyplanet.security.Pbkdf2PasswordHasher
+import pt.isel.keepmyplanet.service.AuthService
+import pt.isel.keepmyplanet.service.ChatSseService
+import pt.isel.keepmyplanet.service.EventService
+import pt.isel.keepmyplanet.service.EventStateChangeService
+import pt.isel.keepmyplanet.service.JwtService
+import pt.isel.keepmyplanet.service.MessageService
+import pt.isel.keepmyplanet.service.UserService
+import pt.isel.keepmyplanet.service.ZoneService
 import pt.isel.keepmyplanet.db.Database
 import pt.isel.keepmyplanet.repository.database.adapters.DescriptionAdapter
 import pt.isel.keepmyplanet.repository.database.adapters.EmailAdapter
@@ -26,18 +45,25 @@ import ptiselkeepmyplanetdb.Photos
 import ptiselkeepmyplanetdb.Users
 import ptiselkeepmyplanetdb.Zone_photos
 import ptiselkeepmyplanetdb.Zones
+import io.ktor.server.application.*
+import io.ktor.server.config.ApplicationConfig
 
-/*lateinit var database: Database
-    private set
+fun appModule(application: Application) = module {
 
-fun Application.configureDatabase() {
-    val driverClassName = environment.config.property("storage.driverClassName").getString()
-    val jdbcURL = environment.config.property("storage.jdbcURL").getString()
-    val user = environment.config.property("storage.user").getString()
-    val password = environment.config.property("storage.password").getString()
+    single { application.environment.config }
 
-    val hikariConfig =
-        HikariConfig().apply {
+    single { JwtService(get()) }
+    single<PasswordHasher> { Pbkdf2PasswordHasher() }
+    single { ChatSseService() }
+
+    single<Database> {
+        val config: ApplicationConfig = get()
+        val driverClassName = config.property("storage.driverClassName").getString()
+        val jdbcURL = config.property("storage.jdbcURL").getString()
+        val user = config.property("storage.user").getString()
+        val password = config.property("storage.password").getString()
+
+        val hikariConfig = HikariConfig().apply {
             this.driverClassName = driverClassName
             this.jdbcUrl = jdbcURL
             this.username = user
@@ -47,10 +73,10 @@ fun Application.configureDatabase() {
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             validate()
         }
-    val dataSource = HikariDataSource(hikariConfig)
-    val driver: SqlDriver = dataSource.asJdbcDriver()
 
-    database =
+        val dataSource = HikariDataSource(hikariConfig)
+        val driver = dataSource.asJdbcDriver()
+
         Database(
             driver = driver,
             usersAdapter =
@@ -127,4 +153,23 @@ fun Application.configureDatabase() {
                     change_timeAdapter = LocalDateTimeAdapter,
                 ),
         )
-}*/
+    }
+
+
+    single<UserRepository> { DatabaseUserRepository(get<Database>().userQueries) }
+    single<ZoneRepository> { DatabaseZoneRepository(get<Database>().zoneQueries) }
+    single<EventRepository> { DatabaseEventRepository(get<Database>().eventQueries) }
+    single<EventStateChangeRepository> { DatabaseEventStateChangeRepository(get<Database>().eventStateChangeQueries) }
+    single<MessageRepository> { DatabaseMessageRepository(get<Database>().messageQueries) }
+
+    single { JwtService(get()) }
+    single<PasswordHasher> { Pbkdf2PasswordHasher() }
+    single { ChatSseService() }
+
+    single { AuthService(get(), get(), get()) }
+    single { UserService(get(), get(), get()) }
+    single { ZoneService(get(), get(), get()) }
+    single { EventService(get(), get(), get(), get()) }
+    single { EventStateChangeService(get(), get(), get(), get()) }
+    single { MessageService(get(), get(), get(), get()) }
+}

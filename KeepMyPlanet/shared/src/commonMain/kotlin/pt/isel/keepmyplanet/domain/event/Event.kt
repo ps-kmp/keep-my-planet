@@ -3,7 +3,6 @@ package pt.isel.keepmyplanet.domain.event
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.utils.now
 
 data class Event(
     val id: Id,
@@ -12,27 +11,12 @@ data class Event(
     val period: Period,
     val zoneId: Id,
     val organizerId: Id,
-    private val persistedStatus: EventStatus = EventStatus.PLANNED,
+    val status: EventStatus = EventStatus.PLANNED,
     val maxParticipants: Int? = null,
     val participantsIds: Set<Id> = emptySet(),
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {
-    val status: EventStatus
-        get() {
-            if (persistedStatus in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)) {
-                return persistedStatus
-            }
-            val now = now()
-            if (now > period.start) {
-                if (period.end == null || now < period.end) {
-                    return EventStatus.IN_PROGRESS
-                }
-            }
-            return persistedStatus
-        }
-
-    fun getPersistedStatus(): EventStatus = persistedStatus
 
     init {
         maxParticipants?.let {

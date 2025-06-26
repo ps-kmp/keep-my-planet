@@ -159,52 +159,6 @@ class EventService(
             if (updatedEvent != event) eventRepository.update(updatedEvent) else event
         }
 
-/*    suspend fun cancelEvent(
-        eventId: Id,
-        userId: Id,
-    ): Result<Event> =
-        runCatching {
-            val event = findEventOrFail(eventId)
-            ensureOrganizerOrFail(event, userId)
-
-            if (event.status == EventStatus.COMPLETED || event.status == EventStatus.CANCELLED) {
-                throw ConflictException("Event is already ${event.status} and cannot be cancelled.")
-            }
-
-            val cancelledEvent = event.copy(status = EventStatus.CANCELLED)
-            val updatedEvent = eventRepository.update(cancelledEvent)
-
-            val zone = findZoneOrFail(event.zoneId)
-            if (zone.eventId == event.id) {
-                val updatedZone = zone.copy(eventId = null, status = ZoneStatus.REPORTED)
-                zoneRepository.update(updatedZone)
-            }
-            updatedEvent
-        }
-
-    suspend fun completeEvent(
-        eventId: Id,
-        actingUserId: Id,
-    ): Result<Event> =
-        runCatching {
-            val event = findEventOrFail(eventId)
-            ensureOrganizerOrFail(event, actingUserId)
-
-            if (event.status != EventStatus.IN_PROGRESS) {
-                throw ConflictException("Only 'IN_PROGRESS' events can be completed.")
-            }
-
-            val completedEvent = event.copy(status = EventStatus.COMPLETED)
-            val updatedEvent = eventRepository.update(completedEvent)
-
-            val zone = findZoneOrFail(event.zoneId)
-            if (zone.eventId == event.id) {
-                val updatedZone = zone.copy(eventId = null, status = ZoneStatus.CLEANED)
-                zoneRepository.update(updatedZone)
-            }
-            updatedEvent
-        }*/
-
     suspend fun joinEvent(
         eventId: Id,
         userId: Id,

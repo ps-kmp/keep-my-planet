@@ -185,28 +185,6 @@ fun Route.eventWebApi(
                         }.onFailure { throw it }
                 }
 
-/*                // Complete Event
-                post("/complete") {
-                    val eventId = call.getEventId()
-                    val userId = call.getCurrentUserId()
-
-                    eventService
-                        .completeEvent(eventId, userId)
-                        .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
-                        .onFailure { throw it }
-                }
-
-                // Cancel Event
-                post("/cancel") {
-                    val eventId = call.getEventId()
-                    val userId = call.getCurrentUserId()
-
-                    eventService
-                        .cancelEvent(eventId, userId)
-                        .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
-                        .onFailure { throw it }
-                }*/
-
                 put("/status") {
                     val eventId = call.getEventId()
                     val userId = call.getCurrentUserId()

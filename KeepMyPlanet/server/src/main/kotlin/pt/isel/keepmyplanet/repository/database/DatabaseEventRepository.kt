@@ -59,7 +59,7 @@ class DatabaseEventRepository(
                         end_datetime = entity.period.end,
                         zone_id = entity.zoneId,
                         organizer_id = entity.organizerId,
-                        status = entity.getPersistedStatus(),
+                        status = entity.status,
                         max_participants = entity.maxParticipants,
                         created_at = currentTime,
                         updated_at = currentTime,
@@ -114,7 +114,7 @@ class DatabaseEventRepository(
                         end_datetime = entity.period.end,
                         zone_id = entity.zoneId,
                         organizer_id = entity.organizerId,
-                        status = entity.getPersistedStatus(),
+                        status = entity.status,
                         max_participants = entity.maxParticipants,
                         updated_at = now(),
                     ).executeAsOne()
@@ -270,6 +270,11 @@ class DatabaseEventRepository(
             eventQueries
                 .findEventsAttendedByUser(userId, limit.toLong(), offset.toLong())
                 .executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
+
+    override suspend fun findEventsToStart(): List<Event> {
+        val dbEvents = eventQueries.findEventsToStart(currentTime = now()).executeAsList()
         return mapEventsToDomain(dbEvents)
     }
 }

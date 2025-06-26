@@ -69,6 +69,11 @@ SELECT * FROM events WHERE id = :id;
 getAll:
 SELECT * FROM events ORDER BY start_datetime DESC LIMIT :limit OFFSET :offset;
 
+findEventsToStart:
+SELECT *
+FROM events
+WHERE status = 'PLANNED' AND start_datetime <= CAST(:currentTime AS TIMESTAMP);
+
 updateEvent:
 UPDATE events
 SET title = :title,

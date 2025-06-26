@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.repository.memory
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.text.compareTo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
@@ -127,6 +128,16 @@ class InMemoryEventRepository : EventRepository {
             .sortedByDescending { it.period.start }
             .drop(offset)
             .take(limit)
+    }
+
+    override suspend fun findEventsToStart(): List<Event> {
+        val currentTime = now()
+        return events.values
+            .filter {
+                it.period.start <= currentTime &&
+                    it.status == EventStatus.PLANNED
+            }
+            .sortedBy { it.period.start }
     }
 
     override suspend fun create(entity: Event): Event {

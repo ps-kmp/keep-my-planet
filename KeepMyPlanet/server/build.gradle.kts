@@ -55,6 +55,8 @@ dependencies {
     // serialization
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    implementation(libs.koin.ktor)
+
     // logging
     implementation(libs.logback.classic)
 

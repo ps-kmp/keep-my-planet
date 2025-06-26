@@ -44,7 +44,7 @@ class EventStateChangeService(
 
             val updatedEvent =
                 event.copy(
-                    persistedStatus = newStatus,
+                    status = newStatus,
                 )
             eventRepository.update(updatedEvent)
 
@@ -124,7 +124,7 @@ class EventStateChangeService(
         to: EventStatus,
     ): Boolean =
         when (from) {
-            EventStatus.PLANNED -> to == EventStatus.CANCELLED
+            EventStatus.PLANNED -> to in listOf(EventStatus.IN_PROGRESS, EventStatus.CANCELLED)
             EventStatus.IN_PROGRESS -> to in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
             EventStatus.COMPLETED, EventStatus.CANCELLED, EventStatus.UNKNOWN -> false
         }
@@ -139,4 +139,14 @@ class EventStateChangeService(
     private suspend fun findEventOrFail(eventId: Id): Event =
         eventRepository.getById(eventId)
             ?: throw NotFoundException("Event '$eventId' not found.")
+
+    suspend fun transitionEventsToInProgress() {
+        val eventsToStart = eventRepository.findEventsToStart()
+        eventsToStart.forEach { event ->
+            changeEventStatus(event.id, EventStatus.IN_PROGRESS, event.organizerId)
+                .onFailure {
+                    println("Failed to transition event ${event.id} to IN_PROGRESS: $it")
+                }
+        }
+    }
 }

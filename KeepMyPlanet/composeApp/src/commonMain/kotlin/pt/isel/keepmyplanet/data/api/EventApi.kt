@@ -39,10 +39,6 @@ class EventApi(
 
         fun getStatusHistory(eventId: UInt) = "${eventById(eventId)}/status/history"
 
-        /*fun cancelEvent(eventId: UInt) = "${eventById(eventId)}/cancel"
-
-        fun completeEvent(eventId: UInt) = "${eventById(eventId)}/complete"*/
-
         fun joinEvent(eventId: UInt) = "${eventById(eventId)}/join"
 
         fun leaveEvent(eventId: UInt) = "${eventById(eventId)}/leave"
@@ -139,18 +135,6 @@ class EventApi(
             method = HttpMethod.Get
             url(Endpoints.getStatusHistory(eventId))
         }
-
-/*    suspend fun cancelEvent(eventId: UInt): Result<EventResponse> =
-        httpClient.executeRequest {
-            method = HttpMethod.Post
-            url(Endpoints.cancelEvent(eventId))
-        }
-
-    suspend fun completeEvent(eventId: UInt): Result<EventResponse> =
-        httpClient.executeRequest {
-            method = HttpMethod.Post
-            url(Endpoints.completeEvent(eventId))
-        }*/
 
     suspend fun joinEvent(eventId: UInt): Result<EventResponse> =
         httpClient.executeRequest {

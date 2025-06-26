@@ -26,6 +26,7 @@ logback = "1.5.18"
 mapcompose-mp = "0.10.0"
 zxing-core = "3.5.2"
 mlkit-barcode-scanning = "17.2.0"
+koin = "4.0.3"
 
 # Tooling
 ktlint = "12.3.0"
@@ -63,6 +64,9 @@ ktor-server-cors = { module = "io.ktor:ktor-server-cors-jvm" }
 # Ktor - Testing
 ktor-server-test-host-jvm = { module = "io.ktor:ktor-server-test-host-jvm" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+
+# Koin
+koin-ktor = { group = "io.insert-koin", name = "koin-ktor", version.ref = "koin" }
 
 # AndroidX & Accompanist
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }

@@ -42,8 +42,16 @@ fun createHttpClient(sessionManager: SessionManager): HttpClient =
         install(Auth) {
             bearer {
                 loadTokens {
-                    sessionManager.loadSession()?.let { access ->
+                    sessionManager.userSession.value?.let { session ->
+                        BearerTokens(accessToken = session.token, refreshToken = "")
+                    }
+/*                    sessionManager.loadSession()?.let { access ->
                         BearerTokens(accessToken = access.token, refreshToken = "")
+                    }*/
+                }
+                refreshTokens {
+                    sessionManager.userSession.value?.let { session ->
+                        BearerTokens(accessToken = session.token, refreshToken = "")
                     }
                 }
             }
