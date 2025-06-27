@@ -1,15 +1,14 @@
-services:
-  - type: psql
-    name: kmp-db
+databases:
+  - name: kmp-db
     plan: free
-    postgresMajorVersion: 16
-    ipAllowList: [ ]
 
+services:
   - type: web
     name: kmp-server
     plan: free
     env: shell
-    buildCommand: "./KeepMyPlanet/build.sh"
+    rootDir: KeepMyPlanet
+    buildCommand: "./build.sh"
     startCommand: "KeepMyPlanet/server/build/install/server/bin/server"
     healthCheckPath: /
     envVars:
