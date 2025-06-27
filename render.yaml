@@ -1,58 +1,21 @@
+databases:
+  - name: kmp-db
+    plan: free
+
 services:
   - type: web
     name: kmp-server
-    runtime: docker
     plan: free
-    region: oregon
     rootDir: KeepMyPlanet
-    dockerfilePath: ./server/Dockerfile
-    dockerContext: ./KeepMyPlanet
+    buildCommand: "./build.sh"
+    startCommand: "KeepMyPlanet/server/build/install/server/bin/server"
     healthCheckPath: /
     envVars:
-      - key: KTOR_STORAGE_JDBCURL
+      - key: DATABASE_URL
         fromDatabase:
           name: kmp-db
           property: connectionString
-      - key: KTOR_STORAGE_USER
-        fromDatabase:
-          name: kmp-db
-          property: user
-      - key: KTOR_STORAGE_PASSWORD
-        fromDatabase:
-          name: kmp-db
-          property: password
-      - key: KTOR_JWT_SECRET
+      - key: JWT_SECRET
         generateValue: true
-      - key: KTOR_SERVER_BASEURL
-        value: ${RENDER_EXTERNAL_URL}
-      - key: KTOR_CLOUDINARY_URL
+      - key: CLOUDINARY_URL
         sync: false
-
-  - type: web
-    name: kmp-webapp
-    runtime: docker
-    plan: free
-    rootDir: KeepMyPlanet
-    dockerfilePath: ./composeApp/Dockerfile
-    dockerContext: ./KeepMyPlanet
-    envVars:
-      - key: BACKEND_URL
-        value: ${kmp-server.url}
-    buildFilter:
-      paths:
-        - "KeepMyPlanet/composeApp/**"
-        - "KeepMyPlanet/shared/**"
-        - "KeepMyPlanet/gradle/**"
-        - "KeepMyPlanet/*.kts"
-        - "KeepMyPlanet/gradlew"
-      ignoredPaths:
-        - "**.test.*"
-        - "**.md"
-
-databases:
-  - name: kmp-db
-    databaseName: kmp_db
-    user: user
-    plan: free
-    region: oregon
-    postgresMajorVersion: "16"
