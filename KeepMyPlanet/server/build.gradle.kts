@@ -35,7 +35,6 @@ dependencies {
     implementation(projects.shared)
 
     implementation(libs.cryptography.core)
-    implementation(libs.cryptography.provider.jdk.jvm)
 
     // ktor
     implementation(platform(libs.ktor.bom))

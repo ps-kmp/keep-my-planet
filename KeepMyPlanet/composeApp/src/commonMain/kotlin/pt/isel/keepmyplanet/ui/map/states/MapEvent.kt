@@ -6,4 +6,8 @@ sealed interface MapEvent : UiEvent {
     data class ShowSnackbar(
         val message: String,
     ) : MapEvent
+
+    data object RequestLocation : MapEvent
+
+    data object CenterOnUserLocation : MapEvent
 }

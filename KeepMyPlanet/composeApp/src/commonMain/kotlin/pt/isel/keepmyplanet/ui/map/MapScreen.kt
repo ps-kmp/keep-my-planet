@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,13 +61,16 @@ import ovh.plrapps.mapcompose.api.addCallout
 import ovh.plrapps.mapcompose.api.addClusterer
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.centerOnMarker
 import ovh.plrapps.mapcompose.api.centroidX
 import ovh.plrapps.mapcompose.api.centroidY
 import ovh.plrapps.mapcompose.api.enableRotation
 import ovh.plrapps.mapcompose.api.getLayoutSize
+import ovh.plrapps.mapcompose.api.hasMarker
 import ovh.plrapps.mapcompose.api.idleStateFlow
 import ovh.plrapps.mapcompose.api.maxScale
 import ovh.plrapps.mapcompose.api.minScale
+import ovh.plrapps.mapcompose.api.moveMarker
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.removeCallout
@@ -85,6 +89,8 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
+import pt.isel.keepmyplanet.ui.components.rememberGpsLocationProvider
+import pt.isel.keepmyplanet.ui.map.components.UserLocationMarker
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.utils.getTileStreamProvider
 import pt.isel.keepmyplanet.utils.latToY
@@ -98,6 +104,7 @@ private val MAP_DIMENSION = TILE_SIZE * 2.0.pow(MAX_ZOOM - 1).toInt()
 
 private const val LISBON_LAT = 38.7223
 private const val LISBON_LON = -9.1393
+private const val USER_LOCATION_MARKER_ID = "user_location_marker"
 
 @OptIn(ExperimentalResourceApi::class, ExperimentalClusteringApi::class, FlowPreview::class)
 @Composable
@@ -108,6 +115,7 @@ fun MapScreen(
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val userLocation by viewModel.userLocation.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -118,6 +126,11 @@ fun MapScreen(
                 scroll(lonToX(LISBON_LON), latToY(LISBON_LAT))
                 minimumScaleMode(Forced(0.2))
             }
+        }
+
+    val locationProvider =
+        rememberGpsLocationProvider { lat, lon ->
+            viewModel.onLocationUpdateReceived(lat, lon)
         }
 
     val isMapReady by produceState(initialValue = false, mapState) {
@@ -146,6 +159,38 @@ fun MapScreen(
                 is MapEvent.ShowSnackbar -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     snackbarHostState.showSnackbar(event.message)
+                }
+
+                is MapEvent.RequestLocation -> {
+                    if (locationProvider.isPermissionGranted) {
+                        locationProvider.requestLocationUpdate()
+                    } else {
+                        locationProvider.requestPermission()
+                        snackbarHostState.showSnackbar(
+                            "Location permission is needed to center the map on you.",
+                        )
+                    }
+                }
+
+                is MapEvent.CenterOnUserLocation -> {
+                    coroutineScope.launch {
+                        mapState.centerOnMarker(USER_LOCATION_MARKER_ID)
+                    }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(userLocation) {
+        val location = userLocation
+        if (location != null) {
+            val x = lonToX(location.longitude)
+            val y = latToY(location.latitude)
+            if (mapState.hasMarker(USER_LOCATION_MARKER_ID)) {
+                mapState.moveMarker(USER_LOCATION_MARKER_ID, x, y)
+            } else {
+                mapState.addMarker(USER_LOCATION_MARKER_ID, x, y) {
+                    UserLocationMarker()
                 }
             }
         }
@@ -225,6 +270,8 @@ fun MapScreen(
     }
 
     mapState.onMarkerClick { id, _, _ ->
+        if (id == USER_LOCATION_MARKER_ID) return@onMarkerClick
+
         if (!uiState.isReportingMode) {
             if (currentCalloutId == id) return@onMarkerClick
 
@@ -283,16 +330,33 @@ fun MapScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = {
-            if (!uiState.isReportingMode && uiState.error == null) {
-                AppTopBar(title = "Map", onNavigateBack = onNavigateBack)
-            }
-        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = { AppTopBar(title = "Map", onNavigateBack = onNavigateBack) },
         floatingActionButton = {
-            if (!uiState.isReportingMode && uiState.error == null) {
-                FloatingActionButton(onClick = { viewModel.enterReportingMode() }) {
-                    Icon(Icons.Default.Add, contentDescription = "Report Zone")
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                if (!uiState.isReportingMode && uiState.error == null) {
+                    FloatingActionButton(
+                        onClick = { viewModel.requestLocationPermissionOrUpdate() },
+                        backgroundColor = MaterialTheme.colors.secondary,
+                    ) {
+                        if (uiState.isLocatingUser) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colors.onSecondary,
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.MyLocation,
+                                contentDescription = "Center on my location",
+                            )
+                        }
+                    }
+                    FloatingActionButton(onClick = { viewModel.enterReportingMode() }) {
+                        Icon(Icons.Default.Add, contentDescription = "Report Zone")
+                    }
                 }
             }
         },

@@ -106,6 +106,7 @@ kotlin {
                 implementation(libs.mlkit.barcode.scanning)
                 implementation(libs.accompanist.permissions)
                 implementation(libs.bundles.androidx.camera)
+                implementation(libs.google.playservices.location)
             }
         }
         val desktopMain by getting {

@@ -1,8 +1,9 @@
 package pt.isel.keepmyplanet.ui.map
 
-import kotlinx.coroutines.launch
-import ovh.plrapps.mapcompose.api.visibleBoundingBox
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import pt.isel.keepmyplanet.data.api.ZoneApi
+import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.mapper.zone.toZone
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.map.states.MapUiState
@@ -14,6 +15,9 @@ import pt.isel.keepmyplanet.utils.yToLat
 class MapViewModel(
     private val zoneApi: ZoneApi,
 ) : BaseViewModel<MapUiState>(MapUiState()) {
+    private val _userLocation = MutableStateFlow<Location?>(null)
+    val userLocation = _userLocation.asStateFlow()
+
     override fun handleErrorWithMessage(message: String) {
         sendEvent(MapEvent.ShowSnackbar(message))
     }
@@ -61,9 +65,17 @@ class MapViewModel(
             copy(isReportingMode = false)
         }
 
-    fun onRetry(mapState: ovh.plrapps.mapcompose.ui.state.MapState) {
-        viewModelScope.launch {
-            onMapIdle(mapState.visibleBoundingBox())
-        }
+    fun onLocationUpdateReceived(
+        latitude: Double,
+        longitude: Double,
+    ) {
+        _userLocation.value = Location(latitude, longitude)
+        sendEvent(MapEvent.CenterOnUserLocation)
+        setState { copy(isLocatingUser = false) }
+    }
+
+    fun requestLocationPermissionOrUpdate() {
+        setState { copy(isLocatingUser = true) }
+        sendEvent(MapEvent.RequestLocation)
     }
 }

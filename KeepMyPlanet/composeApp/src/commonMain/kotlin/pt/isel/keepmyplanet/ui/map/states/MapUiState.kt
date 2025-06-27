@@ -8,4 +8,5 @@ data class MapUiState(
     val isLoading: Boolean = false,
     val isReportingMode: Boolean = false,
     val error: String? = null,
+    val isLocatingUser: Boolean = false,
 ) : UiState
