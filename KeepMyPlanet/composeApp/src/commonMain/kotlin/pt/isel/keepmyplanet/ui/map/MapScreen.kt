@@ -254,7 +254,7 @@ fun MapScreen(
                     ) {
                         StatusBadge(
                             text = zone.zoneSeverity.name,
-                            backgroundColor = getSeverityColor(zone.zoneSeverity)
+                            backgroundColor = getSeverityColor(zone.zoneSeverity),
                         )
 
                         Text(

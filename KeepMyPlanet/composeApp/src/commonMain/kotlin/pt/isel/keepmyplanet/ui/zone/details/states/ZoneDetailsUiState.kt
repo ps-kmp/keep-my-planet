@@ -13,6 +13,7 @@ data class ZoneDetailsUiState(
 ) : UiState {
     sealed interface ActionState {
         data object IDLE : ActionState
+
         data object DELETING : ActionState
     }
 

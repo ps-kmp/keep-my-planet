@@ -20,7 +20,6 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
@@ -92,7 +91,6 @@ fun ZoneDetailsScreen(
         }
     }
 
-
     LaunchedEffect(zoneId) {
         viewModel.loadZoneDetails(zoneId)
     }
@@ -115,16 +113,17 @@ fun ZoneDetailsScreen(
 
                 zone != null -> {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         DetailCard(title = "Description") {
                             Text(
                                 text = zone.description.value,
-                                style = MaterialTheme.typography.body1
+                                style = MaterialTheme.typography.body1,
                             )
                         }
 
@@ -139,11 +138,11 @@ fun ZoneDetailsScreen(
                                         imageVector = Icons.Default.Flag,
                                         contentDescription = "Status",
                                         modifier = Modifier.padding(end = 16.dp),
-                                        tint = MaterialTheme.colors.primary
+                                        tint = MaterialTheme.colors.primary,
                                     )
                                     StatusBadge(
                                         text = zone.status.name.replace('_', ' '),
-                                        backgroundColor = getStatusColor(zone.status)
+                                        backgroundColor = getStatusColor(zone.status),
                                     )
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -151,12 +150,12 @@ fun ZoneDetailsScreen(
                                         imageVector = Icons.Default.Warning,
                                         contentDescription = "Severity",
                                         modifier = Modifier.padding(end = 16.dp),
-                                        tint = MaterialTheme.colors.primary
+                                        tint = MaterialTheme.colors.primary,
                                     )
                                     StatusBadge(
                                         text = zone.zoneSeverity.name,
                                         backgroundColor = getSeverityColor(zone.zoneSeverity),
-                                        icon = Icons.Default.Warning
+                                        icon = Icons.Default.Warning,
                                     )
                                 }
                                 InfoRow(
@@ -198,7 +197,7 @@ fun ZoneDetailsScreen(
                                     Button(
                                         onClick = { onNavigateToUpdateZone(zone.id) },
                                         modifier = Modifier.fillMaxWidth(),
-                                        enabled = !uiState.isLoading
+                                        enabled = !uiState.isLoading,
                                     ) {
                                         Text("Edit Zone")
                                     }
@@ -207,9 +206,10 @@ fun ZoneDetailsScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         isLoading = uiState.actionState == ZoneDetailsUiState.ActionState.DELETING,
                                         enabled = !uiState.isActionInProgress,
-                                        colors = ButtonDefaults.outlinedButtonColors(
-                                            contentColor = MaterialTheme.colors.error,
-                                        ),
+                                        colors =
+                                            ButtonDefaults.outlinedButtonColors(
+                                                contentColor = MaterialTheme.colors.error,
+                                            ),
                                         text = "Delete Zone",
                                         loadingIndicatorColor = MaterialTheme.colors.error,
                                     )

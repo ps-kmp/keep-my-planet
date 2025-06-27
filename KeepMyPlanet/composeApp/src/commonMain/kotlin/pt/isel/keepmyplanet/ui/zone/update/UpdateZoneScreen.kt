@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Scaffold
@@ -59,21 +57,22 @@ fun UpdateZoneScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { AppTopBar("Edit Zone", onNavigateBack = onNavigateBack) }
+        topBar = { AppTopBar("Edit Zone", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
         Box(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             when {
                 uiState.isLoading -> FullScreenLoading()
                 uiState.error != null -> ErrorState(uiState.error!!) { viewModel.loadZone(zoneId) }
                 else -> {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         FormField(
                             value = uiState.description,
@@ -81,7 +80,7 @@ fun UpdateZoneScreen(
                             label = "Description",
                             minLines = 4,
                             enabled = !isActionInProgress,
-                            errorText = uiState.descriptionError
+                            errorText = uiState.descriptionError,
                         )
 
                         Text("Severity:", style = MaterialTheme.typography.subtitle1)
@@ -89,7 +88,8 @@ fun UpdateZoneScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            ZoneSeverity.entries.filter { it != ZoneSeverity.UNKNOWN }.forEach { severity ->
+                            ZoneSeverity.entries.filter { it != ZoneSeverity.UNKNOWN }.forEach {
+                                    severity ->
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.weight(1f),
@@ -99,7 +99,10 @@ fun UpdateZoneScreen(
                                         onClick = { viewModel.onSeverityChange(severity) },
                                         enabled = !isActionInProgress,
                                     )
-                                    Text(text = severity.name, modifier = Modifier.padding(start = 4.dp))
+                                    Text(
+                                        text = severity.name,
+                                        modifier = Modifier.padding(start = 4.dp),
+                                    )
                                 }
                             }
                         }
@@ -109,9 +112,9 @@ fun UpdateZoneScreen(
                         LoadingButton(
                             onClick = viewModel::submitUpdate,
                             isLoading = isActionInProgress,
-                            enabled = !isActionInProgress, // Add validation logic if needed
+                            enabled = !isActionInProgress,
                             text = "Save Changes",
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }

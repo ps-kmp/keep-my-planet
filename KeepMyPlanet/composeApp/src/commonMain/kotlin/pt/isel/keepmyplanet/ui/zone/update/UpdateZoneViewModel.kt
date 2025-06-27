@@ -12,7 +12,6 @@ import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneUiState
 class UpdateZoneViewModel(
     private val zoneApi: ZoneApi,
 ) : BaseViewModel<UpdateZoneUiState>(UpdateZoneUiState()) {
-
     override fun handleErrorWithMessage(message: String) {
         sendEvent(UpdateZoneEvent.ShowSnackbar(message))
     }
@@ -28,11 +27,17 @@ class UpdateZoneViewModel(
                     copy(
                         zone = zone,
                         description = zone.description.value,
-                        severity = zone.zoneSeverity
+                        severity = zone.zoneSeverity,
                     )
                 }
             },
-            onError = { setState { copy(error = getErrorMessage("Failed to load zone data", it)) } }
+            onError = {
+                setState {
+                    copy(
+                        error = getErrorMessage("Failed to load zone data", it),
+                    )
+                }
+            },
         )
     }
 
@@ -56,18 +61,19 @@ class UpdateZoneViewModel(
             onStart = { copy(isUpdating = true) },
             onFinally = { copy(isUpdating = false) },
             block = {
-                val request = UpdateZoneRequest(
-                    description = currentState.description,
-                    severity = currentState.severity.name,
-                    status = null
-                )
+                val request =
+                    UpdateZoneRequest(
+                        description = currentState.description,
+                        severity = currentState.severity.name,
+                        status = null,
+                    )
                 zoneApi.updateZone(zoneId.value, request)
             },
             onSuccess = {
                 sendEvent(UpdateZoneEvent.ShowSnackbar("Zone updated successfully!"))
                 sendEvent(UpdateZoneEvent.UpdateSuccessful)
             },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to update zone", it)) }
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to update zone", it)) },
         )
     }
 }

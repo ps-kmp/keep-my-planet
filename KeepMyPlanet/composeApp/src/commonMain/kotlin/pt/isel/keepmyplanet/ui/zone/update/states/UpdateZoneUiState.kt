@@ -4,7 +4,6 @@ import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.ui.viewmodel.UiState
 
-
 data class UpdateZoneUiState(
     val zone: Zone? = null,
     val description: String = "",

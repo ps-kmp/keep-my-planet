@@ -202,10 +202,9 @@ fun App() {
             UpdateZoneScreen(
                 viewModel = koinViewModel(),
                 zoneId = route.zoneId,
-                onNavigateBack = { appViewModel.navigateBack() }
+                onNavigateBack = { appViewModel.navigateBack() },
             )
         }
-
 
         is AppRoute.ReportZone -> {
             ReportZoneScreen(

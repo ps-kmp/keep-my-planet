@@ -57,9 +57,10 @@ class RegisterViewModel(
                         errorMessage.contains("name", ignoreCase = true) -> {
                         setState {
                             copy(
-                                usernameError = errorMessage.substringAfter(
-                                    "Registration failed: ",
-                                ),
+                                usernameError =
+                                    errorMessage.substringAfter(
+                                        "Registration failed: ",
+                                    ),
                             )
                         }
                     }

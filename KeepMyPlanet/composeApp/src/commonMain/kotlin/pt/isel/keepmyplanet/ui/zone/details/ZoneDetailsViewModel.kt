@@ -16,7 +16,6 @@ class ZoneDetailsViewModel(
     private val photoApi: PhotoApi,
     private val sessionManager: SessionManager,
 ) : BaseViewModel<ZoneDetailsUiState>(ZoneDetailsUiState()) {
-
     private val currentUser: UserInfo?
         get() = sessionManager.userSession.value?.userInfo
 
@@ -56,6 +55,7 @@ class ZoneDetailsViewModel(
             setState { copy(photoUrls = urls) }
         }
     }
+
     fun deleteZone() {
         val zoneId = currentState.zone?.id ?: return
 
