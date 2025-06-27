@@ -9,8 +9,8 @@ services:
     name: kmp-server
     plan: free
     env: shell
-    buildCommand: "./build.sh"
-    startCommand: "server/build/install/server/bin/server"
+    buildCommand: "./KeepMyPlanet/build.sh"
+    startCommand: "KeepMyPlanet/server/build/install/server/bin/server"
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
