@@ -5,8 +5,11 @@ COPY . .
 ENV JAVA_HOME=/usr/local/openjdk-17
 ENV PATH=$JAVA_HOME/bin:$PATH
 
-RUN chmod +x ./gradlew \
- && ./gradlew :composeApp:wasmJsBrowserDistribution
+RUN ls
+
+RUN cd KeepMyPlanet \
+    && chmod +x ./gradlew \
+    && ./gradlew :composeApp:wasmJsBrowserDistribution
 
 ARG KMP_SERVER_URL
 RUN if [ -f build/dist/wasmJs/productionExecutable/composeApp.js ]; then \
