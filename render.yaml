@@ -26,7 +26,6 @@ services:
       - key: KTOR_CLOUDINARY_URL
         sync: false
 
-
   - type: web
     name: kmp-webapp
     runtime: docker
@@ -38,7 +37,6 @@ services:
     envVars:
       - key: KMP_SERVER_URL
         value: ${kmp-server.url}
-
 
 databases:
   - name: kmp-db
