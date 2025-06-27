@@ -24,7 +24,8 @@ import pt.isel.keepmyplanet.ui.profile.UserProfileViewModel
 import pt.isel.keepmyplanet.ui.register.RegisterViewModel
 import pt.isel.keepmyplanet.ui.report.ReportZoneViewModel
 import pt.isel.keepmyplanet.ui.stats.UserStatsViewModel
-import pt.isel.keepmyplanet.ui.zone.ZoneDetailsViewModel
+import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsViewModel
+import pt.isel.keepmyplanet.ui.zone.update.UpdateZoneViewModel
 
 val appModule =
     module {
@@ -52,6 +53,7 @@ val appModule =
         factoryOf(::EventFormViewModel)
         factoryOf(::MapViewModel)
         factoryOf(::ZoneDetailsViewModel)
+        factoryOf(::UpdateZoneViewModel)
         factoryOf(::ReportZoneViewModel)
         factoryOf(::UserProfileViewModel)
         factoryOf(::ChatViewModel)

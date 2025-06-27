@@ -1,9 +1,10 @@
-package pt.isel.keepmyplanet.ui.zone
+package pt.isel.keepmyplanet.ui.zone.details
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,37 +12,52 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.ui.common.FullScreenLoading
+import pt.isel.keepmyplanet.ui.common.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.ConfirmActionDialog
 import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.InfoRow
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.getStatusColor
+import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsEvent
+import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsUiState
 
 @Composable
 fun ZoneDetailsScreen(
@@ -49,16 +65,40 @@ fun ZoneDetailsScreen(
     zoneId: Id,
     onNavigateToCreateEvent: (zoneId: Id) -> Unit,
     onNavigateToEventDetails: (eventId: Id) -> Unit,
+    onNavigateToUpdateZone: (zoneId: Id) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val zone = uiState.zone
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val showDeleteDialog = remember { mutableStateOf(false) }
+
+    if (showDeleteDialog.value) {
+        ConfirmActionDialog(
+            showDialog = showDeleteDialog,
+            onConfirm = viewModel::deleteZone,
+            title = "Delete Zone?",
+            text = "Are you sure you want to permanently delete this zone report? This action cannot be undone.",
+        )
+    }
+
+    LaunchedEffect(viewModel.events) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is ZoneDetailsEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
+                is ZoneDetailsEvent.ZoneDeleted -> onNavigateBack()
+            }
+        }
+    }
+
 
     LaunchedEffect(zoneId) {
         viewModel.loadZoneDetails(zoneId)
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { AppTopBar(title = "Zone Details", onNavigateBack = onNavigateBack) },
     ) { paddingValues ->
         Box(
@@ -66,7 +106,7 @@ fun ZoneDetailsScreen(
             contentAlignment = Alignment.Center,
         ) {
             when {
-                uiState.isLoading -> FullScreenLoading()
+                uiState.isLoading && zone == null -> FullScreenLoading()
                 uiState.error != null ->
                     ErrorState(
                         message = uiState.error!!,
@@ -75,34 +115,57 @@ fun ZoneDetailsScreen(
 
                 zone != null -> {
                     Column(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        Text("Zone #${zone.id.value}", style = MaterialTheme.typography.h4)
+                        DetailCard(title = "Description") {
+                            Text(
+                                text = zone.description.value,
+                                style = MaterialTheme.typography.body1
+                            )
+                        }
 
-                        DetailCard(title = "Details") {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                InfoRow(
-                                    icon = Icons.Default.Category,
-                                    text = zone.description.value,
-                                )
+                        DetailCard(title = "Information") {
+                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                 InfoRow(
                                     icon = Icons.Default.Report,
                                     text = "Reported by User #${zone.reporterId.value}",
                                 )
-                            }
-                        }
-
-                        DetailCard(title = "Status & Severity") {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                StatusBadge(
-                                    text = zone.status.name.replace('_', ' '),
-                                    backgroundColor = getStatusColor(zone.status),
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Flag,
+                                        contentDescription = "Status",
+                                        modifier = Modifier.padding(end = 16.dp),
+                                        tint = MaterialTheme.colors.primary
+                                    )
+                                    StatusBadge(
+                                        text = zone.status.name.replace('_', ' '),
+                                        backgroundColor = getStatusColor(zone.status)
+                                    )
+                                }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = "Severity",
+                                        modifier = Modifier.padding(end = 16.dp),
+                                        tint = MaterialTheme.colors.primary
+                                    )
+                                    StatusBadge(
+                                        text = zone.zoneSeverity.name,
+                                        backgroundColor = getSeverityColor(zone.zoneSeverity),
+                                        icon = Icons.Default.Warning
+                                    )
+                                }
+                                InfoRow(
+                                    icon = Icons.Default.DateRange,
+                                    text = "Created at: (to be implemented)",
                                 )
-                                StatusBadge(
-                                    text = zone.zoneSeverity.name,
-                                    backgroundColor = getSeverityColor(zone.zoneSeverity),
-                                    icon = Icons.Default.ErrorOutline,
+                                InfoRow(
+                                    icon = Icons.Default.Update,
+                                    text = "Last update: (to be implemented)",
                                 )
                             }
                         }
@@ -126,6 +189,30 @@ fun ZoneDetailsScreen(
                                             )
                                         }
                                     }
+                                }
+                            }
+                        }
+                        if (uiState.canUserManageZone) {
+                            DetailCard(title = "Actions") {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(
+                                        onClick = { onNavigateToUpdateZone(zone.id) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = !uiState.isLoading
+                                    ) {
+                                        Text("Edit Zone")
+                                    }
+                                    LoadingOutlinedButton(
+                                        onClick = { showDeleteDialog.value = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        isLoading = uiState.actionState == ZoneDetailsUiState.ActionState.DELETING,
+                                        enabled = !uiState.isActionInProgress,
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = MaterialTheme.colors.error,
+                                        ),
+                                        text = "Delete Zone",
+                                        loadingIndicatorColor = MaterialTheme.colors.error,
+                                    )
                                 }
                             }
                         }

@@ -41,6 +41,10 @@ sealed class AppRoute {
         val zoneId: Id,
     ) : AppRoute()
 
+    data class UpdateZone(
+        val zoneId: Id,
+    ) : AppRoute()
+
     data object Map : AppRoute()
 
     data object UserProfile : AppRoute()

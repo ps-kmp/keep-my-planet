@@ -28,7 +28,8 @@ import pt.isel.keepmyplanet.ui.register.RegisterScreen
 import pt.isel.keepmyplanet.ui.report.ReportZoneScreen
 import pt.isel.keepmyplanet.ui.stats.UserStatsScreen
 import pt.isel.keepmyplanet.ui.viewmodel.koinViewModel
-import pt.isel.keepmyplanet.ui.zone.ZoneDetailsScreen
+import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsScreen
+import pt.isel.keepmyplanet.ui.zone.update.UpdateZoneScreen
 
 @Composable
 fun App() {
@@ -191,8 +192,20 @@ fun App() {
                 onNavigateToCreateEvent = { appViewModel.navigate(AppRoute.CreateEvent(it)) },
                 onNavigateToEventDetails = { appViewModel.navigate(AppRoute.EventDetails(it)) },
                 onNavigateBack = { appViewModel.navigateBack() },
+                onNavigateToUpdateZone = { zoneId ->
+                    appViewModel.navigate(AppRoute.UpdateZone(zoneId))
+                },
             )
         }
+
+        is AppRoute.UpdateZone -> {
+            UpdateZoneScreen(
+                viewModel = koinViewModel(),
+                zoneId = route.zoneId,
+                onNavigateBack = { appViewModel.navigateBack() }
+            )
+        }
+
 
         is AppRoute.ReportZone -> {
             ReportZoneScreen(

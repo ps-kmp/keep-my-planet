@@ -83,6 +83,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.common.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
+import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.utils.getTileStreamProvider
@@ -248,26 +249,27 @@ fun MapScreen(
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Column(
-                        modifier = Modifier.padding(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(
-                            text = "Zone #${zone.id.value}",
-                            style = MaterialTheme.typography.subtitle2,
-                            fontWeight = FontWeight.Bold,
+                        StatusBadge(
+                            text = zone.zoneSeverity.name,
+                            backgroundColor = getSeverityColor(zone.zoneSeverity)
                         )
+
                         Text(
                             text = zone.description.value,
                             style = MaterialTheme.typography.body2,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
                         )
+
                         Box(
                             modifier = Modifier.fillMaxWidth(),
                             contentAlignment = Alignment.CenterEnd,
                         ) {
                             TextButton(onClick = { onNavigateToZoneDetails(zone.id) }) {
-                                Text("VIEW DETAILS")
+                                Text("VIEW DETAILS", color = Color(0xFF6200EE))
                             }
                         }
                     }
