@@ -35,12 +35,12 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 
 private const val ABOUT_TEXT =
     "A multiplatform system developed with Kotlin Multiplatform (KMP) that allows the " +
-        "identification and mapping of polluted zones, as well as organizing and participating in " +
-        "community cleanup events. The system provides an interactive interface where volunteers can " +
-        "report areas as polluted, share photos and descriptions of the conditions found, and " +
-        "create or join cleanup initiatives organized for these zones. KeepMyPlanet is the rallying " +
-        "point for community and environmental action, addressing a real and increasingly relevant " +
-        "and emerging problem."
+        "identification and mapping of polluted zones, as well as organizing and participating " +
+        "in community cleanup events. The system provides an interactive interface where " +
+        "volunteers can report areas as polluted, share photos and descriptions of the " +
+        "conditions found, and create or join cleanup initiatives organized for these zones. " +
+        "KeepMyPlanet is the rallying point for community and environmental action, addressing a " +
+        "real and increasingly relevant and emerging problem."
 
 @Composable
 fun AboutScreen(onNavigateBack: () -> Unit) {

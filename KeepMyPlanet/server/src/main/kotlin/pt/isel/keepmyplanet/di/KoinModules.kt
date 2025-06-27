@@ -1,3 +1,4 @@
+// FILE: server/src/main/kotlin/pt/isel/keepmyplanet/di/KoinModules.kt
 package pt.isel.keepmyplanet.di
 
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
@@ -58,22 +59,37 @@ fun appModule(application: Application) =
 
         single<Database> {
             val appConfig = application.environment.config
-            val driverClassName = appConfig.property("storage.driverClassName").getString()
-            val jdbcURL = appConfig.property("storage.jdbcURL").getString()
-            val user = appConfig.property("storage.user").getString()
-            val password = appConfig.property("storage.password").getString()
+            val databaseUrl = System.getenv("DATABASE_URL")
 
             val hikariConfig =
-                HikariConfig().apply {
-                    this.driverClassName = driverClassName
-                    this.jdbcUrl = jdbcURL
-                    this.username = user
-                    this.password = password
-                    maximumPoolSize = 10
-                    isAutoCommit = true
-                    transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-                    validate()
+                if (databaseUrl != null) {
+                    val dbUri = java.net.URI(databaseUrl)
+                    val (user, password) = dbUri.userInfo.split(":", limit = 2)
+                    val jdbcUrl =
+                        "jdbc:postgresql://${dbUri.host}:${dbUri.port}${dbUri.path}?sslmode=require"
+
+                    HikariConfig().apply {
+                        this.driverClassName = "org.postgresql.Driver"
+                        this.jdbcUrl = jdbcUrl
+                        this.username = user
+                        this.password = password
+                    }
+                } else {
+                    HikariConfig().apply {
+                        this.driverClassName =
+                            appConfig.property("storage.driverClassName").getString()
+                        this.jdbcUrl = appConfig.property("storage.jdbcURL").getString()
+                        this.username = appConfig.property("storage.user").getString()
+                        this.password = appConfig.property("storage.password").getString()
+                    }
                 }
+
+            hikariConfig.apply {
+                maximumPoolSize = 10
+                isAutoCommit = true
+                transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+                validate()
+            }
 
             val dataSource = HikariDataSource(hikariConfig)
             val driver = dataSource.asJdbcDriver()
@@ -170,7 +186,9 @@ fun appModule(application: Application) =
         // single<FileStorageService> { CloudinaryStorageService(get()) }
         single<FileStorageService> {
             val appConfig = get<io.ktor.server.config.ApplicationConfig>()
-            val baseUrl = appConfig.property("server.baseUrl").getString()
+            val baseUrl =
+                System.getenv("RENDER_EXTERNAL_URL")
+                    ?: appConfig.property("server.baseUrl").getString()
             LocalFileStorageService(baseUrl = baseUrl)
         }
 

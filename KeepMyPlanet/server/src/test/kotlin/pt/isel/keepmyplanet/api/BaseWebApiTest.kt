@@ -48,7 +48,8 @@ abstract class BaseWebApiTest {
     protected val fakeUserRepository = InMemoryUserRepository()
     protected val fakeZoneRepository = InMemoryZoneRepository()
     protected val fakeEventRepository = InMemoryEventRepository()
-    protected val fakeEventStateChangeRepository = InMemoryEventStateChangeRepository()
+    protected val fakeEventStateChangeRepository =
+        InMemoryEventStateChangeRepository(fakeUserRepository)
     protected val fakeMessageRepository = InMemoryMessageRepository()
     protected val fakePhotoRepository = InMemoryPhotoRepository()
     protected val chatSseService = ChatSseService()

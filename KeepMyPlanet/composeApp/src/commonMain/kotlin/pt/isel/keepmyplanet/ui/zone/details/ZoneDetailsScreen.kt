@@ -78,7 +78,9 @@ fun ZoneDetailsScreen(
             showDialog = showDeleteDialog,
             onConfirm = viewModel::deleteZone,
             title = "Delete Zone?",
-            text = "Are you sure you want to permanently delete this zone report? This action cannot be undone.",
+            text =
+                "Are you sure you want to permanently delete this zone report? " +
+                    "This action cannot be undone.",
         )
     }
 
@@ -204,7 +206,9 @@ fun ZoneDetailsScreen(
                                     LoadingOutlinedButton(
                                         onClick = { showDeleteDialog.value = true },
                                         modifier = Modifier.fillMaxWidth(),
-                                        isLoading = uiState.actionState == ZoneDetailsUiState.ActionState.DELETING,
+                                        isLoading =
+                                            uiState.actionState ==
+                                                ZoneDetailsUiState.ActionState.DELETING,
                                         enabled = !uiState.isActionInProgress,
                                         colors =
                                             ButtonDefaults.outlinedButtonColors(
