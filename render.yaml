@@ -5,12 +5,14 @@ services:
     plan: free
     region: oregon
     rootDir: KeepMyPlanet
-    dockerfilePath: ./KeepMyPlanet/server/Dockerfile
+    dockerfilePath: ./server/Dockerfile
     dockerContext: ./KeepMyPlanet
     healthCheckPath: /
     envVars:
       - key: KTOR_STORAGE_JDBCURL
-        value: "jdbc:postgresql://${kmp-db.host}:${kmp-db.port}/${kmp-db.databaseName}"
+        fromDatabase:
+          name: kmp-db
+          property: connectionString
       - key: KTOR_STORAGE_USER
         fromDatabase:
           name: kmp-db
@@ -28,16 +30,14 @@ services:
 
   - type: web
     name: kmp-webapp
-    runtime: static
+    runtime: docker
+    plan: free
     rootDir: KeepMyPlanet
-    buildCommand: |
-      ./gradlew :composeApp:wasmJsBrowserDistribution
-      sed -i "s|http://localhost:1904|${kmp-server.url}|g" ./composeApp/build/dist/wasmJs/productionExecutable/composeApp.js
-    staticPublishPath: ./composeApp/build/dist/wasmJs/productionExecutable
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    dockerfilePath: ./composeApp/Dockerfile
+    dockerContext: ./KeepMyPlanet
+    envVars:
+      - key: BACKEND_URL
+        value: ${kmp-server.url}
     buildFilter:
       paths:
         - "KeepMyPlanet/composeApp/**"
