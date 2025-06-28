@@ -9,4 +9,5 @@ data class MapUiState(
     val isReportingMode: Boolean = false,
     val error: String? = null,
     val isLocatingUser: Boolean = false,
+    val selectedZoneId: String? = null,
 ) : UiState

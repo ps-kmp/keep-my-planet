@@ -1,34 +1,163 @@
 package pt.isel.keepmyplanet.ui.map
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
+import ovh.plrapps.mapcompose.api.ExperimentalClusteringApi
+import ovh.plrapps.mapcompose.api.addClusterer
+import ovh.plrapps.mapcompose.api.addLayer
+import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.hasMarker
+import ovh.plrapps.mapcompose.api.idleStateFlow
+import ovh.plrapps.mapcompose.api.moveMarker
+import ovh.plrapps.mapcompose.api.onMarkerClick
+import ovh.plrapps.mapcompose.api.onTap
+import ovh.plrapps.mapcompose.api.removeMarker
+import ovh.plrapps.mapcompose.api.scrollTo
+import ovh.plrapps.mapcompose.api.visibleBoundingBox
+import ovh.plrapps.mapcompose.ui.layout.Forced
+import ovh.plrapps.mapcompose.ui.state.MapState
+import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.domain.zone.Location
+import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.mapper.zone.toZone
+import pt.isel.keepmyplanet.ui.components.getSeverityColor
+import pt.isel.keepmyplanet.ui.map.MapConfiguration.DEFAULT_LAT
+import pt.isel.keepmyplanet.ui.map.MapConfiguration.DEFAULT_LON
+import pt.isel.keepmyplanet.ui.map.MapConfiguration.INITIAL_SCALE
+import pt.isel.keepmyplanet.ui.map.MapConfiguration.MAP_DIMENSION
+import pt.isel.keepmyplanet.ui.map.MapConfiguration.MAX_ZOOM
+import pt.isel.keepmyplanet.ui.map.MapConfiguration.USER_LOCATION_MARKER_ID
+import pt.isel.keepmyplanet.ui.map.MapConfiguration.ZONE_CLUSTER_ID
+import pt.isel.keepmyplanet.ui.map.components.UserLocationMarker
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.map.states.MapUiState
 import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
+import pt.isel.keepmyplanet.utils.getTileStreamProvider
 import pt.isel.keepmyplanet.utils.haversineDistance
+import pt.isel.keepmyplanet.utils.latToY
+import pt.isel.keepmyplanet.utils.lonToX
 import pt.isel.keepmyplanet.utils.xToLon
 import pt.isel.keepmyplanet.utils.yToLat
 
+@OptIn(FlowPreview::class, ExperimentalClusteringApi::class)
 class MapViewModel(
     private val zoneApi: ZoneApi,
 ) : BaseViewModel<MapUiState>(MapUiState()) {
     private val _userLocation = MutableStateFlow<Location?>(null)
     val userLocation = _userLocation.asStateFlow()
 
-    override fun handleErrorWithMessage(message: String) {
-        sendEvent(MapEvent.ShowSnackbar(message))
+    private val displayedZoneIds = MutableStateFlow<Set<String>>(emptySet())
+
+    val mapState: MapState =
+        MapState(MAX_ZOOM, MAP_DIMENSION, MAP_DIMENSION) {
+            scale(INITIAL_SCALE)
+            scroll(lonToX(DEFAULT_LON), latToY(DEFAULT_LAT))
+            minimumScaleMode(Forced(0.2))
+            preloadingPadding(128)
+        }
+
+    private var isInitialLocationSet = false
+
+    init {
+        initializeMap()
     }
 
-    fun onMapIdle(bbox: ovh.plrapps.mapcompose.api.BoundingBox) {
+    override fun onCleared() {
+        super.onCleared()
+        mapState.shutdown()
+    }
+
+    private fun initializeMap() {
+        viewModelScope.launch {
+            mapState.addLayer(getTileStreamProvider())
+            setupClusterer()
+            setupMapListeners()
+
+            mapState
+                .idleStateFlow()
+                .debounce(500L)
+                .distinctUntilChanged()
+                .collectLatest { isIdle ->
+                    if (isIdle) {
+                        onMapIdle()
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            userLocation.collectLatest { location ->
+                if (location != null) {
+                    val x = lonToX(location.longitude)
+                    val y = latToY(location.latitude)
+                    if (mapState.hasMarker(USER_LOCATION_MARKER_ID)) {
+                        mapState.moveMarker(USER_LOCATION_MARKER_ID, x, y)
+                    } else {
+                        mapState.addMarker(USER_LOCATION_MARKER_ID, x, y) { UserLocationMarker() }
+                    }
+                    if (!isInitialLocationSet) {
+                        mapState.scrollTo(x, y, 16.0)
+                        isInitialLocationSet = true
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            uiState.collectLatest { state ->
+                updateZoneMarkersOnMap(state.zones)
+            }
+        }
+    }
+
+    private fun setupClusterer() {
+        mapState.addClusterer(ZONE_CLUSTER_ID) { clusterIds ->
+            {
+                Box(
+                    modifier =
+                        Modifier.size(40.dp).background(MaterialTheme.colors.primary, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = clusterIds.size.toString(),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun setupMapListeners() {
+        mapState.onMarkerClick { id, _, _ -> onMarkerTapped(id) }
+        mapState.onTap { _, _ -> hideCallout() }
+    }
+
+    suspend fun onMapIdle() {
+        val bbox = mapState.visibleBoundingBox()
         val centerLat = yToLat((bbox.yTop + bbox.yBottom) / 2)
         val centerLon = xToLon((bbox.xLeft + bbox.xRight) / 2)
-
         val cornerLat = yToLat(bbox.yTop)
         val cornerLon = xToLon(bbox.xLeft)
-
         val radiusInMeters = haversineDistance(centerLat, centerLon, cornerLat, cornerLon)
 
         if (radiusInMeters > 50_000) return
@@ -38,11 +167,9 @@ class MapViewModel(
             onFinally = { copy(isLoading = false) },
             block = { zoneApi.findZonesByLocation(centerLat, centerLon, radiusInMeters) },
             onSuccess = { response ->
-                setState {
-                    val newZones = response.map { it.toZone() }
-                    val updatedZones = (this.zones + newZones).distinctBy { it.id }
-                    copy(zones = updatedZones, error = null)
-                }
+                val newZones = response.map { it.toZone() }
+                val updatedZones = (currentState.zones + newZones).distinctBy { it.id }
+                setState { copy(zones = updatedZones, error = null) }
             },
             onError = {
                 val errorMsg = getErrorMessage("Failed to load zones", it)
@@ -55,27 +182,71 @@ class MapViewModel(
         )
     }
 
+    private fun updateZoneMarkersOnMap(zones: List<Zone>) {
+        val newZonesMap = zones.associateBy { it.id.value.toString() }
+        val newZoneIds = newZonesMap.keys
+        val currentZoneIds = displayedZoneIds.value
+
+        val zoneIdsToRemove = currentZoneIds - newZoneIds
+        val zoneIdsToAdd = newZoneIds - currentZoneIds
+
+        zoneIdsToRemove.forEach { mapState.removeMarker(it) }
+
+        zoneIdsToAdd.forEach { id ->
+            val zone = newZonesMap[id] ?: return@forEach
+            mapState.addMarker(
+                id = zone.id.value.toString(),
+                x = lonToX(zone.location.longitude),
+                y = latToY(zone.location.latitude),
+                renderingStrategy = RenderingStrategy.Clustering(ZONE_CLUSTER_ID),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Zone: ${zone.description.value}",
+                    tint = getSeverityColor(zone.zoneSeverity),
+                    modifier = Modifier.size(36.dp),
+                )
+            }
+        }
+        displayedZoneIds.value = newZoneIds
+    }
+
+    fun onMarkerTapped(id: String) {
+        if (id == USER_LOCATION_MARKER_ID) return
+
+        if (currentState.isReportingMode) {
+            hideCallout()
+            return
+        }
+        setState { copy(selectedZoneId = id) }
+    }
+
+    fun hideCallout() {
+        setState { copy(selectedZoneId = null) }
+    }
+
     fun enterReportingMode() =
         setState {
+            hideCallout()
             copy(isReportingMode = true)
         }
 
-    fun exitReportingMode() =
-        setState {
-            copy(isReportingMode = false)
-        }
+    fun exitReportingMode() = setState { copy(isReportingMode = false) }
 
     fun onLocationUpdateReceived(
         latitude: Double,
         longitude: Double,
     ) {
         _userLocation.value = Location(latitude, longitude)
-        sendEvent(MapEvent.CenterOnUserLocation)
         setState { copy(isLocatingUser = false) }
     }
 
     fun requestLocationPermissionOrUpdate() {
         setState { copy(isLocatingUser = true) }
         sendEvent(MapEvent.RequestLocation)
+    }
+
+    override fun handleErrorWithMessage(message: String) {
+        sendEvent(MapEvent.ShowSnackbar(message))
     }
 }
