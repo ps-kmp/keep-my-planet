@@ -41,6 +41,7 @@ import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.mapper.zone.toZone
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
+import pt.isel.keepmyplanet.ui.components.shouldShowUserLocationMarker
 import pt.isel.keepmyplanet.ui.map.MapConfiguration.DEFAULT_LAT
 import pt.isel.keepmyplanet.ui.map.MapConfiguration.DEFAULT_LON
 import pt.isel.keepmyplanet.ui.map.MapConfiguration.INITIAL_SCALE
@@ -109,10 +110,14 @@ class MapViewModel(
                 if (location != null) {
                     val x = lonToX(location.longitude)
                     val y = latToY(location.latitude)
-                    if (mapState.hasMarker(USER_LOCATION_MARKER_ID)) {
-                        mapState.moveMarker(USER_LOCATION_MARKER_ID, x, y)
-                    } else {
-                        mapState.addMarker(USER_LOCATION_MARKER_ID, x, y) { UserLocationMarker() }
+                    if (shouldShowUserLocationMarker) {
+                        if (mapState.hasMarker(USER_LOCATION_MARKER_ID)) {
+                            mapState.moveMarker(USER_LOCATION_MARKER_ID, x, y)
+                        } else {
+                            mapState.addMarker(USER_LOCATION_MARKER_ID, x, y) {
+                                UserLocationMarker()
+                            }
+                        }
                     }
                     if (!isInitialLocationSet) {
                         mapState.scrollTo(x, y, 16.0)

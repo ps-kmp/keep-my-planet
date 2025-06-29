@@ -14,3 +14,5 @@ interface GpsLocationProvider {
 expect fun rememberGpsLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
 ): GpsLocationProvider
+
+expect val shouldShowUserLocationMarker: Boolean

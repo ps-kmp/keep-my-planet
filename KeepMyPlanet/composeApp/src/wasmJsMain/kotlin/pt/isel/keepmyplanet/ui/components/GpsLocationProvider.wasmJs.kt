@@ -30,6 +30,8 @@ actual fun rememberGpsLocationProvider(
     }
 }
 
+actual val shouldShowUserLocationMarker: Boolean = false
+
 private fun jsRequestLocation(
     onSuccess: (latitude: Double, longitude: Double) -> Unit,
     onError: (code: Int, message: String) -> Unit,

@@ -60,3 +60,5 @@ actual fun rememberGpsLocationProvider(
         }
     }
 }
+
+actual val shouldShowUserLocationMarker: Boolean = false
