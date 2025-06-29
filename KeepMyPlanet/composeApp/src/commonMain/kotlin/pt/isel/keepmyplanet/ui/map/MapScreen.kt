@@ -66,6 +66,7 @@ import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.rememberGpsLocationProvider
+import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
@@ -114,8 +115,7 @@ fun MapScreen(
                     }
                 }
 
-                is MapEvent.CenterOnUserLocation -> {
-                }
+                is MapEvent.CenterOnUserLocation -> {}
             }
         }
     }
@@ -247,6 +247,19 @@ fun MapScreen(
         ) {
             MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
 
+            MapSearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChanged,
+                onClear = viewModel::clearSearch,
+                searchResults = uiState.searchResults,
+                isSearching = uiState.isSearching,
+                onPlaceSelected = viewModel::onPlaceSelected,
+                modifier =
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+
             if (uiState.isLoading && uiState.zones.isEmpty()) {
                 FullScreenLoading()
             } else if (uiState.error != null && uiState.zones.isEmpty()) {
@@ -256,7 +269,8 @@ fun MapScreen(
             } else {
                 if (uiState.isLoading) {
                     Surface(
-                        modifier = Modifier.align(Alignment.TopCenter).padding(top = 16.dp),
+                        modifier =
+                            Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp),
                         shape = RoundedCornerShape(16.dp),
                         elevation = 4.dp,
                     ) {

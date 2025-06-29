@@ -36,7 +36,9 @@ import ovh.plrapps.mapcompose.api.visibleBoundingBox
 import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
 import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
+import pt.isel.keepmyplanet.data.api.GeocodingApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
+import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.mapper.zone.toZone
@@ -63,11 +65,13 @@ import pt.isel.keepmyplanet.utils.yToLat
 @OptIn(FlowPreview::class, ExperimentalClusteringApi::class)
 class MapViewModel(
     private val zoneApi: ZoneApi,
+    private val geocodingApi: GeocodingApi,
 ) : BaseViewModel<MapUiState>(MapUiState()) {
     private val _userLocation = MutableStateFlow<Location?>(null)
     val userLocation = _userLocation.asStateFlow()
 
     private val displayedZoneIds = MutableStateFlow<Set<String>>(emptySet())
+    private val searchQueryFlow = MutableStateFlow("")
 
     val mapState: MapState =
         MapState(MAX_ZOOM, MAP_DIMENSION, MAP_DIMENSION) {
@@ -101,6 +105,19 @@ class MapViewModel(
                 .collectLatest { isIdle ->
                     if (isIdle) {
                         onMapIdle()
+                    }
+                }
+        }
+
+        viewModelScope.launch {
+            searchQueryFlow
+                .debounce(500L)
+                .distinctUntilChanged()
+                .collectLatest { query ->
+                    if (query.length < 3) {
+                        setState { copy(searchResults = emptyList(), isSearching = false) }
+                    } else {
+                        searchAddress(query)
                     }
                 }
         }
@@ -253,5 +270,37 @@ class MapViewModel(
 
     override fun handleErrorWithMessage(message: String) {
         sendEvent(MapEvent.ShowSnackbar(message))
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        setState { copy(searchQuery = query) }
+        searchQueryFlow.value = query
+    }
+
+    private fun searchAddress(query: String) {
+        launchWithResult(
+            onStart = { copy(isSearching = true) },
+            onFinally = { copy(isSearching = false) },
+            block = { geocodingApi.search(query) },
+            onSuccess = { results -> setState { copy(searchResults = results) } },
+            onError = {
+                handleErrorWithMessage(getErrorMessage("Failed to search for address", it))
+                setState { copy(searchResults = emptyList()) }
+            },
+        )
+    }
+
+    fun onPlaceSelected(place: Place) {
+        viewModelScope.launch {
+            val x = lonToX(place.longitude)
+            val y = latToY(place.latitude)
+            mapState.scrollTo(x, y, 16.5)
+            clearSearch()
+        }
+    }
+
+    fun clearSearch() {
+        setState { copy(searchQuery = "", searchResults = emptyList(), isSearching = false) }
+        searchQueryFlow.value = ""
     }
 }

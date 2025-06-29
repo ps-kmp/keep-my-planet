@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.ui.map.states
 
+import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.ui.viewmodel.UiState
 
@@ -10,4 +11,7 @@ data class MapUiState(
     val error: String? = null,
     val isLocatingUser: Boolean = false,
     val selectedZoneId: String? = null,
+    val searchQuery: String = "",
+    val searchResults: List<Place> = emptyList(),
+    val isSearching: Boolean = false,
 ) : UiState

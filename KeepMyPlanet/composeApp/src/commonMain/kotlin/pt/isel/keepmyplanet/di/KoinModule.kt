@@ -8,6 +8,7 @@ import pt.isel.keepmyplanet.data.api.AuthApi
 import pt.isel.keepmyplanet.data.api.ChatApi
 import pt.isel.keepmyplanet.data.api.DeviceApi
 import pt.isel.keepmyplanet.data.api.EventApi
+import pt.isel.keepmyplanet.data.api.GeocodingApi
 import pt.isel.keepmyplanet.data.api.PhotoApi
 import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
@@ -44,6 +45,7 @@ val appModule =
         single { ZoneApi(get()) }
         single { PhotoApi(get()) }
         single { DeviceApi(get()) }
+        single { GeocodingApi(get()) }
 
         // ViewModels
         single { AppViewModel(get()) }
@@ -53,7 +55,7 @@ val appModule =
         factoryOf(::EventDetailsViewModel)
         factoryOf(::EventStatusHistoryViewModel)
         factoryOf(::EventFormViewModel)
-        factoryOf(::MapViewModel)
+        factory { MapViewModel(get(), get()) }
         factoryOf(::ZoneDetailsViewModel)
         factoryOf(::UpdateZoneViewModel)
         factoryOf(::ReportZoneViewModel)
