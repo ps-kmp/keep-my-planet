@@ -91,6 +91,10 @@ fun MapScreen(
             viewModel.onLocationUpdateReceived(lat, lon)
         }
 
+    LaunchedEffect(Unit) {
+        viewModel.requestLocationPermissionOrUpdate()
+    }
+
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -98,6 +102,7 @@ fun MapScreen(
                     snackbarHostState.currentSnackbarData?.dismiss()
                     snackbarHostState.showSnackbar(event.message)
                 }
+
                 is MapEvent.RequestLocation -> {
                     if (locationProvider.isPermissionGranted) {
                         locationProvider.requestLocationUpdate()
@@ -108,6 +113,7 @@ fun MapScreen(
                         )
                     }
                 }
+
                 is MapEvent.CenterOnUserLocation -> {
                 }
             }
@@ -132,9 +138,8 @@ fun MapScreen(
                     Card(
                         modifier =
                             Modifier
-                                .padding(
-                                    10.dp,
-                                ).shadow(4.dp, RoundedCornerShape(8.dp))
+                                .padding(10.dp)
+                                .shadow(4.dp, RoundedCornerShape(8.dp))
                                 .widthIn(max = 240.dp),
                         shape = RoundedCornerShape(8.dp),
                     ) {

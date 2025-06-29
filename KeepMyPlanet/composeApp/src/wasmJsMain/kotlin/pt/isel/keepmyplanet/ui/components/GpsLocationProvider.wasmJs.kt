@@ -1,35 +1,55 @@
 package pt.isel.keepmyplanet.ui.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 
 @Composable
 actual fun rememberGpsLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
-): GpsLocationProvider =
-    object : GpsLocationProvider {
-        // The browser handles permissions implicitly on each request.
-        override val isPermissionGranted: Boolean = true
+): GpsLocationProvider {
+    val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
 
-        override fun requestPermission() {
-            // No-op, browser handles it.
-        }
+    return remember {
+        object : GpsLocationProvider {
+            // The browser handles permissions implicitly on each request.
+            override val isPermissionGranted: Boolean = true
 
-        override fun requestLocationUpdate() {
-            TODO()
-            /*
-            if (window.navigator.geolocation == null) {
-                console.error("Geolocation is not supported by this browser.")
-                return
+            override fun requestPermission() {
+                // No-op, browser handles it.
             }
 
-            window.navigator.geolocation.getCurrentPosition(
-                success = { position: GeolocationPosition ->
-                    onLocationUpdated(position.coords.latitude, position.coords.longitude)
-                },
-                error = { error: GeolocationPositionError ->
-                    console.error("Error getting location: Code ${error.code} - ${error.message}")
-                },
-            )
-             */
+            override fun requestLocationUpdate() {
+                jsRequestLocation(
+                    onSuccess = { lat, lon -> onLocationUpdatedState(lat, lon) },
+                    onError = { _, _ -> },
+                )
+            }
         }
     }
+}
+
+private fun jsRequestLocation(
+    onSuccess: (latitude: Double, longitude: Double) -> Unit,
+    onError: (code: Int, message: String) -> Unit,
+): Unit =
+    js(
+        """{
+            if (!('geolocation' in navigator)) {
+                console.error('Geolocation is not supported by this browser.');
+                rnError(-1, 'Geolocation is not supported by this browser.');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    onSuccess(position.coords.latitude, position.coords.longitude);
+                },
+                (error) => {
+                    console.error(`Error getting location`);
+                    onError(error.code, error.message);
+                }
+            );
+        }""",
+    )
