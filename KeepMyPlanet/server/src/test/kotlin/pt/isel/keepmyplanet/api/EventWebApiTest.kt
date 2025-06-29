@@ -32,23 +32,32 @@ import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
+import pt.isel.keepmyplanet.service.NotificationService
 import pt.isel.keepmyplanet.utils.minus
 import pt.isel.keepmyplanet.utils.now
 import pt.isel.keepmyplanet.utils.plus
 
 class EventWebApiTest : BaseWebApiTest() {
+    private val notificationService =
+        NotificationService(
+            userDeviceRepository = fakeUserDeviceRepository,
+            config = testConfigForNotifications,
+        )
     private val eventService =
         EventService(
             eventRepository = fakeEventRepository,
             userRepository = fakeUserRepository,
             zoneRepository = fakeZoneRepository,
             messageRepository = fakeMessageRepository,
+            notificationService = notificationService,
+            userDeviceRepository = fakeUserDeviceRepository,
         )
     private val eventChangeStateService =
         EventStateChangeService(
             eventRepository = fakeEventRepository,
             zoneRepository = fakeZoneRepository,
             eventStateChangeRepository = fakeEventStateChangeRepository,
+            notificationService = notificationService,
         )
 
     private val futureStart = now().plus(7.days)

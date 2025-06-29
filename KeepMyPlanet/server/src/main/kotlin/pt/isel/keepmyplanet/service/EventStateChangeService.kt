@@ -19,6 +19,7 @@ class EventStateChangeService(
     private val eventRepository: EventRepository,
     private val zoneRepository: ZoneRepository,
     private val eventStateChangeRepository: EventStateChangeRepository,
+    private val notificationService: NotificationService,
 ) {
     suspend fun changeEventStatus(
         eventId: Id,
@@ -33,26 +34,18 @@ class EventStateChangeService(
                     "User $requestingUserId is not authorized to change event status.",
                 )
             }
-
             if (!isValidTransition(event.status, newStatus)) {
                 throw ConflictException("Invalid status transition: ${event.status} → $newStatus.")
             }
 
             val now = now()
-
             val updatedEvent =
                 if (newStatus == EventStatus.COMPLETED && event.period.end == null) {
-                    event.copy(
-                        status = newStatus,
-                        period = event.period.copy(end = now),
-                    )
+                    event.copy(status = newStatus, period = event.period.copy(end = now))
                 } else {
-                    event.copy(
-                        status = newStatus,
-                    )
+                    event.copy(status = newStatus)
                 }
             eventRepository.update(updatedEvent)
-
             handleZoneStatusChange(event, newStatus)
 
             val stateChange =
@@ -64,6 +57,19 @@ class EventStateChangeService(
                     changeTime = now,
                 )
             eventStateChangeRepository.save(stateChange)
+
+            if (newStatus == EventStatus.CANCELLED) {
+                val notificationData =
+                    mapOf(
+                        "title" to "Event Cancelled: ${event.title.value}",
+                        "body" to
+                            "The event '${event.title.value}' has been cancelled by the organizer.",
+                        "eventId" to event.id.value.toString(),
+                        "type" to "EVENT_CANCELLED",
+                    )
+                val topic = "event_${event.id.value}"
+                notificationService.sendNotificationToTopic(topic, notificationData)
+            }
 
             updatedEvent
         }

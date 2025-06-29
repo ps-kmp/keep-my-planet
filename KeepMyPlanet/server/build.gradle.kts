@@ -33,6 +33,7 @@ ktlint {
 dependencies {
     // project dependencies
     implementation(projects.shared)
+    implementation(libs.firebase.admin)
 
     implementation(libs.cryptography.core)
 
@@ -47,6 +48,8 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.sse)
     implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.client.cio.jvm)
+    implementation(libs.ktor.client.content.negotiation)
 
     // database
     implementation(libs.sqldelight.runtime)
@@ -61,6 +64,7 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
 
     implementation(libs.koin.ktor)
+    implementation(libs.google.auth.library.oauth2.http)
 
     // logging
     implementation(libs.logback.classic)

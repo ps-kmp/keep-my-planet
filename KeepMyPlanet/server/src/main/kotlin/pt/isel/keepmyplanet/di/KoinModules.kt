@@ -1,4 +1,3 @@
-// FILE: server/src/main/kotlin/pt/isel/keepmyplanet/di/KoinModules.kt
 package pt.isel.keepmyplanet.di
 
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
@@ -11,12 +10,14 @@ import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.EventStateChangeRepository
 import pt.isel.keepmyplanet.repository.MessageRepository
 import pt.isel.keepmyplanet.repository.PhotoRepository
+import pt.isel.keepmyplanet.repository.UserDeviceRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseEventRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseEventStateChangeRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseMessageRepository
 import pt.isel.keepmyplanet.repository.database.DatabasePhotoRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseUserDeviceRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseUserRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseZoneRepository
 import pt.isel.keepmyplanet.repository.database.adapters.DescriptionAdapter
@@ -40,6 +41,7 @@ import pt.isel.keepmyplanet.service.FileStorageService
 import pt.isel.keepmyplanet.service.JwtService
 import pt.isel.keepmyplanet.service.LocalFileStorageService
 import pt.isel.keepmyplanet.service.MessageService
+import pt.isel.keepmyplanet.service.NotificationService
 import pt.isel.keepmyplanet.service.PhotoService
 import pt.isel.keepmyplanet.service.UserService
 import pt.isel.keepmyplanet.service.ZoneService
@@ -49,6 +51,7 @@ import ptiselkeepmyplanetdb.Event_state_changes
 import ptiselkeepmyplanetdb.Events
 import ptiselkeepmyplanetdb.Messages
 import ptiselkeepmyplanetdb.Photos
+import ptiselkeepmyplanetdb.User_devices
 import ptiselkeepmyplanetdb.Users
 import ptiselkeepmyplanetdb.Zone_photos
 import ptiselkeepmyplanetdb.Zones
@@ -168,6 +171,12 @@ fun appModule(application: Application) =
                         changed_byAdapter = IdAdapter,
                         change_timeAdapter = LocalDateTimeAdapter,
                     ),
+                user_devicesAdapter =
+                    User_devices.Adapter(
+                        idAdapter = IdAdapter,
+                        user_idAdapter = IdAdapter,
+                        created_atAdapter = LocalDateTimeAdapter,
+                    ),
             )
         }
 
@@ -179,6 +188,9 @@ fun appModule(application: Application) =
         }
         single<MessageRepository> { DatabaseMessageRepository(get<Database>().messageQueries) }
         single<PhotoRepository> { DatabasePhotoRepository(get<Database>().photoQueries) }
+        single<UserDeviceRepository> {
+            DatabaseUserDeviceRepository(get<Database>().userDeviceQueries)
+        }
 
         single { JwtService(get()) }
         single<PasswordHasher> { Pbkdf2PasswordHasher() }
@@ -195,8 +207,9 @@ fun appModule(application: Application) =
         single { AuthService(get(), get(), get()) }
         single { UserService(get(), get(), get(), get()) }
         single { ZoneService(get(), get(), get(), get()) }
-        single { EventService(get(), get(), get(), get()) }
-        single { EventStateChangeService(get(), get(), get()) }
-        single { MessageService(get(), get(), get(), get()) }
+        single { EventService(get(), get(), get(), get(), get(), get()) }
+        single { EventStateChangeService(get(), get(), get(), get()) }
+        single { MessageService(get(), get(), get(), get(), get()) }
         single { PhotoService(get(), get(), get()) }
+        single { NotificationService(get(), get()) }
     }

@@ -6,6 +6,7 @@ import org.koin.dsl.module
 import pt.isel.keepmyplanet.AppViewModel
 import pt.isel.keepmyplanet.data.api.AuthApi
 import pt.isel.keepmyplanet.data.api.ChatApi
+import pt.isel.keepmyplanet.data.api.DeviceApi
 import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.data.api.PhotoApi
 import pt.isel.keepmyplanet.data.api.UserApi
@@ -42,6 +43,7 @@ val appModule =
         single { ChatApi(get()) }
         single { ZoneApi(get()) }
         single { PhotoApi(get()) }
+        single { DeviceApi(get()) }
 
         // ViewModels
         single { AppViewModel(get()) }

@@ -38,6 +38,7 @@ import pt.isel.keepmyplanet.repository.memory.InMemoryEventRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryEventStateChangeRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryMessageRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryPhotoRepository
+import pt.isel.keepmyplanet.repository.memory.InMemoryUserDeviceRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryZoneRepository
 import pt.isel.keepmyplanet.security.Pbkdf2PasswordHasher
@@ -52,8 +53,12 @@ abstract class BaseWebApiTest {
         InMemoryEventStateChangeRepository(fakeUserRepository)
     protected val fakeMessageRepository = InMemoryMessageRepository()
     protected val fakePhotoRepository = InMemoryPhotoRepository()
+    protected val fakeUserDeviceRepository = InMemoryUserDeviceRepository()
     protected val chatSseService = ChatSseService()
     protected val passwordHasher = Pbkdf2PasswordHasher()
+
+    protected val testConfigForNotifications =
+        MapApplicationConfig("fcm.projectId" to "test-project-id")
 
     protected val testJwtSecret = "test-jwt-secret-for-ktor-tests"
     protected val testJwtIssuer = "test-issuer-for-ktor-tests"
@@ -67,6 +72,7 @@ abstract class BaseWebApiTest {
         fakeEventRepository.clear()
         fakeMessageRepository.clear()
         fakePhotoRepository.clear()
+        fakeUserDeviceRepository.clear()
     }
 
     protected fun generateTestToken(

@@ -36,3 +36,6 @@ CREATE INDEX IF NOT EXISTS idx_ep_user_id ON event_participants(user_id);
 
 -- Indexes for zone_photos join table
 CREATE INDEX IF NOT EXISTS idx_zp_photo_id ON zone_photos(photo_id);
+
+-- Indexes for user_devices table
+CREATE INDEX IF NOT EXISTS idx_ud_user_id ON user_devices(user_id);

@@ -1,6 +1,7 @@
 [versions]
 # Project
 agp = "8.10.1"
+googleAuthLibraryOauth2Http = "1.24.0"
 kotlin = "2.2.0"
 compose-multiplatform = "1.8.1"
 ktor = "3.2.0"
@@ -30,12 +31,16 @@ mlkit-barcode-scanning = "17.3.0"
 cloudinary = "1.39.0"
 coil = "3.2.0"
 koin = "4.1.0"
+firebase = "33.16.0"
+firebase-admin = "9.5.0"
+google-services = "4.4.3"
 
 # Tooling
 ktlint = "12.3.0"
 
 [libraries]
 # Kotlinx
+google-auth-library-oauth2-http = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "googleAuthLibraryOauth2Http" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
@@ -44,6 +49,7 @@ ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
 
 # Ktor - Client
 ktor-client-core = { module = "io.ktor:ktor-client-core" }
+ktor-client-cio-jvm = { module = "io.ktor:ktor-client-cio-jvm" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging" }
@@ -84,7 +90,9 @@ androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", versi
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "androidx-camera" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist-permissions" }
 google-playservices-location = { module = "com.google.android.gms:play-services-location", version.ref = "google-playservices-location" }
-
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging-ktx" }
+firebase-admin = { group = "com.google.firebase", name = "firebase-admin", version.ref = "firebase-admin" }
 
 # Database
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
@@ -119,6 +127,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

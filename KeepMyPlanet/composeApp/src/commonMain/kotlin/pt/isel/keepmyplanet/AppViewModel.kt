@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.Title
+import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.navigation.AppRoute
@@ -92,4 +95,15 @@ class AppViewModel(
         } else {
             AppRoute.Login
         }
+
+    fun handleNotificationNavigation(eventId: String) {
+        val eventIdAsUInt = eventId.toUIntOrNull() ?: return
+        val eventIdDomain = Id(eventIdAsUInt)
+        val placeholderTitle = Title("Event Chat")
+        val chatInfo = ChatInfo(eventIdDomain, placeholderTitle)
+
+        if (userSession.value != null) {
+            navigate(AppRoute.Chat(chatInfo))
+        }
+    }
 }

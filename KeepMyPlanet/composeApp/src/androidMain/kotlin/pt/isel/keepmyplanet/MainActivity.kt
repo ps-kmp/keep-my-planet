@@ -1,14 +1,28 @@
 package pt.isel.keepmyplanet
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import org.koin.compose.koinInject
+import androidx.lifecycle.lifecycleScope
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.get
 import org.koin.core.context.startKoin
+import pt.isel.keepmyplanet.data.api.DeviceApi
 import pt.isel.keepmyplanet.di.appModule
 
 class KeepMyPlanetApplication : Application() {
@@ -17,19 +31,95 @@ class KeepMyPlanetApplication : Application() {
         startKoin {
             modules(appModule)
         }
+        createNotificationChannel()
+    }
+
+    private fun createNotificationChannel() {
+        val name = "KeepMyPlanet Channel"
+        val descriptionText = "Notifications for event updates and messages"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel =
+            NotificationChannel(FirebasePushNotificationService.CHANNEL_ID, name, importance)
+                .apply { description = descriptionText }
+        val notificationManager: NotificationManager =
+            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 class MainActivity : ComponentActivity() {
+    companion object {
+        const val EXTRA_EVENT_ID = "event_id"
+    }
+
+    private val deviceApi: DeviceApi by lazy { get() }
+    private val appViewModel: AppViewModel by lazy { get() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        handleIntent(intent)
+
         setContent {
-            val appViewModel: AppViewModel = koinInject()
             val navStack by appViewModel.navStack.collectAsState()
+            val userSession by appViewModel.userSession.collectAsState()
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val notificationPermissionState =
+                    rememberPermissionState(
+                        android.Manifest.permission.POST_NOTIFICATIONS,
+                    )
+                if (!notificationPermissionState.status.isGranted) {
+                    LaunchedEffect(Unit) {
+                        notificationPermissionState.launchPermissionRequest()
+                    }
+                }
+            }
+
+            LaunchedEffect(userSession) {
+                if (userSession != null) {
+                    registerDeviceToken()
+                }
+            }
+
             BackHandler(enabled = navStack.size > 1) {
                 appViewModel.navigateBack()
             }
             App()
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        intent?.getStringExtra(EXTRA_EVENT_ID)?.let { eventId ->
+            Log.d("NAV_FROM_NOTIF", "Received eventId: $eventId, navigating...")
+            appViewModel.handleNotificationNavigation(eventId)
+        }
+    }
+
+    private fun registerDeviceToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(
+            OnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w("FCM_REG", "Fetching FCM registration token failed", task.exception)
+                    return@OnCompleteListener
+                }
+
+                val token = task.result
+                Log.d("FCM_REG", "Token is $token. Registering with server.")
+
+                lifecycleScope.launch {
+                    deviceApi
+                        .registerDevice(token, "ANDROID")
+                        .onSuccess { Log.d("FCM_REG", "Server registration successful.") }
+                        .onFailure { Log.e("FCM_REG", "Server registration failed.", it) }
+                }
+            },
+        )
     }
 }

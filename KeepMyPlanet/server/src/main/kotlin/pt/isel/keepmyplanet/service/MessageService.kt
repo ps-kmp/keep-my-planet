@@ -20,6 +20,7 @@ class MessageService(
     private val eventRepository: EventRepository,
     private val userRepository: UserRepository,
     private val chatSseService: ChatSseService,
+    private val notificationService: NotificationService,
 ) {
     suspend fun getAllMessagesFromEvent(eventId: Id): Result<List<Message>> =
         runCatching {
@@ -46,22 +47,16 @@ class MessageService(
     ): Result<Message> =
         runCatching {
             val event = findEventOrFail(eventId)
-
             if (event.status == EventStatus.CANCELLED || event.status == EventStatus.COMPLETED) {
                 throw ConflictException("Cannot add messages to a ${event.status} event")
             }
-
             if (senderId != event.organizerId && senderId !in event.participantsIds) {
                 throw AuthorizationException(
                     "User '$senderId' must be the organizer or a participant to send messages.",
                 )
             }
-
-            val senderName =
-                userRepository.getById(senderId)
-                    ?: throw NotFoundException(
-                        "Could not find user details for sender '${senderId.value}'.",
-                    )
+            val sender =
+                userRepository.getById(senderId) ?: throw NotFoundException("Sender not found")
 
             val messageContent = MessageContent(content)
             val newMessage =
@@ -69,7 +64,7 @@ class MessageService(
                     id = Id(0U),
                     eventId = eventId,
                     senderId = senderId,
-                    senderName = senderName.name,
+                    senderName = sender.name,
                     content = messageContent,
                     timestamp = now(),
                     chatPosition = -1,
@@ -77,6 +72,20 @@ class MessageService(
 
             val createdMessage = messageRepository.create(newMessage)
             chatSseService.publish(createdMessage)
+
+            val notificationData =
+                mapOf(
+                    "title" to "New message in ${event.title.value}",
+                    "body" to "${sender.name.value}: ${createdMessage.content.value.take(100)}",
+                    "eventId" to eventId.value.toString(),
+                    "type" to "NEW_MESSAGE",
+                )
+
+            val recipients = event.participantsIds - senderId
+            recipients.forEach {
+                notificationService.sendNotificationToUser(userId = it, data = notificationData)
+            }
+
             createdMessage
         }
 

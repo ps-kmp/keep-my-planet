@@ -16,6 +16,7 @@ import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.exception.ValidationException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.MessageRepository
+import pt.isel.keepmyplanet.repository.UserDeviceRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
 import pt.isel.keepmyplanet.utils.now
@@ -25,6 +26,8 @@ class EventService(
     private val zoneRepository: ZoneRepository,
     private val userRepository: UserRepository,
     private val messageRepository: MessageRepository,
+    private val notificationService: NotificationService,
+    private val userDeviceRepository: UserDeviceRepository,
 ) {
     suspend fun createEvent(
         title: Title,
@@ -183,7 +186,12 @@ class EventService(
             }
 
             val updatedEvent = event.copy(participantsIds = event.participantsIds + userId)
-            eventRepository.update(updatedEvent)
+            val finalEvent = eventRepository.update(updatedEvent)
+
+            val userTokens = userDeviceRepository.findTokensByUserId(userId)
+            notificationService.subscribeToTopic(userTokens, "event_${eventId.value}")
+
+            finalEvent
         }
 
     suspend fun leaveEvent(
@@ -208,6 +216,9 @@ class EventService(
             if (userId !in event.participantsIds) {
                 throw NotFoundException("User '$userId' is not a participant in event '$eventId'.")
             }
+
+            val userTokens = userDeviceRepository.findTokensByUserId(userId)
+            notificationService.unsubscribeFromTopic(userTokens, "event_${eventId.value}")
 
             val updatedEvent = event.copy(participantsIds = event.participantsIds - userId)
             eventRepository.update(updatedEvent)
