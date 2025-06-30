@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.data.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.parameter
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
@@ -22,10 +23,14 @@ class ChatApi(
         fun messagesSse(eventId: UInt) = "events/$eventId/chat/stream"
     }
 
-    suspend fun getMessages(eventId: UInt): Result<List<MessageResponse>> =
+    suspend fun getMessages(
+        eventId: UInt,
+        afterPosition: Int? = null,
+    ): Result<List<MessageResponse>> =
         httpClient.executeRequest {
             method = HttpMethod.Get
             url(Endpoints.messages(eventId))
+            afterPosition?.let { parameter("after_position", it) }
         }
 
     suspend fun sendMessage(

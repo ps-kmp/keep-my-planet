@@ -36,6 +36,15 @@ class DatabaseMessageRepository(
             .executeAsList()
             .map { it.toDomain() }
 
+    override suspend fun getAllByEventIdAfterPosition(
+        eventId: Id,
+        position: Int,
+    ): List<Message> =
+        messageQueries
+            .getAllByEventIdAfterPosition(eventId, position)
+            .executeAsList()
+            .map { it.toDomain() }
+
     override suspend fun getSingleByEventIdAndSeqNum(
         eventId: Id,
         sequenceNum: Int,

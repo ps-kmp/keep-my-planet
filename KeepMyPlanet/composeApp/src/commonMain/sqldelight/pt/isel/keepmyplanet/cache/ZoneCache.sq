@@ -1,0 +1,31 @@
+CREATE TABLE ZoneCache (
+    id INTEGER NOT NULL PRIMARY KEY,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    description TEXT NOT NULL,
+    reporterId INTEGER NOT NULL,
+    eventId INTEGER,
+    status TEXT NOT NULL,
+    zoneSeverity TEXT NOT NULL,
+    photosIds_json TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+insertZone:
+INSERT OR REPLACE INTO ZoneCache(id, latitude, longitude, description, reporterId, eventId, status, zoneSeverity, photosIds_json, createdAt, updatedAt, timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+getZonesInBoundingBox:
+SELECT * FROM ZoneCache
+WHERE latitude BETWEEN :minLat AND :maxLat AND longitude BETWEEN :minLon AND :maxLon;
+
+getById:
+SELECT * FROM ZoneCache WHERE id = ?;
+
+clearAllZones:
+DELETE FROM ZoneCache;
+
+deleteExpiredZones:
+DELETE FROM ZoneCache WHERE timestamp < ?;

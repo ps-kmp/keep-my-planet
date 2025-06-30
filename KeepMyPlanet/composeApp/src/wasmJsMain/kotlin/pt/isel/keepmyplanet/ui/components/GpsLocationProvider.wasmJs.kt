@@ -13,12 +13,9 @@ actual fun rememberGpsLocationProvider(
 
     return remember {
         object : GpsLocationProvider {
-            // The browser handles permissions implicitly on each request.
             override val isPermissionGranted: Boolean = true
 
-            override fun requestPermission() {
-                // No-op, browser handles it.
-            }
+            override fun requestPermission() {}
 
             override fun requestLocationUpdate() {
                 jsRequestLocation(

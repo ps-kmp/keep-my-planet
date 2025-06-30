@@ -22,9 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceEvent
-import pt.isel.keepmyplanet.ui.common.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.QrCodeScannerView
 
 @OptIn(ExperimentalFoundationApi::class)

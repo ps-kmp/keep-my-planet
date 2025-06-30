@@ -3,6 +3,8 @@ package pt.isel.keepmyplanet.ui.profile
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.PhotoApi
 import pt.isel.keepmyplanet.data.api.UserApi
+import pt.isel.keepmyplanet.data.repository.UserCacheRepository
+import pt.isel.keepmyplanet.data.repository.toUserCacheInfo
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
@@ -20,6 +22,7 @@ class UserProfileViewModel(
     private val userApi: UserApi,
     private val photoApi: PhotoApi,
     private val sessionManager: SessionManager,
+    private val userCacheRepository: UserCacheRepository,
 ) : BaseViewModel<UserProfileUiState>(UserProfileUiState()) {
     private val user: UserInfo
         get() =
@@ -95,6 +98,10 @@ class UserProfileViewModel(
                 if (updatedUser != currentState.userDetails) {
                     sendEvent(UserProfileEvent.ProfileUpdated(updatedUser))
                 }
+                viewModelScope.launch {
+                    userCacheRepository.insertUsers(listOf(updatedUser.toUserCacheInfo()))
+                }
+
                 setState {
                     copy(
                         userDetails = updatedUser,

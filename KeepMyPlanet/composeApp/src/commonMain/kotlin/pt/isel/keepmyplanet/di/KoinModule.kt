@@ -13,9 +13,13 @@ import pt.isel.keepmyplanet.data.api.PhotoApi
 import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.http.createHttpClient
+import pt.isel.keepmyplanet.data.repository.EventsRepository
+import pt.isel.keepmyplanet.data.service.CacheCleanupService
+import pt.isel.keepmyplanet.data.service.ConnectivityService
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceViewModel
 import pt.isel.keepmyplanet.ui.chat.ChatViewModel
+import pt.isel.keepmyplanet.ui.common.SyncService
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsViewModel
 import pt.isel.keepmyplanet.ui.event.forms.EventFormViewModel
 import pt.isel.keepmyplanet.ui.event.history.EventStatusHistoryViewModel
@@ -32,6 +36,12 @@ import pt.isel.keepmyplanet.ui.zone.update.UpdateZoneViewModel
 val appModule =
     module {
         // Session
+        single { ConnectivityService(get()) }
+        single { SyncService(get(), get(), get(), get()) }
+        single {
+            CacheCleanupService(get(), get(), get(), get(), get(), get(), get(), get(), get())
+        }
+
         single { SessionManager() }
 
         // Network
@@ -45,28 +55,31 @@ val appModule =
         single { ZoneApi(get()) }
         single { PhotoApi(get()) }
         single { DeviceApi(get()) }
-        single { GeocodingApi(get()) }
+        single { GeocodingApi(get(), get()) }
+
+        // Repositories
+        single { EventsRepository(get(), get(), get()) }
 
         // ViewModels
         single { AppViewModel(get()) }
         factoryOf(::LoginViewModel)
         factoryOf(::RegisterViewModel)
-        single { EventListViewModel(get()) }
-        factoryOf(::EventDetailsViewModel)
-        factoryOf(::EventStatusHistoryViewModel)
+        factory { EventListViewModel(get(), get()) }
+        factory { EventDetailsViewModel(get(), get(), get()) }
+        factory { EventStatusHistoryViewModel(get(), get()) }
         factoryOf(::EventFormViewModel)
-        factory { MapViewModel(get(), get()) }
-        factoryOf(::ZoneDetailsViewModel)
+        factory { MapViewModel(get(), get(), get(), get(), get()) }
+        factory { ZoneDetailsViewModel(get(), get(), get(), get(), get(), get()) }
         factoryOf(::UpdateZoneViewModel)
         factoryOf(::ReportZoneViewModel)
-        factoryOf(::UserProfileViewModel)
-        factoryOf(::ChatViewModel)
+        factory { UserProfileViewModel(get(), get(), get(), get()) }
+        factory { params -> ChatViewModel(get(), get(), get(), get(), params.get()) }
         factoryOf(::ManageAttendanceViewModel)
-        factoryOf(::UserStatsViewModel)
+        factory { params -> UserStatsViewModel(get(), get(), get(), params.get()) }
     }
 
 fun initKoin() {
     startKoin {
-        modules(appModule)
+        modules(appModule, cacheModule)
     }
 }

@@ -28,9 +28,9 @@ import pt.isel.keepmyplanet.ui.chat.components.MessageInput
 import pt.isel.keepmyplanet.ui.chat.components.MessageItem
 import pt.isel.keepmyplanet.ui.chat.states.ChatEvent
 import pt.isel.keepmyplanet.ui.chat.states.ChatUiState
-import pt.isel.keepmyplanet.ui.common.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 
 @Composable
 fun ChatScreen(
@@ -66,44 +66,50 @@ fun ChatScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = uiState.chatInfo.eventTitle.value,
+                title = uiState.chatInfo.eventTitle?.value ?: "Chat",
                 onNavigateBack = onNavigateBack,
             )
         },
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            when {
-                uiState.isLoading && uiState.messages.isEmpty() -> {
-                    FullScreenLoading()
-                }
+            val user = uiState.user
 
-                uiState.error != null && uiState.messages.isEmpty() -> {
-                    ErrorState(message = uiState.error!!, onRetry = viewModel::loadMessages)
-                }
-
-                else -> {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp),
-                        reverseLayout = true,
-                        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                    ) {
-                        items(uiState.messages, key = { it.id.toString() }) { message ->
-                            MessageItem(message = message, currentUserId = uiState.user.id.value)
-                        }
+            if (uiState.isLoading && uiState.messages.isEmpty()) {
+                FullScreenLoading()
+            } else if (uiState.error != null && uiState.messages.isEmpty()) {
+                ErrorState(
+                    message = uiState.error!!,
+                    onRetry = {
+                        if (user == null) onNavigateBack() else viewModel.loadMessages()
+                    },
+                )
+            } else if (user != null) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp),
+                    reverseLayout = true,
+                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                ) {
+                    items(uiState.messages, key = { it.id.toString() }) { message ->
+                        MessageItem(message = message, currentUserId = user.id.value)
                     }
-
-                    MessageInput(
-                        message = uiState.messageInput,
-                        onMessageChange = viewModel::onMessageChanged,
-                        onSendClick = viewModel::sendMessage,
-                        isSending = uiState.actionState is ChatUiState.ActionState.Sending,
-                        sendEnabled = uiState.isSendEnabled,
-                        errorText = uiState.messageInputError,
-                        maxLength = ChatViewModel.MAX_MESSAGE_LENGTH,
-                    )
                 }
+
+                MessageInput(
+                    message = uiState.messageInput,
+                    onMessageChange = viewModel::onMessageChanged,
+                    onSendClick = viewModel::sendMessage,
+                    isSending = uiState.actionState is ChatUiState.ActionState.Sending,
+                    sendEnabled = uiState.isSendEnabled,
+                    errorText = uiState.messageInputError,
+                    maxLength = ChatViewModel.MAX_MESSAGE_LENGTH,
+                )
+            } else {
+                ErrorState(
+                    message = "An unknown error occurred. Cannot display chat.",
+                    onRetry = onNavigateBack,
+                )
             }
         }
     }

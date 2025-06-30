@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +39,8 @@ import ovh.plrapps.mapcompose.ui.state.MapState
 import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
 import pt.isel.keepmyplanet.data.api.GeocodingApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
+import pt.isel.keepmyplanet.data.repository.MapTileCacheRepository
+import pt.isel.keepmyplanet.data.repository.ZoneCacheRepository
 import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
@@ -55,7 +58,7 @@ import pt.isel.keepmyplanet.ui.map.components.UserLocationMarker
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.map.states.MapUiState
 import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
-import pt.isel.keepmyplanet.utils.getTileStreamProvider
+import pt.isel.keepmyplanet.utils.createOfflineFirstTileStreamProvider
 import pt.isel.keepmyplanet.utils.haversineDistance
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
@@ -64,8 +67,11 @@ import pt.isel.keepmyplanet.utils.yToLat
 
 @OptIn(FlowPreview::class, ExperimentalClusteringApi::class)
 class MapViewModel(
+    private val httpClient: HttpClient,
     private val zoneApi: ZoneApi,
     private val geocodingApi: GeocodingApi,
+    private val mapTileCacheRepository: MapTileCacheRepository,
+    private val zoneCacheRepository: ZoneCacheRepository,
 ) : BaseViewModel<MapUiState>(MapUiState()) {
     private val _userLocation = MutableStateFlow<Location?>(null)
     val userLocation = _userLocation.asStateFlow()
@@ -94,7 +100,9 @@ class MapViewModel(
 
     private fun initializeMap() {
         viewModelScope.launch {
-            mapState.addLayer(getTileStreamProvider())
+            mapState.addLayer(
+                createOfflineFirstTileStreamProvider(httpClient, mapTileCacheRepository),
+            )
             setupClusterer()
             setupMapListeners()
 
@@ -176,6 +184,16 @@ class MapViewModel(
 
     suspend fun onMapIdle() {
         val bbox = mapState.visibleBoundingBox()
+
+        val minLocation = Location(yToLat(bbox.yBottom), xToLon(bbox.xLeft))
+        val maxLocation = Location(yToLat(bbox.yTop), xToLon(bbox.xRight))
+        val cachedZones = zoneCacheRepository.getZonesInBoundingBox(minLocation, maxLocation)
+
+        if (cachedZones.isNotEmpty()) {
+            val zonesToShow = (currentState.zones + cachedZones).distinctBy { it.id }
+            setState { copy(zones = zonesToShow) }
+        }
+
         val centerLat = yToLat((bbox.yTop + bbox.yBottom) / 2)
         val centerLon = xToLon((bbox.xLeft + bbox.xRight) / 2)
         val cornerLat = yToLat(bbox.yTop)
@@ -190,6 +208,11 @@ class MapViewModel(
             block = { zoneApi.findZonesByLocation(centerLat, centerLon, radiusInMeters) },
             onSuccess = { response ->
                 val newZones = response.map { it.toZone() }
+
+                if (newZones.isNotEmpty()) {
+                    zoneCacheRepository.insertZones(newZones)
+                }
+
                 val updatedZones = (currentState.zones + newZones).distinctBy { it.id }
                 setState { copy(zones = updatedZones, error = null) }
             },

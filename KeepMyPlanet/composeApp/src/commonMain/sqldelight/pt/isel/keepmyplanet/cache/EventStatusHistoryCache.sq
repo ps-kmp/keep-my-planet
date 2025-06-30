@@ -1,0 +1,19 @@
+CREATE TABLE EventStatusHistoryCache (
+    id INTEGER NOT NULL PRIMARY KEY,
+    event_id INTEGER NOT NULL,
+    new_status TEXT NOT NULL,
+    changed_by_id INTEGER NOT NULL,
+    changed_by_name TEXT NOT NULL,
+    change_time TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+insertHistory:
+INSERT OR REPLACE INTO EventStatusHistoryCache(id, event_id, new_status, changed_by_id, changed_by_name, change_time, timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+getHistoryByEventId:
+SELECT * FROM EventStatusHistoryCache WHERE event_id = ? ORDER BY change_time DESC;
+
+deleteExpiredHistory:
+DELETE FROM EventStatusHistoryCache WHERE timestamp < ?;

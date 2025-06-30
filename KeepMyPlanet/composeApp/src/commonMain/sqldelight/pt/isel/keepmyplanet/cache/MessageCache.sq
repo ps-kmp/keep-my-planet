@@ -1,0 +1,26 @@
+CREATE TABLE MessageCache (
+    id INTEGER NOT NULL PRIMARY KEY,
+    eventId INTEGER NOT NULL,
+    senderId INTEGER NOT NULL,
+    senderName TEXT NOT NULL,
+    content TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    chatPosition INTEGER NOT NULL,
+    FOREIGN KEY(eventId) REFERENCES EventCache(id) ON DELETE CASCADE
+);
+
+insertMessage:
+INSERT OR REPLACE INTO MessageCache(id, eventId, senderId, senderName, content, timestamp, chatPosition)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+getMessagesByEventId:
+SELECT * FROM MessageCache WHERE eventId = ? ORDER BY chatPosition ASC;
+
+clearAllMessages:
+DELETE FROM MessageCache;
+
+deleteExpiredMessages:
+DELETE FROM MessageCache WHERE timestamp < ?;
+
+clearMessagesForEvent:
+DELETE FROM MessageCache WHERE eventId = ?;

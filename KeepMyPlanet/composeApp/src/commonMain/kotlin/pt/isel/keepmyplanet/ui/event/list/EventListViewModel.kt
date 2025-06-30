@@ -5,6 +5,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.EventApi
+import pt.isel.keepmyplanet.data.repository.EventCacheRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.mapper.event.toListItem
@@ -16,6 +17,7 @@ private const val SEARCH_DEBOUNCE_DELAY_MS = 500L
 
 class EventListViewModel(
     private val eventApi: EventApi,
+    private val eventCacheRepository: EventCacheRepository,
 ) : BaseViewModel<EventListUiState>(EventListUiState()) {
     private var searchJob: Job? = null
 
@@ -70,6 +72,13 @@ class EventListViewModel(
 
         if (isRefresh.not() && (currentState.isLoading || currentState.isAddingMore)) return
 
+        if (isRefresh && clearPrevious) {
+            val cachedEvents = eventCacheRepository.getAllEvents().map { it.toListItem() }
+            if (cachedEvents.isNotEmpty()) {
+                setState { copy(events = cachedEvents, isLoading = true) }
+            }
+        }
+
         val block: suspend () -> Result<List<*>> = {
             when (currentState.filter) {
                 EventFilterType.ALL ->
@@ -114,13 +123,23 @@ class EventListViewModel(
                         events =
                             (currentEvents + newEvents.map { (it as EventResponse).toListItem() })
                                 .distinctBy { it.id },
-                        offset = if (isRefresh) newEvents.size else this.offset + newEvents.size,
-                        error = null,
+                        offset = if (isRefresh) 0 else this.offset + newEvents.size,
                         hasMorePages = newEvents.size == this.limit,
+                        error = null,
                     )
                 }
             },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to load events", it)) },
+            onError = {
+                if (currentState.events.isEmpty()) {
+                    handleErrorWithMessage(getErrorMessage("Failed to load events", it))
+                } else {
+                    sendEvent(
+                        EventListEvent.ShowSnackbar(
+                            getErrorMessage("Failed to refresh events", it),
+                        ),
+                    )
+                }
+            },
         )
     }
 }

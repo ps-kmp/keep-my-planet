@@ -60,9 +60,9 @@ import ovh.plrapps.mapcompose.api.scroll
 import ovh.plrapps.mapcompose.api.setScroll
 import ovh.plrapps.mapcompose.ui.MapUI
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.ui.common.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.rememberGpsLocationProvider

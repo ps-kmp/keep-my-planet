@@ -1,0 +1,16 @@
+CREATE TABLE UserStatsCache (
+    user_id INTEGER NOT NULL PRIMARY KEY,
+    total_events_attended INTEGER NOT NULL,
+    total_hours_volunteered REAL NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+getStatsByUserId:
+SELECT * FROM UserStatsCache WHERE user_id = ?;
+
+insertOrUpdateStats:
+INSERT OR REPLACE INTO UserStatsCache(user_id, total_events_attended, total_hours_volunteered, timestamp)
+VALUES (?, ?, ?, ?);
+
+deleteExpiredStats:
+DELETE FROM UserStatsCache WHERE timestamp < ?;

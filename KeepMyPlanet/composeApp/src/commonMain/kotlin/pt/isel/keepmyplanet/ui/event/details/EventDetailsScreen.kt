@@ -32,15 +32,16 @@ import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.message.ChatInfo
-import pt.isel.keepmyplanet.ui.common.FullScreenLoading
-import pt.isel.keepmyplanet.ui.common.LoadingButton
-import pt.isel.keepmyplanet.ui.common.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ConfirmActionDialog
 import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.InfoRow
+import pt.isel.keepmyplanet.ui.components.LoadingButton
+import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.QrCodeIconButton
+import pt.isel.keepmyplanet.ui.components.isQrScanningAvailable
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
@@ -118,7 +119,7 @@ fun EventDetailsScreen(
                 title = event?.title?.value ?: "Event Details",
                 onNavigateBack = onNavigateBack,
                 actions = {
-                    if (uiState.canUseQrFeature) {
+                    if (uiState.canUseQrFeature && isQrScanningAvailable) {
                         QrCodeIconButton(
                             onClick = viewModel::onQrCodeIconClicked,
                             contentDescription = "Open QR Code Feature",

@@ -15,13 +15,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import org.koin.android.ext.android.get
 import pt.isel.keepmyplanet.data.api.DeviceApi
 
 class FirebasePushNotificationService : FirebaseMessagingService() {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO + job)
-    private val deviceApi: DeviceApi by inject()
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -50,6 +49,7 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
     }
 
     private fun sendTokenToServer(token: String) {
+        val deviceApi: DeviceApi = get()
         scope.launch {
             deviceApi
                 .registerDevice(token, "ANDROID")

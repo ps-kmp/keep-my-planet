@@ -8,6 +8,16 @@ import io.ktor.client.request.request
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.dto.error.ErrorResponse
 
+suspend fun handleRequestException(e: ClientRequestException): Nothing {
+    val errorResponse =
+        try {
+            Json.decodeFromString<ErrorResponse>(e.response.body())
+        } catch (_: Exception) {
+            null
+        }
+    throw errorResponse?.let { ApiException(it) } ?: e
+}
+
 suspend inline fun <reified T> HttpClient.executeRequest(
     block: HttpRequestBuilder.() -> Unit,
 ): Result<T> =
@@ -15,13 +25,7 @@ suspend inline fun <reified T> HttpClient.executeRequest(
         try {
             request { block() }.body<T>()
         } catch (e: ClientRequestException) {
-            val errorResponse =
-                try {
-                    Json.decodeFromString<ErrorResponse>(e.response.body())
-                } catch (_: Exception) {
-                    null
-                }
-            throw errorResponse?.let { ApiException(it) } ?: e
+            handleRequestException(e)
         }
     }
 
@@ -31,12 +35,6 @@ suspend fun HttpClient.executeRequestUnit(block: HttpRequestBuilder.() -> Unit):
             request { block() }
             Unit
         } catch (e: ClientRequestException) {
-            val errorResponse =
-                try {
-                    Json.decodeFromString<ErrorResponse>(e.response.body())
-                } catch (_: Exception) {
-                    null
-                }
-            throw errorResponse?.let { ApiException(it) } ?: e
+            handleRequestException(e)
         }
     }

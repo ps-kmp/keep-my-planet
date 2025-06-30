@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.ui.event.history
 
-import StatusHistoryItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,10 +15,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.ui.common.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.EmptyState
 import pt.isel.keepmyplanet.ui.components.ErrorState
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
+import pt.isel.keepmyplanet.ui.event.history.components.StatusHistoryItem
 
 @Composable
 fun EventStatusHistoryScreen(

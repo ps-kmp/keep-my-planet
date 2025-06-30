@@ -21,17 +21,25 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
+import org.koin.android.ext.android.inject
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import pt.isel.keepmyplanet.data.api.DeviceApi
+import pt.isel.keepmyplanet.data.service.CacheCleanupService
 import pt.isel.keepmyplanet.di.appModule
+import pt.isel.keepmyplanet.di.cacheModule
 
 class KeepMyPlanetApplication : Application() {
+    private val cacheCleanupService: CacheCleanupService by inject()
+
     override fun onCreate() {
         super.onCreate()
         startKoin {
-            modules(appModule)
+            androidContext(this@KeepMyPlanetApplication)
+            modules(appModule, cacheModule)
         }
         createNotificationChannel()
+        cacheCleanupService.performCleanup()
     }
 
     private fun createNotificationChannel() {

@@ -48,13 +48,18 @@ abstract class BaseViewModel<S : UiState>(
         onStart: (S.() -> S)? = null,
         onFinally: (S.() -> S)? = null,
         block: suspend () -> Result<T>,
-        onSuccess: (T) -> Unit,
+        onSuccess: suspend (T) -> Unit,
         onError: (Throwable) -> Unit = { handleError(it) },
     ) {
         viewModelScope.launch {
             onStart?.let { setState(it) }
             try {
-                block().onSuccess(onSuccess).onFailure(onError)
+                val result = block()
+                if (result.isSuccess) {
+                    onSuccess(result.getOrThrow())
+                } else {
+                    onError(result.exceptionOrNull() ?: Exception("Unknown error in result"))
+                }
             } finally {
                 onFinally?.let { setState(it) }
             }

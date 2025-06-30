@@ -9,8 +9,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.common.LoadingButton
 import pt.isel.keepmyplanet.ui.components.FormField
+import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileUiState
 
 @Composable

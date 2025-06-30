@@ -1,0 +1,23 @@
+CREATE TABLE UserCache (
+    id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    profilePictureUrl TEXT,
+    timestamp INTEGER NOT NULL
+);
+
+insertUser:
+INSERT OR REPLACE INTO UserCache(id, name, email, profilePictureUrl, timestamp)
+VALUES(?, ?, ?, ?, ?);
+
+getUserById:
+SELECT * FROM UserCache WHERE id = ?;
+
+getUsersByIds:
+SELECT * FROM UserCache WHERE id IN ?;
+
+deleteExpiredUsers:
+DELETE FROM UserCache WHERE timestamp < ?;
+
+clearAllUsers:
+DELETE FROM UserCache;

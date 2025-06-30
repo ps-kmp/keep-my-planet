@@ -36,6 +36,12 @@ FROM messages m
 JOIN users u ON m.sender_id = u.id
 WHERE m.event_id = :eventId ORDER BY chat_position;
 
+getAllByEventIdAfterPosition:
+SELECT m.*, u.name AS sender_name
+FROM messages m
+JOIN users u ON m.sender_id = u.id
+WHERE m.event_id = :eventId AND m.chat_position > :position ORDER BY chat_position;
+
 getSingleByEventIdAndSeqNum:
 SELECT m.*, u.name AS sender_name
 FROM messages m
@@ -66,6 +72,3 @@ WHERE m.sender_id = :senderId ORDER BY event_id, chat_position;
 
 deleteAllByEventIdReturningIds:
 DELETE FROM messages WHERE event_id = :eventId RETURNING id;
-
-getMaxChatPositionForEvent:
-SELECT MAX(chat_position) FROM messages WHERE event_id = :eventId;

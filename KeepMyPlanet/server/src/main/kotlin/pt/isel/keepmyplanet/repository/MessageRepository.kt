@@ -6,6 +6,11 @@ import pt.isel.keepmyplanet.domain.message.Message
 interface MessageRepository : Repository<Message, Id> {
     suspend fun getAllByEventId(eventId: Id): List<Message>
 
+    suspend fun getAllByEventIdAfterPosition(
+        eventId: Id,
+        position: Int,
+    ): List<Message>
+
     suspend fun getAllBySenderId(senderId: Id): List<Message>
 
     suspend fun getSingleByEventIdAndSeqNum(

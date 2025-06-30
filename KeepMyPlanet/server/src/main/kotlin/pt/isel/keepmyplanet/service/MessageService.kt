@@ -22,10 +22,17 @@ class MessageService(
     private val chatSseService: ChatSseService,
     private val notificationService: NotificationService,
 ) {
-    suspend fun getAllMessagesFromEvent(eventId: Id): Result<List<Message>> =
+    suspend fun getMessages(
+        eventId: Id,
+        afterPosition: Int? = null,
+    ): Result<List<Message>> =
         runCatching {
             findEventOrFail(eventId)
-            messageRepository.getAllByEventId(eventId)
+            if (afterPosition != null) {
+                messageRepository.getAllByEventIdAfterPosition(eventId, afterPosition)
+            } else {
+                messageRepository.getAllByEventId(eventId)
+            }
         }
 
     suspend fun getSingleMessageBySequence(

@@ -1,0 +1,14 @@
+CREATE TABLE GeocodingCache (
+    query TEXT NOT NULL PRIMARY KEY,
+    results_json TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+insertResult:
+INSERT OR REPLACE INTO GeocodingCache(query, results_json, timestamp) VALUES (?, ?, ?);
+
+getResultByQuery:
+SELECT results_json FROM GeocodingCache WHERE query = ?;
+
+deleteExpiredResults:
+DELETE FROM GeocodingCache WHERE timestamp < ?;

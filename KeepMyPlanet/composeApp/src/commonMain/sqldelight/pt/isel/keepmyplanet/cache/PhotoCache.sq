@@ -1,0 +1,25 @@
+CREATE TABLE PhotoCache (
+    id INTEGER NOT NULL PRIMARY KEY,
+    url TEXT NOT NULL,
+    image_data BLOB,
+    timestamp INTEGER NOT NULL
+);
+
+insertPhotoUrl:
+INSERT OR REPLACE INTO PhotoCache(id, url, image_data, timestamp)
+VALUES (?, ?, (SELECT image_data FROM PhotoCache WHERE id = ?), ?);
+
+updatePhotoData:
+UPDATE PhotoCache SET image_data = ? WHERE id = ?;
+
+getPhotoUrlById:
+SELECT url FROM PhotoCache WHERE id = ?;
+
+getPhotoDataById:
+SELECT image_data FROM PhotoCache WHERE id = ?;
+
+deleteExpiredPhotos:
+DELETE FROM PhotoCache WHERE timestamp < ?;
+
+clearAllPhotos:
+DELETE FROM PhotoCache;

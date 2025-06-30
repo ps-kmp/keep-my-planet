@@ -5,5 +5,5 @@ import pt.isel.keepmyplanet.domain.event.Title
 
 data class ChatInfo(
     val eventId: Id,
-    val eventTitle: Title,
+    val eventTitle: Title?,
 )

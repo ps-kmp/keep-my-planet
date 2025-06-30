@@ -6,7 +6,7 @@ import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.ui.viewmodel.UiState
 
 data class ChatUiState(
-    val user: UserInfo,
+    val user: UserInfo?,
     val chatInfo: ChatInfo,
     val messages: List<Message> = emptyList(),
     val messageInput: String = "",
@@ -23,7 +23,8 @@ data class ChatUiState(
 
     val isSendEnabled: Boolean
         get() =
-            messageInput.isNotBlank() &&
+            user != null &&
+                messageInput.isNotBlank() &&
                 actionState == ActionState.Idle &&
                 messageInputError == null
 }

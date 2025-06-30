@@ -1,0 +1,34 @@
+CREATE TABLE EventCache (
+    id INTEGER NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    startDate TEXT NOT NULL,
+    endDate TEXT,
+    zoneId INTEGER NOT NULL,
+    organizerId INTEGER NOT NULL,
+    status TEXT NOT NULL,
+    maxParticipants INTEGER,
+    participantIds_json TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+insertEvent:
+INSERT OR REPLACE INTO EventCache(id, title, description, startDate, endDate, zoneId, organizerId, status, maxParticipants, participantIds_json, createdAt, updatedAt, timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+getEventById:
+SELECT * FROM EventCache WHERE id = ?;
+
+getAllEvents:
+SELECT * FROM EventCache ORDER BY startDate DESC;
+
+deleteEventById:
+DELETE FROM EventCache WHERE id = ?;
+
+clearAllEvents:
+DELETE FROM EventCache;
+
+deleteExpiredEvents:
+DELETE FROM EventCache WHERE timestamp < ?;

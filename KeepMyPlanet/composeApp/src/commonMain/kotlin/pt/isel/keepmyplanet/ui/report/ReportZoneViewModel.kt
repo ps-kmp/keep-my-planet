@@ -3,8 +3,11 @@ package pt.isel.keepmyplanet.ui.report
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.PhotoApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
+import pt.isel.keepmyplanet.data.repository.OfflineReportQueueRepository
+import pt.isel.keepmyplanet.data.service.ConnectivityService
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
@@ -16,6 +19,8 @@ import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 class ReportZoneViewModel(
     private val zoneApi: ZoneApi,
     private val photoApi: PhotoApi,
+    private val connectivityService: ConnectivityService,
+    private val offlineReportQueueRepository: OfflineReportQueueRepository,
 ) : BaseViewModel<ReportZoneUiState>(ReportZoneUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(ReportZoneEvent.ShowSnackbar(message))
@@ -54,6 +59,13 @@ class ReportZoneViewModel(
     fun submitZoneReport() {
         if (!validateForm() || !currentState.canSubmit) return
 
+        viewModelScope.launch {
+            if (!connectivityService.isOnline.value) {
+                queueReportForOfflineSubmission()
+                return@launch
+            }
+        }
+
         launchWithResult(
             onStart = { copy(actionState = ReportZoneUiState.ActionState.Submitting) },
             onFinally = { copy(actionState = ReportZoneUiState.ActionState.Idle) },
@@ -82,6 +94,19 @@ class ReportZoneViewModel(
             },
             onError = { handleErrorWithMessage(getErrorMessage("Failed to report zone", it)) },
         )
+    }
+
+    private suspend fun queueReportForOfflineSubmission() {
+        val state = currentState
+        offlineReportQueueRepository.queueReport(
+            latitude = state.latitude,
+            longitude = state.longitude,
+            description = state.description,
+            severity = state.severity,
+            photos = state.photos,
+        )
+        sendEvent(ReportZoneEvent.ShowSnackbar("You're offline. Report queued for later."))
+        sendEvent(ReportZoneEvent.ReportSuccessful)
     }
 
     private fun validateForm(): Boolean {

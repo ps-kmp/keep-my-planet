@@ -15,17 +15,18 @@ actual fun rememberPhotoPicker(
 ): () -> Unit {
     val scope = rememberCoroutineScope()
     return {
-        scope.launch(Dispatchers.IO) {
-            val fileDialog = FileDialog(null as Frame?, "Select a Photo", FileDialog.LOAD)
-            fileDialog.isVisible = true
+        val fileDialog = FileDialog(null as Frame?, "Select a Photo", FileDialog.LOAD)
+        fileDialog.isVisible = true
 
-            val file = fileDialog.file
-            val dir = fileDialog.directory
+        val file = fileDialog.file
+        val dir = fileDialog.directory
 
-            if (file != null && dir != null) {
+        if (file != null && dir != null) {
+            scope.launch(Dispatchers.IO) {
                 val path = File(dir, file)
+                val bytes = path.readBytes()
                 withContext(Dispatchers.Main) {
-                    onImageSelected(path.readBytes(), path.name)
+                    onImageSelected(bytes, path.name)
                 }
             }
         }

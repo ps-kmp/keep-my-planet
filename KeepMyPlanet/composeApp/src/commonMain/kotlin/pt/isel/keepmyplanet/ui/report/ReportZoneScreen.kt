@@ -29,9 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
-import pt.isel.keepmyplanet.ui.common.LoadingButton
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FormField
+import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.components.rememberPhotoPicker
 import pt.isel.keepmyplanet.ui.report.components.ImageThumbnail
 import pt.isel.keepmyplanet.ui.report.states.ReportZoneEvent

@@ -39,12 +39,9 @@ actual fun rememberGpsLocationProvider(
 
     return remember {
         object : GpsLocationProvider {
-            // Permission is not explicitly required for IP-based geolocation
             override val isPermissionGranted: Boolean = true
 
-            override fun requestPermission() {
-                // No-op on desktop
-            }
+            override fun requestPermission() {}
 
             override fun requestLocationUpdate() {
                 coroutineScope.launch(Dispatchers.IO) {

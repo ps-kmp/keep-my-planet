@@ -2,7 +2,6 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -10,6 +9,7 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.sqldelight)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
 }
@@ -42,18 +42,18 @@ kotlin {
     wasmJs {
         outputModuleName = "composeApp"
         browser {
-            val rootDirPath = project.rootDir.path
-            val projectDirPath = project.projectDir.path
+            // val rootDirPath = project.rootDir.path
+            // val projectDirPath = project.projectDir.path
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
-                devServer =
-                    (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                        static =
-                            (static ?: mutableListOf()).apply {
-                                add(rootDirPath)
-                                add(projectDirPath)
-                            }
-                    }
+//                devServer =
+//                    (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+//                        static =
+//                            (static ?: mutableListOf()).apply {
+//                                add(rootDirPath)
+//                                add(projectDirPath)
+//                            }
+//                    }
             }
         }
         binaries.executable()
@@ -87,6 +87,7 @@ kotlin {
                 implementation(libs.multiplatform.settings.no.arg)
                 implementation(libs.multiplatform.settings.coroutines)
                 implementation(libs.mapcompose.mp)
+                implementation(libs.sqldelight.coroutines.extensions)
                 implementation(libs.coil.compose)
                 implementation(libs.coil.network.ktor3)
                 implementation(libs.koin.core)
@@ -101,6 +102,7 @@ kotlin {
                 implementation(libs.koin.android)
                 implementation(libs.koin.androidx.compose)
                 implementation(libs.ktor.client.android)
+                implementation(libs.sqldelight.android.driver)
 
                 // barcode and qr code scanning
                 implementation(libs.zxing.core)
@@ -116,12 +118,18 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
+                implementation(libs.sqldelight.sqlite.driver)
                 implementation(libs.ktor.client.java)
+                implementation(libs.logback.classic)
             }
         }
         val wasmJsMain by getting {
             dependencies {
                 implementation(libs.ktor.client.js)
+                implementation(libs.sqldelight.web.worker.driver)
+                implementation(
+                    npm("@cashapp/sqldelight-sqljs-worker", libs.versions.sqldelight.get()),
+                )
             }
         }
     }
@@ -182,6 +190,15 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "pt.isel.keepmyplanet"
             packageVersion = "1.0.0"
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("KeepMyPlanetCache") {
+            packageName.set("pt.isel.keepmyplanet.cache")
+            generateAsync.set(true)
         }
     }
 }

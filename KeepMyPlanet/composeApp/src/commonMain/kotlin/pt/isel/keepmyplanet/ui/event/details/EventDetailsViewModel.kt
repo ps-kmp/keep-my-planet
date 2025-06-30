@@ -1,16 +1,13 @@
 package pt.isel.keepmyplanet.ui.event.details
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.EventApi
+import pt.isel.keepmyplanet.data.repository.EventsRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.mapper.event.toEvent
-import pt.isel.keepmyplanet.mapper.user.toUserInfo
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
@@ -19,6 +16,7 @@ import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 class EventDetailsViewModel(
     private val eventApi: EventApi,
     private val sessionManager: SessionManager,
+    private val eventsRepository: EventsRepository,
 ) : BaseViewModel<EventDetailsUiState>(EventDetailsUiState()) {
     private val currentUser: UserInfo
         get() =
@@ -30,33 +28,27 @@ class EventDetailsViewModel(
     }
 
     fun loadEventDetails(eventId: Id) {
-        viewModelScope.launch {
-            setState { copy(isLoading = true, error = null) }
-            try {
-                coroutineScope {
-                    val detailsDeferred = async { eventApi.getEventDetails(eventId.value) }
-                    val participantsDeferred =
-                        async { eventApi.getEventParticipants(eventId.value) }
-                    val details = detailsDeferred.await().getOrThrow()
-                    val participants = participantsDeferred.await().getOrThrow()
-                    val event = details.toEvent()
-                    setState {
-                        copy(
-                            event = event,
-                            isCurrentUserOrganizer = event.organizerId == currentUser.id,
-                            isCurrentUserParticipant =
-                                event.participantsIds.contains(currentUser.id),
-                            participants = participants.map { it.toUserInfo() },
-                        )
-                    }
+        launchWithResult(
+            onStart = { copy(isLoading = true, error = null) },
+            onFinally = { copy(isLoading = false) },
+            block = { eventsRepository.getEventDetailsBundle(eventId) },
+            onSuccess = { bundle ->
+                setState {
+                    copy(
+                        event = bundle.event,
+                        isCurrentUserOrganizer = bundle.event.organizerId == currentUser.id,
+                        isCurrentUserParticipant =
+                            bundle.event.participantsIds.contains(currentUser.id),
+                        participants = bundle.participants,
+                        error = null,
+                    )
                 }
-            } catch (error: Throwable) {
+            },
+            onError = { error ->
                 val message = getErrorMessage("Failed to load event details", error)
                 setState { copy(error = message) }
-            } finally {
-                setState { copy(isLoading = false) }
-            }
-        }
+            },
+        )
     }
 
     private fun performAction(

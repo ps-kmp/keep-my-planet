@@ -16,22 +16,27 @@ import kotlin.math.sqrt
 import kotlin.math.tan
 import kotlinx.io.Buffer
 import ovh.plrapps.mapcompose.core.TileStreamProvider
+import pt.isel.keepmyplanet.data.repository.MapTileCacheRepository
 
-fun getTileStreamProvider(httpClient: HttpClient = HttpClient()) =
-    TileStreamProvider { row, col, zoomLvl ->
-        try {
-            val response = httpClient.get("https://tile.openstreetmap.org/$zoomLvl/$col/$row.png")
-            if (response.status.isSuccess()) {
-                val bytes: ByteArray = response.body()
-                Buffer().apply { write(bytes) }
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            println("Error fetching tile: $e")
+fun createOfflineFirstTileStreamProvider(
+    httpClient: HttpClient,
+    cacheRepository: MapTileCacheRepository,
+) = TileStreamProvider { row, col, zoomLvl ->
+    cacheRepository.getTile(zoomLvl, col, row)?.let {
+        return@TileStreamProvider Buffer().apply { write(it) }
+    }
+
+    runCatching {
+        val response = httpClient.get("https://tile.openstreetmap.org/$zoomLvl/$col/$row.png")
+        if (response.status.isSuccess()) {
+            val bytes: ByteArray = response.body()
+            cacheRepository.insertTile(zoomLvl, col, row, bytes)
+            Buffer().apply { write(bytes) }
+        } else {
             null
         }
-    }
+    }.getOrNull()
+}
 
 fun lonToX(lon: Double): Double = (lon + 180.0) / 360.0
 

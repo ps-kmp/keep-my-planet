@@ -1,0 +1,23 @@
+CREATE TABLE OfflineReportQueue (
+    id INTEGER NOT NULL PRIMARY KEY,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    description TEXT NOT NULL,
+    severity TEXT NOT NULL,
+    photos_json TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    retries INTEGER NOT NULL DEFAULT 0
+);
+
+queueReport:
+INSERT INTO OfflineReportQueue(latitude, longitude, description, severity, photos_json, timestamp)
+VALUES (?, ?, ?, ?, ?, ?);
+
+peekNextReport:
+SELECT * FROM OfflineReportQueue ORDER BY timestamp ASC LIMIT 1;
+
+deleteReport:
+DELETE FROM OfflineReportQueue WHERE id = ?;
+
+incrementReportRetries:
+UPDATE OfflineReportQueue SET retries = retries + 1 WHERE id = ?;

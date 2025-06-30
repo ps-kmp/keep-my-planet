@@ -40,6 +40,8 @@ import java.util.concurrent.Executors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+actual val isQrScanningAvailable: Boolean = true
+
 @Composable
 actual fun ManageAttendanceButton(onClick: () -> Unit) {
     Button(onClick = onClick) {

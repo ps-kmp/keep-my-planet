@@ -17,6 +17,7 @@ import ptiselkeepmyplanetdb.Events
 import ptiselkeepmyplanetdb.FindByEventIdWithUserName
 import ptiselkeepmyplanetdb.GetAll
 import ptiselkeepmyplanetdb.GetAllByEventId
+import ptiselkeepmyplanetdb.GetAllByEventIdAfterPosition
 import ptiselkeepmyplanetdb.GetAllBySenderId
 import ptiselkeepmyplanetdb.GetById
 import ptiselkeepmyplanetdb.GetSingleByEventIdAndSeqNum
@@ -77,6 +78,17 @@ internal fun GetById.toDomain(): Message =
     )
 
 internal fun GetAllByEventId.toDomain(): Message =
+    Message(
+        id = this.id,
+        eventId = this.event_id,
+        senderId = this.sender_id,
+        senderName = this.sender_name,
+        content = this.content,
+        timestamp = this.timestamp,
+        chatPosition = this.chat_position,
+    )
+
+internal fun GetAllByEventIdAfterPosition.toDomain(): Message =
     Message(
         id = this.id,
         eventId = this.event_id,

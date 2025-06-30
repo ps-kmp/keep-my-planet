@@ -3,6 +3,8 @@ package pt.isel.keepmyplanet.ui.chat
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.ChatApi
+import pt.isel.keepmyplanet.data.repository.EventsRepository
+import pt.isel.keepmyplanet.data.repository.MessageCacheRepository
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
@@ -14,13 +16,13 @@ import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class ChatViewModel(
     private val chatApi: ChatApi,
+    private val messageCacheRepository: MessageCacheRepository,
+    private val eventsRepository: EventsRepository,
     sessionManager: SessionManager,
     chatInfo: ChatInfo,
 ) : BaseViewModel<ChatUiState>(
         ChatUiState(
-            user =
-                sessionManager.userSession.value?.userInfo
-                    ?: throw IllegalStateException("ChatViewModel requires a logged-in user."),
+            user = sessionManager.userSession.value?.userInfo,
             chatInfo = chatInfo,
         ),
     ) {
@@ -29,8 +31,27 @@ class ChatViewModel(
     }
 
     init {
-        loadMessages()
-        startListeningToMessages()
+        if (currentState.user == null) {
+            setState { copy(error = "User is not logged in. Cannot display chat.") }
+        } else {
+            if (currentState.chatInfo.eventTitle == null) {
+                fetchEventDetails()
+            }
+            loadMessages()
+            startListeningToMessages()
+        }
+    }
+
+    private fun fetchEventDetails() {
+        viewModelScope.launch {
+            eventsRepository
+                .getEventDetails(currentState.chatInfo.eventId)
+                .onSuccess { event ->
+                    setState { copy(chatInfo = chatInfo.copy(eventTitle = event.title)) }
+                }.onFailure {
+                    handleErrorWithMessage("Could not load event title.")
+                }
+        }
     }
 
     override fun handleErrorWithMessage(message: String) {
@@ -68,19 +89,51 @@ class ChatViewModel(
     }
 
     fun loadMessages() {
-        launchWithResult(
-            onStart = { copy(isLoading = true, error = null) },
-            onFinally = { copy(isLoading = false) },
-            block = { chatApi.getMessages(currentState.chatInfo.eventId.value) },
-            onSuccess = { messages ->
-                setState { copy(messages = messages.map { dto -> dto.toMessage() }.reversed()) }
-                if (messages.isNotEmpty()) sendEvent(ChatEvent.ScrollToBottom)
-            },
-            onError = {
-                val errorMsg = getErrorMessage("Failed to load messages", it)
-                setState { copy(error = errorMsg) }
-            },
-        )
+        if (currentState.user == null) return
+
+        viewModelScope.launch {
+            val cachedMessages =
+                messageCacheRepository.getMessagesByEventId(
+                    currentState.chatInfo.eventId,
+                )
+            if (cachedMessages.isNotEmpty()) {
+                setState { copy(messages = cachedMessages.reversed(), isLoading = false) }
+                sendEvent(ChatEvent.ScrollToBottom)
+            } else {
+                setState { copy(isLoading = true, error = null) }
+            }
+
+            val lastPosition = cachedMessages.maxOfOrNull { it.chatPosition }
+            val result = chatApi.getMessages(currentState.chatInfo.eventId.value, lastPosition)
+
+            result
+                .onSuccess { newMessages ->
+                    if (newMessages.isNotEmpty()) {
+                        val newDomainMessages = newMessages.map { it.toMessage() }
+                        messageCacheRepository.insertMessages(newDomainMessages)
+                        val allMessages =
+                            (cachedMessages + newDomainMessages).sortedBy { it.chatPosition }
+                        setState {
+                            copy(
+                                isLoading = false,
+                                messages = allMessages.reversed(),
+                                error = null,
+                            )
+                        }
+                        sendEvent(ChatEvent.ScrollToBottom)
+                    } else {
+                        setState { copy(isLoading = false) }
+                    }
+                }.onFailure { error ->
+                    if (currentState.messages.isEmpty()) {
+                        val errorMsg = getErrorMessage("Failed to load messages", error)
+                        setState { copy(error = errorMsg, isLoading = false) }
+                    } else {
+                        handleErrorWithMessage(getErrorMessage("Failed to refresh messages", error))
+                        setState { copy(isLoading = false) }
+                    }
+                }
+        }
     }
 
     private fun validateMessage(content: String): String? =
@@ -98,6 +151,8 @@ class ChatViewModel(
         }
 
     private fun startListeningToMessages() {
+        if (currentState.user == null) return
+
         viewModelScope.launch {
             chatApi
                 .listenToMessages(currentState.chatInfo.eventId.value)
@@ -122,6 +177,7 @@ class ChatViewModel(
             if (messages.any { it.id == newMessage.id }) {
                 this
             } else {
+                viewModelScope.launch { messageCacheRepository.insertMessages(listOf(newMessage)) }
                 wasAdded = true
                 copy(messages = listOf(newMessage) + messages)
             }

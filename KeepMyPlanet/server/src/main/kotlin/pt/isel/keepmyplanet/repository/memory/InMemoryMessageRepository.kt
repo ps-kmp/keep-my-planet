@@ -32,6 +32,14 @@ class InMemoryMessageRepository : MessageRepository {
             .filter { it.eventId == eventId }
             .sortedBy { it.chatPosition }
 
+    override suspend fun getAllByEventIdAfterPosition(
+        eventId: Id,
+        position: Int,
+    ): List<Message> =
+        messages.values
+            .filter { it.eventId == eventId && it.chatPosition > position }
+            .sortedBy { it.chatPosition }
+
     // Get single message by event chat
     override suspend fun getSingleByEventIdAndSeqNum(
         eventId: Id,

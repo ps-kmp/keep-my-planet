@@ -45,13 +45,13 @@ import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
-import pt.isel.keepmyplanet.ui.common.FullScreenLoading
-import pt.isel.keepmyplanet.ui.common.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ConfirmActionDialog
 import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.InfoRow
+import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.getStatusColor
@@ -171,19 +171,19 @@ fun ZoneDetailsScreen(
                             }
                         }
 
-                        if (uiState.photoUrls.isNotEmpty()) {
+                        if (uiState.photoModels.isNotEmpty()) {
                             DetailCard(title = "Photos") {
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    items(uiState.photoUrls) { url ->
+                                    items(uiState.photoModels.values.toList()) { model ->
                                         Card(
                                             modifier = Modifier.size(120.dp),
                                             shape = RoundedCornerShape(8.dp),
                                             elevation = 2.dp,
                                         ) {
                                             Image(
-                                                painter = rememberAsyncImagePainter(model = url),
+                                                painter = rememberAsyncImagePainter(model = model),
                                                 contentDescription = "Zone Photo",
                                                 contentScale = ContentScale.Crop,
                                                 modifier = Modifier.fillMaxSize(),

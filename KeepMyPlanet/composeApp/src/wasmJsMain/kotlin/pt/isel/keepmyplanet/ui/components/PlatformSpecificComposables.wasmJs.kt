@@ -3,6 +3,8 @@ package pt.isel.keepmyplanet.ui.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
+actual val isQrScanningAvailable: Boolean = false
+
 @Composable
 actual fun ManageAttendanceButton(onClick: () -> Unit) {
 }

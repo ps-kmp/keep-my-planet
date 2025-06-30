@@ -22,6 +22,7 @@ import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.utils.getCurrentUserId
 import pt.isel.keepmyplanet.utils.getPathIntParameter
 import pt.isel.keepmyplanet.utils.getPathUIntId
+import pt.isel.keepmyplanet.utils.getQueryIntParameter
 
 fun Route.messageWebApi(
     messageService: MessageService,
@@ -46,9 +47,10 @@ fun Route.messageWebApi(
             // Get all messages from chat
             get {
                 val eventId = call.getEventId()
+                val afterPosition = call.getQueryIntParameter("after_position", -1)
 
                 messageService
-                    .getAllMessagesFromEvent(eventId)
+                    .getMessages(eventId, if (afterPosition == -1) null else afterPosition)
                     .onSuccess { msg ->
                         call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList())
                     }.onFailure { throw it }

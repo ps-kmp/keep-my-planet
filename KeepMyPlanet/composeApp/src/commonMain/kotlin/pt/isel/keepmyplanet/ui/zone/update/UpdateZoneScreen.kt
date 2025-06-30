@@ -25,11 +25,11 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
-import pt.isel.keepmyplanet.ui.common.FullScreenLoading
-import pt.isel.keepmyplanet.ui.common.LoadingButton
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FormField
+import pt.isel.keepmyplanet.ui.components.FullScreenLoading
+import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneEvent
 
 @Composable
@@ -88,23 +88,24 @@ fun UpdateZoneScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            ZoneSeverity.entries.filter { it != ZoneSeverity.UNKNOWN }.forEach {
-                                    severity ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f),
-                                ) {
-                                    RadioButton(
-                                        selected = uiState.severity == severity,
-                                        onClick = { viewModel.onSeverityChange(severity) },
-                                        enabled = !isActionInProgress,
-                                    )
-                                    Text(
-                                        text = severity.name,
-                                        modifier = Modifier.padding(start = 4.dp),
-                                    )
+                            ZoneSeverity.entries
+                                .filter { it != ZoneSeverity.UNKNOWN }
+                                .forEach { severity ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        RadioButton(
+                                            selected = uiState.severity == severity,
+                                            onClick = { viewModel.onSeverityChange(severity) },
+                                            enabled = !isActionInProgress,
+                                        )
+                                        Text(
+                                            text = severity.name,
+                                            modifier = Modifier.padding(start = 4.dp),
+                                        )
+                                    }
                                 }
-                            }
                         }
 
                         Spacer(modifier = Modifier.weight(1f))
