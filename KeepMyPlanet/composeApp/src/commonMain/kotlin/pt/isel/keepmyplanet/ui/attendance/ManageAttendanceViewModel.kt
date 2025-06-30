@@ -1,19 +1,15 @@
 package pt.isel.keepmyplanet.ui.attendance
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.api.EventApi
+import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
-import pt.isel.keepmyplanet.mapper.event.toEvent
-import pt.isel.keepmyplanet.mapper.user.toUserInfo
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceEvent
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 
 class ManageAttendanceViewModel(
-    private val eventApi: EventApi,
+    private val eventRepository: DefaultEventRepository,
     private val eventId: Id,
 ) : BaseViewModel<ManageAttendanceUiState>(ManageAttendanceUiState()) {
     init {
@@ -29,25 +25,17 @@ class ManageAttendanceViewModel(
             setState { copy(isLoading = true, error = null) }
             val result =
                 runCatching {
-                    coroutineScope {
-                        val detailsDeferred = async { eventApi.getEventDetails(eventId.value) }
-                        val participantsDeferred =
-                            async { eventApi.getEventParticipants(eventId.value) }
-                        val attendeesDeferred = async { eventApi.getEventAttendees(eventId.value) }
-                        Triple(
-                            detailsDeferred.await().getOrThrow(),
-                            participantsDeferred.await().getOrThrow(),
-                            attendeesDeferred.await().getOrThrow(),
-                        )
-                    }
+                    val bundle = eventRepository.getEventDetailsBundle(eventId).getOrThrow()
+                    val attendees = eventRepository.getEventAttendees(eventId).getOrThrow()
+                    Pair(bundle, attendees)
                 }
             result
-                .onSuccess { (eventDto, participantsDto, attendeesDto) ->
+                .onSuccess { (bundle, attendees) ->
                     setState {
                         copy(
-                            event = eventDto.toEvent(),
-                            participants = participantsDto.map { it.toUserInfo() },
-                            attendees = attendeesDto.map { it.toUserInfo() },
+                            event = bundle.event,
+                            participants = bundle.participants,
+                            attendees = attendees,
                         )
                     }
                 }.onFailure { e ->
@@ -82,7 +70,7 @@ class ManageAttendanceViewModel(
         launchWithResult(
             onStart = { copy(isCheckingIn = true) },
             onFinally = { copy(isCheckingIn = false) },
-            block = { eventApi.checkInUser(eventId.value, request) },
+            block = { eventRepository.checkInUser(eventId, request) },
             onSuccess = {
                 sendEvent(
                     ManageAttendanceEvent.ShowSnackbar(
@@ -97,8 +85,8 @@ class ManageAttendanceViewModel(
 
     private fun refreshAttendees() {
         launchWithResult(
-            block = { eventApi.getEventAttendees(eventId.value) },
-            onSuccess = { setState { copy(attendees = it.map { a -> a.toUserInfo() }) } },
+            block = { eventRepository.getEventAttendees(eventId) },
+            onSuccess = { setState { copy(attendees = it) } },
             onError = {
                 handleErrorWithMessage(
                     getErrorMessage("Failed to refresh attendee list", it),

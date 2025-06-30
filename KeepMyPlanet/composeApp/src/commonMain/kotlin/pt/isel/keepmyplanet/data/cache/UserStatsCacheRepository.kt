@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.data.repository
+package pt.isel.keepmyplanet.data.cache
 
 import kotlinx.datetime.Clock
 import pt.isel.keepmyplanet.cache.KeepMyPlanetCache

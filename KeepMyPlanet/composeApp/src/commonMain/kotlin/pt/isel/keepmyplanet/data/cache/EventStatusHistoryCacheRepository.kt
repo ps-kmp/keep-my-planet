@@ -1,26 +1,10 @@
-package pt.isel.keepmyplanet.data.repository
+package pt.isel.keepmyplanet.data.cache
 
 import kotlinx.datetime.Clock
-import pt.isel.keepmyplanet.cache.EventStatusHistoryCache
 import pt.isel.keepmyplanet.cache.KeepMyPlanetCache
+import pt.isel.keepmyplanet.data.cache.mappers.toResponse
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
-import pt.isel.keepmyplanet.dto.user.UserInfoSummaryResponse
-import pt.isel.keepmyplanet.utils.safeValueOf
-
-fun EventStatusHistoryCache.toResponse(): EventStateChangeResponse =
-    EventStateChangeResponse(
-        id = this.id.toUInt(),
-        eventId = this.event_id.toUInt(),
-        newStatus = safeValueOf<EventStatus>(this.new_status) ?: EventStatus.UNKNOWN,
-        changedBy =
-            UserInfoSummaryResponse(
-                id = this.changed_by_id.toUInt(),
-                name = this.changed_by_name,
-            ),
-        changeTime = this.change_time,
-    )
 
 class EventStatusHistoryCacheRepository(
     database: KeepMyPlanetCache,

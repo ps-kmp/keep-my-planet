@@ -1,16 +1,16 @@
 package pt.isel.keepmyplanet.ui.event.forms
 
 import kotlinx.datetime.LocalDateTime
-import pt.isel.keepmyplanet.data.api.EventApi
+import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.event.forms.states.EventFormEvent
 import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class EventFormViewModel(
-    private val eventApi: EventApi,
+    private val eventRepository: DefaultEventRepository,
 ) : BaseViewModel<EventFormUiState>(EventFormUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(EventFormEvent.ShowSnackbar(message))
@@ -24,13 +24,13 @@ class EventFormViewModel(
         launchWithResult(
             onStart = { copy(isEditMode = true, isLoading = true, eventIdToEdit = eventId) },
             onFinally = { copy(isLoading = false) },
-            block = { eventApi.getEventDetails(eventId.value) },
+            block = { eventRepository.getEventDetails(eventId) },
             onSuccess = { event ->
                 setState {
                     copy(
-                        title = event.title,
-                        description = event.description,
-                        startDate = event.startDate,
+                        title = event.title.value,
+                        description = event.description.value,
+                        startDate = event.period.start.toString(),
                         maxParticipants = event.maxParticipants?.toString() ?: "",
                     )
                 }
@@ -85,8 +85,8 @@ class EventFormViewModel(
         launchWithResult(
             onStart = { copy(actionState = EventFormUiState.ActionState.Submitting) },
             onFinally = { copy(actionState = EventFormUiState.ActionState.Idle) },
-            block = { eventApi.createEvent(request) },
-            onSuccess = { response -> sendEvent(EventFormEvent.EventCreated(Id(response.id))) },
+            block = { eventRepository.createEvent(request) },
+            onSuccess = { response -> sendEvent(EventFormEvent.EventCreated(response.id)) },
             onError = { handleErrorWithMessage(getErrorMessage("Failed to create event", it)) },
         )
     }
@@ -106,7 +106,7 @@ class EventFormViewModel(
         launchWithResult(
             onStart = { copy(actionState = EventFormUiState.ActionState.Submitting) },
             onFinally = { copy(actionState = EventFormUiState.ActionState.Idle) },
-            block = { eventApi.updateEventDetails(eventId.value, request) },
+            block = { eventRepository.updateEvent(eventId, request) },
             onSuccess = {
                 sendEvent(EventFormEvent.ShowSnackbar("Event updated successfully"))
                 sendEvent(EventFormEvent.NavigateBack)

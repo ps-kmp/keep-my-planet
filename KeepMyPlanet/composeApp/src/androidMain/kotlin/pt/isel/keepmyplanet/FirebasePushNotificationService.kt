@@ -16,7 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
-import pt.isel.keepmyplanet.data.api.DeviceApi
+import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
 
 class FirebasePushNotificationService : FirebaseMessagingService() {
     private val job = SupervisorJob()
@@ -49,9 +49,9 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
     }
 
     private fun sendTokenToServer(token: String) {
-        val deviceApi: DeviceApi = get()
+        val deviceRepository: DefaultDeviceRepository = get()
         scope.launch {
-            deviceApi
+            deviceRepository
                 .registerDevice(token, "ANDROID")
                 .onSuccess { Log.d("FCM", "Token registered successfully") }
                 .onFailure { Log.e("FCM", "Failed to register token", it) }

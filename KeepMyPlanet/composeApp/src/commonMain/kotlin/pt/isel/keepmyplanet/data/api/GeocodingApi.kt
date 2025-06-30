@@ -4,7 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.path
-import pt.isel.keepmyplanet.data.repository.GeocodingCacheRepository
+import pt.isel.keepmyplanet.data.cache.GeocodingCacheRepository
 import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.dto.geocoding.NominatimResult
 import pt.isel.keepmyplanet.mapper.geocoding.toPlace

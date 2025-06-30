@@ -1,24 +1,21 @@
 package pt.isel.keepmyplanet.ui.report
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.api.PhotoApi
-import pt.isel.keepmyplanet.data.api.ZoneApi
-import pt.isel.keepmyplanet.data.repository.OfflineReportQueueRepository
+import pt.isel.keepmyplanet.data.cache.OfflineReportQueueRepository
+import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
+import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.data.service.ConnectivityService
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.report.states.ReportZoneEvent
 import pt.isel.keepmyplanet.ui.report.states.ReportZoneUiState
 import pt.isel.keepmyplanet.ui.report.states.SelectedImage
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class ReportZoneViewModel(
-    private val zoneApi: ZoneApi,
-    private val photoApi: PhotoApi,
+    private val zoneRepository: DefaultZoneRepository,
+    private val photoRepository: DefaultPhotoRepository,
     private val connectivityService: ConnectivityService,
     private val offlineReportQueueRepository: OfflineReportQueueRepository,
 ) : BaseViewModel<ReportZoneUiState>(ReportZoneUiState()) {
@@ -64,18 +61,16 @@ class ReportZoneViewModel(
                 queueReportForOfflineSubmission()
                 return@launch
             }
-        }
 
-        launchWithResult(
-            onStart = { copy(actionState = ReportZoneUiState.ActionState.Submitting) },
-            onFinally = { copy(actionState = ReportZoneUiState.ActionState.Idle) },
-            block = {
-                coroutineScope {
+            launchWithResult(
+                onStart = { copy(actionState = ReportZoneUiState.ActionState.Submitting) },
+                onFinally = { copy(actionState = ReportZoneUiState.ActionState.Idle) },
+                block = {
                     val photoIds =
                         currentState.photos
                             .map {
-                                async { photoApi.createPhoto(it.data, it.filename).getOrThrow().id }
-                            }.awaitAll()
+                                photoRepository.createPhoto(it.data, it.filename).getOrThrow().id
+                            }.toSet()
 
                     val request =
                         ReportZoneRequest(
@@ -83,17 +78,17 @@ class ReportZoneViewModel(
                             longitude = currentState.longitude,
                             description = currentState.description,
                             severity = currentState.severity.name,
-                            photoIds = photoIds.toSet(),
+                            photoIds = photoIds,
                         )
-                    zoneApi.reportZone(request)
-                }
-            },
-            onSuccess = {
-                sendEvent(ReportZoneEvent.ShowSnackbar("Zone reported successfully!"))
-                sendEvent(ReportZoneEvent.ReportSuccessful)
-            },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to report zone", it)) },
-        )
+                    zoneRepository.reportZone(request)
+                },
+                onSuccess = {
+                    sendEvent(ReportZoneEvent.ShowSnackbar("Zone reported successfully!"))
+                    sendEvent(ReportZoneEvent.ReportSuccessful)
+                },
+                onError = { handleErrorWithMessage(getErrorMessage("Failed to report zone", it)) },
+            )
+        }
     }
 
     private suspend fun queueReportForOfflineSubmission() {

@@ -3,20 +3,16 @@ package pt.isel.keepmyplanet.ui.stats
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.api.EventApi
-import pt.isel.keepmyplanet.data.api.UserApi
-import pt.isel.keepmyplanet.data.repository.UserStatsCacheRepository
+import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
+import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.mapper.event.toListItem
-import pt.isel.keepmyplanet.mapper.user.toDomain
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.stats.states.UserStatsEvent
 import pt.isel.keepmyplanet.ui.stats.states.UserStatsUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class UserStatsViewModel(
-    private val userApi: UserApi,
-    private val eventApi: EventApi,
-    private val userStatsCacheRepository: UserStatsCacheRepository,
+    private val userRepository: DefaultUserRepository,
+    private val eventRepository: DefaultEventRepository,
     private val userId: Id,
 ) : BaseViewModel<UserStatsUiState>(UserStatsUiState()) {
     init {
@@ -29,28 +25,19 @@ class UserStatsViewModel(
 
     fun loadInitialData() {
         viewModelScope.launch {
-            val cachedStats = userStatsCacheRepository.getStatsByUserId(userId)
-            if (cachedStats != null) {
-                setState { copy(stats = cachedStats, isLoading = true) }
-            } else {
-                setState { copy(isLoading = true, error = null) }
-            }
+            setState { copy(isLoading = true, error = null) }
 
             try {
                 val (statsResult, eventsResult) =
                     coroutineScope {
-                        val statsJob = async { userApi.getUserStats(userId.value) }
+                        val statsJob = async { userRepository.getUserStats(userId) }
                         val eventsJob =
-                            async {
-                                eventApi.getAttendedEvents(limit = currentState.limit, offset = 0)
-                            }
+                            async { eventRepository.getAttendedEvents(currentState.limit, 0) }
                         Pair(statsJob.await(), eventsJob.await())
                     }
 
-                val stats = statsResult.getOrNull()?.toDomain()
-                val events = eventsResult.getOrNull()?.map { it.toListItem() } ?: emptyList()
-
-                stats?.let { userStatsCacheRepository.insertOrUpdateStats(userId, it) }
+                val stats = statsResult.getOrNull()
+                val events = eventsResult.getOrNull() ?: emptyList()
 
                 val errorMessage =
                     if (statsResult.isFailure || eventsResult.isFailure) {
@@ -102,15 +89,9 @@ class UserStatsViewModel(
         launchWithResult(
             onStart = { copy(isAddingMore = true) },
             onFinally = { copy(isAddingMore = false) },
-            block = {
-                eventApi.getAttendedEvents(
-                    limit = currentState.limit,
-                    offset = currentState.offset,
-                )
-            },
-            onSuccess = { response ->
+            block = { eventRepository.getAttendedEvents(currentState.limit, currentState.offset) },
+            onSuccess = { newEvents ->
                 setState {
-                    val newEvents = response.map { it.toListItem() }
                     copy(
                         attendedEvents = (this.attendedEvents + newEvents).distinctBy { it.id },
                         offset = this.offset + newEvents.size,

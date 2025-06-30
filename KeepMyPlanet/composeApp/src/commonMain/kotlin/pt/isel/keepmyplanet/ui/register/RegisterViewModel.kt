@@ -1,16 +1,16 @@
 package pt.isel.keepmyplanet.ui.register
 
-import pt.isel.keepmyplanet.data.api.UserApi
+import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.auth.RegisterRequest
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.register.states.RegisterEvent
 import pt.isel.keepmyplanet.ui.register.states.RegisterUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class RegisterViewModel(
-    private val userApi: UserApi,
+    private val userRepository: DefaultUserRepository,
 ) : BaseViewModel<RegisterUiState>(RegisterUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(RegisterEvent.ShowSnackbar(message))
@@ -45,7 +45,7 @@ class RegisterViewModel(
         launchWithResult(
             onStart = { copy(actionState = RegisterUiState.ActionState.Registering) },
             onFinally = { copy(actionState = RegisterUiState.ActionState.Idle) },
-            block = { userApi.registerUser(request) },
+            block = { userRepository.registerUser(request) },
             onSuccess = {
                 sendEvent(RegisterEvent.ShowSnackbar("Registration successful! Please login."))
                 sendEvent(RegisterEvent.NavigateToLogin)
@@ -58,12 +58,11 @@ class RegisterViewModel(
                         setState {
                             copy(
                                 usernameError =
-                                    errorMessage.substringAfter(
-                                        "Registration failed: ",
-                                    ),
+                                    errorMessage.substringAfter("Registration failed: "),
                             )
                         }
                     }
+
                     errorMessage.contains("Email", ignoreCase = true) -> {
                         setState {
                             copy(
@@ -71,6 +70,7 @@ class RegisterViewModel(
                             )
                         }
                     }
+
                     else -> {
                         handleErrorWithMessage(getErrorMessage("Registration failed", error))
                     }

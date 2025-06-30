@@ -1,43 +1,11 @@
-package pt.isel.keepmyplanet.data.repository
+package pt.isel.keepmyplanet.data.cache
 
 import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
-import pt.isel.keepmyplanet.cache.EventCache
 import pt.isel.keepmyplanet.cache.KeepMyPlanetCache
-import pt.isel.keepmyplanet.domain.common.Description
+import pt.isel.keepmyplanet.data.cache.mappers.toEvent
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
-import pt.isel.keepmyplanet.domain.event.EventStatus
-import pt.isel.keepmyplanet.domain.event.Period
-import pt.isel.keepmyplanet.domain.event.Title
-import pt.isel.keepmyplanet.utils.safeValueOf
-
-fun EventCache.toEvent(): Event {
-    val participantIds =
-        Json
-            .decodeFromString<Set<UInt>>(this.participantIds_json)
-            .map {
-                Id(it)
-            }.toSet()
-    return Event(
-        id = Id(this.id.toUInt()),
-        title = Title(this.title),
-        description = Description(this.description),
-        period =
-            Period(
-                LocalDateTime.parse(this.startDate),
-                this.endDate?.let { LocalDateTime.parse(it) },
-            ),
-        zoneId = Id(this.zoneId.toUInt()),
-        organizerId = Id(this.organizerId.toUInt()),
-        status = safeValueOf<EventStatus>(this.status) ?: EventStatus.UNKNOWN,
-        maxParticipants = this.maxParticipants?.toInt(),
-        participantsIds = participantIds,
-        createdAt = LocalDateTime.parse(this.createdAt),
-        updatedAt = LocalDateTime.parse(this.updatedAt),
-    )
-}
 
 class EventCacheRepository(
     database: KeepMyPlanetCache,
@@ -58,9 +26,7 @@ class EventCacheRepository(
                     status = event.status.name,
                     maxParticipants = event.maxParticipants?.toLong(),
                     participantIds_json =
-                        Json.encodeToString(
-                            event.participantsIds.map { it.value },
-                        ),
+                        Json.encodeToString(event.participantsIds.map { it.value }),
                     createdAt = event.createdAt.toString(),
                     updatedAt = event.updatedAt.toString(),
                     timestamp = Clock.System.now().epochSeconds,

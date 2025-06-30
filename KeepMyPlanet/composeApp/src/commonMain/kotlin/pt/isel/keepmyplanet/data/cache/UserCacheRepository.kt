@@ -1,35 +1,10 @@
-package pt.isel.keepmyplanet.data.repository
+package pt.isel.keepmyplanet.data.cache
 
 import kotlinx.datetime.Clock
 import pt.isel.keepmyplanet.cache.KeepMyPlanetCache
-import pt.isel.keepmyplanet.cache.UserCache
+import pt.isel.keepmyplanet.data.cache.mappers.toUserCacheInfo
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.user.Email
-import pt.isel.keepmyplanet.domain.user.Name
-import pt.isel.keepmyplanet.domain.user.UserInfo
-
-data class UserCacheInfo(
-    val id: Id,
-    val name: Name,
-    val email: Email,
-    val profilePictureUrl: String?,
-)
-
-fun UserCache.toUserCacheInfo(): UserCacheInfo =
-    UserCacheInfo(
-        id = Id(this.id.toUInt()),
-        name = Name(this.name),
-        email = Email(this.email),
-        profilePictureUrl = this.profilePictureUrl,
-    )
-
-fun UserInfo.toUserCacheInfo(): UserCacheInfo =
-    UserCacheInfo(
-        id = this.id,
-        name = this.name,
-        email = this.email,
-        profilePictureUrl = null,
-    )
+import pt.isel.keepmyplanet.domain.user.UserCacheInfo
 
 class UserCacheRepository(
     database: KeepMyPlanetCache,
@@ -64,11 +39,3 @@ class UserCacheRepository(
         queries.deleteExpiredUsers(expirationTime)
     }
 }
-
-fun UserCacheInfo.toUserInfo(): UserInfo =
-    UserInfo(
-        id = this.id,
-        name = this.name,
-        email = this.email,
-        profilePictureId = null,
-    )

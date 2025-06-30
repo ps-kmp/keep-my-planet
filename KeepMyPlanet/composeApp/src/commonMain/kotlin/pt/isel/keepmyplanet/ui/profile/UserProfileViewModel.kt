@@ -1,10 +1,8 @@
 package pt.isel.keepmyplanet.ui.profile
 
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.api.PhotoApi
-import pt.isel.keepmyplanet.data.api.UserApi
-import pt.isel.keepmyplanet.data.repository.UserCacheRepository
-import pt.isel.keepmyplanet.data.repository.toUserCacheInfo
+import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
+import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
@@ -12,17 +10,15 @@ import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
-import pt.isel.keepmyplanet.mapper.user.toUserInfo
 import pt.isel.keepmyplanet.session.SessionManager
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileEvent
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class UserProfileViewModel(
-    private val userApi: UserApi,
-    private val photoApi: PhotoApi,
+    private val userRepository: DefaultUserRepository,
+    private val photoRepository: DefaultPhotoRepository,
     private val sessionManager: SessionManager,
-    private val userCacheRepository: UserCacheRepository,
 ) : BaseViewModel<UserProfileUiState>(UserProfileUiState()) {
     private val user: UserInfo
         get() =
@@ -92,16 +88,11 @@ class UserProfileViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = { userApi.getUserDetails(user.id.value) },
-            onSuccess = { userResponse ->
-                val updatedUser = userResponse.toUserInfo()
+            block = { userRepository.getUserDetails(user.id) },
+            onSuccess = { updatedUser ->
                 if (updatedUser != currentState.userDetails) {
                     sendEvent(UserProfileEvent.ProfileUpdated(updatedUser))
                 }
-                viewModelScope.launch {
-                    userCacheRepository.insertUsers(listOf(updatedUser.toUserCacheInfo()))
-                }
-
                 setState {
                     copy(
                         userDetails = updatedUser,
@@ -117,9 +108,9 @@ class UserProfileViewModel(
 
     private fun fetchPhotoUrl(photoId: Id) {
         viewModelScope.launch {
-            photoApi
-                .getPhotoById(photoId)
-                .onSuccess { photoResponse -> setState { copy(photoUrl = photoResponse.url) } }
+            photoRepository
+                .getPhotoUrl(photoId)
+                .onSuccess { photoUrl -> setState { copy(photoUrl = photoUrl) } }
                 .onFailure { setState { copy(photoUrl = null) } }
         }
     }
@@ -132,7 +123,7 @@ class UserProfileViewModel(
 
         viewModelScope.launch {
             setState { copy(actionState = UserProfileUiState.ActionState.UPDATING_PHOTO) }
-            photoApi
+            photoRepository
                 .createPhoto(imageData, filename)
                 .onSuccess { photoResponse ->
                     val photoId = Id(photoResponse.id)
@@ -183,7 +174,7 @@ class UserProfileViewModel(
         launchWithResult(
             onStart = { copy(actionState = UserProfileUiState.ActionState.CHANGING_PASSWORD) },
             onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
-            block = { userApi.changePassword(user.id.value, request) },
+            block = { userRepository.changePassword(user.id, request) },
             onSuccess = {
                 setState {
                     copy(
@@ -205,7 +196,7 @@ class UserProfileViewModel(
         launchWithResult(
             onStart = { copy(actionState = UserProfileUiState.ActionState.DELETING_ACCOUNT) },
             onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
-            block = { userApi.deleteUser(user.id.value) },
+            block = { userRepository.deleteUser(user.id) },
             onSuccess = {
                 sendEvent(UserProfileEvent.ShowSnackbar("Account deleted successfully"))
                 sendEvent(UserProfileEvent.AccountDeleted)
@@ -230,9 +221,8 @@ class UserProfileViewModel(
                 )
             },
             onFinally = { copy(actionState = UserProfileUiState.ActionState.IDLE) },
-            block = { userApi.updateUserProfile(user.id.value, request) },
-            onSuccess = { updatedUserResponse ->
-                val updatedUser = updatedUserResponse.toUserInfo()
+            block = { userRepository.updateUserProfile(user.id, request) },
+            onSuccess = { updatedUser ->
                 sendEvent(UserProfileEvent.ProfileUpdated(updatedUser))
                 setState {
                     copy(

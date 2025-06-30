@@ -24,7 +24,7 @@ import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import pt.isel.keepmyplanet.data.api.DeviceApi
+import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
 import pt.isel.keepmyplanet.data.service.CacheCleanupService
 import pt.isel.keepmyplanet.di.appModule
 import pt.isel.keepmyplanet.di.cacheModule
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_EVENT_ID = "event_id"
     }
 
-    private val deviceApi: DeviceApi by lazy { get() }
+    private val deviceRepository: DefaultDeviceRepository by lazy { get() }
     private val appViewModel: AppViewModel by lazy { get() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,7 +122,7 @@ class MainActivity : ComponentActivity() {
                 Log.d("FCM_REG", "Token is $token. Registering with server.")
 
                 lifecycleScope.launch {
-                    deviceApi
+                    deviceRepository
                         .registerDevice(token, "ANDROID")
                         .onSuccess { Log.d("FCM_REG", "Server registration successful.") }
                         .onFailure { Log.e("FCM_REG", "Server registration failed.", it) }

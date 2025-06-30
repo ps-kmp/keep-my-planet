@@ -1,23 +1,9 @@
-package pt.isel.keepmyplanet.data.repository
+package pt.isel.keepmyplanet.data.cache
 
-import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.cache.KeepMyPlanetCache
-import pt.isel.keepmyplanet.cache.MessageCache
+import pt.isel.keepmyplanet.data.cache.mappers.toMessage
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
-import pt.isel.keepmyplanet.domain.message.MessageContent
-import pt.isel.keepmyplanet.domain.user.Name
-
-fun MessageCache.toMessage(): Message =
-    Message(
-        id = Id(this.id.toUInt()),
-        eventId = Id(this.eventId.toUInt()),
-        senderId = Id(this.senderId.toUInt()),
-        senderName = Name(this.senderName),
-        content = MessageContent(this.content),
-        timestamp = LocalDateTime.parse(this.timestamp),
-        chatPosition = this.chatPosition.toInt(),
-    )
 
 class MessageCacheRepository(
     database: KeepMyPlanetCache,

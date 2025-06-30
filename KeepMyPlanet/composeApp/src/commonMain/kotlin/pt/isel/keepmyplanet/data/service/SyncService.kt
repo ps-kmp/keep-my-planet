@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.common
+package pt.isel.keepmyplanet.data.service
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -8,8 +8,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.api.PhotoApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
-import pt.isel.keepmyplanet.data.repository.OfflineReportQueueRepository
-import pt.isel.keepmyplanet.data.service.ConnectivityService
+import pt.isel.keepmyplanet.data.cache.OfflineReportQueueRepository
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 
 private const val MAX_RETRIES = 3

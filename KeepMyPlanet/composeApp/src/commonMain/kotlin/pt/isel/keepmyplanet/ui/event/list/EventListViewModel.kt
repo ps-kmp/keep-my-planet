@@ -4,20 +4,16 @@ import androidx.compose.foundation.lazy.LazyListState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.api.EventApi
-import pt.isel.keepmyplanet.data.repository.EventCacheRepository
+import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
-import pt.isel.keepmyplanet.dto.event.EventResponse
-import pt.isel.keepmyplanet.mapper.event.toListItem
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.event.list.states.EventListEvent
 import pt.isel.keepmyplanet.ui.event.list.states.EventListUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 private const val SEARCH_DEBOUNCE_DELAY_MS = 500L
 
 class EventListViewModel(
-    private val eventApi: EventApi,
-    private val eventCacheRepository: EventCacheRepository,
+    private val eventRepository: DefaultEventRepository,
 ) : BaseViewModel<EventListUiState>(EventListUiState()) {
     private var searchJob: Job? = null
 
@@ -72,39 +68,6 @@ class EventListViewModel(
 
         if (isRefresh.not() && (currentState.isLoading || currentState.isAddingMore)) return
 
-        if (isRefresh && clearPrevious) {
-            val cachedEvents = eventCacheRepository.getAllEvents().map { it.toListItem() }
-            if (cachedEvents.isNotEmpty()) {
-                setState { copy(events = cachedEvents, isLoading = true) }
-            }
-        }
-
-        val block: suspend () -> Result<List<*>> = {
-            when (currentState.filter) {
-                EventFilterType.ALL ->
-                    eventApi.searchAllEvents(
-                        currentState.query.ifBlank { null },
-                        currentState.limit,
-                        offset,
-                    )
-
-                EventFilterType.ORGANIZED ->
-                    eventApi
-                        .searchOrganizedEvents(
-                            currentState.query.ifBlank { null },
-                            currentState.limit,
-                            offset,
-                        )
-
-                EventFilterType.JOINED ->
-                    eventApi.searchJoinedEvents(
-                        currentState.query.ifBlank { null },
-                        currentState.limit,
-                        offset,
-                    )
-            }
-        }
-
         launchWithResult(
             onStart = {
                 copy(
@@ -115,14 +78,19 @@ class EventListViewModel(
                 )
             },
             onFinally = { copy(isLoading = false, isAddingMore = false) },
-            block = block,
+            block = {
+                eventRepository.searchEvents(
+                    filter = currentState.filter,
+                    query = currentState.query.ifBlank { null },
+                    limit = currentState.limit,
+                    offset = offset,
+                )
+            },
             onSuccess = { newEvents ->
                 setState {
                     val currentEvents = if (isRefresh) emptyList() else this.events
                     copy(
-                        events =
-                            (currentEvents + newEvents.map { (it as EventResponse).toListItem() })
-                                .distinctBy { it.id },
+                        events = (currentEvents + newEvents).distinctBy { it.id },
                         offset = if (isRefresh) 0 else this.offset + newEvents.size,
                         hasMorePages = newEvents.size == this.limit,
                         error = null,

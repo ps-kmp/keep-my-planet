@@ -2,30 +2,22 @@ package pt.isel.keepmyplanet.ui.chat
 
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.api.ChatApi
-import pt.isel.keepmyplanet.data.repository.EventsRepository
-import pt.isel.keepmyplanet.data.repository.MessageCacheRepository
+import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
+import pt.isel.keepmyplanet.data.repository.DefaultMessageRepository
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
-import pt.isel.keepmyplanet.mapper.message.toMessage
 import pt.isel.keepmyplanet.session.SessionManager
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.chat.states.ChatEvent
 import pt.isel.keepmyplanet.ui.chat.states.ChatUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class ChatViewModel(
-    private val chatApi: ChatApi,
-    private val messageCacheRepository: MessageCacheRepository,
-    private val eventsRepository: EventsRepository,
+    private val messageRepository: DefaultMessageRepository,
+    private val eventRepository: DefaultEventRepository,
     sessionManager: SessionManager,
     chatInfo: ChatInfo,
-) : BaseViewModel<ChatUiState>(
-        ChatUiState(
-            user = sessionManager.userSession.value?.userInfo,
-            chatInfo = chatInfo,
-        ),
-    ) {
+) : BaseViewModel<ChatUiState>(ChatUiState(sessionManager.userSession.value?.userInfo, chatInfo)) {
     companion object {
         const val MAX_MESSAGE_LENGTH = 1000
     }
@@ -44,7 +36,7 @@ class ChatViewModel(
 
     private fun fetchEventDetails() {
         viewModelScope.launch {
-            eventsRepository
+            eventRepository
                 .getEventDetails(currentState.chatInfo.eventId)
                 .onSuccess { event ->
                     setState { copy(chatInfo = chatInfo.copy(eventTitle = event.title)) }
@@ -68,7 +60,7 @@ class ChatViewModel(
         if (!currentState.isSendEnabled) return
 
         val messageContent = currentState.messageInput.trim()
-        val eventId = currentState.chatInfo.eventId.value
+        val eventId = currentState.chatInfo.eventId
 
         launchWithResult(
             onStart = {
@@ -79,7 +71,7 @@ class ChatViewModel(
                 )
             },
             onFinally = { copy(actionState = ChatUiState.ActionState.Idle) },
-            block = { chatApi.sendMessage(eventId, messageContent) },
+            block = { messageRepository.sendMessage(eventId, messageContent) },
             onSuccess = { },
             onError = {
                 setState { copy(messageInput = messageContent) }
@@ -91,39 +83,20 @@ class ChatViewModel(
     fun loadMessages() {
         if (currentState.user == null) return
 
+        setState { copy(isLoading = true, error = null) }
+
         viewModelScope.launch {
-            val cachedMessages =
-                messageCacheRepository.getMessagesByEventId(
-                    currentState.chatInfo.eventId,
-                )
-            if (cachedMessages.isNotEmpty()) {
-                setState { copy(messages = cachedMessages.reversed(), isLoading = false) }
-                sendEvent(ChatEvent.ScrollToBottom)
-            } else {
-                setState { copy(isLoading = true, error = null) }
-            }
-
-            val lastPosition = cachedMessages.maxOfOrNull { it.chatPosition }
-            val result = chatApi.getMessages(currentState.chatInfo.eventId.value, lastPosition)
-
-            result
+            messageRepository
+                .getMessages(currentState.chatInfo.eventId)
                 .onSuccess { newMessages ->
-                    if (newMessages.isNotEmpty()) {
-                        val newDomainMessages = newMessages.map { it.toMessage() }
-                        messageCacheRepository.insertMessages(newDomainMessages)
-                        val allMessages =
-                            (cachedMessages + newDomainMessages).sortedBy { it.chatPosition }
-                        setState {
-                            copy(
-                                isLoading = false,
-                                messages = allMessages.reversed(),
-                                error = null,
-                            )
-                        }
-                        sendEvent(ChatEvent.ScrollToBottom)
-                    } else {
-                        setState { copy(isLoading = false) }
+                    setState {
+                        copy(
+                            isLoading = false,
+                            messages = newMessages.reversed(),
+                            error = null,
+                        )
                     }
+                    sendEvent(ChatEvent.ScrollToBottom)
                 }.onFailure { error ->
                     if (currentState.messages.isEmpty()) {
                         val errorMsg = getErrorMessage("Failed to load messages", error)
@@ -154,13 +127,13 @@ class ChatViewModel(
         if (currentState.user == null) return
 
         viewModelScope.launch {
-            chatApi
-                .listenToMessages(currentState.chatInfo.eventId.value)
+            messageRepository
+                .listenToMessages(currentState.chatInfo.eventId)
                 .catch { handleErrorWithMessage(getErrorMessage("Chat connection error", it)) }
                 .collect { messageResult ->
                     messageResult
                         .onSuccess { newMessageResponse ->
-                            val messageAdded = addNewMessage(newMessageResponse.toMessage())
+                            val messageAdded = addNewMessage(newMessageResponse)
                             if (messageAdded) sendEvent(ChatEvent.ScrollToBottom)
                         }.onFailure { exception ->
                             handleErrorWithMessage(
@@ -177,7 +150,6 @@ class ChatViewModel(
             if (messages.any { it.id == newMessage.id }) {
                 this
             } else {
-                viewModelScope.launch { messageCacheRepository.insertMessages(listOf(newMessage)) }
                 wasAdded = true
                 copy(messages = listOf(newMessage) + messages)
             }

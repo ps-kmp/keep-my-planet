@@ -16,7 +16,7 @@ import kotlin.math.sqrt
 import kotlin.math.tan
 import kotlinx.io.Buffer
 import ovh.plrapps.mapcompose.core.TileStreamProvider
-import pt.isel.keepmyplanet.data.repository.MapTileCacheRepository
+import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
 
 fun createOfflineFirstTileStreamProvider(
     httpClient: HttpClient,

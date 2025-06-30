@@ -4,15 +4,15 @@ import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.EventCacheRepository
-import pt.isel.keepmyplanet.data.repository.EventStatusHistoryCacheRepository
-import pt.isel.keepmyplanet.data.repository.GeocodingCacheRepository
-import pt.isel.keepmyplanet.data.repository.MapTileCacheRepository
-import pt.isel.keepmyplanet.data.repository.MessageCacheRepository
-import pt.isel.keepmyplanet.data.repository.PhotoCacheRepository
-import pt.isel.keepmyplanet.data.repository.UserCacheRepository
-import pt.isel.keepmyplanet.data.repository.UserStatsCacheRepository
-import pt.isel.keepmyplanet.data.repository.ZoneCacheRepository
+import pt.isel.keepmyplanet.data.cache.EventCacheRepository
+import pt.isel.keepmyplanet.data.cache.EventStatusHistoryCacheRepository
+import pt.isel.keepmyplanet.data.cache.GeocodingCacheRepository
+import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
+import pt.isel.keepmyplanet.data.cache.MessageCacheRepository
+import pt.isel.keepmyplanet.data.cache.PhotoCacheRepository
+import pt.isel.keepmyplanet.data.cache.UserCacheRepository
+import pt.isel.keepmyplanet.data.cache.UserStatsCacheRepository
+import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
 import pt.isel.keepmyplanet.utils.minus
 import pt.isel.keepmyplanet.utils.now
 
@@ -43,9 +43,7 @@ class CacheCleanupService(
             zoneCacheRepository.deleteExpiredZones(THIRTY_DAYS_IN_SECONDS)
             geocodingCacheRepository.deleteExpiredResults(ONE_DAY_IN_SECONDS)
             eventStatusHistoryCacheRepository.deleteExpiredHistory(SEVEN_DAYS_IN_SECONDS)
-
-            val messageExpiration = now().minus(30.days)
-            messageCacheRepository.deleteExpiredMessages(messageExpiration.toString())
+            messageCacheRepository.deleteExpiredMessages(now().minus(30.days).toString())
         }
     }
 }

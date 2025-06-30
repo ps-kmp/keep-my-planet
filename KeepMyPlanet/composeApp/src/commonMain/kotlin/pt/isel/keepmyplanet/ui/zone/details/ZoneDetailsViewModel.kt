@@ -1,31 +1,21 @@
 package pt.isel.keepmyplanet.ui.zone.details
 
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
-import io.ktor.client.statement.readRawBytes
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.api.PhotoApi
-import pt.isel.keepmyplanet.data.api.ZoneApi
-import pt.isel.keepmyplanet.data.repository.PhotoCacheRepository
-import pt.isel.keepmyplanet.data.repository.ZoneCacheRepository
+import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
+import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.UserInfo
-import pt.isel.keepmyplanet.mapper.zone.toZone
 import pt.isel.keepmyplanet.session.SessionManager
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsEvent
 import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsUiState
 
 class ZoneDetailsViewModel(
-    private val zoneApi: ZoneApi,
-    private val photoApi: PhotoApi,
-    private val zoneCacheRepository: ZoneCacheRepository,
-    private val photoCacheRepository: PhotoCacheRepository,
+    private val zoneRepository: DefaultZoneRepository,
+    private val photoRepository: DefaultPhotoRepository,
     private val sessionManager: SessionManager,
-    private val httpClient: HttpClient,
 ) : BaseViewModel<ZoneDetailsUiState>(ZoneDetailsUiState()) {
     private val currentUser: UserInfo?
         get() = sessionManager.userSession.value?.userInfo
@@ -36,33 +26,10 @@ class ZoneDetailsViewModel(
 
     fun loadZoneDetails(zoneId: Id) {
         launchWithResult(
-            onStart = {
-                viewModelScope.launch {
-                    val cachedZone = zoneCacheRepository.getZoneById(zoneId)
-                    if (cachedZone != null) {
-                        val photoModels =
-                            cachedZone.photosIds.associateWith {
-                                photoCacheRepository.getPhotoData(it)
-                                    ?: photoCacheRepository.getPhotoUrl(it)
-                                    ?: ""
-                            }
-                        setState {
-                            copy(
-                                zone = cachedZone,
-                                photoModels = photoModels,
-                                isLoading = true,
-                            )
-                        }
-                    } else {
-                        setState { copy(isLoading = true, zone = null, error = null) }
-                    }
-                }
-                this
-            },
+            onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = { zoneApi.getZoneDetails(zoneId.value) },
-            onSuccess = { response ->
-                val zone = response.toZone()
+            block = { zoneRepository.getZoneDetails(zoneId) },
+            onSuccess = { zone ->
                 setState {
                     copy(
                         zone = zone,
@@ -70,7 +37,6 @@ class ZoneDetailsViewModel(
                     )
                 }
                 fetchAndCachePhotos(zone.photosIds)
-                zoneCacheRepository.insertZones(listOf(zone))
             },
             onError = {
                 if (currentState.zone == null) {
@@ -83,30 +49,18 @@ class ZoneDetailsViewModel(
     }
 
     private suspend fun fetchAndCachePhotos(photoIds: Set<Id>) {
-        val urls =
-            coroutineScope {
-                photoIds.map { id -> async { photoApi.getPhotoById(id) } }.awaitAll()
-            }
         val fetchedPhotoModels = mutableMapOf<Id, Any>()
-        urls.forEach { result ->
-            result.onSuccess { photo ->
-                val photoId = Id(photo.id)
-                photoCacheRepository.insertPhotoUrl(photoId, photo.url)
-                fetchedPhotoModels[photoId] = photo.url
-            }
+        coroutineScope {
+            photoIds
+                .map { id ->
+                    async {
+                        photoRepository.getPhotoModel(id).onSuccess { model ->
+                            fetchedPhotoModels[id] = model
+                        }
+                    }
+                }.awaitAll()
         }
         setState { copy(photoModels = fetchedPhotoModels) }
-
-        viewModelScope.launch {
-            fetchedPhotoModels.forEach { (id, model) ->
-                if (model is String) {
-                    runCatching {
-                        val imageData = httpClient.get(model).readRawBytes()
-                        photoCacheRepository.updatePhotoData(id, imageData)
-                    }
-                }
-            }
-        }
     }
 
     fun deleteZone() {
@@ -115,7 +69,7 @@ class ZoneDetailsViewModel(
         launchWithResult(
             onStart = { copy(actionState = ZoneDetailsUiState.ActionState.DELETING) },
             onFinally = { copy(actionState = ZoneDetailsUiState.ActionState.IDLE) },
-            block = { zoneApi.deleteZone(zoneId.value) },
+            block = { zoneRepository.deleteZone(zoneId) },
             onSuccess = {
                 sendEvent(ZoneDetailsEvent.ShowSnackbar("Zone deleted successfully"))
                 sendEvent(ZoneDetailsEvent.ZoneDeleted)

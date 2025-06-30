@@ -1,16 +1,15 @@
 package pt.isel.keepmyplanet.ui.zone.update
 
-import pt.isel.keepmyplanet.data.api.ZoneApi
+import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
-import pt.isel.keepmyplanet.mapper.zone.toZone
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneEvent
 import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneUiState
 
 class UpdateZoneViewModel(
-    private val zoneApi: ZoneApi,
+    private val zoneRepository: DefaultZoneRepository,
 ) : BaseViewModel<UpdateZoneUiState>(UpdateZoneUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(UpdateZoneEvent.ShowSnackbar(message))
@@ -20,9 +19,8 @@ class UpdateZoneViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = { zoneApi.getZoneDetails(zoneId.value) },
-            onSuccess = { response ->
-                val zone = response.toZone()
+            block = { zoneRepository.getZoneDetails(zoneId) },
+            onSuccess = { zone ->
                 setState {
                     copy(
                         zone = zone,
@@ -67,7 +65,7 @@ class UpdateZoneViewModel(
                         severity = currentState.severity.name,
                         status = null,
                     )
-                zoneApi.updateZone(zoneId.value, request)
+                zoneRepository.updateZone(zoneId, request)
             },
             onSuccess = {
                 sendEvent(UpdateZoneEvent.ShowSnackbar("Zone updated successfully!"))

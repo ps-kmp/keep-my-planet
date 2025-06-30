@@ -1,22 +1,19 @@
 package pt.isel.keepmyplanet.ui.event.details
 
-import pt.isel.keepmyplanet.data.api.EventApi
-import pt.isel.keepmyplanet.data.repository.EventsRepository
+import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
-import pt.isel.keepmyplanet.mapper.event.toEvent
 import pt.isel.keepmyplanet.session.SessionManager
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 
 class EventDetailsViewModel(
-    private val eventApi: EventApi,
+    private val eventRepository: DefaultEventRepository,
     private val sessionManager: SessionManager,
-    private val eventsRepository: EventsRepository,
 ) : BaseViewModel<EventDetailsUiState>(EventDetailsUiState()) {
     private val currentUser: UserInfo
         get() =
@@ -31,7 +28,7 @@ class EventDetailsViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = { eventsRepository.getEventDetailsBundle(eventId) },
+            block = { eventRepository.getEventDetailsBundle(eventId) },
             onSuccess = { bundle ->
                 setState {
                     copy(
@@ -55,13 +52,13 @@ class EventDetailsViewModel(
         actionState: EventDetailsUiState.ActionState,
         successMessage: String,
         errorMessagePrefix: String,
-        apiCall: suspend (UInt) -> Result<Event>,
+        apiCall: suspend (Id) -> Result<Event>,
     ) {
         val eventId = getEventId() ?: return
         launchWithResult(
             onStart = { copy(actionState = actionState) },
             onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
-            block = { apiCall(eventId.value) },
+            block = { apiCall(eventId) },
             onSuccess = { eventResponse ->
                 updateEventInState(eventResponse)
                 sendEvent(EventDetailsEvent.ShowSnackbar(successMessage))
@@ -77,7 +74,7 @@ class EventDetailsViewModel(
             "Joined event successfully",
             "Failed to join event",
         ) {
-            eventApi.joinEvent(it).map { eventResponse -> eventResponse.toEvent() }
+            eventRepository.joinEvent(it)
         }
 
     fun leaveEvent() =
@@ -86,7 +83,7 @@ class EventDetailsViewModel(
             "Left event successfully",
             "Failed to leave event",
         ) {
-            eventApi.leaveEvent(it).map { eventResponse -> eventResponse.toEvent() }
+            eventRepository.leaveEvent(it)
         }
 
     fun changeEventStatus(newStatus: EventStatus) {
@@ -115,7 +112,7 @@ class EventDetailsViewModel(
             errorMessagePrefix = errorMessagePrefix,
             apiCall = { eventId ->
                 val request = ChangeEventStatusRequest(newStatus)
-                eventApi.changeEventStatus(eventId, request).map { it.toEvent() }
+                eventRepository.changeEventStatus(eventId, request)
             },
         )
     }
@@ -125,7 +122,7 @@ class EventDetailsViewModel(
         launchWithResult(
             onStart = { copy(actionState = EventDetailsUiState.ActionState.DELETING) },
             onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
-            block = { eventApi.deleteEvent(eventId.value) },
+            block = { eventRepository.deleteEvent(eventId) },
             onSuccess = {
                 sendEvent(EventDetailsEvent.ShowSnackbar("Event deleted successfully"))
                 sendEvent(EventDetailsEvent.EventDeleted)

@@ -37,14 +37,13 @@ import ovh.plrapps.mapcompose.api.visibleBoundingBox
 import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
 import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
-import pt.isel.keepmyplanet.data.api.GeocodingApi
-import pt.isel.keepmyplanet.data.api.ZoneApi
-import pt.isel.keepmyplanet.data.repository.MapTileCacheRepository
-import pt.isel.keepmyplanet.data.repository.ZoneCacheRepository
+import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
+import pt.isel.keepmyplanet.data.repository.DefaultGeocodingRepository
+import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
-import pt.isel.keepmyplanet.mapper.zone.toZone
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.shouldShowUserLocationMarker
 import pt.isel.keepmyplanet.ui.map.MapConfiguration.DEFAULT_LAT
@@ -57,7 +56,6 @@ import pt.isel.keepmyplanet.ui.map.MapConfiguration.ZONE_CLUSTER_ID
 import pt.isel.keepmyplanet.ui.map.components.UserLocationMarker
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.map.states.MapUiState
-import pt.isel.keepmyplanet.ui.viewmodel.BaseViewModel
 import pt.isel.keepmyplanet.utils.createOfflineFirstTileStreamProvider
 import pt.isel.keepmyplanet.utils.haversineDistance
 import pt.isel.keepmyplanet.utils.latToY
@@ -68,10 +66,9 @@ import pt.isel.keepmyplanet.utils.yToLat
 @OptIn(FlowPreview::class, ExperimentalClusteringApi::class)
 class MapViewModel(
     private val httpClient: HttpClient,
-    private val zoneApi: ZoneApi,
-    private val geocodingApi: GeocodingApi,
+    private val zoneRepository: DefaultZoneRepository,
+    private val geocodingRepository: DefaultGeocodingRepository,
     private val mapTileCacheRepository: MapTileCacheRepository,
-    private val zoneCacheRepository: ZoneCacheRepository,
 ) : BaseViewModel<MapUiState>(MapUiState()) {
     private val _userLocation = MutableStateFlow<Location?>(null)
     val userLocation = _userLocation.asStateFlow()
@@ -185,15 +182,6 @@ class MapViewModel(
     suspend fun onMapIdle() {
         val bbox = mapState.visibleBoundingBox()
 
-        val minLocation = Location(yToLat(bbox.yBottom), xToLon(bbox.xLeft))
-        val maxLocation = Location(yToLat(bbox.yTop), xToLon(bbox.xRight))
-        val cachedZones = zoneCacheRepository.getZonesInBoundingBox(minLocation, maxLocation)
-
-        if (cachedZones.isNotEmpty()) {
-            val zonesToShow = (currentState.zones + cachedZones).distinctBy { it.id }
-            setState { copy(zones = zonesToShow) }
-        }
-
         val centerLat = yToLat((bbox.yTop + bbox.yBottom) / 2)
         val centerLon = xToLon((bbox.xLeft + bbox.xRight) / 2)
         val cornerLat = yToLat(bbox.yTop)
@@ -205,14 +193,8 @@ class MapViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true) },
             onFinally = { copy(isLoading = false) },
-            block = { zoneApi.findZonesByLocation(centerLat, centerLon, radiusInMeters) },
-            onSuccess = { response ->
-                val newZones = response.map { it.toZone() }
-
-                if (newZones.isNotEmpty()) {
-                    zoneCacheRepository.insertZones(newZones)
-                }
-
+            block = { zoneRepository.findZonesByLocation(centerLat, centerLon, radiusInMeters) },
+            onSuccess = { newZones ->
                 val updatedZones = (currentState.zones + newZones).distinctBy { it.id }
                 setState { copy(zones = updatedZones, error = null) }
             },
@@ -304,7 +286,7 @@ class MapViewModel(
         launchWithResult(
             onStart = { copy(isSearching = true) },
             onFinally = { copy(isSearching = false) },
-            block = { geocodingApi.search(query) },
+            block = { geocodingRepository.search(query) },
             onSuccess = { results -> setState { copy(searchResults = results) } },
             onError = {
                 handleErrorWithMessage(getErrorMessage("Failed to search for address", it))
