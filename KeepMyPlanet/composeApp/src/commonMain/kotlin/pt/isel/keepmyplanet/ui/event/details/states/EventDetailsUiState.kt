@@ -3,7 +3,7 @@ package pt.isel.keepmyplanet.ui.event.details.states
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.UserInfo
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class EventDetailsUiState(
     val event: Event? = null,

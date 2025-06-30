@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.ui.stats.states
 
-import pt.isel.keepmyplanet.ui.viewmodel.UiEvent
+import pt.isel.keepmyplanet.ui.base.UiEvent
 
 sealed interface UserStatsEvent : UiEvent {
     data class ShowSnackbar(

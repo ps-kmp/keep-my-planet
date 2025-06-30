@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.report.states
 
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class ReportZoneUiState(
     val latitude: Double = 0.0,

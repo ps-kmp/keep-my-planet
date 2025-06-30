@@ -14,6 +14,7 @@ import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.about.AboutScreen
 import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceScreen
 import pt.isel.keepmyplanet.ui.attendance.MyQrCodeScreen
+import pt.isel.keepmyplanet.ui.base.koinViewModel
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.event.forms.CreateEventScreen
@@ -27,7 +28,6 @@ import pt.isel.keepmyplanet.ui.profile.UserProfileScreen
 import pt.isel.keepmyplanet.ui.register.RegisterScreen
 import pt.isel.keepmyplanet.ui.report.ReportZoneScreen
 import pt.isel.keepmyplanet.ui.stats.UserStatsScreen
-import pt.isel.keepmyplanet.ui.viewmodel.koinViewModel
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsScreen
 import pt.isel.keepmyplanet.ui.zone.update.UpdateZoneScreen
 

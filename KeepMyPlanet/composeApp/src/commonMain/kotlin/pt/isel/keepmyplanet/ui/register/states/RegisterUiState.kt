@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.ui.register.states
 
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class RegisterUiState(
     val username: String = "",

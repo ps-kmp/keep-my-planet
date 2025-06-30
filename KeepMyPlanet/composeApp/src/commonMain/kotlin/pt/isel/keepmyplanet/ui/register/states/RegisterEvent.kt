@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.ui.register.states
 
-import pt.isel.keepmyplanet.ui.viewmodel.UiEvent
+import pt.isel.keepmyplanet.ui.base.UiEvent
 
 sealed interface RegisterEvent : UiEvent {
     data object NavigateToLogin : RegisterEvent

@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.ui.map.states
 
-import pt.isel.keepmyplanet.ui.viewmodel.UiEvent
+import pt.isel.keepmyplanet.ui.base.UiEvent
 
 sealed interface MapEvent : UiEvent {
     data class ShowSnackbar(

@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.viewmodel
+package pt.isel.keepmyplanet.ui.base
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect

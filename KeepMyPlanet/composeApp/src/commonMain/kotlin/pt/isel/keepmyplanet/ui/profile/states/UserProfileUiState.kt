@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.profile.states
 
 import pt.isel.keepmyplanet.domain.user.UserInfo
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class UserProfileUiState(
     val userDetails: UserInfo? = null,

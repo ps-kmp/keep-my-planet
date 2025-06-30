@@ -2,7 +2,7 @@ package pt.isel.keepmyplanet.ui.event.list.states
 
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.domain.event.EventListItem
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class EventListUiState(
     val events: List<EventListItem> = emptyList(),

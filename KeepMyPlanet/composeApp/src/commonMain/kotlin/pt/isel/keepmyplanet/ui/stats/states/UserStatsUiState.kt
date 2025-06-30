@@ -2,7 +2,7 @@ package pt.isel.keepmyplanet.ui.stats.states
 
 import pt.isel.keepmyplanet.domain.event.EventListItem
 import pt.isel.keepmyplanet.domain.user.UserStats
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class UserStatsUiState(
     val stats: UserStats? = null,

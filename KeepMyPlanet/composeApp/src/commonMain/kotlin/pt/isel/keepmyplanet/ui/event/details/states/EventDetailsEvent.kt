@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.details.states
 
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.ui.viewmodel.UiEvent
+import pt.isel.keepmyplanet.ui.base.UiEvent
 
 sealed interface EventDetailsEvent : UiEvent {
     data class ShowSnackbar(

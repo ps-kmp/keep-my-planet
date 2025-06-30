@@ -2,7 +2,7 @@ package pt.isel.keepmyplanet.ui.map.states
 
 import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.domain.zone.Zone
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class MapUiState(
     val zones: List<Zone> = emptyList(),

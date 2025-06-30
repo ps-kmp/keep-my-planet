@@ -15,7 +15,7 @@ import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.session.SessionManager
-import pt.isel.keepmyplanet.ui.viewmodel.ViewModel
+import pt.isel.keepmyplanet.ui.base.ViewModel
 
 class AppViewModel(
     private val sessionManager: SessionManager,

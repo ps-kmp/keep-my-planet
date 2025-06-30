@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.forms.states
 
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class EventFormUiState(
     val title: String = "",

@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.ui.login.states
 
-import pt.isel.keepmyplanet.ui.viewmodel.UiState
+import pt.isel.keepmyplanet.ui.base.UiState
 
 data class LoginUiState(
     val email: String = "",

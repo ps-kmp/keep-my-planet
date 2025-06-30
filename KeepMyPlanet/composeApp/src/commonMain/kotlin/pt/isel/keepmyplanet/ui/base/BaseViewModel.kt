@@ -1,4 +1,4 @@
-package pt.isel.keepmyplanet.ui.viewmodel
+package pt.isel.keepmyplanet.ui.base
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
