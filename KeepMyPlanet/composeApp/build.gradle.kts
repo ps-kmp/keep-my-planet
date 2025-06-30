@@ -198,7 +198,7 @@ sqldelight {
     databases {
         create("KeepMyPlanetCache") {
             packageName.set("pt.isel.keepmyplanet.cache")
-            generateAsync.set(true)
+            generateAsync.set(false)
         }
     }
 }
