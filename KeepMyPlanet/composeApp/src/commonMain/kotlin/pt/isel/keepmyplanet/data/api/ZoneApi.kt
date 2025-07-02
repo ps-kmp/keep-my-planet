@@ -39,6 +39,8 @@ class ZoneApi(
         ) = "${zoneById(zoneId)}/photos/$photoId"
 
         fun confirmCleanliness(zoneId: UInt) = "$ZONES_BASE/$zoneId/confirm-cleanliness"
+
+        fun revertToReported(zoneId: UInt) = "$ZONES_BASE/$zoneId/revert-to-reported"
     }
 
     suspend fun reportZone(request: ReportZoneRequest): Result<ZoneResponse> =
@@ -116,5 +118,11 @@ class ZoneApi(
             method = HttpMethod.Post
             url(Endpoints.confirmCleanliness(zoneId))
             setBody(request)
+        }
+
+    suspend fun revertToReported(zoneId: UInt): Result<ZoneResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url("${Endpoints.zoneById(zoneId)}/revert-to-reported")
         }
 }

@@ -57,6 +57,7 @@ fun EventDetailsScreen(
     onNavigateToManageAttendance: (Id) -> Unit,
     onNavigateToMyQrCode: (userId: Id, organizerName: String) -> Unit,
     onNavigateToStatusHistory: (Id) -> Unit,
+    onNavigateToUpdateZone: (Id) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -130,6 +131,8 @@ fun EventDetailsScreen(
                 is EventDetailsEvent.NavigateToMyQrCode -> {
                     onNavigateToMyQrCode(event.userId, event.organizerName)
                 }
+
+                is EventDetailsEvent.NavigateToUpdateZone -> onNavigateToUpdateZone(event.zoneId)
             }
         }
     }

@@ -136,22 +136,26 @@ class EventDetailsViewModel(
     fun confirmZoneCleanliness(wasCleaned: Boolean) {
         val event = currentState.event ?: return
 
-        launchWithResult(
-            onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
-            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
-            block = {
-                zoneRepository.confirmCleanliness(
-                    zoneId = event.zoneId,
-                    eventId = event.id,
-                    wasCleaned = wasCleaned
-                )
-            },
-            onSuccess = { updatedZone ->
-                sendEvent(EventDetailsEvent.ShowSnackbar("Zone status confirmed successfully!"))
-                sendEvent(EventDetailsEvent.NavigateBack)
-            },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to confirm zone status", it)) }
-        )
+        if(wasCleaned){
+            launchWithResult(
+                onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
+                onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
+                block = {
+                    zoneRepository.confirmCleanliness(
+                        zoneId = event.zoneId,
+                        eventId = event.id,
+                        wasCleaned = true
+                    )
+                },
+                onSuccess = {
+                    sendEvent(EventDetailsEvent.ShowSnackbar("Zone status confirmed successfully!"))
+                    sendEvent(EventDetailsEvent.NavigateBack)
+                },
+                onError = { handleErrorWithMessage(getErrorMessage("Failed to confirm zone status", it)) }
+            )
+        } else {
+            sendEvent(EventDetailsEvent.NavigateToUpdateZone(event.zoneId))
+        }
     }
 
     fun onQrCodeIconClicked() {

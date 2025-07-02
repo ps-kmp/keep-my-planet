@@ -81,7 +81,7 @@ val appModule =
         factoryOf(::EventListViewModel)
         factory { EventDetailsViewModel(get(), get(), get()) }
         factoryOf(::EventStatusHistoryViewModel)
-        factoryOf(::EventFormViewModel)
+        factory { EventFormViewModel(get(), get()) }
         factoryOf(::MapViewModel)
         factoryOf(::ZoneDetailsViewModel)
         factoryOf(::UpdateZoneViewModel)

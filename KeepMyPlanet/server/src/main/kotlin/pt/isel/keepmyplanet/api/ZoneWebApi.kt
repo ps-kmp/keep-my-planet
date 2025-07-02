@@ -107,14 +107,30 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                     val request = call.receive<ConfirmCleanlinessRequest>()
                     val eventId = Id(request.eventId)
 
+                    val newSeverity: ZoneSeverity? = request.newSeverity?.let { severityString ->
+                        safeValueOf<ZoneSeverity>(severityString)
+                            ?: throw ValidationException("Invalid severity value provided: '$severityString'")
+                    }
+
                     zoneService.confirmZoneCleanliness(
                         zoneId = zoneId,
                         organizerId = organizerId,
                         wasCleaned = request.wasCleaned,
-                        eventId = eventId
+                        eventId = eventId,
+                        newSeverity = newSeverity
                     ).onSuccess { updatedZone ->
                         call.respond(HttpStatusCode.OK, updatedZone.toResponse())
                     }.onFailure { throw it }
+                }
+
+                post("/revert-to-reported") {
+                    val zoneId = call.getZoneId()
+                    val userId = call.getCurrentUserId()
+
+                    zoneService.revertZoneToReported(zoneId, userId)
+                        .onSuccess { updatedZone ->
+                            call.respond(HttpStatusCode.OK, updatedZone.toResponse())
+                        }.onFailure { throw it }
                 }
 
                 route("/photos") {

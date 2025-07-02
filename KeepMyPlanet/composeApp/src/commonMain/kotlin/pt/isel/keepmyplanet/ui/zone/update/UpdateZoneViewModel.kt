@@ -1,8 +1,10 @@
 package pt.isel.keepmyplanet.ui.zone.update
 
+import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
+import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneEvent
@@ -19,7 +21,7 @@ class UpdateZoneViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = { zoneRepository.getZoneDetails(zoneId) },
+            block = { zoneRepository.getZoneDetails(zoneId, forceNetwork = true) },
             onSuccess = { zone ->
                 setState {
                     copy(
@@ -27,6 +29,14 @@ class UpdateZoneViewModel(
                         description = zone.description.value,
                         severity = zone.zoneSeverity,
                     )
+                }
+                if (zone.status == ZoneStatus.CLEANING_SCHEDULED) {
+                    viewModelScope.launch {
+                        zoneRepository.revertToReported(zoneId)
+                            .onFailure {
+                                handleErrorWithMessage("Could not auto-revert zone status.")
+                            }
+                    }
                 }
             },
             onError = {

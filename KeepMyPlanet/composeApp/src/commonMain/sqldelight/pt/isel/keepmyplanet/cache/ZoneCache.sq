@@ -29,3 +29,6 @@ DELETE FROM ZoneCache;
 
 deleteExpiredZones:
 DELETE FROM ZoneCache WHERE timestamp < ?;
+
+deleteById:
+DELETE FROM ZoneCache WHERE id = ?;

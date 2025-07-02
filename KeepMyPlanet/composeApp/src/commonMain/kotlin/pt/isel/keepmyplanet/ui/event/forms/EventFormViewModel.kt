@@ -1,7 +1,9 @@
 package pt.isel.keepmyplanet.ui.event.forms
 
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
+import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
@@ -11,6 +13,7 @@ import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
 
 class EventFormViewModel(
     private val eventRepository: DefaultEventRepository,
+    private val zoneRepository: DefaultZoneRepository
 ) : BaseViewModel<EventFormUiState>(EventFormUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(EventFormEvent.ShowSnackbar(message))
@@ -86,7 +89,12 @@ class EventFormViewModel(
             onStart = { copy(actionState = EventFormUiState.ActionState.Submitting) },
             onFinally = { copy(actionState = EventFormUiState.ActionState.Idle) },
             block = { eventRepository.createEvent(request) },
-            onSuccess = { response -> sendEvent(EventFormEvent.EventCreated(response.id)) },
+            onSuccess = { createdEvent  ->
+                viewModelScope.launch {
+                    zoneRepository.invalidateZoneCache(createdEvent.zoneId)
+                }
+                sendEvent(EventFormEvent.EventCreated(createdEvent.id))
+            },
             onError = { handleErrorWithMessage(getErrorMessage("Failed to create event", it)) },
         )
     }

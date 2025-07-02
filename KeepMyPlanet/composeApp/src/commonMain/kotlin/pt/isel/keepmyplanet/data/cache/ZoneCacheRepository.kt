@@ -35,6 +35,10 @@ class ZoneCacheRepository(
         }
     }
 
+    suspend fun deleteById(id: Id) {
+        queries.deleteById(id.value.toLong())
+    }
+
     fun getZonesInBoundingBox(
         min: Location,
         max: Location,

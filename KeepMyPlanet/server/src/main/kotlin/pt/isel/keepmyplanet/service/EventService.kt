@@ -257,14 +257,14 @@ class EventService(
 
             val zone = findZoneOrFail(event.zoneId)
             if (zone.eventId == event.id) {
-                zoneStateChangeService.changeZoneStatus(
+                val zoneAfterStatusChange = zoneStateChangeService.changeZoneStatus(
                     zone = zone,
                     newStatus = ZoneStatus.REPORTED,
                     changedBy = userId,
                     triggeredByEventId = event.id
                 )
-                val updatedZone = zone.copy(eventId = null)
-                zoneRepository.update(updatedZone)
+                val finalZone = zoneAfterStatusChange.copy(eventId = null)
+                zoneRepository.update(finalZone)
             }
 
             messageRepository.deleteAllByEventId(eventId)

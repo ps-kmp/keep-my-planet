@@ -17,8 +17,19 @@ class DefaultZoneRepository(
     suspend fun reportZone(request: ReportZoneRequest): Result<Zone> =
         zoneApi.reportZone(request).map { it.toZone() }
 
-    suspend fun getZoneDetails(zoneId: Id): Result<Zone> =
+    suspend fun invalidateZoneCache(zoneId: Id) {
+        zoneCache.deleteById(zoneId)
+    }
+
+    suspend fun getZoneDetails(
+        zoneId: Id,
+        forceNetwork: Boolean = false
+    ): Result<Zone> =
         runCatching {
+            if (!forceNetwork) {
+                val cachedZone = zoneCache.getZoneById(zoneId)
+                if (cachedZone != null) return@runCatching cachedZone
+            }
             val networkResult = zoneApi.getZoneDetails(zoneId.value)
             if (networkResult.isSuccess) {
                 val zone = networkResult.getOrThrow().toZone()
@@ -76,4 +87,7 @@ class DefaultZoneRepository(
             updatedZone
         }
     }
+
+    suspend fun revertToReported(zoneId: Id): Result<Zone> =
+        zoneApi.revertToReported(zoneId.value).map { it.toZone() }
 }

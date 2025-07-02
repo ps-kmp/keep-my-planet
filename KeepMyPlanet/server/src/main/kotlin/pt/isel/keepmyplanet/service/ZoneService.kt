@@ -185,7 +185,8 @@ class ZoneService(
         zoneId: Id,
         organizerId: Id,
         wasCleaned: Boolean,
-        eventId: Id
+        eventId: Id,
+        newSeverity: ZoneSeverity? = null
     ): Result<Zone> = runCatching {
         val zone = findZoneOrFail(zoneId)
         val event = eventRepository.getById(eventId)
@@ -208,13 +209,29 @@ class ZoneService(
             )
             zoneStateChangeService.archiveZone(updatedZone)
         } else {
-            zoneStateChangeService.changeZoneStatus(
+            var zoneToUpdate = zoneStateChangeService.changeZoneStatus(
                 zone = zone,
                 newStatus = ZoneStatus.REPORTED,
                 changedBy = organizerId,
                 triggeredByEventId = eventId
             )
+            newSeverity?.let {
+                if (zoneToUpdate.zoneSeverity != it) {
+                    zoneToUpdate = zoneToUpdate.copy(zoneSeverity = it)
+                }
+            }
+            zoneRepository.update(zoneToUpdate)
         }
+    }
+
+    suspend fun revertZoneToReported(zoneId: Id, userId: Id): Result<Zone> = runCatching {
+        val zone = findZoneOrFail(zoneId)
+        zoneStateChangeService.changeZoneStatus(
+            zone = zone,
+            newStatus = ZoneStatus.REPORTED,
+            changedBy = userId,
+            triggeredByEventId = null
+        )
     }
 
     suspend fun processZoneConfirmationTimeouts() {

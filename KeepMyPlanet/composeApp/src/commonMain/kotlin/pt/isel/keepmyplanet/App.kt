@@ -109,6 +109,10 @@ fun App() {
                         appViewModel.navigate(AppRoute.EventStatusHistory(it))
                     },
                     onNavigateBack = { appViewModel.navigateBack() },
+
+                    onNavigateToUpdateZone = { zoneId ->
+                        appViewModel.navigate(AppRoute.UpdateZone(zoneId))
+                    }
                 )
             }
         }
