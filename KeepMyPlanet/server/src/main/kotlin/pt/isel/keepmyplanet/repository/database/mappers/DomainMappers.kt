@@ -63,6 +63,8 @@ internal fun Events.toDomainEvent(participantIds: Set<Id>): Event =
         status = this.status,
         maxParticipants = this.max_participants,
         participantsIds = participantIds,
+        pendingOrganizerId = this.pending_organizer_id,
+        transferRequestTime = this.transfer_request_time,
         createdAt = this.created_at,
         updatedAt = this.updated_at,
     )

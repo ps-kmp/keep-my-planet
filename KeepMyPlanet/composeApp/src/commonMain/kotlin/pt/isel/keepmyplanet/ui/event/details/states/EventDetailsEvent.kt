@@ -22,4 +22,6 @@ sealed interface EventDetailsEvent : UiEvent {
         val userId: Id,
         val organizerName: String,
     ) : EventDetailsEvent
+
+    data object ShowParticipantSelectionDialog : EventDetailsEvent
 }

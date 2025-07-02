@@ -3,6 +3,8 @@ package pt.isel.keepmyplanet.repository.memory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.text.compareTo
+import kotlin.text.get
+import kotlin.text.set
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
@@ -168,6 +170,37 @@ class InMemoryEventRepository : EventRepository {
                 it.status == EventStatus.COMPLETED && it.updatedAt < timeThreshold
             }
             .sortedBy { it.updatedAt }
+    }
+
+    override suspend fun updateTransferStatus(
+        eventId: Id,
+        newOrganizerId: Id,
+        pendingOrganizerId: Id,
+        updatedAt: LocalDateTime
+    ): Event? {
+        val event = events[eventId] ?: return null
+        val updatedEvent = event.copy(
+            organizerId = newOrganizerId,
+            pendingOrganizerId = pendingOrganizerId,
+            transferRequestTime = updatedAt,
+            updatedAt = updatedAt
+        )
+        events[eventId] = updatedEvent
+        return updatedEvent
+    }
+
+    override suspend fun clearPendingTransfer(
+        eventId: Id,
+        updatedAt: LocalDateTime
+    ): Event {
+        val event = events[eventId] ?: throw NotFoundException("Event '$eventId' not found.")
+        val updatedEvent = event.copy(
+            pendingOrganizerId = null,
+            transferRequestTime = null,
+            updatedAt = updatedAt
+        )
+        events[eventId] = updatedEvent
+        return updatedEvent
     }
 
     override suspend fun create(entity: Event): Event {

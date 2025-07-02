@@ -40,12 +40,12 @@ INSERT INTO zones (latitude, longitude, description, reporter_id, status, zone_s
 (40.6405, -8.6538, 'Some trash found near the University of Aveiro campus.', 6, 'REPORTED', 'LOW', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- SEED EVENTS & LINK TO ZONES
-INSERT INTO events (title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, created_at, updated_at) VALUES
-('Porto City Park Cleanup', 'Let''s make our park beautiful again. Refreshments provided.', CURRENT_TIMESTAMP + INTERVAL '10 days', NULL, 2, 2, 'PLANNED', 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('Lis River Bank Restoration', 'Cleanup of Lis River banks. Great job everyone!', CURRENT_TIMESTAMP - INTERVAL '15 days', CURRENT_TIMESTAMP - INTERVAL '15 days' + INTERVAL '3 hours', 3, 3, 'COMPLETED', 10, CURRENT_TIMESTAMP - INTERVAL '20 days', CURRENT_TIMESTAMP - INTERVAL '15 days'),
-('Faro Forest Trail Cleanup', 'Let''s clean this beautiful trail. Bring sturdy shoes!', CURRENT_TIMESTAMP - INTERVAL '1 hour', CURRENT_TIMESTAMP + INTERVAL '2 hours', 4, 4, 'IN_PROGRESS', 4, CURRENT_TIMESTAMP - INTERVAL '5 days', CURRENT_TIMESTAMP - INTERVAL '1 hour'),
-('Campo Grande Garden Tidy Up', 'Event cancelled due to bad weather forecast.', CURRENT_TIMESTAMP + INTERVAL '5 days', NULL, 5, 5, 'CANCELLED', 15, CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '1 day'),
-('Figueirinha Beach Mega-Cleanup', 'Let''s tackle this high-priority zone together! We need all hands on deck.', CURRENT_TIMESTAMP + INTERVAL '14 days', NULL, 1, 1, 'PLANNED', 50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO events (title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, pending_organizer_id, transfer_request_time, created_at, updated_at) VALUES
+('Porto City Park Cleanup', 'Let''s make our park beautiful again. Refreshments provided.', CURRENT_TIMESTAMP + INTERVAL '10 days', NULL, 2, 2, 'PLANNED', 20, NULL, NULL,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('Lis River Bank Restoration', 'Cleanup of Lis River banks. Great job everyone!', CURRENT_TIMESTAMP - INTERVAL '15 days', CURRENT_TIMESTAMP - INTERVAL '15 days' + INTERVAL '3 hours', 3, 3, 'COMPLETED', 10, NULL, NULL,CURRENT_TIMESTAMP - INTERVAL '20 days', CURRENT_TIMESTAMP - INTERVAL '15 days'),
+('Faro Forest Trail Cleanup', 'Let''s clean this beautiful trail. Bring sturdy shoes!', CURRENT_TIMESTAMP - INTERVAL '1 hour', CURRENT_TIMESTAMP + INTERVAL '2 hours', 4, 4, 'IN_PROGRESS', 4, NULL, NULL,CURRENT_TIMESTAMP - INTERVAL '5 days', CURRENT_TIMESTAMP - INTERVAL '1 hour'),
+('Campo Grande Garden Tidy Up', 'Event cancelled due to bad weather forecast.', CURRENT_TIMESTAMP + INTERVAL '5 days', NULL, 5, 5, 'CANCELLED', 15, NULL, NULL,CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+('Figueirinha Beach Mega-Cleanup', 'Let''s tackle this high-priority zone together! We need all hands on deck.', CURRENT_TIMESTAMP + INTERVAL '14 days', NULL, 1, 1, 'PLANNED', 50, NULL, NULL,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Update Zone status based on linked event
 UPDATE zones SET event_id = 1, status = 'CLEANING_SCHEDULED' WHERE id = 2;

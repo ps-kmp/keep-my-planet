@@ -14,6 +14,8 @@ data class Event(
     val status: EventStatus = EventStatus.PLANNED,
     val maxParticipants: Int? = null,
     val participantsIds: Set<Id> = emptySet(),
+    val pendingOrganizerId: Id? = null,
+    val transferRequestTime: LocalDateTime? = null,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 ) {

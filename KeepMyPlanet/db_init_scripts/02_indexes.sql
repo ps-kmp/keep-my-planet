@@ -23,6 +23,7 @@ CREATE INDEX IF NOT EXISTS idx_events_status ON events(status);
 CREATE INDEX IF NOT EXISTS idx_events_start_datetime ON events(start_datetime);
 CREATE INDEX IF NOT EXISTS idx_events_title_trgm ON events USING GIN (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_events_status_start_datetime ON events(status, start_datetime);
+CREATE INDEX IF NOT EXISTS idx_events_pending_organizer_id ON events(pending_organizer_id);
 
 CREATE INDEX IF NOT EXISTS idx_esc_event_id_change_time ON event_state_changes(event_id, change_time DESC);
 CREATE INDEX IF NOT EXISTS idx_esc_changed_by ON event_state_changes(changed_by);

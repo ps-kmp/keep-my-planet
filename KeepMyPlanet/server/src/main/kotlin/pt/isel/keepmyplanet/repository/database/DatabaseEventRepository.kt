@@ -61,6 +61,8 @@ class DatabaseEventRepository(
                         organizer_id = entity.organizerId,
                         status = entity.status,
                         max_participants = entity.maxParticipants,
+                        pending_organizer_id = entity.pendingOrganizerId,
+                        transfer_request_time = entity.transferRequestTime,
                         created_at = currentTime,
                         updated_at = currentTime,
                     ).executeAsOne()
@@ -116,6 +118,8 @@ class DatabaseEventRepository(
                         organizer_id = entity.organizerId,
                         status = entity.status,
                         max_participants = entity.maxParticipants,
+                        pending_organizer_id = entity.pendingOrganizerId,
+                        transfer_request_time = entity.transferRequestTime,
                         updated_at = now(),
                     ).executeAsOne()
 
@@ -136,6 +140,26 @@ class DatabaseEventRepository(
 
             dbEvent.toDomainEvent(newParticipantIds)
         }
+    }
+
+    override suspend fun updateTransferStatus(
+        eventId: Id,
+        newOrganizerId: Id,
+        pendingOrganizerId: Id,
+        updatedAt: LocalDateTime
+    ): Event? {
+        val dbEvent = eventQueries.updateTransferStatus(
+            id = eventId,
+            new_organizer_id = newOrganizerId,
+            pending_organizer_id = pendingOrganizerId,
+            updated_at = updatedAt
+        ).executeAsOneOrNull()
+        return dbEvent?.let { getEventWithParticipants(it.id) }
+    }
+
+    override suspend fun clearPendingTransfer(eventId: Id, updatedAt: LocalDateTime): Event {
+        val dbEvent = eventQueries.clearPendingTransfer(updatedAt, eventId).executeAsOne()
+        return getEventWithParticipants(dbEvent.id)!!
     }
 
     override suspend fun deleteById(id: Id): Boolean {

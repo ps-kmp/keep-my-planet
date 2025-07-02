@@ -27,6 +27,8 @@ class EventCacheRepository(
                     maxParticipants = event.maxParticipants?.toLong(),
                     participantIds_json =
                         Json.encodeToString(event.participantsIds.map { it.value }),
+                    pendingOrganizerId = event.pendingOrganizerId?.value?.toLong(),
+                    transferRequestTime = event.transferRequestTime?.toString(),
                     createdAt = event.createdAt.toString(),
                     updatedAt = event.updatedAt.toString(),
                     timestamp = Clock.System.now().epochSeconds,

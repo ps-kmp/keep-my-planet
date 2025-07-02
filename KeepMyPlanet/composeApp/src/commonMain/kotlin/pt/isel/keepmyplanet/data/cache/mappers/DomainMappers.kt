@@ -38,6 +38,8 @@ fun EventCache.toEvent(): Event =
         maxParticipants = maxParticipants?.toInt(),
         participantsIds =
             Json.decodeFromString<Set<UInt>>(participantIds_json).map { Id(it) }.toSet(),
+        pendingOrganizerId = pendingOrganizerId?.let { Id(it.toUInt()) },
+        transferRequestTime = transferRequestTime?.let { LocalDateTime.parse(it) },
         createdAt = LocalDateTime.parse(createdAt),
         updatedAt = LocalDateTime.parse(updatedAt),
     )

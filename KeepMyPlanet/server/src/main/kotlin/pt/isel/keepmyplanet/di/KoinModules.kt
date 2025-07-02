@@ -4,6 +4,8 @@ import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
+import io.ktor.server.config.ApplicationConfig
+import java.net.URI
 import org.koin.dsl.module
 import pt.isel.keepmyplanet.db.Database
 import pt.isel.keepmyplanet.repository.EventRepository
@@ -70,7 +72,7 @@ fun appModule(application: Application) =
 
             val hikariConfig =
                 if (databaseUrl != null) {
-                    val dbUri = java.net.URI(databaseUrl)
+                    val dbUri = URI(databaseUrl)
                     val (user, password) = dbUri.userInfo.split(":", limit = 2)
                     val jdbcUrl =
                         "jdbc:postgresql://${dbUri.host}:${dbUri.port}${dbUri.path}?sslmode=require"
@@ -136,6 +138,8 @@ fun appModule(application: Application) =
                         statusAdapter = EventStatusAdapter,
                         created_atAdapter = LocalDateTimeAdapter,
                         updated_atAdapter = LocalDateTimeAdapter,
+                        pending_organizer_idAdapter = IdAdapter,
+                        transfer_request_timeAdapter = LocalDateTimeAdapter,
                     ),
                 messagesAdapter =
                     Messages.Adapter(
@@ -213,7 +217,7 @@ fun appModule(application: Application) =
         single { ChatSseService() }
         // single<FileStorageService> { CloudinaryStorageService(get()) }
         single<FileStorageService> {
-            val appConfig = get<io.ktor.server.config.ApplicationConfig>()
+            val appConfig = get<ApplicationConfig>()
             val baseUrl =
                 System.getenv("RENDER_EXTERNAL_URL")
                     ?: appConfig.property("server.baseUrl").getString()

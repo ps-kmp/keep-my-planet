@@ -9,14 +9,16 @@ CREATE TABLE EventCache (
     status TEXT NOT NULL,
     maxParticipants INTEGER,
     participantIds_json TEXT NOT NULL,
+    pendingOrganizerId INTEGER,
+    transferRequestTime TEXT,
     createdAt TEXT NOT NULL,
     updatedAt TEXT NOT NULL,
     timestamp INTEGER NOT NULL
 );
 
 insertEvent:
-INSERT OR REPLACE INTO EventCache(id, title, description, startDate, endDate, zoneId, organizerId, status, maxParticipants, participantIds_json, createdAt, updatedAt, timestamp)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO EventCache(id, title, description, startDate, endDate, zoneId, organizerId, status, maxParticipants, participantIds_json, pendingOrganizerId, transferRequestTime, createdAt, updatedAt, timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 getEventById:
 SELECT * FROM EventCache WHERE id = ?;

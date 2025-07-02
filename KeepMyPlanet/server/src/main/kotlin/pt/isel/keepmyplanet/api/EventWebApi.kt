@@ -21,6 +21,8 @@ import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
+import pt.isel.keepmyplanet.dto.event.InitiateTransferRequest
+import pt.isel.keepmyplanet.dto.event.RespondToTransferRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.mapper.event.toResponse
 import pt.isel.keepmyplanet.mapper.user.toResponse
@@ -221,6 +223,27 @@ fun Route.eventWebApi(
                     eventService
                         .leaveEvent(eventId, userId)
                         .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                        .onFailure { throw it }
+                }
+
+                post("/initiate-transfer") {
+                    val eventId = call.getEventId()
+                    val currentOrganizerId = call.getCurrentUserId()
+                    val request = call.receive<InitiateTransferRequest>()
+                    val nomineeId = Id(request.nomineeId)
+
+                    eventService.initiateTransfer(eventId, currentOrganizerId, nomineeId)
+                        .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
+                        .onFailure { throw it }
+                }
+
+                post("/respond-to-transfer") {
+                    val eventId = call.getEventId()
+                    val nomineeId = call.getCurrentUserId()
+                    val request = call.receive<RespondToTransferRequest>()
+
+                    eventService.respondToTransfer(eventId, nomineeId, request.accept)
+                        .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }
             }

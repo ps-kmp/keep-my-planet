@@ -14,6 +14,8 @@ data class EventResponse(
     val status: String,
     val maxParticipants: Int? = null,
     val participantsIds: Set<UInt>,
+    val pendingOrganizerId: UInt? = null,
+    val transferRequestTime: String? = null,
     val createdAt: String,
     val updatedAt: String,
 )

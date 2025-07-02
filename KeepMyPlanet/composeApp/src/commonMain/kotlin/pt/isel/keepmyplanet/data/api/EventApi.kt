@@ -12,6 +12,8 @@ import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
+import pt.isel.keepmyplanet.dto.event.InitiateTransferRequest
+import pt.isel.keepmyplanet.dto.event.RespondToTransferRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 
@@ -50,6 +52,10 @@ class EventApi(
         fun checkInUser(eventId: UInt) = "${eventById(eventId)}/check-in"
 
         fun attendedEvents() = "$EVENTS_BASE/attended"
+
+        fun initiateTransfer(eventId: UInt) = "${eventById(eventId)}/initiate-transfer"
+
+        fun respondToTransfer(eventId: UInt) = "${eventById(eventId)}/respond-to-transfer"
     }
 
     suspend fun searchAllEvents(
@@ -180,4 +186,22 @@ class EventApi(
             parameter("limit", limit)
             parameter("offset", offset)
         }
+
+    suspend fun initiateTransfer(
+        eventId: UInt,
+        request: InitiateTransferRequest
+    ): Result<EventResponse> = httpClient.executeRequest {
+        method = HttpMethod.Post
+        url(Endpoints.initiateTransfer(eventId))
+        setBody(request)
+    }
+
+    suspend fun respondToTransfer(
+        eventId: UInt,
+        request: RespondToTransferRequest
+    ): Result<EventResponse> = httpClient.executeRequest {
+        method = HttpMethod.Post
+        url(Endpoints.respondToTransfer(eventId))
+        setBody(request)
+    }
 }

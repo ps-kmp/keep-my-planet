@@ -14,6 +14,8 @@ CREATE TABLE events (
     organizer_id BIGINT AS Id NOT NULL,
     status TEXT AS EventStatus NOT NULL,
     max_participants INTEGER,
+    pending_organizer_id BIGINT AS Id,
+    transfer_request_time TIMESTAMP AS LocalDateTime,
     created_at TIMESTAMP AS LocalDateTime NOT NULL,
     updated_at TIMESTAMP AS LocalDateTime NOT NULL
 );
@@ -71,11 +73,12 @@ WHERE ea.user_id = :userId
   AND e.end_datetime IS NOT NULL;
 
 insert:
-INSERT INTO events(title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, created_at, updated_at)
+INSERT INTO events(title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, pending_organizer_id, transfer_request_time, created_at, updated_at)
 VALUES (
     :title, :description,
     :start_datetime, :end_datetime,
     :zone_id, :organizer_id, :status, :max_participants,
+    :pending_organizer_id, :transfer_request_time,
     :created_at, :updated_at
 )
 RETURNING *;
@@ -101,6 +104,25 @@ SET title = :title,
     organizer_id = :organizer_id,
     status = :status,
     max_participants = :max_participants,
+    pending_organizer_id = :pending_organizer_id,
+    transfer_request_time = :transfer_request_time,
+    updated_at = :updated_at
+WHERE id = :id
+RETURNING *;
+
+updateTransferStatus:
+UPDATE events
+SET organizer_id = :new_organizer_id,
+    pending_organizer_id = NULL,
+    transfer_request_time = NULL,
+    updated_at = :updated_at
+WHERE id = :id AND pending_organizer_id = :pending_organizer_id
+RETURNING *;
+
+clearPendingTransfer:
+UPDATE events
+SET pending_organizer_id = NULL,
+    transfer_request_time = NULL,
     updated_at = :updated_at
 WHERE id = :id
 RETURNING *;

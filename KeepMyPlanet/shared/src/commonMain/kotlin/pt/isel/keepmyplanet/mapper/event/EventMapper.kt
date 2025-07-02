@@ -22,6 +22,8 @@ fun Event.toResponse() =
         status = status.name,
         maxParticipants = maxParticipants,
         participantsIds = participantsIds.map { it.value }.toSet(),
+        pendingOrganizerId = pendingOrganizerId?.value,
+        transferRequestTime = transferRequestTime?.toString(),
         createdAt = createdAt.toString(),
         updatedAt = updatedAt.toString(),
     )
@@ -40,6 +42,8 @@ fun EventResponse.toEvent(): Event =
         maxParticipants = maxParticipants,
         organizerId = Id(organizerId),
         participantsIds = participantsIds.map { Id(it) }.toSet(),
+        pendingOrganizerId = pendingOrganizerId?.let { Id(it) },
+        transferRequestTime = transferRequestTime?.let { LocalDateTime.parse(it) },
         createdAt = LocalDateTime.parse(createdAt),
         updatedAt = LocalDateTime.parse(updatedAt),
         zoneId = Id(zoneId),

@@ -77,4 +77,13 @@ interface EventRepository : Repository<Event, Id> {
     suspend fun calculateTotalHoursVolunteered(userId: Id): Double
 
     suspend fun findCompletedEventsPendingConfirmation(timeThreshold: LocalDateTime): List<Event>
+
+    suspend fun updateTransferStatus(
+        eventId: Id,
+        newOrganizerId: Id,
+        pendingOrganizerId: Id,
+        updatedAt: LocalDateTime
+    ): Event?
+
+    suspend fun clearPendingTransfer(eventId: Id, updatedAt: LocalDateTime): Event
 }

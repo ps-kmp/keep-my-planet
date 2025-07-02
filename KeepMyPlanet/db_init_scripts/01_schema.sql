@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS events (
     organizer_id BIGINT NOT NULL,
     status TEXT NOT NULL,
     max_participants INTEGER,
+    pending_organizer_id BIGINT,
+    transfer_request_time TIMESTAMP,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     CONSTRAINT fk_event_zone FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,

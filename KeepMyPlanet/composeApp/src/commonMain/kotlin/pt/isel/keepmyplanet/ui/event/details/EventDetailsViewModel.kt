@@ -30,7 +30,10 @@ class EventDetailsViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = { eventRepository.getEventDetailsBundle(eventId) },
+            block = {
+                eventRepository.invalidateEventCache(eventId)
+                eventRepository.getEventDetailsBundle(eventId)
+                },
             onSuccess = { bundle ->
                 setState {
                     copy(
@@ -38,6 +41,8 @@ class EventDetailsViewModel(
                         isCurrentUserOrganizer = bundle.event.organizerId == currentUser.id,
                         isCurrentUserParticipant =
                             bundle.event.participantsIds.contains(currentUser.id),
+                        isCurrentUserPendingNominee =
+                            bundle.event.pendingOrganizerId == currentUser.id,
                         participants = bundle.participants,
                         error = null,
                     )
@@ -192,7 +197,44 @@ class EventDetailsViewModel(
                 event = updatedEvent,
                 isCurrentUserOrganizer = updatedEvent.organizerId == currentUser.id,
                 isCurrentUserParticipant = updatedEvent.participantsIds.contains(currentUser.id),
+                isCurrentUserPendingNominee = updatedEvent.pendingOrganizerId == currentUser.id,
             )
+        }
+    }
+
+    fun initiateTransfer(nomineeId: Id) {
+        val eventId = getEventId() ?: return
+        launchWithResult(
+            onStart = { copy(actionState = EventDetailsUiState.ActionState.INITIATING_TRANSFER) },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
+            block = { eventRepository.initiateTransfer(eventId, nomineeId) },
+            onSuccess = { updatedEvent ->
+                updateEventInState(updatedEvent)
+                sendEvent(EventDetailsEvent.ShowSnackbar("Transfer request sent successfully."))
+            },
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to initiate transfer", it)) }
+        )
+    }
+
+    fun respondToTransfer(accepted: Boolean) {
+        val eventId = getEventId() ?: return
+        launchWithResult(
+            onStart = { copy(actionState = EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER) },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
+            block = { eventRepository.respondToTransfer(eventId, accepted) },
+            onSuccess = { updatedEvent ->
+                updateEventInState(updatedEvent)
+                val message = if (accepted) "You are now the new organizer!" else "Transfer request declined."
+                sendEvent(EventDetailsEvent.ShowSnackbar(message))
+                loadEventDetails(eventId)
+            },
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to respond to transfer", it)) }
+        )
+    }
+
+    fun onTransferOwnershipClicked() {
+        if (currentState.canTransferOwnership) {
+            sendEvent(EventDetailsEvent.ShowParticipantSelectionDialog)
         }
     }
 }

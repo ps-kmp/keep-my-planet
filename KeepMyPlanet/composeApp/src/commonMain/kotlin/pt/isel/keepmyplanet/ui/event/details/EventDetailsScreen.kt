@@ -44,6 +44,8 @@ import pt.isel.keepmyplanet.ui.components.QrCodeIconButton
 import pt.isel.keepmyplanet.ui.components.isQrScanningAvailable
 import pt.isel.keepmyplanet.ui.event.details.components.CleanlinessConfirmationDialog
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
+import pt.isel.keepmyplanet.ui.event.details.components.ParticipantSelectionDialog
+import pt.isel.keepmyplanet.ui.event.details.components.TransferOwnershipBanner
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
 import pt.isel.keepmyplanet.utils.toFormattedString
@@ -66,6 +68,7 @@ fun EventDetailsScreen(
     val showCancelDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val showCleanlinessDialog = remember { mutableStateOf(false) }
+    val showTransferDialog = remember { mutableStateOf(false) }
 
     if (uiState.showCleanlinessConfirmation && event != null) {
         LaunchedEffect(uiState.showCleanlinessConfirmation) {
@@ -106,6 +109,18 @@ fun EventDetailsScreen(
         )
     }
 
+    if (showTransferDialog.value) {
+        val potentialNominees = uiState.participants.filter { it.id != uiState.event?.organizerId }
+        ParticipantSelectionDialog(
+            participants = potentialNominees,
+            onParticipantSelected = { nomineeId ->
+                viewModel.initiateTransfer(nomineeId)
+                showTransferDialog.value = false
+            },
+            onDismiss = { showTransferDialog.value = false }
+        )
+    }
+
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -133,6 +148,10 @@ fun EventDetailsScreen(
                 }
 
                 is EventDetailsEvent.NavigateToUpdateZone -> onNavigateToUpdateZone(event.zoneId)
+
+                is EventDetailsEvent.ShowParticipantSelectionDialog -> {
+                    showTransferDialog.value = true
+                }
             }
         }
     }
@@ -176,6 +195,13 @@ fun EventDetailsScreen(
                                 .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
+                        if (uiState.isCurrentUserPendingNominee) {
+                            TransferOwnershipBanner(
+                                isLoading = uiState.actionState == EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
+                                onAccept = { viewModel.respondToTransfer(true) },
+                                onDecline = { viewModel.respondToTransfer(false) }
+                            )
+                        }
                         Text(
                             text = event.title.value,
                             style = MaterialTheme.typography.h5,
@@ -337,6 +363,16 @@ fun EventDetailsScreen(
                                                     EventDetailsUiState.ActionState.DELETING,
                                             text = "Delete Event",
                                             loadingIndicatorColor = MaterialTheme.colors.error,
+                                        )
+                                    }
+
+                                    if (uiState.canTransferOwnership) {
+                                        LoadingButton(
+                                            onClick = viewModel::onTransferOwnershipClicked,
+                                            isLoading = uiState.actionState == EventDetailsUiState.ActionState.INITIATING_TRANSFER,
+                                            enabled = !uiState.isActionInProgress,
+                                            text = "Transfer Ownership",
+                                            modifier = Modifier.fillMaxWidth()
                                         )
                                     }
                                 }
