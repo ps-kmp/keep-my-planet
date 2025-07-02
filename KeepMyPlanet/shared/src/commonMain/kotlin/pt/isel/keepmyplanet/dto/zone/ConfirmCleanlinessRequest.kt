@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class ConfirmCleanlinessRequest(
     val wasCleaned: Boolean,
     val eventId: UInt,
-    val newSeverity: String? = null
+    val newSeverity: String? = null,
 )

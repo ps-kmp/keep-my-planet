@@ -645,7 +645,7 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
-    */
+ */
 /*
     @Test
     fun `POST cancel event - should succeed as organizer`() =
@@ -840,7 +840,8 @@ class EventWebApiTest : BaseWebApiTest() {
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
-     *//*
+ */
+/*
 
 
     @Test
@@ -907,7 +908,7 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
-    */
+ */
 /*
     @Test
     fun `POST join event - should fail with 409 if event is IN_PROGRESS`() =
@@ -924,7 +925,8 @@ class EventWebApiTest : BaseWebApiTest() {
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
-     *//*
+ */
+/*
 
 
     @Test
@@ -959,7 +961,7 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
-    */
+ */
 /*
     @Test
     fun `POST join event - should fail with 409 if user is the organizer`() =
@@ -975,7 +977,8 @@ class EventWebApiTest : BaseWebApiTest() {
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
-     *//*
+ */
+/*
 
 
     @Test
@@ -1113,7 +1116,7 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals("[]", response.bodyAsText())
         }
 
-    */
+ */
 /*
     @Test
     fun `POST cancel event - should fail with 401 Unauthorized if no token`() =
@@ -1136,7 +1139,8 @@ class EventWebApiTest : BaseWebApiTest() {
             val response = client.post("/events/${event.id.value}/complete")
             assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
-     *//*
+ */
+/*
 
 
     @Test

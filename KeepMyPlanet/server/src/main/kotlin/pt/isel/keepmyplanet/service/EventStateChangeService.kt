@@ -78,27 +78,31 @@ class EventStateChangeService(
     private suspend fun handleZoneStatusChange(
         event: Event,
         newStatus: EventStatus,
-        requestingUserId: Id
+        requestingUserId: Id,
     ) {
-        val zone = zoneRepository.getById(event.zoneId)
-            ?: throw NotFoundException("Zone '${event.zoneId}' not found.")
+        val zone =
+            zoneRepository.getById(event.zoneId)
+                ?: throw NotFoundException("Zone '${event.zoneId}' not found.")
 
         if (zone.eventId != event.id) return
 
         when (newStatus) {
             EventStatus.CANCELLED -> {
-                val updatedZone = zoneStateChangeService.changeZoneStatus(
-                    zone = zone,
-                    newStatus = ZoneStatus.REPORTED,
-                    changedBy = requestingUserId,
-                    triggeredByEventId = event.id
-                )
+                val updatedZone =
+                    zoneStateChangeService.changeZoneStatus(
+                        zone = zone,
+                        newStatus = ZoneStatus.REPORTED,
+                        changedBy = requestingUserId,
+                        triggeredByEventId = event.id,
+                    )
                 zoneRepository.update(updatedZone.copy(eventId = null))
             }
             EventStatus.COMPLETED -> {
                 zoneRepository.update(zone.copy(eventId = null))
-                println("LOG: Event ${event.id} completed. Awaiting organizer confirmation for zone ${zone.id} status.")
-                //notificationService.sendOrganizerConfirmationRequest(event.organizerId, zone.id, event.id)
+                println(
+                    "LOG: Event ${event.id} completed. Awaiting organizer confirmation for zone ${zone.id} status.",
+                )
+                // notificationService.sendOrganizerConfirmationRequest(event.organizerId, zone.id, event.id)
             }
             else -> {
                 // No action needed for other statuses

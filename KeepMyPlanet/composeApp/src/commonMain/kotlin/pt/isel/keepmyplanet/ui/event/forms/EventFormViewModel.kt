@@ -13,7 +13,7 @@ import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
 
 class EventFormViewModel(
     private val eventRepository: DefaultEventRepository,
-    private val zoneRepository: DefaultZoneRepository
+    private val zoneRepository: DefaultZoneRepository,
 ) : BaseViewModel<EventFormUiState>(EventFormUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(EventFormEvent.ShowSnackbar(message))
@@ -89,7 +89,7 @@ class EventFormViewModel(
             onStart = { copy(actionState = EventFormUiState.ActionState.Submitting) },
             onFinally = { copy(actionState = EventFormUiState.ActionState.Idle) },
             block = { eventRepository.createEvent(request) },
-            onSuccess = { createdEvent  ->
+            onSuccess = { createdEvent ->
                 viewModelScope.launch {
                     zoneRepository.invalidateZoneCache(createdEvent.zoneId)
                 }

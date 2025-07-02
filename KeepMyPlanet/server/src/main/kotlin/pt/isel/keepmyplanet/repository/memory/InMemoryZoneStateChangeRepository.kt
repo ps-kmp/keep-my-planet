@@ -14,8 +14,7 @@ class InMemoryZoneStateChangeRepository : ZoneStateChangeRepository {
         return entity
     }
 
-    override suspend fun getById(id: Id): ZoneStateChange? =
-        data[id]
+    override suspend fun getById(id: Id): ZoneStateChange? = data[id]
 
     override suspend fun findByZoneId(zoneId: Id): List<ZoneStateChange> =
         data.values.filter { it.zoneId == zoneId }

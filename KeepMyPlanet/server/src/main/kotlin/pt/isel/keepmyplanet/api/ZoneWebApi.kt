@@ -107,17 +107,18 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                     val request = call.receive<ConfirmCleanlinessRequest>()
                     val eventId = Id(request.eventId)
 
-                    val newSeverity: ZoneSeverity? = request.newSeverity?.let { severityString ->
-                        safeValueOf<ZoneSeverity>(severityString)
-                            ?: throw ValidationException("Invalid severity value provided: '$severityString'")
-                    }
+                    val newSeverity: ZoneSeverity? =
+                        request.newSeverity?.let { severityString ->
+                            safeValueOf<ZoneSeverity>(severityString)
+                                ?: throw ValidationException("Invalid severity value provided: '$severityString'")
+                        }
 
                     zoneService.confirmZoneCleanliness(
                         zoneId = zoneId,
                         organizerId = organizerId,
                         wasCleaned = request.wasCleaned,
                         eventId = eventId,
-                        newSeverity = newSeverity
+                        newSeverity = newSeverity,
                     ).onSuccess { updatedZone ->
                         call.respond(HttpStatusCode.OK, updatedZone.toResponse())
                     }.onFailure { throw it }

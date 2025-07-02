@@ -186,53 +186,63 @@ class ZoneService(
         organizerId: Id,
         wasCleaned: Boolean,
         eventId: Id,
-        newSeverity: ZoneSeverity? = null
-    ): Result<Zone> = runCatching {
-        val zone = findZoneOrFail(zoneId)
-        val event = eventRepository.getById(eventId)
-            ?: throw NotFoundException("Triggering event '$eventId' not found.")
+        newSeverity: ZoneSeverity? = null,
+    ): Result<Zone> =
+        runCatching {
+            val zone = findZoneOrFail(zoneId)
+            val event =
+                eventRepository.getById(eventId)
+                    ?: throw NotFoundException("Triggering event '$eventId' not found.")
 
-        if (event.organizerId != organizerId) {
-            throw AuthorizationException("Only the event organizer can confirm zone status.")
+            if (event.organizerId != organizerId) {
+                throw AuthorizationException("Only the event organizer can confirm zone status.")
+            }
+
+            if (event.status != EventStatus.COMPLETED) {
+                throw ConflictException(
+                    "Cannot confirm cleanliness for an event that is not 'COMPLETED'.",
+                )
+            }
+
+            if (wasCleaned) {
+                val updatedZone =
+                    zoneStateChangeService.changeZoneStatus(
+                        zone = zone,
+                        newStatus = ZoneStatus.CLEANED,
+                        changedBy = organizerId,
+                        triggeredByEventId = eventId,
+                    )
+                zoneStateChangeService.archiveZone(updatedZone)
+            } else {
+                var zoneToUpdate =
+                    zoneStateChangeService.changeZoneStatus(
+                        zone = zone,
+                        newStatus = ZoneStatus.REPORTED,
+                        changedBy = organizerId,
+                        triggeredByEventId = eventId,
+                    )
+                newSeverity?.let {
+                    if (zoneToUpdate.zoneSeverity != it) {
+                        zoneToUpdate = zoneToUpdate.copy(zoneSeverity = it)
+                    }
+                }
+                zoneRepository.update(zoneToUpdate)
+            }
         }
 
-        if (event.status != EventStatus.COMPLETED) {
-            throw ConflictException("Cannot confirm cleanliness for an event that is not 'COMPLETED'.")
-        }
-
-        if (wasCleaned) {
-            val updatedZone = zoneStateChangeService.changeZoneStatus(
-                zone = zone,
-                newStatus = ZoneStatus.CLEANED,
-                changedBy = organizerId,
-                triggeredByEventId = eventId
-            )
-            zoneStateChangeService.archiveZone(updatedZone)
-        } else {
-            var zoneToUpdate = zoneStateChangeService.changeZoneStatus(
+    suspend fun revertZoneToReported(
+        zoneId: Id,
+        userId: Id,
+    ): Result<Zone> =
+        runCatching {
+            val zone = findZoneOrFail(zoneId)
+            zoneStateChangeService.changeZoneStatus(
                 zone = zone,
                 newStatus = ZoneStatus.REPORTED,
-                changedBy = organizerId,
-                triggeredByEventId = eventId
+                changedBy = userId,
+                triggeredByEventId = null,
             )
-            newSeverity?.let {
-                if (zoneToUpdate.zoneSeverity != it) {
-                    zoneToUpdate = zoneToUpdate.copy(zoneSeverity = it)
-                }
-            }
-            zoneRepository.update(zoneToUpdate)
         }
-    }
-
-    suspend fun revertZoneToReported(zoneId: Id, userId: Id): Result<Zone> = runCatching {
-        val zone = findZoneOrFail(zoneId)
-        zoneStateChangeService.changeZoneStatus(
-            zone = zone,
-            newStatus = ZoneStatus.REPORTED,
-            changedBy = userId,
-            triggeredByEventId = null
-        )
-    }
 
     suspend fun processZoneConfirmationTimeouts() {
         val timeThreshold = now().minus(24.hours)
@@ -248,19 +258,24 @@ class ZoneService(
         for (event in eventsToProcess) {
             val zone = zoneRepository.getById(event.zoneId)
             if (zone == null) {
-                println("Timeout Job: Zone ${event.zoneId} for event ${event.id} not found. Skipping.")
+                println(
+                    "Timeout Job: Zone ${event.zoneId} for event ${event.id} not found. Skipping.",
+                )
                 continue
             }
 
             if (zone.status == ZoneStatus.CLEANING_SCHEDULED) {
-                println("Timeout Job: Processing zone ${zone.id}. Setting to CLEANED and archiving.")
-
-                val updatedZone = zoneStateChangeService.changeZoneStatus(
-                    zone = zone,
-                    newStatus = ZoneStatus.CLEANED,
-                    changedBy = null,
-                    triggeredByEventId = event.id
+                println(
+                    "Timeout Job: Processing zone ${zone.id}. Setting to CLEANED and archiving.",
                 )
+
+                val updatedZone =
+                    zoneStateChangeService.changeZoneStatus(
+                        zone = zone,
+                        newStatus = ZoneStatus.CLEANED,
+                        changedBy = null,
+                        triggeredByEventId = event.id,
+                    )
 
                 zoneStateChangeService.archiveZone(updatedZone)
             }

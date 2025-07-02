@@ -102,7 +102,7 @@ fun EventDetailsScreen(
                 viewModel.confirmZoneCleanliness(wasCleaned = false)
                 showCleanlinessDialog.value = false
             },
-            onDismissRequest = { showCleanlinessDialog.value = false }
+            onDismissRequest = { showCleanlinessDialog.value = false },
         )
     }
 

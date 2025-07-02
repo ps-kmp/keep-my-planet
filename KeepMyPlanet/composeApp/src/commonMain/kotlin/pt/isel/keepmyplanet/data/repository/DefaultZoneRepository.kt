@@ -23,7 +23,7 @@ class DefaultZoneRepository(
 
     suspend fun getZoneDetails(
         zoneId: Id,
-        forceNetwork: Boolean = false
+        forceNetwork: Boolean = false,
     ): Result<Zone> =
         runCatching {
             if (!forceNetwork) {
@@ -77,10 +77,11 @@ class DefaultZoneRepository(
         eventId: Id,
         wasCleaned: Boolean,
     ): Result<Zone> {
-        val request = ConfirmCleanlinessRequest(
-            wasCleaned = wasCleaned,
-            eventId = eventId.value
-        )
+        val request =
+            ConfirmCleanlinessRequest(
+                wasCleaned = wasCleaned,
+                eventId = eventId.value,
+            )
         return zoneApi.confirmCleanliness(zoneId.value, request).map {
             val updatedZone = it.toZone()
             zoneCache.insertZones(listOf(updatedZone))

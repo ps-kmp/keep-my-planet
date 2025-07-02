@@ -160,7 +160,9 @@ class InMemoryEventRepository : EventRepository {
             }.toDouble()
     }
 
-    override suspend fun findCompletedEventsPendingConfirmation(timeThreshold: LocalDateTime): List<Event> {
+    override suspend fun findCompletedEventsPendingConfirmation(
+        timeThreshold: LocalDateTime,
+    ): List<Event> {
         return events.values
             .filter {
                 it.status == EventStatus.COMPLETED && it.updatedAt < timeThreshold

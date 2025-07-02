@@ -11,7 +11,6 @@ class ZoneStateChangeService(
     private val zoneRepository: ZoneRepository,
     private val zoneStateChangeRepository: ZoneStateChangeRepository,
 ) {
-
     suspend fun changeZoneStatus(
         zone: Zone,
         newStatus: ZoneStatus,
@@ -23,14 +22,15 @@ class ZoneStateChangeService(
         val updatedZone = zone.copy(status = newStatus)
         val finalZone = zoneRepository.update(updatedZone)
 
-        val logEntry = ZoneStateChange(
-            id = Id(0u),
-            zoneId = finalZone.id,
-            newStatus = newStatus,
-            changedBy = changedBy,
-            triggeredByEventId = triggeredByEventId,
-            changeTime = finalZone.updatedAt
-        )
+        val logEntry =
+            ZoneStateChange(
+                id = Id(0u),
+                zoneId = finalZone.id,
+                newStatus = newStatus,
+                changedBy = changedBy,
+                triggeredByEventId = triggeredByEventId,
+                changeTime = finalZone.updatedAt,
+            )
         zoneStateChangeRepository.create(logEntry)
 
         return finalZone

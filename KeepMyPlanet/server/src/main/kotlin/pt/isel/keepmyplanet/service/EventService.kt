@@ -42,9 +42,10 @@ class EventService(
             findUserOrFail(organizerId)
             val zone = findZoneOrFail(zoneId)
 
-            val activeEventsForZone = eventRepository.findByZoneId(zoneId).filter {
-                it.status == EventStatus.PLANNED || it.status == EventStatus.IN_PROGRESS
-            }
+            val activeEventsForZone =
+                eventRepository.findByZoneId(zoneId).filter {
+                    it.status == EventStatus.PLANNED || it.status == EventStatus.IN_PROGRESS
+                }
             if (activeEventsForZone.isNotEmpty()) {
                 throw ConflictException("Zone '$zoneId' already has an active or planned event.")
             }
@@ -73,12 +74,13 @@ class EventService(
                 )
             val createdEvent = eventRepository.create(event)
 
-            val zoneAfterStatusChange = zoneStateChangeService.changeZoneStatus(
-                zone = zone,
-                newStatus = ZoneStatus.CLEANING_SCHEDULED,
-                changedBy = organizerId,
-                triggeredByEventId = createdEvent.id
-            )
+            val zoneAfterStatusChange =
+                zoneStateChangeService.changeZoneStatus(
+                    zone = zone,
+                    newStatus = ZoneStatus.CLEANING_SCHEDULED,
+                    changedBy = organizerId,
+                    triggeredByEventId = createdEvent.id,
+                )
             val finalZone = zoneAfterStatusChange.copy(eventId = createdEvent.id)
 
             zoneRepository.update(finalZone)
@@ -257,12 +259,13 @@ class EventService(
 
             val zone = findZoneOrFail(event.zoneId)
             if (zone.eventId == event.id) {
-                val zoneAfterStatusChange = zoneStateChangeService.changeZoneStatus(
-                    zone = zone,
-                    newStatus = ZoneStatus.REPORTED,
-                    changedBy = userId,
-                    triggeredByEventId = event.id
-                )
+                val zoneAfterStatusChange =
+                    zoneStateChangeService.changeZoneStatus(
+                        zone = zone,
+                        newStatus = ZoneStatus.REPORTED,
+                        changedBy = userId,
+                        triggeredByEventId = event.id,
+                    )
                 val finalZone = zoneAfterStatusChange.copy(eventId = null)
                 zoneRepository.update(finalZone)
             }

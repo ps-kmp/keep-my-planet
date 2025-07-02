@@ -37,6 +37,6 @@ fun Application.configureScheduling() {
         },
         0,
         1,
-        TimeUnit.MINUTES, //ALTERAR PARA HORA A HORA OU DIA A DIA
+        TimeUnit.MINUTES, // ALTERAR PARA HORA A HORA OU DIA A DIA
     )
 }
