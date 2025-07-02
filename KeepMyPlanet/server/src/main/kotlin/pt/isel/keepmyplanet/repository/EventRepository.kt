@@ -75,4 +75,6 @@ interface EventRepository : Repository<Event, Id> {
     suspend fun countAttendedEvents(userId: Id): Long
 
     suspend fun calculateTotalHoursVolunteered(userId: Id): Double
+
+    suspend fun findCompletedEventsPendingConfirmation(timeThreshold: LocalDateTime): List<Event>
 }

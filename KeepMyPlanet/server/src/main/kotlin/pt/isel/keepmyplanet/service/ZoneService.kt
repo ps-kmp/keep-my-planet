@@ -1,7 +1,9 @@
 package pt.isel.keepmyplanet.service
 
+import kotlin.time.Duration.Companion.hours
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
@@ -16,6 +18,7 @@ import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.PhotoRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
+import pt.isel.keepmyplanet.utils.minus
 import pt.isel.keepmyplanet.utils.now
 
 class ZoneService(
@@ -23,6 +26,7 @@ class ZoneService(
     private val userRepository: UserRepository,
     private val eventRepository: EventRepository,
     private val photoRepository: PhotoRepository,
+    private val zoneStateChangeService: ZoneStateChangeService,
 ) {
     suspend fun reportZone(
         location: Location,
@@ -176,6 +180,75 @@ class ZoneService(
             if (!deleted) throw InternalServerException("Failed to delete zone $zoneId.")
             Unit
         }
+
+    suspend fun confirmZoneCleanliness(
+        zoneId: Id,
+        organizerId: Id,
+        wasCleaned: Boolean,
+        eventId: Id
+    ): Result<Zone> = runCatching {
+        val zone = findZoneOrFail(zoneId)
+        val event = eventRepository.getById(eventId)
+            ?: throw NotFoundException("Triggering event '$eventId' not found.")
+
+        if (event.organizerId != organizerId) {
+            throw AuthorizationException("Only the event organizer can confirm zone status.")
+        }
+
+        if (event.status != EventStatus.COMPLETED) {
+            throw ConflictException("Cannot confirm cleanliness for an event that is not 'COMPLETED'.")
+        }
+
+        if (wasCleaned) {
+            val updatedZone = zoneStateChangeService.changeZoneStatus(
+                zone = zone,
+                newStatus = ZoneStatus.CLEANED,
+                changedBy = organizerId,
+                triggeredByEventId = eventId
+            )
+            zoneStateChangeService.archiveZone(updatedZone)
+        } else {
+            zoneStateChangeService.changeZoneStatus(
+                zone = zone,
+                newStatus = ZoneStatus.REPORTED,
+                changedBy = organizerId,
+                triggeredByEventId = eventId
+            )
+        }
+    }
+
+    suspend fun processZoneConfirmationTimeouts() {
+        val timeThreshold = now().minus(24.hours)
+        val eventsToProcess = eventRepository.findCompletedEventsPendingConfirmation(timeThreshold)
+
+        if (eventsToProcess.isEmpty()) {
+            println("Timeout Job: No zones to process.")
+            return
+        }
+
+        println("Timeout Job: Found ${eventsToProcess.size} zones to process.")
+
+        for (event in eventsToProcess) {
+            val zone = zoneRepository.getById(event.zoneId)
+            if (zone == null) {
+                println("Timeout Job: Zone ${event.zoneId} for event ${event.id} not found. Skipping.")
+                continue
+            }
+
+            if (zone.status == ZoneStatus.CLEANING_SCHEDULED) {
+                println("Timeout Job: Processing zone ${zone.id}. Setting to CLEANED and archiving.")
+
+                val updatedZone = zoneStateChangeService.changeZoneStatus(
+                    zone = zone,
+                    newStatus = ZoneStatus.CLEANED,
+                    changedBy = null,
+                    triggeredByEventId = event.id
+                )
+
+                zoneStateChangeService.archiveZone(updatedZone)
+            }
+        }
+    }
 
     private suspend fun findZoneOrFail(zoneId: Id): Zone =
         zoneRepository.getById(zoneId)

@@ -41,6 +41,7 @@ import pt.isel.keepmyplanet.repository.memory.InMemoryPhotoRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryUserDeviceRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryUserRepository
 import pt.isel.keepmyplanet.repository.memory.InMemoryZoneRepository
+import pt.isel.keepmyplanet.repository.memory.InMemoryZoneStateChangeRepository
 import pt.isel.keepmyplanet.security.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.utils.now
@@ -51,6 +52,7 @@ abstract class BaseWebApiTest {
     protected val fakeEventRepository = InMemoryEventRepository()
     protected val fakeEventStateChangeRepository =
         InMemoryEventStateChangeRepository(fakeUserRepository)
+    protected val fakeZoneStateChangeRepository = InMemoryZoneStateChangeRepository()
     protected val fakeMessageRepository = InMemoryMessageRepository()
     protected val fakePhotoRepository = InMemoryPhotoRepository()
     protected val fakeUserDeviceRepository = InMemoryUserDeviceRepository()

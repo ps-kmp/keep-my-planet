@@ -1,6 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.details
 
 import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
+import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
@@ -13,6 +14,7 @@ import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
 
 class EventDetailsViewModel(
     private val eventRepository: DefaultEventRepository,
+    private val zoneRepository: DefaultZoneRepository,
     private val sessionManager: SessionManager,
 ) : BaseViewModel<EventDetailsUiState>(EventDetailsUiState()) {
     private val currentUser: UserInfo
@@ -128,6 +130,27 @@ class EventDetailsViewModel(
                 sendEvent(EventDetailsEvent.EventDeleted)
             },
             onError = { handleErrorWithMessage(getErrorMessage("Failed to delete event", it)) },
+        )
+    }
+
+    fun confirmZoneCleanliness(wasCleaned: Boolean) {
+        val event = currentState.event ?: return
+
+        launchWithResult(
+            onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
+            block = {
+                zoneRepository.confirmCleanliness(
+                    zoneId = event.zoneId,
+                    eventId = event.id,
+                    wasCleaned = wasCleaned
+                )
+            },
+            onSuccess = { updatedZone ->
+                sendEvent(EventDetailsEvent.ShowSnackbar("Zone status confirmed successfully!"))
+                sendEvent(EventDetailsEvent.NavigateBack)
+            },
+            onError = { handleErrorWithMessage(getErrorMessage("Failed to confirm zone status", it)) }
         )
     }
 

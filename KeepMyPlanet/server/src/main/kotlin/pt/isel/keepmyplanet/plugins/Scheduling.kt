@@ -7,9 +7,11 @@ import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
 import pt.isel.keepmyplanet.service.EventStateChangeService
+import pt.isel.keepmyplanet.service.ZoneService
 
 fun Application.configureScheduling() {
     val eventStateChangeService by inject<EventStateChangeService>()
+    val zoneService by inject<ZoneService>()
     val log = LoggerFactory.getLogger("EventSchedulingJob")
     val scheduler = Executors.newSingleThreadScheduledExecutor()
 
@@ -23,10 +25,18 @@ fun Application.configureScheduling() {
                 } catch (e: Exception) {
                     log.error("Error in event transition job", e)
                 }
+
+                try {
+                    log.info("Running zone confirmation timeout job...")
+                    zoneService.processZoneConfirmationTimeouts()
+                    log.info("Zone confirmation timeout job finished.")
+                } catch (e: Exception) {
+                    log.error("Error in zone confirmation timeout job", e)
+                }
             }
         },
         0,
         1,
-        TimeUnit.MINUTES,
+        TimeUnit.MINUTES, //ALTERAR PARA HORA A HORA OU DIA A DIA
     )
 }

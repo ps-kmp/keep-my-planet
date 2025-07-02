@@ -73,4 +73,7 @@ data class EventDetailsUiState(
             event != null &&
                 isCurrentUserOrganizer &&
                 event.status in listOf(EventStatus.PLANNED, EventStatus.CANCELLED)
+
+    val showCleanlinessConfirmation: Boolean
+        get() = event?.status == EventStatus.COMPLETED && isCurrentUserOrganizer
 }

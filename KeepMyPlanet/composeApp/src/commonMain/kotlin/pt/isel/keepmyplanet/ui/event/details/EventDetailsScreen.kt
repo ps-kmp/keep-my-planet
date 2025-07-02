@@ -42,6 +42,7 @@ import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.QrCodeIconButton
 import pt.isel.keepmyplanet.ui.components.isQrScanningAvailable
+import pt.isel.keepmyplanet.ui.event.details.components.CleanlinessConfirmationDialog
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
@@ -63,6 +64,13 @@ fun EventDetailsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val showCancelDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf(false) }
+    val showCleanlinessDialog = remember { mutableStateOf(false) }
+
+    if (uiState.showCleanlinessConfirmation && event != null) {
+        LaunchedEffect(uiState.showCleanlinessConfirmation) {
+            showCleanlinessDialog.value = true
+        }
+    }
 
     if (showCancelDialog.value) {
         ConfirmActionDialog(
@@ -83,6 +91,20 @@ fun EventDetailsScreen(
         )
     }
 
+    if (showCleanlinessDialog.value) {
+        CleanlinessConfirmationDialog(
+            onConfirm = {
+                viewModel.confirmZoneCleanliness(wasCleaned = true)
+                showCleanlinessDialog.value = false
+            },
+            onDismiss = {
+                viewModel.confirmZoneCleanliness(wasCleaned = false)
+                showCleanlinessDialog.value = false
+            },
+            onDismissRequest = { showCleanlinessDialog.value = false }
+        )
+    }
+
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -94,6 +116,10 @@ fun EventDetailsScreen(
                 }
 
                 is EventDetailsEvent.EventDeleted -> {
+                    onNavigateBack()
+                }
+
+                is EventDetailsEvent.NavigateBack -> {
                     onNavigateBack()
                 }
 

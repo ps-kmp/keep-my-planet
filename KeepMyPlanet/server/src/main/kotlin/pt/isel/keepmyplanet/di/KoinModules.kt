@@ -13,6 +13,7 @@ import pt.isel.keepmyplanet.repository.PhotoRepository
 import pt.isel.keepmyplanet.repository.UserDeviceRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
+import pt.isel.keepmyplanet.repository.ZoneStateChangeRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseEventRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseEventStateChangeRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseMessageRepository
@@ -20,6 +21,7 @@ import pt.isel.keepmyplanet.repository.database.DatabasePhotoRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseUserDeviceRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseUserRepository
 import pt.isel.keepmyplanet.repository.database.DatabaseZoneRepository
+import pt.isel.keepmyplanet.repository.database.DatabaseZoneStateChangeRepository
 import pt.isel.keepmyplanet.repository.database.adapters.DescriptionAdapter
 import pt.isel.keepmyplanet.repository.database.adapters.EmailAdapter
 import pt.isel.keepmyplanet.repository.database.adapters.EventStatusAdapter
@@ -45,6 +47,7 @@ import pt.isel.keepmyplanet.service.NotificationService
 import pt.isel.keepmyplanet.service.PhotoService
 import pt.isel.keepmyplanet.service.UserService
 import pt.isel.keepmyplanet.service.ZoneService
+import pt.isel.keepmyplanet.service.ZoneStateChangeService
 import ptiselkeepmyplanetdb.Event_attendances
 import ptiselkeepmyplanetdb.Event_participants
 import ptiselkeepmyplanetdb.Event_state_changes
@@ -54,6 +57,7 @@ import ptiselkeepmyplanetdb.Photos
 import ptiselkeepmyplanetdb.User_devices
 import ptiselkeepmyplanetdb.Users
 import ptiselkeepmyplanetdb.Zone_photos
+import ptiselkeepmyplanetdb.Zone_state_changes
 import ptiselkeepmyplanetdb.Zones
 
 fun appModule(application: Application) =
@@ -177,6 +181,15 @@ fun appModule(application: Application) =
                         user_idAdapter = IdAdapter,
                         created_atAdapter = LocalDateTimeAdapter,
                     ),
+                zone_state_changesAdapter =
+                    Zone_state_changes.Adapter(
+                        idAdapter = IdAdapter,
+                        zone_idAdapter = IdAdapter,
+                        new_statusAdapter = ZoneStatusAdapter,
+                        changed_byAdapter = IdAdapter,
+                        triggered_by_event_idAdapter = IdAdapter,
+                        change_timeAdapter = LocalDateTimeAdapter,
+                    ),
             )
         }
 
@@ -190,6 +203,9 @@ fun appModule(application: Application) =
         single<PhotoRepository> { DatabasePhotoRepository(get<Database>().photoQueries) }
         single<UserDeviceRepository> {
             DatabaseUserDeviceRepository(get<Database>().userDeviceQueries)
+        }
+        single<ZoneStateChangeRepository> {
+            DatabaseZoneStateChangeRepository(get<Database>().zoneStateChangeQueries)
         }
 
         single { JwtService(get()) }
@@ -206,9 +222,10 @@ fun appModule(application: Application) =
 
         single { AuthService(get(), get(), get()) }
         single { UserService(get(), get(), get(), get()) }
-        single { ZoneService(get(), get(), get(), get()) }
-        single { EventService(get(), get(), get(), get(), get(), get()) }
-        single { EventStateChangeService(get(), get(), get(), get()) }
+        single { ZoneService(get(), get(), get(), get(), get()) }
+        single { EventService(get(), get(), get(), get(), get(), get(), get()) }
+        single { EventStateChangeService(get(), get(), get(), get(), get()) }
+        single { ZoneStateChangeService(get(), get()) }
         single { MessageService(get(), get(), get(), get(), get()) }
         single { PhotoService(get(), get(), get()) }
         single { NotificationService(get(), get()) }

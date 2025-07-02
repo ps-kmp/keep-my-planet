@@ -287,4 +287,9 @@ class DatabaseEventRepository(
             .executeAsOneOrNull()
             ?.total_seconds
             ?: 0.0
+
+    override suspend fun findCompletedEventsPendingConfirmation(timeThreshold: LocalDateTime): List<Event> {
+        val dbEvents = eventQueries.findCompletedEventsPendingConfirmation(timeThreshold).executeAsList()
+        return mapEventsToDomain(dbEvents)
+    }
 }

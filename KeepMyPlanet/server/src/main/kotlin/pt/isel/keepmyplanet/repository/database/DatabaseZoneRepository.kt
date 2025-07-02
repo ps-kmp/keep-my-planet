@@ -44,6 +44,7 @@ class DatabaseZoneRepository(
                         event_id = entity.eventId,
                         status = entity.status,
                         zone_severity = entity.zoneSeverity,
+                        is_active = entity.isActive,
                         created_at = currentTime,
                         updated_at = currentTime,
                     ).executeAsOne()
@@ -60,7 +61,7 @@ class DatabaseZoneRepository(
         offset: Int,
     ): List<Zone> =
         zoneQueries
-            .getAll(limit.toLong(), offset.toLong())
+            .getAllActive(limit.toLong(), offset.toLong())
             .executeAsList()
             .map { getZoneWithPhotos(it) }
 
@@ -80,6 +81,7 @@ class DatabaseZoneRepository(
                         event_id = entity.eventId,
                         status = entity.status,
                         zone_severity = entity.zoneSeverity,
+                        is_active = entity.isActive,
                         updated_at = now(),
                     ).executeAsOne()
 
@@ -131,7 +133,7 @@ class DatabaseZoneRepository(
         val (minCoords, maxCoords) = calculateBoundingBox(center, radiusKm)
         val candidateDbZones =
             zoneQueries
-                .findInBoundingBox(
+                .findInBoundingBoxActive(
                     minLat = minCoords.latitude,
                     maxLat = maxCoords.latitude,
                     minLon = minCoords.longitude,

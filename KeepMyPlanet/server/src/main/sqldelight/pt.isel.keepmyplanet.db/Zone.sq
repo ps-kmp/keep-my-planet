@@ -13,6 +13,7 @@ CREATE TABLE zones (
     event_id BIGINT AS Id,
     status TEXT AS ZoneStatus NOT NULL,
     zone_severity TEXT AS ZoneSeverity NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP AS LocalDateTime NOT NULL,
     updated_at TIMESTAMP AS LocalDateTime NOT NULL
 );
@@ -26,8 +27,8 @@ CREATE TABLE zone_photos (
 );
 
 insert:
-INSERT INTO zones(latitude, longitude, description, reporter_id, event_id, status, zone_severity, created_at, updated_at)
-VALUES (:latitude, :longitude, :description, :reporter_id, :event_id, :status, :zone_severity, :created_at, :updated_at)
+INSERT INTO zones(latitude, longitude, description, reporter_id, event_id, status, zone_severity, is_active, created_at, updated_at)
+VALUES (:latitude, :longitude, :description, :reporter_id, :event_id, :status, :zone_severity, :is_active, :created_at, :updated_at)
 RETURNING *;
 
 getById:
@@ -35,6 +36,9 @@ SELECT * FROM zones WHERE id = :id;
 
 getAll:
 SELECT * FROM zones ORDER BY id LIMIT :limit OFFSET :offset;
+
+getAllActive:
+SELECT * FROM zones WHERE is_active = TRUE ORDER BY id LIMIT :limit OFFSET :offset;
 
 updateZone:
 UPDATE zones
@@ -45,6 +49,7 @@ SET latitude = :latitude,
     event_id = :event_id,
     status = :status,
     zone_severity = :zone_severity,
+    is_active = :is_active,
     updated_at = :updated_at
 WHERE id = :id
 RETURNING *;
@@ -68,6 +73,13 @@ findInBoundingBox:
 SELECT * FROM zones
 WHERE latitude BETWEEN :minLat AND :maxLat
   AND longitude BETWEEN :minLon AND :maxLon
+ORDER BY id;
+
+findInBoundingBoxActive:
+SELECT * FROM zones
+WHERE latitude BETWEEN :minLat AND :maxLat
+  AND longitude BETWEEN :minLon AND :maxLon
+  AND is_active = TRUE
 ORDER BY id;
 
 getPhotoIdsForZone:

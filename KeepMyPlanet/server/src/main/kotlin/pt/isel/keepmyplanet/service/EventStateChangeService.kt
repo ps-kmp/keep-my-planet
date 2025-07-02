@@ -20,6 +20,7 @@ class EventStateChangeService(
     private val zoneRepository: ZoneRepository,
     private val eventStateChangeRepository: EventStateChangeRepository,
     private val notificationService: NotificationService,
+    private val zoneStateChangeService: ZoneStateChangeService,
 ) {
     suspend fun changeEventStatus(
         eventId: Id,
@@ -46,7 +47,7 @@ class EventStateChangeService(
                     event.copy(status = newStatus)
                 }
             eventRepository.update(updatedEvent)
-            handleZoneStatusChange(event, newStatus)
+            handleZoneStatusChange(event, newStatus, requestingUserId)
 
             val stateChange =
                 EventStateChange(
@@ -77,24 +78,31 @@ class EventStateChangeService(
     private suspend fun handleZoneStatusChange(
         event: Event,
         newStatus: EventStatus,
+        requestingUserId: Id
     ) {
-        val zone =
-            zoneRepository.getById(event.zoneId)
-                ?: throw NotFoundException(
-                    "Zone '${event.zoneId}' associated with event not found.",
-                )
+        val zone = zoneRepository.getById(event.zoneId)
+            ?: throw NotFoundException("Zone '${event.zoneId}' not found.")
 
         if (zone.eventId != event.id) return
 
-        val updatedZone =
-            when (newStatus) {
-                EventStatus.CANCELLED -> zone.copy(eventId = null, status = ZoneStatus.REPORTED)
-                EventStatus.COMPLETED -> zone.copy(eventId = null, status = ZoneStatus.CLEANED)
-                else -> null
+        when (newStatus) {
+            EventStatus.CANCELLED -> {
+                val updatedZone = zoneStateChangeService.changeZoneStatus(
+                    zone = zone,
+                    newStatus = ZoneStatus.REPORTED,
+                    changedBy = requestingUserId,
+                    triggeredByEventId = event.id
+                )
+                zoneRepository.update(updatedZone.copy(eventId = null))
             }
-
-        updatedZone?.let {
-            zoneRepository.update(it)
+            EventStatus.COMPLETED -> {
+                zoneRepository.update(zone.copy(eventId = null))
+                println("LOG: Event ${event.id} completed. Awaiting organizer confirmation for zone ${zone.id} status.")
+                //notificationService.sendOrganizerConfirmationRequest(event.organizerId, zone.id, event.id)
+            }
+            else -> {
+                // No action needed for other statuses
+            }
         }
     }
 

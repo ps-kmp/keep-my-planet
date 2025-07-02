@@ -180,3 +180,11 @@ JOIN zones z ON e.zone_id = z.id;
 
 findEventsByZoneIds:
 SELECT * FROM events WHERE zone_id IN :zoneIds;
+
+findCompletedEventsPendingConfirmation:
+SELECT e.*
+FROM events e
+JOIN zones z ON e.zone_id = z.id
+WHERE e.status = 'COMPLETED'
+  AND z.status = 'CLEANING_SCHEDULED'
+  AND e.updated_at <= :timeThreshold;

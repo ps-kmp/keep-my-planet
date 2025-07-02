@@ -8,6 +8,7 @@ import io.ktor.http.HttpMethod
 import pt.isel.keepmyplanet.data.http.executeRequest
 import pt.isel.keepmyplanet.data.http.executeRequestUnit
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
+import pt.isel.keepmyplanet.dto.zone.ConfirmCleanlinessRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.dto.zone.ZoneResponse
@@ -36,6 +37,8 @@ class ZoneApi(
             zoneId: UInt,
             photoId: UInt,
         ) = "${zoneById(zoneId)}/photos/$photoId"
+
+        fun confirmCleanliness(zoneId: UInt) = "$ZONES_BASE/$zoneId/confirm-cleanliness"
     }
 
     suspend fun reportZone(request: ReportZoneRequest): Result<ZoneResponse> =
@@ -103,5 +106,15 @@ class ZoneApi(
         httpClient.executeRequest {
             method = HttpMethod.Delete
             url(Endpoints.removePhotoFromZone(zoneId, photoId))
+        }
+
+    suspend fun confirmCleanliness(
+        zoneId: UInt,
+        request: ConfirmCleanlinessRequest,
+    ): Result<ZoneResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.confirmCleanliness(zoneId))
+            setBody(request)
         }
 }

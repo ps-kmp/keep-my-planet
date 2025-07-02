@@ -18,6 +18,7 @@ import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.dto.zone.AddPhotoRequest
+import pt.isel.keepmyplanet.dto.zone.ConfirmCleanlinessRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.exception.ValidationException
@@ -98,6 +99,22 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                         .deleteZone(zoneId, userId)
                         .onSuccess { call.respond(HttpStatusCode.NoContent) }
                         .onFailure { throw it }
+                }
+
+                post("/confirm-cleanliness") {
+                    val zoneId = call.getZoneId()
+                    val organizerId = call.getCurrentUserId()
+                    val request = call.receive<ConfirmCleanlinessRequest>()
+                    val eventId = Id(request.eventId)
+
+                    zoneService.confirmZoneCleanliness(
+                        zoneId = zoneId,
+                        organizerId = organizerId,
+                        wasCleaned = request.wasCleaned,
+                        eventId = eventId
+                    ).onSuccess { updatedZone ->
+                        call.respond(HttpStatusCode.OK, updatedZone.toResponse())
+                    }.onFailure { throw it }
                 }
 
                 route("/photos") {

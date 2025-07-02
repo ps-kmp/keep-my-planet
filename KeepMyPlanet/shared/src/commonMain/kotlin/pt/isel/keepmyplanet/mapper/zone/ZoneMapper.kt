@@ -34,6 +34,7 @@ fun ZoneResponse.toZone(): Zone =
         eventId = eventId?.let { Id(it) },
         status = safeValueOf<ZoneStatus>(status) ?: ZoneStatus.REPORTED,
         zoneSeverity = safeValueOf<ZoneSeverity>(severity) ?: ZoneSeverity.UNKNOWN,
+        isActive = true,
         photosIds = photosIds.map { Id(it) }.toSet(),
         createdAt = LocalDateTime.parse(createdAt),
         updatedAt = LocalDateTime.parse(updatedAt),

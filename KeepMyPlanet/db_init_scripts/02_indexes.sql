@@ -14,6 +14,7 @@ CREATE INDEX IF NOT EXISTS idx_zones_event_id ON zones(event_id);
 CREATE INDEX IF NOT EXISTS idx_zones_status ON zones(status);
 CREATE INDEX IF NOT EXISTS idx_zones_severity ON zones(zone_severity);
 CREATE INDEX IF NOT EXISTS idx_zones_coordinates ON zones(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_zones_is_active ON zones(is_active);
 
 -- Indexes for events table
 CREATE INDEX IF NOT EXISTS idx_events_zone_id ON events(zone_id);
@@ -25,6 +26,11 @@ CREATE INDEX IF NOT EXISTS idx_events_status_start_datetime ON events(status, st
 
 CREATE INDEX IF NOT EXISTS idx_esc_event_id_change_time ON event_state_changes(event_id, change_time DESC);
 CREATE INDEX IF NOT EXISTS idx_esc_changed_by ON event_state_changes(changed_by);
+
+-- Indexes for zone_state_changes table
+CREATE INDEX IF NOT EXISTS idx_zsc_zone_id_change_time ON zone_state_changes(zone_id, change_time DESC);
+CREATE INDEX IF NOT EXISTS idx_zsc_changed_by ON zone_state_changes(changed_by);
+CREATE INDEX IF NOT EXISTS idx_zsc_triggered_by_event_id ON zone_state_changes(triggered_by_event_id);
 
 -- Indexes for messages table
 CREATE INDEX IF NOT EXISTS idx_messages_event_id_chat_position ON messages(event_id, chat_position);

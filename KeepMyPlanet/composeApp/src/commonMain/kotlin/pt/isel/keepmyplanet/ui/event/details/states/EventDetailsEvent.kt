@@ -10,6 +10,8 @@ sealed interface EventDetailsEvent : UiEvent {
 
     data object EventDeleted : EventDetailsEvent
 
+    data object NavigateBack : EventDetailsEvent
+
     data class NavigateToManageAttendance(
         val eventId: Id,
     ) : EventDetailsEvent

@@ -46,6 +46,7 @@ internal fun Zones.toDomainZone(photoIds: Set<Id>): Zone =
         eventId = this.event_id,
         status = this.status,
         zoneSeverity = this.zone_severity,
+        isActive = this.is_active,
         photosIds = photoIds,
         createdAt = this.created_at,
         updatedAt = this.updated_at,

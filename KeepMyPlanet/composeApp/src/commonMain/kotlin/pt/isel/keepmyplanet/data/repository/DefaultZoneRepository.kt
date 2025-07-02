@@ -5,6 +5,7 @@ import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.dto.zone.ConfirmCleanlinessRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.mapper.zone.toZone
@@ -59,4 +60,20 @@ class DefaultZoneRepository(
         }
 
     suspend fun deleteZone(zoneId: Id): Result<Unit> = zoneApi.deleteZone(zoneId.value)
+
+    suspend fun confirmCleanliness(
+        zoneId: Id,
+        eventId: Id,
+        wasCleaned: Boolean,
+    ): Result<Zone> {
+        val request = ConfirmCleanlinessRequest(
+            wasCleaned = wasCleaned,
+            eventId = eventId.value
+        )
+        return zoneApi.confirmCleanliness(zoneId.value, request).map {
+            val updatedZone = it.toZone()
+            zoneCache.insertZones(listOf(updatedZone))
+            updatedZone
+        }
+    }
 }

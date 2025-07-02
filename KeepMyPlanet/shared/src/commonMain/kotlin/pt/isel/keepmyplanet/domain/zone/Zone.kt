@@ -12,6 +12,7 @@ data class Zone(
     val eventId: Id? = null,
     val status: ZoneStatus = ZoneStatus.REPORTED,
     val zoneSeverity: ZoneSeverity = ZoneSeverity.UNKNOWN,
+    val isActive: Boolean = true,
     val photosIds: Set<Id>,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
