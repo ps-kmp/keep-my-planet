@@ -117,7 +117,7 @@ fun EventDetailsScreen(
                 viewModel.initiateTransfer(nomineeId)
                 showTransferDialog.value = false
             },
-            onDismiss = { showTransferDialog.value = false }
+            onDismiss = { showTransferDialog.value = false },
         )
     }
 
@@ -199,7 +199,7 @@ fun EventDetailsScreen(
                             TransferOwnershipBanner(
                                 isLoading = uiState.actionState == EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
                                 onAccept = { viewModel.respondToTransfer(true) },
-                                onDecline = { viewModel.respondToTransfer(false) }
+                                onDecline = { viewModel.respondToTransfer(false) },
                             )
                         }
                         Text(
@@ -372,7 +372,7 @@ fun EventDetailsScreen(
                                             isLoading = uiState.actionState == EventDetailsUiState.ActionState.INITIATING_TRANSFER,
                                             enabled = !uiState.isActionInProgress,
                                             text = "Transfer Ownership",
-                                            modifier = Modifier.fillMaxWidth()
+                                            modifier = Modifier.fillMaxWidth(),
                                         )
                                     }
                                 }

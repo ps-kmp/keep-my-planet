@@ -33,7 +33,7 @@ class EventDetailsViewModel(
             block = {
                 eventRepository.invalidateEventCache(eventId)
                 eventRepository.getEventDetailsBundle(eventId)
-                },
+            },
             onSuccess = { bundle ->
                 setState {
                     copy(
@@ -141,31 +141,30 @@ class EventDetailsViewModel(
     fun confirmZoneCleanliness(wasCleaned: Boolean) {
         val event = currentState.event ?: return
 
-        if (wasCleaned)
-            {
-                launchWithResult(
-                    onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
-                    onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
-                    block = {
-                        zoneRepository.confirmCleanliness(
-                            zoneId = event.zoneId,
-                            eventId = event.id,
-                            wasCleaned = true,
-                        )
-                    },
-                    onSuccess = {
-                        sendEvent(
-                            EventDetailsEvent.ShowSnackbar("Zone status confirmed successfully!"),
-                        )
-                        sendEvent(EventDetailsEvent.NavigateBack)
-                    },
-                    onError = {
-                        handleErrorWithMessage(
-                            getErrorMessage("Failed to confirm zone status", it),
-                        )
-                    },
-                )
-            } else {
+        if (wasCleaned) {
+            launchWithResult(
+                onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
+                onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
+                block = {
+                    zoneRepository.confirmCleanliness(
+                        zoneId = event.zoneId,
+                        eventId = event.id,
+                        wasCleaned = true,
+                    )
+                },
+                onSuccess = {
+                    sendEvent(
+                        EventDetailsEvent.ShowSnackbar("Zone status confirmed successfully!"),
+                    )
+                    sendEvent(EventDetailsEvent.NavigateBack)
+                },
+                onError = {
+                    handleErrorWithMessage(
+                        getErrorMessage("Failed to confirm zone status", it),
+                    )
+                },
+            )
+        } else {
             sendEvent(EventDetailsEvent.NavigateToUpdateZone(event.zoneId))
         }
     }
@@ -212,14 +211,22 @@ class EventDetailsViewModel(
                 updateEventInState(updatedEvent)
                 sendEvent(EventDetailsEvent.ShowSnackbar("Transfer request sent successfully."))
             },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to initiate transfer", it)) }
+            onError = {
+                handleErrorWithMessage(
+                    getErrorMessage("Failed to initiate transfer", it),
+                )
+            },
         )
     }
 
     fun respondToTransfer(accepted: Boolean) {
         val eventId = getEventId() ?: return
         launchWithResult(
-            onStart = { copy(actionState = EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER) },
+            onStart = {
+                copy(
+                    actionState = EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
+                )
+            },
             onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
             block = { eventRepository.respondToTransfer(eventId, accepted) },
             onSuccess = { updatedEvent ->
@@ -228,7 +235,11 @@ class EventDetailsViewModel(
                 sendEvent(EventDetailsEvent.ShowSnackbar(message))
                 loadEventDetails(eventId)
             },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to respond to transfer", it)) }
+            onError = {
+                handleErrorWithMessage(
+                    getErrorMessage("Failed to respond to transfer", it),
+                )
+            },
         )
     }
 

@@ -189,19 +189,21 @@ class EventApi(
 
     suspend fun initiateTransfer(
         eventId: UInt,
-        request: InitiateTransferRequest
-    ): Result<EventResponse> = httpClient.executeRequest {
-        method = HttpMethod.Post
-        url(Endpoints.initiateTransfer(eventId))
-        setBody(request)
-    }
+        request: InitiateTransferRequest,
+    ): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.initiateTransfer(eventId))
+            setBody(request)
+        }
 
     suspend fun respondToTransfer(
         eventId: UInt,
-        request: RespondToTransferRequest
-    ): Result<EventResponse> = httpClient.executeRequest {
-        method = HttpMethod.Post
-        url(Endpoints.respondToTransfer(eventId))
-        setBody(request)
-    }
+        request: RespondToTransferRequest,
+    ): Result<EventResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Post
+            url(Endpoints.respondToTransfer(eventId))
+            setBody(request)
+        }
 }

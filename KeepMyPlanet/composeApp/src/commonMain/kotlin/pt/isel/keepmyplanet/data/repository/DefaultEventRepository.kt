@@ -53,11 +53,15 @@ class DefaultEventRepository(
                 println("DEBUG: [2] Waiting for API calls to complete...")
 
                 val eventDetailsResult = detailsDeferred.await()
-                println("DEBUG: [3] eventApi.getEventDetails finished with success=${eventDetailsResult.isSuccess}")
+                println(
+                    "DEBUG: [3] eventApi.getEventDetails finished with success=${eventDetailsResult.isSuccess}",
+                )
                 val eventResponse = eventDetailsResult.getOrThrow()
 
                 val participantsResult = participantsDeferred.await()
-                println("DEBUG: [4] eventApi.getEventParticipants finished with success=${participantsResult.isSuccess}")
+                println(
+                    "DEBUG: [4] eventApi.getEventParticipants finished with success=${participantsResult.isSuccess}",
+                )
                 val participantsResponse = participantsResult.getOrThrow()
 
                 println("DEBUG: [5] Mapping responses to domain objects...")
@@ -68,7 +72,6 @@ class DefaultEventRepository(
 
                 println("DEBUG: Mapped Event object: $event")
                 println("DEBUG: Mapped Event has pendingOrganizerId = ${event.pendingOrganizerId}")
-
 
                 println("DEBUG: [6] Inserting into cache...")
                 eventCache.insertEvents(listOf(event))
@@ -90,7 +93,9 @@ class DefaultEventRepository(
                     println("DEBUG: [CACHE] Successfully created bundle from cache.")
                     EventDetailsBundle(cachedEvent, cachedParticipants.map { it.toUserInfo() })
                 } else {
-                    println("DEBUG: [CACHE] Found event but participants are missing. Re-throwing error.")
+                    println(
+                        "DEBUG: [CACHE] Found event but participants are missing. Re-throwing error.",
+                    )
                     throw throwable
                 }
             } else {
@@ -194,7 +199,7 @@ class DefaultEventRepository(
 
     suspend fun initiateTransfer(
         eventId: Id,
-        nomineeId: Id
+        nomineeId: Id,
     ): Result<Event> {
         val request = InitiateTransferRequest(nomineeId.value)
         return eventApi.initiateTransfer(eventId.value, request).map {
@@ -206,7 +211,7 @@ class DefaultEventRepository(
 
     suspend fun respondToTransfer(
         eventId: Id,
-        accepted: Boolean
+        accepted: Boolean,
     ): Result<Event> {
         val request = RespondToTransferRequest(accept = accepted)
         return eventApi.respondToTransfer(eventId.value, request).map {

@@ -13,7 +13,7 @@ data class EventDetailsUiState(
     val error: String? = null,
     val isCurrentUserOrganizer: Boolean = false,
     val isCurrentUserParticipant: Boolean = false,
-    val isCurrentUserPendingNominee: Boolean = false
+    val isCurrentUserPendingNominee: Boolean = false,
 ) : UiState {
     enum class ActionState {
         IDLE,
@@ -23,7 +23,7 @@ data class EventDetailsUiState(
         COMPLETING,
         DELETING,
         INITIATING_TRANSFER,
-        RESPONDING_TO_TRANSFER
+        RESPONDING_TO_TRANSFER,
     }
 
     val isActionInProgress: Boolean
@@ -81,9 +81,9 @@ data class EventDetailsUiState(
         get() = event?.status == EventStatus.COMPLETED && isCurrentUserOrganizer
 
     val canTransferOwnership: Boolean
-        get() = event != null &&
-            isCurrentUserOrganizer &&
-            event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS) &&
-            event.pendingOrganizerId == null
-
+        get() =
+            event != null &&
+                isCurrentUserOrganizer &&
+                event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS) &&
+                event.pendingOrganizerId == null
 }
