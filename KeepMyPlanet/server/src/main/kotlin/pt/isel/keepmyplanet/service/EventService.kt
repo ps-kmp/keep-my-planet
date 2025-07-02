@@ -73,16 +73,15 @@ class EventService(
                 )
             val createdEvent = eventRepository.create(event)
 
-            zoneStateChangeService.changeZoneStatus(
+            val zoneAfterStatusChange = zoneStateChangeService.changeZoneStatus(
                 zone = zone,
                 newStatus = ZoneStatus.CLEANING_SCHEDULED,
                 changedBy = organizerId,
                 triggeredByEventId = createdEvent.id
             )
+            val finalZone = zoneAfterStatusChange.copy(eventId = createdEvent.id)
 
-            val updatedZoneWithEvent = zone.copy(eventId = createdEvent.id)
-            zoneRepository.update(updatedZoneWithEvent)
-
+            zoneRepository.update(finalZone)
 
             createdEvent
         }
