@@ -7,13 +7,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.LoadingIconButton
+import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 @Composable
 fun MessageInput(
@@ -35,7 +35,10 @@ fun MessageInput(
     errorText: String? = null,
 ) {
     val isError = errorText != null
-    Surface(elevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
+    Surface(
+        shadowElevation = 4.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -48,13 +51,13 @@ fun MessageInput(
                     enabled = !isSending,
                     isError = isError,
                     maxLines = 5,
-                    colors =
+/*                    colors =
                         TextFieldDefaults.outlinedTextFieldColors(
                             focusedBorderColor =
                                 MaterialTheme.colors.primary.copy(ContentAlpha.high),
                             unfocusedBorderColor =
                                 MaterialTheme.colors.onSurface.copy(ContentAlpha.disabled),
-                        ),
+                        ),*/
                     shape = MaterialTheme.shapes.medium,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -68,9 +71,9 @@ fun MessageInput(
                         contentDescription = "Send Message",
                         tint =
                             if (sendEnabled) {
-                                MaterialTheme.colors.primary
+                                primaryLight
                             } else {
-                                MaterialTheme.colors.onSurface.copy(ContentAlpha.disabled)
+                                MaterialTheme.colorScheme.onSurface.copy(0.38f)
                             },
                     )
                 }
@@ -82,8 +85,8 @@ fun MessageInput(
                 if (isError) {
                     Text(
                         text = errorText,
-                        color = MaterialTheme.colors.error,
-                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f).padding(start = 12.dp),
                     )
                 } else {
@@ -91,11 +94,11 @@ fun MessageInput(
                 }
                 Text(
                     text = "${message.length} / $maxLength",
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.End,
                     color =
                         if (message.length > maxLength) {
-                            MaterialTheme.colors.error
+                            MaterialTheme.colorScheme.error
                         } else {
                             Color.Unspecified
                         },

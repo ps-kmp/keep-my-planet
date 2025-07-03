@@ -14,25 +14,34 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.theme.secondaryLight
+import pt.isel.keepmyplanet.ui.theme.surfaceVariantLight
+import pt.isel.keepmyplanet.ui.theme.tertiaryLight
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(
     title: String,
@@ -41,6 +50,12 @@ fun AppTopBar(
 ) {
     TopAppBar(
         title = { Text(title) },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = secondaryLight,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+            actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
+            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+        ),
         modifier = Modifier.statusBarsPadding(),
         navigationIcon =
             {
@@ -66,7 +81,11 @@ fun DetailCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        elevation = 2.dp,
+        elevation = CardDefaults.cardElevation(2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -79,12 +98,12 @@ fun DetailCard(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                 )
                 actions()
             }
-            Divider()
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
             content()
         }
     }
@@ -104,10 +123,10 @@ fun ErrorState(
             imageVector = Icons.Default.Warning,
             contentDescription = "Error",
             modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colors.error,
+            tint = MaterialTheme.colorScheme.error,
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = message, textAlign = TextAlign.Center, style = MaterialTheme.typography.h6)
+        Text(text = message, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = onRetry) {
             Text("Retry")
@@ -131,13 +150,13 @@ fun EmptyState(
             imageVector = Icons.AutoMirrored.Filled.ListAlt,
             contentDescription = "Empty",
             modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colors.onSurface.copy(alpha = 0.5f),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = message,
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.h6,
+            style = MaterialTheme.typography.titleSmall,
         )
         if (buttonText != null && onActionClick != null) {
             Spacer(modifier = Modifier.height(16.dp))
@@ -154,13 +173,13 @@ fun FeatureNotAvailable(
     message: String,
 ) {
     Box(
-        modifier = modifier.background(MaterialTheme.colors.surface.copy(0.3f)).padding(16.dp),
+        modifier = modifier.background(MaterialTheme.colorScheme.surface.copy(0.3f)).padding(16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = message,
-            style = MaterialTheme.typography.body1,
-            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center,
         )
     }

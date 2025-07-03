@@ -31,6 +31,7 @@ import pt.isel.keepmyplanet.ui.event.details.EventDetailsViewModel
 import pt.isel.keepmyplanet.ui.event.forms.EventFormViewModel
 import pt.isel.keepmyplanet.ui.event.history.EventStatusHistoryViewModel
 import pt.isel.keepmyplanet.ui.event.list.EventListViewModel
+import pt.isel.keepmyplanet.ui.event.participants.ParticipantListViewModel
 import pt.isel.keepmyplanet.ui.login.LoginViewModel
 import pt.isel.keepmyplanet.ui.map.MapViewModel
 import pt.isel.keepmyplanet.ui.profile.UserProfileViewModel
@@ -90,6 +91,7 @@ val appModule =
         factory { params -> ChatViewModel(get(), get(), get(), params.get()) }
         factoryOf(::ManageAttendanceViewModel)
         factory { params -> UserStatsViewModel(get(), get(), params.get()) }
+        factory { params -> ParticipantListViewModel(params.get(), get()) }
     }
 
 fun initKoin() {

@@ -20,6 +20,8 @@ sealed class AppRoute {
         val eventId: Id,
     ) : AppRoute()
 
+    data class ParticipantList(val eventId: Id) : AppRoute()
+
     data class EventStatusHistory(
         val eventId: Id,
     ) : AppRoute()

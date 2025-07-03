@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 @Composable
 fun StatusBadge(
@@ -51,7 +52,7 @@ fun StatusBadge(
                 text = text,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
             )
         }
     }
@@ -61,17 +62,17 @@ fun StatusBadge(
 fun getStatusColor(status: ZoneStatus): Color =
     when (status) {
         ZoneStatus.REPORTED -> Color(0xFFFFA000)
-        ZoneStatus.CLEANING_SCHEDULED -> MaterialTheme.colors.primary
+        ZoneStatus.CLEANING_SCHEDULED -> primaryLight
         ZoneStatus.CLEANED -> Color(0xFF388E3C)
     }
 
 @Composable
 fun getStatusColor(status: EventStatus): Color =
     when (status) {
-        EventStatus.PLANNED -> MaterialTheme.colors.primary
+        EventStatus.PLANNED -> primaryLight
         EventStatus.IN_PROGRESS -> Color(0xFFFFA000)
         EventStatus.COMPLETED -> Color(0xFF388E3C)
-        EventStatus.CANCELLED -> MaterialTheme.colors.error
+        EventStatus.CANCELLED -> Color(0xFFEA4335)
         EventStatus.UNKNOWN -> Color.Gray
     }
 
@@ -80,6 +81,6 @@ fun getSeverityColor(severity: ZoneSeverity): Color =
     when (severity) {
         ZoneSeverity.LOW -> Color(0xFF34A853)
         ZoneSeverity.MEDIUM -> Color(0xFFFBBC05)
-        ZoneSeverity.HIGH -> MaterialTheme.colors.error
+        ZoneSeverity.HIGH -> Color(0xFFEA4335)
         ZoneSeverity.UNKNOWN -> Color.Gray
     }

@@ -4,9 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.ui.Alignment
@@ -56,6 +56,7 @@ import pt.isel.keepmyplanet.ui.map.MapConfiguration.ZONE_CLUSTER_ID
 import pt.isel.keepmyplanet.ui.map.components.UserLocationMarker
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.map.states.MapUiState
+import pt.isel.keepmyplanet.ui.theme.primaryLight
 import pt.isel.keepmyplanet.utils.createOfflineFirstTileStreamProvider
 import pt.isel.keepmyplanet.utils.haversineDistance
 import pt.isel.keepmyplanet.utils.latToY
@@ -161,7 +162,7 @@ class MapViewModel(
             {
                 Box(
                     modifier =
-                        Modifier.size(40.dp).background(MaterialTheme.colors.primary, CircleShape),
+                        Modifier.size(40.dp).background(primaryLight, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(

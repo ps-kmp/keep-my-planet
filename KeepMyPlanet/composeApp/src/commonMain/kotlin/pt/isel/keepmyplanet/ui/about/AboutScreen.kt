@@ -12,17 +12,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.TrackChanges
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +33,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
+import pt.isel.keepmyplanet.ui.theme.primaryLight
+import pt.isel.keepmyplanet.ui.theme.surfaceLight
+import pt.isel.keepmyplanet.ui.theme.tertiaryLight
 
 private const val ABOUT_TEXT =
     "A multiplatform system developed with Kotlin Multiplatform (KMP) that allows the " +
@@ -58,14 +63,14 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
         ) {
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                color = surfaceLight.copy(alpha = 0.1f),
                 modifier = Modifier.size(96.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = "About Icon",
                     modifier = Modifier.padding(20.dp),
-                    tint = MaterialTheme.colors.primary,
+                    tint = tertiaryLight,
                 )
             }
 
@@ -73,7 +78,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
 
             Text(
                 text = "Our Mission",
-                style = MaterialTheme.typography.h4,
+                style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
             )
 
@@ -81,7 +86,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
 
             Text(
                 text = ABOUT_TEXT,
-                style = MaterialTheme.typography.body1,
+                style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
@@ -90,7 +95,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
 
             Text(
                 text = "Core Features",
-                style = MaterialTheme.typography.h5,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
             )
             Spacer(Modifier.height(16.dp))
@@ -110,14 +115,14 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
 
             Text(
                 text = "Thank You!",
-                style = MaterialTheme.typography.h4,
-                color = MaterialTheme.colors.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = primaryLight,
                 modifier = Modifier.padding(top = 32.dp, bottom = 16.dp),
             )
 
             Text(
                 text = "for being part of the solution.",
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
             )
         }
@@ -132,7 +137,11 @@ private fun FeatureCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        elevation = 2.dp,
+        elevation = CardDefaults.cardElevation(2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = surfaceLight,
+            contentColor = onSurfaceLight,
+        ),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -142,12 +151,12 @@ private fun FeatureCard(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = MaterialTheme.colors.primary,
+                tint = tertiaryLight,
                 modifier = Modifier.size(40.dp),
             )
             Column {
-                Text(text = title, style = MaterialTheme.typography.h6)
-                Text(text = description, style = MaterialTheme.typography.body2, color = Color.Gray)
+                Text(text = title, style = MaterialTheme.typography.titleSmall)
+                Text(text = description, style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
             }
         }
     }

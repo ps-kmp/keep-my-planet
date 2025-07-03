@@ -13,22 +13,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -68,6 +70,10 @@ import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.rememberGpsLocationProvider
 import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
+import pt.isel.keepmyplanet.ui.theme.backgroundLight
+import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
+import pt.isel.keepmyplanet.ui.theme.primaryLight
+import pt.isel.keepmyplanet.ui.theme.surfaceLight
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
 import pt.isel.keepmyplanet.utils.xToLon
@@ -142,6 +148,10 @@ fun MapScreen(
                                 .shadow(4.dp, RoundedCornerShape(8.dp))
                                 .widthIn(max = 240.dp),
                         shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = surfaceLight,
+                            contentColor = onSurfaceLight,
+                        ),
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp),
@@ -153,7 +163,7 @@ fun MapScreen(
                             )
                             Text(
                                 text = zone.description.value,
-                                style = MaterialTheme.typography.body2,
+                                style = MaterialTheme.typography.bodyLarge,
                                 maxLines = 3,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -161,8 +171,14 @@ fun MapScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 contentAlignment = Alignment.CenterEnd,
                             ) {
-                                TextButton(onClick = { onNavigateToZoneDetails(zone.id) }) {
-                                    Text("VIEW DETAILS", color = Color(0xFF6200EE))
+                                TextButton(
+                                    onClick = { onNavigateToZoneDetails(zone.id) },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        containerColor = surfaceLight,
+                                        contentColor = onSurfaceLight
+                                    )
+                                ) {
+                                    Text("VIEW DETAILS", color = primaryLight)
                                 }
                             }
                         }
@@ -184,12 +200,12 @@ fun MapScreen(
                 if (!uiState.isReportingMode && uiState.error == null) {
                     FloatingActionButton(
                         onClick = { viewModel.requestLocationPermissionOrUpdate() },
-                        backgroundColor = MaterialTheme.colors.secondary,
+                        containerColor = MaterialTheme.colorScheme.secondary,
                     ) {
                         if (uiState.isLocatingUser) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
-                                color = MaterialTheme.colors.onSecondary,
+                                color = MaterialTheme.colorScheme.onSecondary,
                             )
                         } else {
                             Icon(
@@ -198,8 +214,15 @@ fun MapScreen(
                             )
                         }
                     }
-                    FloatingActionButton(onClick = { viewModel.enterReportingMode() }) {
-                        Icon(Icons.Default.Add, contentDescription = "Report Zone")
+                    FloatingActionButton(
+                        onClick = { viewModel.enterReportingMode() },
+                        containerColor = backgroundLight
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Report Zone",
+                            tint = primaryLight,
+                        )
                     }
                 }
             }
@@ -272,7 +295,7 @@ fun MapScreen(
                         modifier =
                             Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp),
                         shape = RoundedCornerShape(16.dp),
-                        elevation = 4.dp,
+                        shadowElevation = 4.dp,
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -283,7 +306,7 @@ fun MapScreen(
                                 strokeWidth = 2.dp,
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text("Loading zones...", style = MaterialTheme.typography.body2)
+                            Text("Loading zones...", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
@@ -293,7 +316,7 @@ fun MapScreen(
                         imageVector = Icons.Default.GpsFixed,
                         contentDescription = "Reporting Pin",
                         modifier = Modifier.size(40.dp),
-                        tint = MaterialTheme.colors.primary,
+                        tint = primaryLight,
                     )
 
                     Surface(
@@ -311,14 +334,14 @@ fun MapScreen(
                         ) {
                             Text(
                                 "Report Polluted Zone",
-                                style = MaterialTheme.typography.h6,
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
                                 "Move the map to position the pin on the polluted area.",
-                                style = MaterialTheme.typography.body2,
+                                style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center,
-                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(

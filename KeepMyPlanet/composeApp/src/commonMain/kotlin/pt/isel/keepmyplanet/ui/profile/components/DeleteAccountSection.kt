@@ -2,13 +2,13 @@ package pt.isel.keepmyplanet.ui.profile.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,10 +34,10 @@ fun DeleteAccountSection(
                         showDeleteConfirmDialog.value = false
                         onConfirmDelete()
                     },
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            backgroundColor = MaterialTheme.colors.error,
-                        ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError,
+                    ),
                 ) {
                     Text("Delete")
                 }
@@ -54,12 +54,15 @@ fun DeleteAccountSection(
         onClick = { showDeleteConfirmDialog.value = true },
         enabled = uiState.isDeleteAccountEnabled,
         modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        ),
     ) {
         if (uiState.actionState == UserProfileUiState.ActionState.DELETING_ACCOUNT) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                color = MaterialTheme.colors.error,
+                color = MaterialTheme.colorScheme.onErrorContainer,
             )
         } else {
             Text("Delete Account")

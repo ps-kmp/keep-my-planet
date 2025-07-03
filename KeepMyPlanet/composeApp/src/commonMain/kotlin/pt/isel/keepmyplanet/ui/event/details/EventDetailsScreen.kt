@@ -8,24 +8,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarDuration
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
@@ -60,6 +63,7 @@ fun EventDetailsScreen(
     onNavigateToMyQrCode: (userId: Id, organizerName: String) -> Unit,
     onNavigateToStatusHistory: (Id) -> Unit,
     onNavigateToUpdateZone: (Id) -> Unit,
+    onNavigateToParticipantList: (Id) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -187,6 +191,7 @@ fun EventDetailsScreen(
                 }
 
                 event != null -> {
+                    val organizer = uiState.participants.find { it.id == event.organizerId }
                     Column(
                         modifier =
                             Modifier
@@ -202,20 +207,24 @@ fun EventDetailsScreen(
                                 onDecline = { viewModel.respondToTransfer(false) },
                             )
                         }
-                        Text(
-                            text = event.title.value,
-                            style = MaterialTheme.typography.h5,
-                        )
 
                         DetailCard(title = "Description") {
                             Text(
                                 text = event.description.value,
-                                style = MaterialTheme.typography.body1,
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
 
                         DetailCard(title = "Information") {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                                organizer?.let {
+                                    InfoRow(
+                                        icon = Icons.Default.Person,
+                                        text = "Organizer: ${it.name.value}",
+                                    )
+                                }
+
                                 InfoRow(
                                     icon = Icons.Default.Schedule,
                                     text = "Starts: ${event.period.start.toFormattedString()}",
@@ -236,19 +245,42 @@ fun EventDetailsScreen(
                                     isClickable = true,
                                 )
 
-                                event.maxParticipants?.let {
+/*                                event.maxParticipants?.let {
                                     InfoRow(
                                         icon = Icons.Default.People,
                                         text = "Participants: ${event.participantsIds.size}/$it",
                                     )
-                                }
+                                }*/
+
+                                InfoRow(
+                                    icon = Icons.Default.Schedule,
+                                    text = "Created: ${event.createdAt.toFormattedString()}",
+                                )
+                                InfoRow(
+                                    icon = Icons.Default.Schedule,
+                                    text = "Last update: ${event.updatedAt.toFormattedString()}",
+                                )
                             }
                         }
                         if (uiState.participants.isNotEmpty()) {
-                            DetailCard("Participants (${uiState.participants.size})") {
+                            val maxParticipantsText = event.maxParticipants?.let { "/$it" } ?: ""
+                            DetailCard("Participants (${uiState.participants.size}$maxParticipantsText)") {
                                 Column(modifier = Modifier.fillMaxWidth()) {
-                                    uiState.participants.forEach { participant ->
-                                        ParticipantRow(participant)
+                                    val participantsPreview = uiState.participants.take(5)
+                                    participantsPreview.forEach { participant ->
+                                        ParticipantRow(
+                                            participant = participant,
+                                            isOrganizer = participant.id == event.organizerId
+                                        )
+                                    }
+
+                                    if (uiState.participants.size > 5) {
+                                        TextButton(
+                                            onClick = { onNavigateToParticipantList(event.id) },
+                                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                                        ) {
+                                            Text("View All (${uiState.participants.size})")
+                                        }
                                     }
                                 }
                             }
@@ -339,14 +371,14 @@ fun EventDetailsScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             colors =
                                                 ButtonDefaults.outlinedButtonColors(
-                                                    contentColor = MaterialTheme.colors.error,
+                                                    contentColor = MaterialTheme.colorScheme.error,
                                                 ),
                                             enabled = !uiState.isActionInProgress,
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.CANCELLING,
                                             text = "Cancel Event",
-                                            loadingIndicatorColor = MaterialTheme.colors.error,
+                                            loadingIndicatorColor = MaterialTheme.colorScheme.error,
                                         )
                                     }
                                     if (uiState.canOrganizerDelete) {
@@ -355,14 +387,14 @@ fun EventDetailsScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             colors =
                                                 ButtonDefaults.outlinedButtonColors(
-                                                    contentColor = MaterialTheme.colors.error,
+                                                    contentColor = MaterialTheme.colorScheme.error,
                                                 ),
                                             enabled = !uiState.isActionInProgress,
                                             isLoading =
                                                 uiState.actionState ==
                                                     EventDetailsUiState.ActionState.DELETING,
                                             text = "Delete Event",
-                                            loadingIndicatorColor = MaterialTheme.colors.error,
+                                            loadingIndicatorColor = MaterialTheme.colorScheme.error,
                                         )
                                     }
 
@@ -379,19 +411,6 @@ fun EventDetailsScreen(
                             }
                         }
 
-                        Column(
-                            modifier = Modifier.padding(top = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Text(
-                                text = "Created: ${event.createdAt.toFormattedString()}",
-                                style = MaterialTheme.typography.caption,
-                            )
-                            Text(
-                                text = "Last update: ${event.updatedAt.toFormattedString()}",
-                                style = MaterialTheme.typography.caption,
-                            )
-                        }
                     }
                 }
             }

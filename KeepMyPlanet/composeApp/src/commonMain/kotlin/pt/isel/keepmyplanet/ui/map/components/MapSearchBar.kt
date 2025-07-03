@@ -11,15 +11,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Place
@@ -43,7 +43,10 @@ fun MapSearchBar(
 ) {
     val showResults = searchResults.isNotEmpty() && query.isNotEmpty()
 
-    Surface(modifier = modifier, shape = RoundedCornerShape(8.dp), elevation = 4.dp) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        shadowElevation = 4.dp) {
         Column {
             OutlinedTextField(
                 value = query,
@@ -61,12 +64,12 @@ fun MapSearchBar(
                     }
                 },
                 singleLine = true,
-                colors =
+/*                colors =
                     TextFieldDefaults.outlinedTextFieldColors(
                         backgroundColor = MaterialTheme.colors.surface,
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                    ),
+                    ),*/
             )
 
             AnimatedVisibility(visible = showResults) {

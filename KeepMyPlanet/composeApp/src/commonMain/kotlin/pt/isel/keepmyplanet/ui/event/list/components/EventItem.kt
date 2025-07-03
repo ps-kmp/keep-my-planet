@@ -9,12 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getStatusColor
+import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
+import pt.isel.keepmyplanet.ui.theme.surfaceLight
 import pt.isel.keepmyplanet.utils.toFormattedString
 
 @Composable
@@ -33,7 +36,11 @@ fun EventItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        elevation = 4.dp,
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = surfaceLight,
+            contentColor = onSurfaceLight,
+        ),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -41,12 +48,12 @@ fun EventItem(
         ) {
             Text(
                 text = event.title.value,
-                style = MaterialTheme.typography.h6,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
             )
             Text(
                 text = event.description.value,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyLarge,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -59,7 +66,7 @@ fun EventItem(
                 Column {
                     Text(
                         text = "Starts: ${event.period.start.toFormattedString()}",
-                        style = MaterialTheme.typography.caption,
+                        style = MaterialTheme.typography.bodySmall,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -71,7 +78,7 @@ fun EventItem(
                             text =
                                 "${event.participantCount}" +
                                     (event.maxParticipants?.let { "/$it" } ?: ""),
-                            style = MaterialTheme.typography.caption,
+                            style = MaterialTheme.typography.bodySmall,
                         )
                     }
                 }

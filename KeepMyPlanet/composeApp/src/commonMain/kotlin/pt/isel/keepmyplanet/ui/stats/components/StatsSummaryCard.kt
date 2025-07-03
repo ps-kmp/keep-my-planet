@@ -8,14 +8,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,12 +27,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pt.isel.keepmyplanet.domain.user.UserStats
+import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
+import pt.isel.keepmyplanet.ui.theme.primaryLight
+import pt.isel.keepmyplanet.ui.theme.surfaceLight
 
 @Composable
 fun StatsSummaryCard(stats: UserStats) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = 4.dp,
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = surfaceLight,
+            contentColor = onSurfaceLight,
+        ),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -41,7 +51,11 @@ fun StatsSummaryCard(stats: UserStats) {
                 label = "Events Attended",
                 icon = Icons.Default.Event,
             )
-            Divider(modifier = Modifier.height(60.dp).width(1.dp))
+            HorizontalDivider(
+                Modifier.height(60.dp).width(1.dp),
+                DividerDefaults.Thickness,
+                DividerDefaults.color
+            )
             StatItem(
                 value = ((stats.totalHoursVolunteered * 10).toInt() / 10.0).toString(),
                 label = "Hours Volunteered",
@@ -64,17 +78,17 @@ private fun StatItem(
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = MaterialTheme.colors.primary,
+            tint = primaryLight,
             modifier = Modifier.size(32.dp),
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.h4,
+            style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
         )
         Text(
             text = label,
-            style = MaterialTheme.typography.caption.copy(fontSize = 14.sp),
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
         )
     }
 }

@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.runtime.Composable
@@ -87,7 +87,7 @@ fun Avatar(
             initial != null -> {
                 Text(
                     text = initial.toString(),
-                    style = MaterialTheme.typography.h3.copy(fontSize = (size.value / 2).sp),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontSize = (size.value / 2).sp),
                     color = foregroundColor,
                 )
             }
