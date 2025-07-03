@@ -1,11 +1,13 @@
 package pt.isel.keepmyplanet.ui.zone.details.states
 
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.ui.base.UiState
 
 data class ZoneDetailsUiState(
     val zone: Zone? = null,
+    val reporter: UserInfo? = null,
     val isLoading: Boolean = false,
     val photoModels: Map<Id, Any> = emptyMap(),
     val error: String? = null,

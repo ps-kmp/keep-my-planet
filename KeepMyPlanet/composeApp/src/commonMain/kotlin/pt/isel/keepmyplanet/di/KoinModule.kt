@@ -73,7 +73,7 @@ val appModule =
         single { DefaultMessageRepository(get(), get()) }
         single { DefaultPhotoRepository(get(), get(), get()) }
         single { DefaultUserRepository(get(), get(), get()) }
-        single { DefaultZoneRepository(get(), get()) }
+        single { DefaultZoneRepository(get(), get(), get()) }
 
         // ViewModels
         single { AppViewModel(get()) }

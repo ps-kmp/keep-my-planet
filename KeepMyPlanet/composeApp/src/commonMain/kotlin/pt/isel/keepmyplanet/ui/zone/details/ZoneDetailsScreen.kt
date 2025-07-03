@@ -132,11 +132,16 @@ fun ZoneDetailsScreen(
                         }
 
                         DetailCard(title = "Information") {
-                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                InfoRow(
-                                    icon = Icons.Default.Report,
-                                    text = "Reported by User #${zone.reporterId.value}",
-                                )
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                uiState.reporter?.let { reporter ->
+                                    InfoRow(
+                                        icon = Icons.Default.Report,
+                                        text = "Reported by ${reporter.name.value}",
+                                    )
+                                }
+
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.Flag,

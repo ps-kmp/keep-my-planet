@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.data.repository
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.common.ZoneDetailsBundle
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.dto.zone.ConfirmCleanlinessRequest
@@ -13,12 +14,24 @@ import pt.isel.keepmyplanet.mapper.zone.toZone
 class DefaultZoneRepository(
     private val zoneApi: ZoneApi,
     private val zoneCache: ZoneCacheRepository,
+    private val userRepository: DefaultUserRepository
 ) {
     suspend fun reportZone(request: ReportZoneRequest): Result<Zone> =
         zoneApi.reportZone(request).map { it.toZone() }
 
     suspend fun invalidateZoneCache(zoneId: Id) {
         zoneCache.deleteById(zoneId)
+    }
+
+    suspend fun getZoneDetailsBundle(zoneId: Id): Result<ZoneDetailsBundle> = runCatching {
+        val zone = getZoneDetails(zoneId, forceNetwork = true).getOrThrow()
+
+        val reporterInfo = userRepository.getUserDetails(zone.reporterId).getOrThrow()
+
+        ZoneDetailsBundle(
+            zone = zone,
+            reporter = reporterInfo
+        )
     }
 
     suspend fun getZoneDetails(

@@ -28,15 +28,16 @@ class ZoneDetailsViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = { zoneRepository.getZoneDetails(zoneId) },
-            onSuccess = { zone ->
+            block = { zoneRepository.getZoneDetailsBundle(zoneId) },
+            onSuccess = { bundle ->
                 setState {
                     copy(
-                        zone = zone,
-                        canUserManageZone = zone.reporterId == currentUser?.id,
+                        zone = bundle.zone,
+                        reporter = bundle.reporter,
+                        canUserManageZone = bundle.zone.reporterId == currentUser?.id,
                     )
                 }
-                fetchAndCachePhotos(zone.photosIds)
+                fetchAndCachePhotos(bundle.zone.photosIds)
             },
             onError = {
                 if (currentState.zone == null) {
