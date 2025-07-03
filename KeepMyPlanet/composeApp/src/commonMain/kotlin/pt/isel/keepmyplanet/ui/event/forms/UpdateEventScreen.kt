@@ -67,9 +67,8 @@ fun UpdateEventScreen(
                     onTitleChanged = viewModel::onTitleChanged,
                     onDescriptionChanged = viewModel::onDescriptionChanged,
                     onStartDateChanged = viewModel::onStartDateChanged,
+                    onEndDateChanged = viewModel::onEndDateChanged,
                     onMaxParticipantsChanged = viewModel::onMaxParticipantsChanged,
-                    onZoneIdChanged = { },
-                    showZoneIdField = false,
                 )
 
                 Spacer(modifier = Modifier.weight(1f))

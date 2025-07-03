@@ -65,10 +65,8 @@ fun CreateEventScreen(
                 onTitleChanged = viewModel::onTitleChanged,
                 onDescriptionChanged = viewModel::onDescriptionChanged,
                 onStartDateChanged = viewModel::onStartDateChanged,
+                onEndDateChanged = viewModel::onEndDateChanged,
                 onMaxParticipantsChanged = viewModel::onMaxParticipantsChanged,
-                onZoneIdChanged = viewModel::onZoneIdChanged,
-                showZoneIdField = true,
-                isZoneIdEditable = (zoneId == null),
             )
 
             Spacer(modifier = Modifier.weight(1f))

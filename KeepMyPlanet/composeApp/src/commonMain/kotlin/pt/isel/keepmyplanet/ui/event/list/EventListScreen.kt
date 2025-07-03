@@ -18,6 +18,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.event.EventListItem
@@ -80,11 +83,6 @@ fun EventListScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { AppTopBar(title = "Events", onNavigateBack = onNavigateBack) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onCreateEventClick) {
-                Icon(Icons.Default.Add, contentDescription = "Create Event")
-            }
-        },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             SearchBarAndFilters(
@@ -104,10 +102,10 @@ fun EventListScreen(
                         onRetry = { viewModel.refreshEvents() },
                     )
                 } else if (uiState.events.isEmpty()) {
-                    EmptyState(
-                        message = "No events found.",
-                        buttonText = "Create an Event",
-                        onActionClick = onCreateEventClick,
+                    Text(
+                        text = "No events found",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleSmall,
                     )
                 } else {
                     key(uiState.filter) {

@@ -7,6 +7,7 @@ data class EventFormUiState(
     val title: String = "",
     val description: String = "",
     val startDate: String = "",
+    val endDate: String = "",
     val maxParticipants: String = "",
     val zoneId: String = "",
     val isLoading: Boolean = false,
@@ -16,8 +17,8 @@ data class EventFormUiState(
     val titleError: String? = null,
     val descriptionError: String? = null,
     val startDateError: String? = null,
+    val endDateError: String? = null,
     val maxParticipantsError: String? = null,
-    val zoneIdError: String? = null,
 ) : UiState {
     sealed interface ActionState {
         data object Idle : ActionState
@@ -31,5 +32,5 @@ data class EventFormUiState(
                 descriptionError != null ||
                 startDateError != null ||
                 maxParticipantsError != null ||
-                zoneIdError != null
+                endDateError != null
 }

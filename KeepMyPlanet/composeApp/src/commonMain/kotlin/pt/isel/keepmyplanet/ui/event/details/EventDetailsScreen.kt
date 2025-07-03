@@ -245,13 +245,6 @@ fun EventDetailsScreen(
                                     isClickable = true,
                                 )
 
-/*                                event.maxParticipants?.let {
-                                    InfoRow(
-                                        icon = Icons.Default.People,
-                                        text = "Participants: ${event.participantsIds.size}/$it",
-                                    )
-                                }*/
-
                                 InfoRow(
                                     icon = Icons.Default.Schedule,
                                     text = "Created: ${event.createdAt.toFormattedString()}",

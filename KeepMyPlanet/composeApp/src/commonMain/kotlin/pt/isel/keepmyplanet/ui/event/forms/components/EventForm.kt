@@ -16,10 +16,8 @@ fun EventForm(
     onTitleChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
     onStartDateChanged: (String) -> Unit,
+    onEndDateChanged: (String) -> Unit,
     onMaxParticipantsChanged: (String) -> Unit,
-    onZoneIdChanged: (String) -> Unit,
-    showZoneIdField: Boolean,
-    isZoneIdEditable: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -54,6 +52,15 @@ fun EventForm(
         )
 
         FormField(
+            value = formUiState.endDate,
+            onValueChange = onEndDateChanged,
+            label = "End Date and Time ((YYYY-MM-DDTHH:MM:SS)(Optional)",
+            errorText = formUiState.endDateError,
+            enabled = formUiState.actionState == EventFormUiState.ActionState.Idle,
+            singleLine = true,
+        )
+
+        FormField(
             value = formUiState.maxParticipants,
             onValueChange = onMaxParticipantsChanged,
             label = "Max Participants (Optional)",
@@ -62,19 +69,5 @@ fun EventForm(
             enabled = formUiState.actionState == EventFormUiState.ActionState.Idle,
             singleLine = true,
         )
-
-        if (showZoneIdField) {
-            FormField(
-                value = formUiState.zoneId,
-                onValueChange = onZoneIdChanged,
-                label = "Zone ID",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                enabled =
-                    formUiState.actionState == EventFormUiState.ActionState.Idle &&
-                        isZoneIdEditable,
-                singleLine = true,
-                errorText = formUiState.zoneIdError,
-            )
-        }
     }
 }

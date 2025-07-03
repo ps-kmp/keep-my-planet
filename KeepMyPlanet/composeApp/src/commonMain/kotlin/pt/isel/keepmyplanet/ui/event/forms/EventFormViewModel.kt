@@ -34,6 +34,7 @@ class EventFormViewModel(
                         title = event.title.value,
                         description = event.description.value,
                         startDate = event.period.start.toString(),
+                        endDate = event.period.end?.toString() ?: "",
                         maxParticipants = event.maxParticipants?.toString() ?: "",
                     )
                 }
@@ -59,14 +60,14 @@ class EventFormViewModel(
             copy(startDate = startDate, startDateError = null)
         }
 
+    fun onEndDateChanged(endDate: String) =
+        setState {
+            copy(endDate = endDate, endDateError = null)
+        }
+
     fun onMaxParticipantsChanged(maxParticipants: String) =
         setState {
             copy(maxParticipants = maxParticipants, maxParticipantsError = null)
-        }
-
-    fun onZoneIdChanged(zoneId: String) =
-        setState {
-            copy(zoneId = zoneId, zoneIdError = null)
         }
 
     fun submit() {
@@ -74,13 +75,19 @@ class EventFormViewModel(
     }
 
     private fun createEvent() {
-        if (!validateForm(isCreate = true)) return
+        if (currentState.zoneId.toUIntOrNull() == null) {
+            handleErrorWithMessage("Cannot create event: Missing Zone ID.")
+            return
+        }
+
+        if (!validateForm()) return
 
         val request =
             CreateEventRequest(
                 title = currentState.title,
                 description = currentState.description,
                 startDate = currentState.startDate,
+                endDate = currentState.endDate,
                 zoneId = currentState.zoneId.toUInt(),
                 maxParticipants = currentState.maxParticipants.toIntOrNull(),
             )
@@ -101,13 +108,14 @@ class EventFormViewModel(
 
     private fun updateEvent() {
         val eventId = currentState.eventIdToEdit ?: return
-        if (!validateForm(isCreate = false)) return
+        if (!validateForm()) return
 
         val request =
             UpdateEventRequest(
                 title = currentState.title,
                 description = currentState.description,
                 startDate = currentState.startDate,
+                endDate = currentState.endDate.takeIf { it.isNotBlank() },
                 maxParticipants = currentState.maxParticipants.toIntOrNull(),
             )
 
@@ -123,7 +131,7 @@ class EventFormViewModel(
         )
     }
 
-    private fun validateForm(isCreate: Boolean): Boolean {
+    private fun validateForm(): Boolean {
         val stateWithErrors =
             currentState.copy(
                 titleError = if (currentState.title.isBlank()) "Title cannot be empty" else null,
@@ -135,6 +143,17 @@ class EventFormViewModel(
                         null
                     } catch (_: Exception) {
                         "Invalid date format (YYYY-MM-DDTHH:MM:SS)"
+                    },
+                endDateError =
+                    if (currentState.endDate.isNotBlank()) {
+                        try {
+                            LocalDateTime.parse(currentState.endDate)
+                            null
+                        } catch (_: Exception) {
+                            "Invalid date format (YYYY-MM-DDTHH:MM:SS)"
+                        }
+                    } else {
+                        null // Optional, so empty is valid
                     },
                 maxParticipantsError =
                     if (currentState.maxParticipants.isNotEmpty()) {
@@ -148,13 +167,7 @@ class EventFormViewModel(
                         }
                     } else {
                         null
-                    },
-                zoneIdError =
-                    if (isCreate && currentState.zoneId.toUIntOrNull() == null) {
-                        "Invalid Zone ID"
-                    } else {
-                        null
-                    },
+                    }
             )
         setState { stateWithErrors }
         return !stateWithErrors.hasErrors
