@@ -23,6 +23,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,8 +78,15 @@ fun MapSearchBar(
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().heightIn(max = 240.dp),
                 ) {
-                    items(searchResults, key = { it.displayName }) { place ->
-                        Divider()
+                    items(
+                        searchResults,
+                        key = { place -> place.id }
+                    ) { place ->
+                        HorizontalDivider(
+                            Modifier,
+                            DividerDefaults.Thickness,
+                            DividerDefaults.color
+                        )
                         SearchResultItem(place = place, onClick = { onPlaceSelected(place) })
                     }
                 }
