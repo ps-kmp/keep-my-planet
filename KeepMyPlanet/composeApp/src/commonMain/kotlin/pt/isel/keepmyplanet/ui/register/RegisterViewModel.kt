@@ -8,6 +8,8 @@ import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.register.states.RegisterEvent
 import pt.isel.keepmyplanet.ui.register.states.RegisterUiState
+import pt.isel.keepmyplanet.utils.AppError
+import pt.isel.keepmyplanet.utils.ErrorHandler
 
 class RegisterViewModel(
     private val userRepository: DefaultUserRepository,
@@ -50,29 +52,27 @@ class RegisterViewModel(
                 sendEvent(RegisterEvent.ShowSnackbar("Registration successful! Please login."))
                 sendEvent(RegisterEvent.NavigateToLogin)
             },
-            onError = { error ->
-                val errorMessage = error.message ?: "An unknown error occurred"
-                when {
-                    errorMessage.contains("Username", ignoreCase = true) ||
-                        errorMessage.contains("name", ignoreCase = true) -> {
-                        setState {
-                            copy(
-                                usernameError =
-                                    errorMessage.substringAfter("Registration failed: "),
-                            )
+            onError = { throwable ->
+                val appError = ErrorHandler.map(throwable)
+
+                when (appError) {
+                    is AppError.ApiFormError -> {
+                        val errorMessage = appError.message
+
+                        when {
+                            errorMessage.contains("Username", ignoreCase = true) -> {
+                                setState { copy(usernameError = errorMessage) }
+                            }
+                            errorMessage.contains("Email", ignoreCase = true) -> {
+                                setState { copy(emailError = errorMessage) }
+                            }
+                            else -> {
+                                handleErrorWithMessage(errorMessage)
+                            }
                         }
                     }
-
-                    errorMessage.contains("Email", ignoreCase = true) -> {
-                        setState {
-                            copy(
-                                emailError = errorMessage.substringAfter("Registration failed: "),
-                            )
-                        }
-                    }
-
-                    else -> {
-                        handleErrorWithMessage(getErrorMessage("Registration failed", error))
+                    is AppError.GeneralError -> {
+                        handleErrorWithMessage(appError.message)
                     }
                 }
             },

@@ -34,10 +34,11 @@ fun DeleteAccountSection(
                         showDeleteConfirmDialog.value = false
                         onConfirmDelete()
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError,
-                    ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ),
                 ) {
                     Text("Delete")
                 }
@@ -54,10 +55,11 @@ fun DeleteAccountSection(
         onClick = { showDeleteConfirmDialog.value = true },
         enabled = uiState.isDeleteAccountEnabled,
         modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer,
-            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        ),
+        colors =
+            ButtonDefaults.outlinedButtonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            ),
     ) {
         if (uiState.actionState == UserProfileUiState.ActionState.DELETING_ACCOUNT) {
             CircularProgressIndicator(

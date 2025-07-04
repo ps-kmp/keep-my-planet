@@ -82,8 +82,11 @@ interface EventRepository : Repository<Event, Id> {
         eventId: Id,
         newOrganizerId: Id,
         pendingOrganizerId: Id,
-        updatedAt: LocalDateTime
+        updatedAt: LocalDateTime,
     ): Event?
 
-    suspend fun clearPendingTransfer(eventId: Id, updatedAt: LocalDateTime): Event
+    suspend fun clearPendingTransfer(
+        eventId: Id,
+        updatedAt: LocalDateTime,
+    ): Event
 }

@@ -2,11 +2,14 @@ package pt.isel.keepmyplanet.ui.login
 
 import pt.isel.keepmyplanet.data.repository.DefaultAuthRepository
 import pt.isel.keepmyplanet.domain.user.Email
+import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
 import pt.isel.keepmyplanet.mapper.user.toUserSession
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.login.states.LoginEvent
 import pt.isel.keepmyplanet.ui.login.states.LoginUiState
+import pt.isel.keepmyplanet.utils.AppError
+import pt.isel.keepmyplanet.utils.ErrorHandler
 
 class LoginViewModel(
     private val authRepository: DefaultAuthRepository,
@@ -16,11 +19,11 @@ class LoginViewModel(
     }
 
     fun onEmailChanged(email: String) {
-        setState { copy(email = email, emailError = null) }
+        setState { copy(email = email, emailError = null, apiError = null) }
     }
 
     fun onPasswordChanged(password: String) {
-        setState { copy(password = password) }
+        setState { copy(password = password, passwordError = null, apiError = null) }
     }
 
     fun onLoginClicked() {
@@ -29,11 +32,27 @@ class LoginViewModel(
         val request = LoginRequest(currentState.email.trim(), currentState.password)
 
         launchWithResult(
-            onStart = { copy(actionState = LoginUiState.ActionState.LoggingIn) },
+            onStart = {
+                copy(actionState = LoginUiState.ActionState.LoggingIn, apiError = null)
+            },
             onFinally = { copy(actionState = LoginUiState.ActionState.Idle) },
-            block = { authRepository.login(request) },
-            onSuccess = { sendEvent(LoginEvent.LoginSuccess(it.toUserSession())) },
-            onError = { handleErrorWithMessage(getErrorMessage("Login failed", it)) },
+            block = {
+                authRepository.login(request)
+            },
+            onSuccess = { loginResponse ->
+                sendEvent(LoginEvent.LoginSuccess(loginResponse.toUserSession()))
+            },
+            onError = { throwable ->
+                val appError = ErrorHandler.map(throwable)
+                when (appError) {
+                    is AppError.ApiFormError -> {
+                        setState { copy(apiError = appError.message) }
+                    }
+                    is AppError.GeneralError -> {
+                        handleErrorWithMessage(appError.message)
+                    }
+                }
+            },
         )
     }
 
@@ -45,7 +64,15 @@ class LoginViewModel(
             } catch (e: IllegalArgumentException) {
                 e.message
             }
-        setState { copy(emailError = emailError) }
-        return !currentState.hasError
+
+        val passwordError =
+            try {
+                Password(currentState.password)
+                null
+            } catch (e: IllegalArgumentException) {
+                e.message
+            }
+        setState { copy(emailError = emailError, passwordError = passwordError) }
+        return emailError == null && passwordError == null
     }
 }

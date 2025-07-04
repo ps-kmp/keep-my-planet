@@ -8,6 +8,7 @@ data class UserProfileUiState(
     val nameInput: String = "",
     val emailInput: String = "",
     val oldPasswordInput: String = "",
+    val oldPasswordInputError: String? = null,
     val newPasswordInput: String = "",
     val confirmPasswordInput: String = "",
     val isLoading: Boolean = false,
@@ -18,6 +19,7 @@ data class UserProfileUiState(
     val emailInputError: String? = null,
     val newPasswordInputError: String? = null,
     val confirmPasswordInputError: String? = null,
+    val passwordApiError: String? = null,
     val photoUrl: String? = null,
     val error: String? = null,
 ) : UiState {
@@ -55,5 +57,5 @@ data class UserProfileUiState(
         get() = nameInputError != null || emailInputError != null
 
     val hasPasswordErrors: Boolean
-        get() = newPasswordInputError != null || confirmPasswordInputError != null
+        get() = oldPasswordInputError != null || newPasswordInputError != null || confirmPasswordInputError != null || passwordApiError != null
 }

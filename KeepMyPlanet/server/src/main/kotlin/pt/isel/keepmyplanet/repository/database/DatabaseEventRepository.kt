@@ -146,18 +146,22 @@ class DatabaseEventRepository(
         eventId: Id,
         newOrganizerId: Id,
         pendingOrganizerId: Id,
-        updatedAt: LocalDateTime
+        updatedAt: LocalDateTime,
     ): Event? {
-        val dbEvent = eventQueries.updateTransferStatus(
-            id = eventId,
-            new_organizer_id = newOrganizerId,
-            pending_organizer_id = pendingOrganizerId,
-            updated_at = updatedAt
-        ).executeAsOneOrNull()
+        val dbEvent =
+            eventQueries.updateTransferStatus(
+                id = eventId,
+                new_organizer_id = newOrganizerId,
+                pending_organizer_id = pendingOrganizerId,
+                updated_at = updatedAt,
+            ).executeAsOneOrNull()
         return dbEvent?.let { getEventWithParticipants(it.id) }
     }
 
-    override suspend fun clearPendingTransfer(eventId: Id, updatedAt: LocalDateTime): Event {
+    override suspend fun clearPendingTransfer(
+        eventId: Id,
+        updatedAt: LocalDateTime,
+    ): Event {
         val dbEvent = eventQueries.clearPendingTransfer(updatedAt, eventId).executeAsOne()
         return getEventWithParticipants(dbEvent.id)!!
     }

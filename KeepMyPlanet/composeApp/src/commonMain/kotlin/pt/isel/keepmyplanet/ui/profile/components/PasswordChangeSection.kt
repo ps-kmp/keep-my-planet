@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.ui.components.FormApiError
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileUiState
@@ -36,6 +37,7 @@ fun PasswordChangeSection(
                 isPasswordField = true,
                 singleLine = true,
                 enabled = !isActionInProgress,
+                errorText = uiState.oldPasswordInputError,
             )
             FormField(
                 value = uiState.newPasswordInput,
@@ -55,6 +57,9 @@ fun PasswordChangeSection(
                 enabled = !isActionInProgress,
                 errorText = uiState.confirmPasswordInputError,
             )
+
+            FormApiError(errorText = uiState.passwordApiError)
+
             LoadingButton(
                 onClick = onChangePasswordClicked,
                 enabled = uiState.isChangePasswordEnabled,

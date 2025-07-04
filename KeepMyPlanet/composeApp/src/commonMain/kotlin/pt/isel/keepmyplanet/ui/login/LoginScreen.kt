@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.user.UserSession
+import pt.isel.keepmyplanet.ui.components.FormApiError
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.login.states.LoginEvent
@@ -106,7 +107,10 @@ private fun LoginContent(
             singleLine = true,
             enabled = !isActionInProgress,
             isPasswordField = true,
+            errorText = uiState.passwordError,
         )
+
+        FormApiError(errorText = uiState.apiError)
 
         LoadingButton(
             onClick = onLoginClicked,

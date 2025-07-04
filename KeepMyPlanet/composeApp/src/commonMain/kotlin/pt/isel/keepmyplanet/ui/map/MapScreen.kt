@@ -13,8 +13,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -25,12 +31,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.GpsFixed
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,7 +41,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -148,10 +147,11 @@ fun MapScreen(
                                 .shadow(4.dp, RoundedCornerShape(8.dp))
                                 .widthIn(max = 240.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = surfaceLight,
-                            contentColor = onSurfaceLight,
-                        ),
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = surfaceLight,
+                                contentColor = onSurfaceLight,
+                            ),
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp),
@@ -173,10 +173,11 @@ fun MapScreen(
                             ) {
                                 TextButton(
                                     onClick = { onNavigateToZoneDetails(zone.id) },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        containerColor = surfaceLight,
-                                        contentColor = onSurfaceLight
-                                    )
+                                    colors =
+                                        ButtonDefaults.textButtonColors(
+                                            containerColor = surfaceLight,
+                                            contentColor = onSurfaceLight,
+                                        ),
                                 ) {
                                     Text("VIEW DETAILS", color = primaryLight)
                                 }
@@ -216,7 +217,7 @@ fun MapScreen(
                     }
                     FloatingActionButton(
                         onClick = { viewModel.enterReportingMode() },
-                        containerColor = backgroundLight
+                        containerColor = backgroundLight,
                     ) {
                         Icon(
                             Icons.Default.Add,

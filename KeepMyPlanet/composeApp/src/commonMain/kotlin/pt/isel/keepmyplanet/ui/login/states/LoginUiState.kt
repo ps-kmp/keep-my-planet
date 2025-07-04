@@ -7,6 +7,8 @@ data class LoginUiState(
     val password: String = "",
     val actionState: ActionState = ActionState.Idle,
     val emailError: String? = null,
+    val passwordError: String? = null,
+    val apiError: String? = null,
 ) : UiState {
     sealed interface ActionState {
         data object Idle : ActionState
@@ -18,5 +20,5 @@ data class LoginUiState(
         get() = email.isNotBlank() && password.isNotBlank() && actionState == ActionState.Idle
 
     val hasError: Boolean
-        get() = emailError != null
+        get() = emailError != null || passwordError != null || apiError != null
 }

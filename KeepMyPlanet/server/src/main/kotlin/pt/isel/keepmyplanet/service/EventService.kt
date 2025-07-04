@@ -223,7 +223,7 @@ class EventService(
             if (userId == event.organizerId) {
                 throw AuthorizationException(
                     "As the organizer, you cannot leave. " +
-                        "You can transfer ownership to another participant, or cancel the event."
+                        "You can transfer ownership to another participant, or cancel the event.",
                 )
             }
             if (userId !in event.participantsIds) {
@@ -240,70 +240,81 @@ class EventService(
     suspend fun initiateTransfer(
         eventId: Id,
         currentOrganizerId: Id,
-        nomineeId: Id
-    ): Result<Event> = runCatching {
-        val event = findEventOrFail(eventId)
-        ensureOrganizerOrFail(event, currentOrganizerId)
+        nomineeId: Id,
+    ): Result<Event> =
+        runCatching {
+            val event = findEventOrFail(eventId)
+            ensureOrganizerOrFail(event, currentOrganizerId)
 
-        if (nomineeId == currentOrganizerId) {
-            throw ValidationException("You cannot transfer ownership to yourself.")
+            if (nomineeId == currentOrganizerId) {
+                throw ValidationException("You cannot transfer ownership to yourself.")
+            }
+            if (nomineeId !in event.participantsIds) {
+                throw ValidationException("The selected user is not a participant of this event.")
+            }
+            if (event.pendingOrganizerId != null) {
+                throw ConflictException(
+                    "There is already a pending transfer request for this event.",
+                )
+            }
+            if (event.status !in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)) {
+                throw ConflictException(
+                    "Ownership can only be transferred for PLANNED or IN_PROGRESS events.",
+                )
+            }
+
+            val updatedEvent =
+                event.copy(
+                    pendingOrganizerId = nomineeId,
+                    transferRequestTime = now(),
+                )
+
+            eventRepository.update(updatedEvent)
+
+            // Enviar notificação para o nomineeId
+            // notificationService.sendTransferRequestNotification(nomineeId, event)
+
+            updatedEvent
         }
-        if (nomineeId !in event.participantsIds) {
-            throw ValidationException("The selected user is not a participant of this event.")
-        }
-        if (event.pendingOrganizerId != null) {
-            throw ConflictException("There is already a pending transfer request for this event.")
-        }
-        if (event.status !in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)) {
-            throw ConflictException("Ownership can only be transferred for PLANNED or IN_PROGRESS events.")
-        }
-
-        val updatedEvent = event.copy(
-            pendingOrganizerId = nomineeId,
-            transferRequestTime = now()
-        )
-
-        eventRepository.update(updatedEvent)
-
-        // Enviar notificação para o nomineeId
-        // notificationService.sendTransferRequestNotification(nomineeId, event)
-
-        updatedEvent
-    }
 
     suspend fun respondToTransfer(
         eventId: Id,
         nomineeId: Id,
-        accepted: Boolean
-    ): Result<Event> = runCatching {
-        var event = findEventOrFail(eventId)
+        accepted: Boolean,
+    ): Result<Event> =
+        runCatching {
+            var event = findEventOrFail(eventId)
 
-        if (event.pendingOrganizerId != nomineeId) {
-            throw AuthorizationException("You are not the pending nominee for this event.")
+            if (event.pendingOrganizerId != nomineeId) {
+                throw AuthorizationException("You are not the pending nominee for this event.")
+            }
+
+            if (accepted) {
+                val oldOrganizerId = event.organizerId
+
+                val updatedEvent =
+                    eventRepository.updateTransferStatus(
+                        eventId = eventId,
+                        newOrganizerId = nomineeId,
+                        pendingOrganizerId = nomineeId,
+                        updatedAt = now(),
+                    ) ?: throw InternalServerException("Failed to update event ownership.")
+
+                val finalParticipants = updatedEvent.participantsIds + oldOrganizerId
+                val finalEvent =
+                    eventRepository.update(
+                        updatedEvent.copy(participantsIds = finalParticipants),
+                    )
+
+                // Notificar o antigo organizador e os outros participantes da mudança.
+                finalEvent
+            } else {
+                val updatedEvent = eventRepository.clearPendingTransfer(eventId, now())
+                // Notificar o organizador original que o pedido foi recusado.
+
+                updatedEvent
+            }
         }
-
-        if (accepted) {
-            val oldOrganizerId = event.organizerId
-
-            val updatedEvent = eventRepository.updateTransferStatus(
-                eventId = eventId,
-                newOrganizerId = nomineeId,
-                pendingOrganizerId = nomineeId,
-                updatedAt = now()
-            ) ?: throw InternalServerException("Failed to update event ownership.")
-
-            val finalParticipants = updatedEvent.participantsIds + oldOrganizerId
-            val finalEvent = eventRepository.update(updatedEvent.copy(participantsIds = finalParticipants))
-
-            // Notificar o antigo organizador e os outros participantes da mudança.
-            finalEvent
-        } else {
-            val updatedEvent = eventRepository.clearPendingTransfer(eventId, now())
-            //Notificar o organizador original que o pedido foi recusado.
-
-            updatedEvent
-        }
-    }
 
     suspend fun getEventParticipants(eventId: Id): Result<List<User>> =
         runCatching {

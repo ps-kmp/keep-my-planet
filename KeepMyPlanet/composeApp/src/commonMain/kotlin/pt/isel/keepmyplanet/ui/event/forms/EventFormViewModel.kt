@@ -167,7 +167,7 @@ class EventFormViewModel(
                         }
                     } else {
                         null
-                    }
+                    },
             )
         setState { stateWithErrors }
         return !stateWithErrors.hasErrors

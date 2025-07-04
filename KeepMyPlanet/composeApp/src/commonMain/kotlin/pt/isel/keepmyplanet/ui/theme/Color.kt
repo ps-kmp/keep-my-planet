@@ -2,7 +2,6 @@ package pt.isel.keepmyplanet.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-
 // Light Theme Colors
 val primaryLight = Color(0xFF006D3B) // Um verde floresta para ações principais
 val onPrimaryLight = Color(0xFFFFFFFF)

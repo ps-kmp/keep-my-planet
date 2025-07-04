@@ -20,10 +20,11 @@ fun StatusHistoryItem(item: EventStateChangeResponse) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = surfaceLight,
-            contentColor = onSurfaceLight,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = surfaceLight,
+                contentColor = onSurfaceLight,
+            ),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

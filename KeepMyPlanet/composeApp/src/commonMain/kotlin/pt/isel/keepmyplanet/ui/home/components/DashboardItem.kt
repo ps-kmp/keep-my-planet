@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.ui.home.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.theme.primaryLight
 import pt.isel.keepmyplanet.ui.theme.surfaceLight
-import pt.isel.keepmyplanet.ui.theme.surfaceVariantLight
 
 @Composable
 fun DashboardItem(
@@ -33,9 +31,10 @@ fun DashboardItem(
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = surfaceLight,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = surfaceLight,
+            ),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

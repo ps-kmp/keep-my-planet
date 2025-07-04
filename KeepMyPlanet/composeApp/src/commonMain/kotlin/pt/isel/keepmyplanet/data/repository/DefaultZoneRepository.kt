@@ -14,7 +14,7 @@ import pt.isel.keepmyplanet.mapper.zone.toZone
 class DefaultZoneRepository(
     private val zoneApi: ZoneApi,
     private val zoneCache: ZoneCacheRepository,
-    private val userRepository: DefaultUserRepository
+    private val userRepository: DefaultUserRepository,
 ) {
     suspend fun reportZone(request: ReportZoneRequest): Result<Zone> =
         zoneApi.reportZone(request).map { it.toZone() }
@@ -23,16 +23,17 @@ class DefaultZoneRepository(
         zoneCache.deleteById(zoneId)
     }
 
-    suspend fun getZoneDetailsBundle(zoneId: Id): Result<ZoneDetailsBundle> = runCatching {
-        val zone = getZoneDetails(zoneId, forceNetwork = true).getOrThrow()
+    suspend fun getZoneDetailsBundle(zoneId: Id): Result<ZoneDetailsBundle> =
+        runCatching {
+            val zone = getZoneDetails(zoneId, forceNetwork = true).getOrThrow()
 
-        val reporterInfo = userRepository.getUserDetails(zone.reporterId).getOrThrow()
+            val reporterInfo = userRepository.getUserDetails(zone.reporterId).getOrThrow()
 
-        ZoneDetailsBundle(
-            zone = zone,
-            reporter = reporterInfo
-        )
-    }
+            ZoneDetailsBundle(
+                zone = zone,
+                reporter = reporterInfo,
+            )
+        }
 
     suspend fun getZoneDetails(
         zoneId: Id,

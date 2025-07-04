@@ -14,6 +14,8 @@ import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileEvent
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileUiState
+import pt.isel.keepmyplanet.utils.AppError
+import pt.isel.keepmyplanet.utils.ErrorHandler
 
 class UserProfileViewModel(
     private val userRepository: DefaultUserRepository,
@@ -50,7 +52,7 @@ class UserProfileViewModel(
 
     fun onNewPasswordChanged(password: String) =
         setState {
-            copy(newPasswordInput = password, newPasswordInputError = null)
+            copy(newPasswordInput = password, newPasswordInputError = null, passwordApiError = null)
         }
 
     fun onConfirmPasswordChanged(password: String) =
@@ -186,7 +188,18 @@ class UserProfileViewModel(
                 }
                 sendEvent(UserProfileEvent.ShowSnackbar("Password changed successfully"))
             },
-            onError = { handleErrorWithMessage(getErrorMessage("Failed to change password", it)) },
+            onError = { throwable ->
+                val appError = ErrorHandler.map(throwable)
+
+                when (appError) {
+                    is AppError.GeneralError -> {
+                        handleErrorWithMessage(appError.message)
+                    }
+                    is AppError.ApiFormError -> {
+                        setState { copy(passwordApiError = appError.message) }
+                    }
+                }
+            },
         )
     }
 

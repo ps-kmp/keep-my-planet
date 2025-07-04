@@ -176,29 +176,31 @@ class InMemoryEventRepository : EventRepository {
         eventId: Id,
         newOrganizerId: Id,
         pendingOrganizerId: Id,
-        updatedAt: LocalDateTime
+        updatedAt: LocalDateTime,
     ): Event? {
         val event = events[eventId] ?: return null
-        val updatedEvent = event.copy(
-            organizerId = newOrganizerId,
-            pendingOrganizerId = pendingOrganizerId,
-            transferRequestTime = updatedAt,
-            updatedAt = updatedAt
-        )
+        val updatedEvent =
+            event.copy(
+                organizerId = newOrganizerId,
+                pendingOrganizerId = pendingOrganizerId,
+                transferRequestTime = updatedAt,
+                updatedAt = updatedAt,
+            )
         events[eventId] = updatedEvent
         return updatedEvent
     }
 
     override suspend fun clearPendingTransfer(
         eventId: Id,
-        updatedAt: LocalDateTime
+        updatedAt: LocalDateTime,
     ): Event {
         val event = events[eventId] ?: throw NotFoundException("Event '$eventId' not found.")
-        val updatedEvent = event.copy(
-            pendingOrganizerId = null,
-            transferRequestTime = null,
-            updatedAt = updatedAt
-        )
+        val updatedEvent =
+            event.copy(
+                pendingOrganizerId = null,
+                transferRequestTime = null,
+                updatedAt = updatedAt,
+            )
         events[eventId] = updatedEvent
         return updatedEvent
     }

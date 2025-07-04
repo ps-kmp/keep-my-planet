@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -16,11 +20,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -217,7 +216,6 @@ fun EventDetailsScreen(
 
                         DetailCard(title = "Information") {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
                                 organizer?.let {
                                     InfoRow(
                                         icon = Icons.Default.Person,
@@ -257,20 +255,22 @@ fun EventDetailsScreen(
                         }
                         if (uiState.participants.isNotEmpty()) {
                             val maxParticipantsText = event.maxParticipants?.let { "/$it" } ?: ""
-                            DetailCard("Participants (${uiState.participants.size}$maxParticipantsText)") {
+                            DetailCard(
+                                "Participants (${uiState.participants.size}$maxParticipantsText)",
+                            ) {
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     val participantsPreview = uiState.participants.take(5)
                                     participantsPreview.forEach { participant ->
                                         ParticipantRow(
                                             participant = participant,
-                                            isOrganizer = participant.id == event.organizerId
+                                            isOrganizer = participant.id == event.organizerId,
                                         )
                                     }
 
                                     if (uiState.participants.size > 5) {
                                         TextButton(
                                             onClick = { onNavigateToParticipantList(event.id) },
-                                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                                            modifier = Modifier.align(Alignment.CenterHorizontally),
                                         ) {
                                             Text("View All (${uiState.participants.size})")
                                         }
@@ -403,7 +403,6 @@ fun EventDetailsScreen(
                                 }
                             }
                         }
-
                     }
                 }
             }

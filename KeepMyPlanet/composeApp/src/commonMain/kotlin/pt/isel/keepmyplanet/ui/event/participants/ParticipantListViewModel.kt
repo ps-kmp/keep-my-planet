@@ -10,7 +10,6 @@ class ParticipantListViewModel(
     private val eventId: Id,
     private val eventRepository: DefaultEventRepository,
 ) : BaseViewModel<ParticipantListUiState>(ParticipantListUiState()) {
-
     init {
         loadParticipants()
     }

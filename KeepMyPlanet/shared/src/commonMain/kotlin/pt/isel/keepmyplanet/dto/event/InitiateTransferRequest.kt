@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class InitiateTransferRequest(
-    val nomineeId: UInt
+    val nomineeId: UInt,
 )
