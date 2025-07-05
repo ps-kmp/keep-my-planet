@@ -1,9 +1,12 @@
 package pt.isel.keepmyplanet.ui.zone.details
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,11 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Report
@@ -24,8 +28,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -38,6 +44,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
@@ -54,7 +61,9 @@ import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.getStatusColor
+import pt.isel.keepmyplanet.ui.components.rememberPhotoPicker
 import pt.isel.keepmyplanet.ui.theme.primaryLight
+import pt.isel.keepmyplanet.ui.zone.details.components.FullScreenPhotoViewer
 import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsEvent
 import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsUiState
 
@@ -71,6 +80,11 @@ fun ZoneDetailsScreen(
     val zone = uiState.zone
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val photoPicker =
+        rememberPhotoPicker { imageData, filename ->
+            viewModel.addAfterPhoto(imageData, filename)
+        }
+
     val showDeleteDialog = remember { mutableStateOf(false) }
 
     if (showDeleteDialog.value) {
@@ -81,6 +95,13 @@ fun ZoneDetailsScreen(
             text =
                 "Are you sure you want to permanently delete this zone report? " +
                     "This action cannot be undone.",
+        )
+    }
+
+    uiState.selectedPhotoModel?.let { model ->
+        FullScreenPhotoViewer(
+            model = model,
+            onDismiss = viewModel::onDismissPhotoViewer,
         )
     }
 
@@ -168,19 +189,34 @@ fun ZoneDetailsScreen(
                             }
                         }
 
-                        if (uiState.photoModels.isNotEmpty()) {
-                            DetailCard(title = "Photos") {
+                        if (uiState.beforePhotos.isNotEmpty()) {
+                            DetailCard(title = "Before Cleanup") {
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    items(uiState.photoModels.values.toList()) { model ->
+                                    itemsIndexed(uiState.beforePhotos, key = {
+                                        _,
+                                        item,
+                                        ->
+                                        item.first.value
+                                    }) { _, model ->
                                         Card(
-                                            modifier = Modifier.size(120.dp),
+                                            modifier =
+                                                Modifier
+                                                    .size(120.dp)
+                                                    .clickable {
+                                                        viewModel.onPhotoClicked(
+                                                            model.second,
+                                                        )
+                                                    },
                                             shape = RoundedCornerShape(8.dp),
                                             elevation = CardDefaults.cardElevation(8.dp),
                                         ) {
                                             Image(
-                                                painter = rememberAsyncImagePainter(model = model),
+                                                painter =
+                                                    rememberAsyncImagePainter(
+                                                        model = model.second,
+                                                    ),
                                                 contentDescription = "Zone Photo",
                                                 contentScale = ContentScale.Crop,
                                                 modifier = Modifier.fillMaxSize(),
@@ -190,6 +226,58 @@ fun ZoneDetailsScreen(
                                 }
                             }
                         }
+
+                        if (uiState.afterPhotos.isNotEmpty()) {
+                            DetailCard(title = "After Cleanup") {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                MaterialTheme.colorScheme.primary.copy(
+                                                    alpha = 0.05f,
+                                                ),
+                                            ).padding(vertical = 8.dp),
+                                ) {
+                                    LazyRow(
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        contentPadding = PaddingValues(horizontal = 8.dp),
+                                    ) {
+                                        itemsIndexed(uiState.afterPhotos, key = {
+                                            _,
+                                            item,
+                                            ->
+                                            item.first.value
+                                        }) { _, model ->
+                                            Card(
+                                                modifier =
+                                                    Modifier
+                                                        .size(120.dp)
+                                                        .clickable {
+                                                            viewModel.onPhotoClicked(
+                                                                model.second,
+                                                            )
+                                                        },
+                                                shape = RoundedCornerShape(8.dp),
+                                                elevation = CardDefaults.cardElevation(8.dp),
+                                            ) {
+                                                Image(
+                                                    painter =
+                                                        rememberAsyncImagePainter(
+                                                            model = model.second,
+                                                        ),
+                                                    contentDescription = "Zone Photo",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         if (uiState.canUserManageZone) {
                             DetailCard(title = "Actions") {
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -199,6 +287,28 @@ fun ZoneDetailsScreen(
                                         enabled = !uiState.isLoading,
                                     ) {
                                         Text("Edit Zone")
+                                    }
+                                    if (zone.status == ZoneStatus.CLEANED) {
+                                        OutlinedButton(
+                                            onClick = photoPicker,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            enabled = !uiState.isActionInProgress,
+                                        ) {
+                                            if (uiState.actionState ==
+                                                ZoneDetailsUiState.ActionState.ADDING_PHOTO
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                )
+                                            } else {
+                                                Icon(
+                                                    Icons.Default.AddAPhoto,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.padding(end = 8.dp),
+                                                )
+                                                Text("Add 'After' Photo")
+                                            }
+                                        }
                                     }
                                     LoadingOutlinedButton(
                                         onClick = { showDeleteDialog.value = true },

@@ -37,7 +37,10 @@ internal fun Users.toDomainUser(): User =
         updatedAt = this.updated_at,
     )
 
-internal fun Zones.toDomainZone(photoIds: Set<Id>): Zone =
+internal fun Zones.toDomainZone(
+    beforePhotosIds: Set<Id>,
+    afterPhotosIds: Set<Id>,
+): Zone =
     Zone(
         id = this.id,
         location = Location(latitude = this.latitude, longitude = this.longitude),
@@ -47,7 +50,8 @@ internal fun Zones.toDomainZone(photoIds: Set<Id>): Zone =
         status = this.status,
         zoneSeverity = this.zone_severity,
         isActive = this.is_active,
-        photosIds = photoIds,
+        beforePhotosIds = beforePhotosIds,
+        afterPhotosIds = afterPhotosIds,
         createdAt = this.created_at,
         updatedAt = this.updated_at,
     )

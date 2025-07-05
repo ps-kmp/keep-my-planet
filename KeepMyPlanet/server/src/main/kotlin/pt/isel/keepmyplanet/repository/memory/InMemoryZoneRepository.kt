@@ -27,7 +27,8 @@ class InMemoryZoneRepository : ZoneRepository {
                 eventId = null,
                 status = ZoneStatus.REPORTED,
                 zoneSeverity = ZoneSeverity.LOW,
-                photosIds = emptySet(),
+                beforePhotosIds = emptySet(),
+                afterPhotosIds = emptySet(),
                 createdAt = now(),
                 updatedAt = now(),
             )
@@ -41,7 +42,8 @@ class InMemoryZoneRepository : ZoneRepository {
                 eventId = null,
                 status = ZoneStatus.REPORTED,
                 zoneSeverity = ZoneSeverity.MEDIUM,
-                photosIds = emptySet(),
+                beforePhotosIds = emptySet(),
+                afterPhotosIds = emptySet(),
                 createdAt = now(),
                 updatedAt = now(),
             )

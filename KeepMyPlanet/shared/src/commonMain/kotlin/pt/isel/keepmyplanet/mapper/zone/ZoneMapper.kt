@@ -20,7 +20,8 @@ fun Zone.toResponse(): ZoneResponse =
         eventId = eventId?.value,
         status = status.name,
         severity = zoneSeverity.name,
-        photosIds = photosIds.map { it.value }.toSet(),
+        beforePhotosIds = beforePhotosIds.map { it.value }.toSet(),
+        afterPhotosIds = afterPhotosIds.map { it.value }.toSet(),
         createdAt = createdAt.toString(),
         updatedAt = updatedAt.toString(),
     )
@@ -35,7 +36,8 @@ fun ZoneResponse.toZone(): Zone =
         status = safeValueOf<ZoneStatus>(status) ?: ZoneStatus.REPORTED,
         zoneSeverity = safeValueOf<ZoneSeverity>(severity) ?: ZoneSeverity.UNKNOWN,
         isActive = true,
-        photosIds = photosIds.map { Id(it) }.toSet(),
+        beforePhotosIds = beforePhotosIds.map { Id(it) }.toSet(),
+        afterPhotosIds = afterPhotosIds.map { Id(it) }.toSet(),
         createdAt = LocalDateTime.parse(createdAt),
         updatedAt = LocalDateTime.parse(updatedAt),
     )

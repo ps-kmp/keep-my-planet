@@ -21,6 +21,7 @@ CREATE TABLE zones (
 CREATE TABLE zone_photos (
     zone_id BIGINT AS Id NOT NULL,
     photo_id BIGINT AS Id NOT NULL,
+    photo_type TEXT NOT NULL,
     PRIMARY KEY (zone_id, photo_id),
     FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,
     FOREIGN KEY (photo_id) REFERENCES photos(id) ON DELETE CASCADE
@@ -82,12 +83,15 @@ WHERE latitude BETWEEN :minLat AND :maxLat
   AND is_active = TRUE
 ORDER BY id;
 
-getPhotoIdsForZone:
-SELECT photo_id FROM zone_photos WHERE zone_id = :zone_id;
+getBeforePhotoIdsForZone:
+SELECT photo_id FROM zone_photos WHERE zone_id = :zone_id AND photo_type = 'BEFORE';
+
+getAfterPhotoIdsForZone:
+SELECT photo_id FROM zone_photos WHERE zone_id = :zone_id AND photo_type = 'AFTER';
 
 addPhotoToZone:
-INSERT INTO zone_photos(zone_id, photo_id)
-VALUES (:zone_id, :photo_id)
+INSERT INTO zone_photos(zone_id, photo_id, photo_type)
+VALUES (:zone_id, :photo_id, :photo_type)
 ON CONFLICT (zone_id, photo_id) DO NOTHING;
 
 removePhotoFromZone:

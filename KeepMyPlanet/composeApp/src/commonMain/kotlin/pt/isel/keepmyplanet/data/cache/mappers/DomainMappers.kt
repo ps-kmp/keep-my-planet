@@ -70,7 +70,10 @@ fun UserCache.toUserCacheInfo(): UserCacheInfo =
         profilePictureUrl = profilePictureUrl,
     )
 
-fun ZoneCache.toZone(photoIds: Set<Id>): Zone =
+fun ZoneCache.toZone(
+    beforePhotosIds: Set<Id>,
+    afterPhotosIds: Set<Id>,
+): Zone =
     Zone(
         id = Id(id.toUInt()),
         location = Location(latitude, longitude),
@@ -79,7 +82,8 @@ fun ZoneCache.toZone(photoIds: Set<Id>): Zone =
         eventId = eventId?.let { Id(it.toUInt()) },
         status = safeValueOf<ZoneStatus>(status) ?: ZoneStatus.REPORTED,
         zoneSeverity = safeValueOf<ZoneSeverity>(zoneSeverity) ?: ZoneSeverity.UNKNOWN,
-        photosIds = photoIds,
+        beforePhotosIds = beforePhotosIds,
+        afterPhotosIds = afterPhotosIds,
         createdAt = LocalDateTime.parse(createdAt),
         updatedAt = LocalDateTime.parse(updatedAt),
     )

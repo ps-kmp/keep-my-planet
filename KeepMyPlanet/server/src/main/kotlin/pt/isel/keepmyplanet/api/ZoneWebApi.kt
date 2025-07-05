@@ -146,7 +146,7 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                         val photoId = Id(request.photoId)
 
                         zoneService
-                            .addPhotoToZone(zoneId, userId, photoId)
+                            .addPhotoToZone(zoneId, userId, photoId, request.type)
                             .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                             .onFailure { throw it }
                     }

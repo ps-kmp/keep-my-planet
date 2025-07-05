@@ -56,7 +56,8 @@ class ZoneService(
                     location = location,
                     description = description,
                     reporterId = reporterId,
-                    photosIds = photosIds,
+                    beforePhotosIds = photosIds,
+                    afterPhotosIds = emptySet(),
                     zoneSeverity = zoneSeverity,
                     createdAt = currentTime,
                     updatedAt = currentTime,
@@ -125,6 +126,7 @@ class ZoneService(
         zoneId: Id,
         userId: Id,
         photoId: Id,
+        photoType: String,
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
@@ -139,9 +141,29 @@ class ZoneService(
                 )
             }
 
-            if (photoId in zone.photosIds) return@runCatching zone
+            val type = photoType.uppercase()
+            if (type != "BEFORE" && type != "AFTER") {
+                throw ValidationException("Photo type must be 'BEFORE' or 'AFTER'")
+            }
 
-            val updatedZone = zone.copy(photosIds = zone.photosIds + photoId)
+            if (type == "AFTER" && zone.status != ZoneStatus.CLEANED) {
+                throw ConflictException(
+                    "Can only add 'AFTER' photos to a zone that has been marked as 'CLEANED'.",
+                )
+            }
+
+            if (photoId in zone.beforePhotosIds ||
+                photoId in zone.afterPhotosIds
+            ) {
+                return@runCatching zone
+            }
+
+            val updatedZone =
+                if (type == "AFTER") {
+                    zone.copy(afterPhotosIds = zone.afterPhotosIds + photoId)
+                } else {
+                    zone.copy(beforePhotosIds = zone.beforePhotosIds + photoId)
+                }
             zoneRepository.update(updatedZone)
         }
 
@@ -154,11 +176,16 @@ class ZoneService(
             val zone = findZoneOrFail(zoneId)
             hasPermissionsOrFail(zone, userId)
 
-            if (photoId !in zone.photosIds) {
+            if (photoId !in zone.beforePhotosIds && photoId !in zone.afterPhotosIds) {
                 throw NotFoundException("Photo '$photoId' not found in zone '$zoneId'.")
             }
 
-            val updatedZone = zone.copy(photosIds = zone.photosIds - photoId)
+            val updatedZone =
+                zone.copy(
+                    beforePhotosIds = zone.beforePhotosIds - photoId,
+                    afterPhotosIds =
+                        zone.afterPhotosIds - photoId,
+                )
             zoneRepository.update(updatedZone)
         }
 
@@ -205,14 +232,18 @@ class ZoneService(
             }
 
             if (wasCleaned) {
-                val updatedZone =
-                    zoneStateChangeService.changeZoneStatus(
-                        zone = zone,
-                        newStatus = ZoneStatus.CLEANED,
-                        changedBy = organizerId,
-                        triggeredByEventId = eventId,
-                    )
-                zoneStateChangeService.archiveZone(updatedZone)
+                if (zone.status != ZoneStatus.CLEANED) {
+                    val updatedZone =
+                        zoneStateChangeService.changeZoneStatus(
+                            zone = zone,
+                            newStatus = ZoneStatus.CLEANED,
+                            changedBy = organizerId,
+                            triggeredByEventId = eventId,
+                        )
+                    zoneStateChangeService.archiveZone(updatedZone)
+                } else {
+                    zone
+                }
             } else {
                 var zoneToUpdate =
                     zoneStateChangeService.changeZoneStatus(

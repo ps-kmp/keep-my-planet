@@ -5,4 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AddPhotoRequest(
     val photoId: UInt,
+    val type: String,
 )

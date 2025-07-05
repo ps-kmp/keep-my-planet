@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
@@ -63,6 +64,7 @@ fun EventDetailsScreen(
     onNavigateToStatusHistory: (Id) -> Unit,
     onNavigateToUpdateZone: (Id) -> Unit,
     onNavigateToParticipantList: (Id) -> Unit,
+    onNavigateToZoneDetails: (Id) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -213,6 +215,15 @@ fun EventDetailsScreen(
                             Text(
                                 text = event.description.value,
                                 style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+
+                        DetailCard(title = "Associated Zone") {
+                            InfoRow(
+                                icon = Icons.Default.LocationOn,
+                                text = "View the zone where this event takes place.",
+                                isClickable = true,
+                                onClick = { onNavigateToZoneDetails(event.zoneId) },
                             )
                         }
 

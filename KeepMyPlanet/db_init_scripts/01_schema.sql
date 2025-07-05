@@ -121,6 +121,7 @@ CREATE TABLE IF NOT EXISTS event_attendances (
 CREATE TABLE IF NOT EXISTS zone_photos (
     zone_id BIGINT NOT NULL,
     photo_id BIGINT NOT NULL,
+    photo_type TEXT NOT NULL DEFAULT 'BEFORE' CHECK (photo_type IN ('BEFORE', 'AFTER')),
     PRIMARY KEY (zone_id, photo_id),
     CONSTRAINT fk_zp_zone FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,
     CONSTRAINT fk_zp_photo FOREIGN KEY (photo_id) REFERENCES photos(id) ON DELETE CASCADE

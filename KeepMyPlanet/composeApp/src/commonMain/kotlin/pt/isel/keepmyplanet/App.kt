@@ -87,6 +87,9 @@ fun App() {
                         onNavigateToParticipantList = {
                             appViewModel.navigate(AppRoute.ParticipantList(it))
                         },
+                        onNavigateToZoneDetails = {
+                            appViewModel.navigate(AppRoute.ZoneDetails(it))
+                        },
                         onNavigateBack = { appViewModel.navigateBack() },
                     )
 

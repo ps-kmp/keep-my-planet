@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.ui.components
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.util.Log
 import android.view.ViewGroup
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
@@ -135,8 +136,8 @@ actual fun QrCodeScannerView(
                                 preview,
                                 imageAnalyzer,
                             )
-                        } catch (_: Exception) {
-                            // Handle errors
+                        } catch (e: Exception) {
+                            Log.e("QrCodeScannerView", "Use case binding failed", e)
                         }
                     },
                     ContextCompat.getMainExecutor(ctx),

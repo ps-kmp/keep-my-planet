@@ -84,6 +84,17 @@ class DefaultZoneRepository(
             zone
         }
 
+    suspend fun addPhotoToZone(
+        zoneId: Id,
+        photoId: Id,
+        type: String,
+    ): Result<Zone> =
+        zoneApi.addPhotoToZone(zoneId.value, photoId.value, type).map {
+            val zone = it.toZone()
+            zoneCache.insertZones(listOf(zone))
+            zone
+        }
+
     suspend fun deleteZone(zoneId: Id): Result<Unit> = zoneApi.deleteZone(zoneId.value)
 
     suspend fun confirmCleanliness(

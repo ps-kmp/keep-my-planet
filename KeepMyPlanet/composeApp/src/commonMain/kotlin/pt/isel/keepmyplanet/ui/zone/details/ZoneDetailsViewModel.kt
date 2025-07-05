@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.ui.zone.details
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
 import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.common.Id
@@ -37,7 +38,7 @@ class ZoneDetailsViewModel(
                         canUserManageZone = bundle.zone.reporterId == currentUser?.id,
                     )
                 }
-                fetchAndCachePhotos(bundle.zone.photosIds)
+                fetchAndCachePhotos(bundle.zone.beforePhotosIds + bundle.zone.afterPhotosIds)
             },
             onError = {
                 if (currentState.zone == null) {
@@ -53,15 +54,51 @@ class ZoneDetailsViewModel(
         val fetchedPhotoModels = mutableMapOf<Id, Any>()
         coroutineScope {
             photoIds
-                .map { id ->
+                .map { photoId ->
                     async {
-                        photoRepository.getPhotoModel(id).onSuccess { model ->
-                            fetchedPhotoModels[id] = model
+                        photoRepository.getPhotoModel(photoId).onSuccess { model ->
+                            fetchedPhotoModels[photoId] = model
                         }
                     }
                 }.awaitAll()
         }
         setState { copy(photoModels = fetchedPhotoModels) }
+    }
+
+    fun addAfterPhoto(
+        imageData: ByteArray,
+        filename: String,
+    ) {
+        val zone = currentState.zone ?: return
+        viewModelScope.launch {
+            setState { copy(actionState = ZoneDetailsUiState.ActionState.ADDING_PHOTO) }
+            photoRepository
+                .createPhoto(imageData, filename)
+                .onSuccess { photoResponse ->
+                    zoneRepository
+                        .addPhotoToZone(zone.id, Id(photoResponse.id), "AFTER")
+                        .onSuccess { updatedZone ->
+                            sendEvent(ZoneDetailsEvent.ShowSnackbar("Photo added successfully!"))
+                            loadZoneDetails(updatedZone.id)
+                        }.onFailure {
+                            handleErrorWithMessage(
+                                getErrorMessage("Failed to add photo to zone", it),
+                            )
+                        }
+                }.onFailure {
+                    handleErrorWithMessage(getErrorMessage("Failed to upload photo", it))
+                }
+
+            setState { copy(actionState = ZoneDetailsUiState.ActionState.IDLE) }
+        }
+    }
+
+    fun onPhotoClicked(model: Any) {
+        setState { copy(selectedPhotoModel = model) }
+    }
+
+    fun onDismissPhotoViewer() {
+        setState { copy(selectedPhotoModel = null) }
     }
 
     fun deleteZone() {

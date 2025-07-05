@@ -13,7 +13,8 @@ data class Zone(
     val status: ZoneStatus = ZoneStatus.REPORTED,
     val zoneSeverity: ZoneSeverity = ZoneSeverity.UNKNOWN,
     val isActive: Boolean = true,
-    val photosIds: Set<Id>,
+    val beforePhotosIds: Set<Id>,
+    val afterPhotosIds: Set<Id>,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 )

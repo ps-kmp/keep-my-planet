@@ -94,11 +94,12 @@ class ZoneApi(
     suspend fun addPhotoToZone(
         zoneId: UInt,
         photoId: UInt,
+        type: String,
     ): Result<ZoneResponse> =
         httpClient.executeRequest {
             method = HttpMethod.Post
             url(Endpoints.addPhotoToZone(zoneId))
-            setBody(AddPhotoRequest(photoId = photoId))
+            setBody(AddPhotoRequest(photoId = photoId, type = type))
         }
 
     suspend fun removePhotoFromZone(

@@ -4,7 +4,6 @@ import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
-import io.ktor.server.config.ApplicationConfig
 import java.net.URI
 import org.koin.dsl.module
 import pt.isel.keepmyplanet.db.Database
@@ -39,11 +38,11 @@ import pt.isel.keepmyplanet.security.PasswordHasher
 import pt.isel.keepmyplanet.security.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.service.AuthService
 import pt.isel.keepmyplanet.service.ChatSseService
+import pt.isel.keepmyplanet.service.CloudinaryStorageService
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
 import pt.isel.keepmyplanet.service.FileStorageService
 import pt.isel.keepmyplanet.service.JwtService
-import pt.isel.keepmyplanet.service.LocalFileStorageService
 import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.service.NotificationService
 import pt.isel.keepmyplanet.service.PhotoService
@@ -215,7 +214,8 @@ fun appModule(application: Application) =
         single { JwtService(get()) }
         single<PasswordHasher> { Pbkdf2PasswordHasher() }
         single { ChatSseService() }
-        // single<FileStorageService> { CloudinaryStorageService(get()) }
+        single<FileStorageService> { CloudinaryStorageService(get()) }
+        /*
         single<FileStorageService> {
             val appConfig = get<ApplicationConfig>()
             val baseUrl =
@@ -223,6 +223,7 @@ fun appModule(application: Application) =
                     ?: appConfig.property("server.baseUrl").getString()
             LocalFileStorageService(baseUrl = baseUrl)
         }
+         */
 
         single { AuthService(get(), get(), get()) }
         single { UserService(get(), get(), get(), get()) }

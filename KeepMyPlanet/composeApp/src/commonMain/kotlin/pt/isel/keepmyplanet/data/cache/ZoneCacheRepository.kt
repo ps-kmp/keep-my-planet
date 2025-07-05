@@ -29,8 +29,19 @@ class ZoneCacheRepository(
                     updatedAt = zone.updatedAt.toString(),
                     timestamp = Clock.System.now().epochSeconds,
                 )
-                zone.photosIds.forEach { photoId ->
-                    photoQueries.insertPhoto(zone.id.value.toLong(), photoId.value.toLong())
+                zone.beforePhotosIds.forEach { photoId ->
+                    photoQueries.insertPhoto(
+                        zone.id.value.toLong(),
+                        photoId.value.toLong(),
+                        "BEFORE",
+                    )
+                }
+                zone.afterPhotosIds.forEach { photoId ->
+                    photoQueries.insertPhoto(
+                        zone.id.value.toLong(),
+                        photoId.value.toLong(),
+                        "AFTER",
+                    )
                 }
             }
         }
@@ -51,13 +62,19 @@ class ZoneCacheRepository(
             .getZonesInBoundingBox(min.latitude, max.latitude, min.longitude, max.longitude)
             .executeAsList()
             .map { dbZone ->
-                val photoIds =
+                val beforePhotoIds =
                     photoQueries
-                        .getPhotosByZoneId(dbZone.id)
+                        .getBeforePhotosByZoneId(dbZone.id)
                         .executeAsList()
                         .map { Id(it.toUInt()) }
                         .toSet()
-                dbZone.toZone(photoIds)
+                val afterPhotoIds =
+                    photoQueries
+                        .getAfterPhotosByZoneId(dbZone.id)
+                        .executeAsList()
+                        .map { Id(it.toUInt()) }
+                        .toSet()
+                dbZone.toZone(beforePhotoIds, afterPhotoIds)
             }
 
     suspend fun clearAllZones() {
@@ -66,13 +83,19 @@ class ZoneCacheRepository(
 
     fun getZoneById(id: Id): Zone? {
         val dbZone = queries.getById(id.value.toLong()).executeAsOneOrNull() ?: return null
-        val photoIds =
+        val beforePhotoIds =
             photoQueries
-                .getPhotosByZoneId(id.value.toLong())
+                .getBeforePhotosByZoneId(id.value.toLong())
                 .executeAsList()
                 .map { Id(it.toUInt()) }
                 .toSet()
-        return dbZone.toZone(photoIds)
+        val afterPhotoIds =
+            photoQueries
+                .getAfterPhotosByZoneId(id.value.toLong())
+                .executeAsList()
+                .map { Id(it.toUInt()) }
+                .toSet()
+        return dbZone.toZone(beforePhotoIds, afterPhotoIds)
     }
 
     override suspend fun cleanupExpiredData(ttlSeconds: Long) {

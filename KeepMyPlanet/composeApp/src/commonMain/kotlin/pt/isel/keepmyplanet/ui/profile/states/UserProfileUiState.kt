@@ -57,5 +57,9 @@ data class UserProfileUiState(
         get() = nameInputError != null || emailInputError != null
 
     val hasPasswordErrors: Boolean
-        get() = oldPasswordInputError != null || newPasswordInputError != null || confirmPasswordInputError != null || passwordApiError != null
+        get() =
+            oldPasswordInputError != null ||
+                newPasswordInputError != null ||
+                confirmPasswordInputError != null ||
+                passwordApiError != null
 }

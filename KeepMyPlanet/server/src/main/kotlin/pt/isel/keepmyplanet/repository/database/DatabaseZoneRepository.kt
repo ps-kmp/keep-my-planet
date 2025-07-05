@@ -18,12 +18,17 @@ class DatabaseZoneRepository(
     private val zoneQueries: ZoneQueries,
 ) : ZoneRepository {
     private fun getZoneWithPhotos(dbZone: Zones): Zone {
-        val photoIds =
+        val beforePhotoIds =
             zoneQueries
-                .getPhotoIdsForZone(dbZone.id)
+                .getBeforePhotoIdsForZone(dbZone.id)
                 .executeAsList()
                 .toSet()
-        return dbZone.toDomainZone(photoIds)
+        val afterPhotoIds =
+            zoneQueries
+                .getAfterPhotoIdsForZone(dbZone.id)
+                .executeAsList()
+                .toSet()
+        return dbZone.toDomainZone(beforePhotoIds, afterPhotoIds)
     }
 
     private fun getZoneWithPhotos(zoneId: Id): Zone? {
@@ -49,8 +54,14 @@ class DatabaseZoneRepository(
                         updated_at = currentTime,
                     ).executeAsOne()
 
-            entity.photosIds.forEach { zoneQueries.addPhotoToZone(insertedDbZone.id, it) }
-            insertedDbZone.toDomainZone(entity.photosIds)
+            entity.beforePhotosIds.forEach {
+                zoneQueries.addPhotoToZone(
+                    insertedDbZone.id,
+                    it,
+                    "BEFORE",
+                )
+            }
+            insertedDbZone.toDomainZone(entity.beforePhotosIds, entity.afterPhotosIds)
         }
     }
 
@@ -86,8 +97,10 @@ class DatabaseZoneRepository(
                     ).executeAsOne()
 
             zoneQueries.removeAllPhotosFromZone(entity.id)
-            entity.photosIds.forEach { zoneQueries.addPhotoToZone(entity.id, it) }
-            updatedDbZone.toDomainZone(entity.photosIds)
+            entity.beforePhotosIds.forEach { zoneQueries.addPhotoToZone(entity.id, it, "BEFORE") }
+            entity.afterPhotosIds.forEach { zoneQueries.addPhotoToZone(entity.id, it, "AFTER") }
+
+            updatedDbZone.toDomainZone(entity.beforePhotosIds, entity.afterPhotosIds)
         }
     }
 

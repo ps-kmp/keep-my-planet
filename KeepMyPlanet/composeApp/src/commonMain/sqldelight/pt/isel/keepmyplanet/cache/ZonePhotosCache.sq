@@ -1,18 +1,25 @@
 CREATE TABLE ZonePhotosCache (
     zone_id INTEGER NOT NULL,
     photo_id INTEGER NOT NULL,
+    photo_type TEXT NOT NULL,
     PRIMARY KEY (zone_id, photo_id)
 );
 
 insertPhoto:
-INSERT OR REPLACE INTO ZonePhotosCache(zone_id, photo_id) VALUES (?, ?);
+INSERT OR REPLACE INTO ZonePhotosCache(zone_id, photo_id, photo_type) VALUES (?, ?, ?);
 
 insertPhotos:
-INSERT OR REPLACE INTO ZonePhotosCache(zone_id, photo_id)
-VALUES (:zone_id, :photo_id);
+INSERT OR REPLACE INTO ZonePhotosCache(zone_id, photo_id, photo_type)
+VALUES (:zone_id, :photo_id, :photo_type);
 
 getPhotosByZoneId:
 SELECT photo_id FROM ZonePhotosCache WHERE zone_id = ?;
+
+getBeforePhotosByZoneId:
+SELECT photo_id FROM ZonePhotosCache WHERE zone_id = ? AND photo_type = 'BEFORE';
+
+getAfterPhotosByZoneId:
+SELECT photo_id FROM ZonePhotosCache WHERE zone_id = ? AND photo_type = 'AFTER';
 
 deletePhotosByZoneId:
 DELETE FROM ZonePhotosCache WHERE zone_id = ?;
