@@ -31,10 +31,7 @@ fun DashboardItem(
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = surfaceLight,
-            ),
+        colors = CardDefaults.cardColors(containerColor = surfaceLight),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

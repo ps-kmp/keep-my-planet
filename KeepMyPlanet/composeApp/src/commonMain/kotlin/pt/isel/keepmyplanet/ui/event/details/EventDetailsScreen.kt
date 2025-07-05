@@ -201,7 +201,9 @@ fun EventDetailsScreen(
                     ) {
                         if (uiState.isCurrentUserPendingNominee) {
                             TransferOwnershipBanner(
-                                isLoading = uiState.actionState == EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
+                                isLoading =
+                                    uiState.actionState ==
+                                        EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
                                 onAccept = { viewModel.respondToTransfer(true) },
                                 onDecline = { viewModel.respondToTransfer(false) },
                             )
@@ -394,7 +396,10 @@ fun EventDetailsScreen(
                                     if (uiState.canTransferOwnership) {
                                         LoadingButton(
                                             onClick = viewModel::onTransferOwnershipClicked,
-                                            isLoading = uiState.actionState == EventDetailsUiState.ActionState.INITIATING_TRANSFER,
+                                            isLoading =
+                                                uiState.actionState ==
+                                                    EventDetailsUiState.ActionState
+                                                        .INITIATING_TRANSFER,
                                             enabled = !uiState.isActionInProgress,
                                             text = "Transfer Ownership",
                                             modifier = Modifier.fillMaxWidth(),

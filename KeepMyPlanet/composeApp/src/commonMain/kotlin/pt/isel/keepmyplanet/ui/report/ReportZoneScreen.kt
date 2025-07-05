@@ -60,11 +60,7 @@ fun ReportZoneScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is ReportZoneEvent.ShowSnackbar ->
-                    snackbarHostState.showSnackbar(
-                        event.message,
-                    )
-
+                is ReportZoneEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 is ReportZoneEvent.ReportSuccessful -> onNavigateBack()
             }
         }

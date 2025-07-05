@@ -182,10 +182,9 @@ class EventService(
             val event = findEventOrFail(eventId)
             findUserOrFail(userId)
 
-            if (event.status !in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)) {
+            if (event.status != EventStatus.PLANNED) {
                 throw ConflictException(
-                    "Can only join events that are 'PLANNED' or 'IN_PROGRESS'. " +
-                        "Current status: '${event.status}'.",
+                    "Can only join events that are 'PLANNED'. Current status: '${event.status}'.",
                 )
             }
             if (userId in event.participantsIds) {
@@ -283,7 +282,7 @@ class EventService(
         accepted: Boolean,
     ): Result<Event> =
         runCatching {
-            var event = findEventOrFail(eventId)
+            val event = findEventOrFail(eventId)
 
             if (event.pendingOrganizerId != nomineeId) {
                 throw AuthorizationException("You are not the pending nominee for this event.")

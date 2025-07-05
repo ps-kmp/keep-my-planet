@@ -133,8 +133,8 @@ abstract class BaseWebApiTest {
 
     protected suspend fun createTestEvent(
         zoneId: Id,
-        organizerId: Id = Id(0U),
-        participantsIds: Set<Id> = setOf(Id(0U)),
+        organizerId: Id,
+        participantsIds: Set<Id>? = null,
         status: EventStatus = EventStatus.PLANNED,
         title: String = "Test Event Title",
         description: String = "Event for testing",
@@ -150,7 +150,7 @@ abstract class BaseWebApiTest {
                 description = Description(description),
                 period = period,
                 status = status,
-                participantsIds = participantsIds,
+                participantsIds = participantsIds ?: setOf(organizerId),
                 maxParticipants = maxParticipants,
                 createdAt = now(),
                 updatedAt = now(),

@@ -45,61 +45,36 @@ class DefaultEventRepository(
 
     suspend fun getEventDetailsBundle(eventId: Id): Result<EventDetailsBundle> =
         runCatching {
-            println("DEBUG: [1] Starting getEventDetailsBundle for event $eventId")
             coroutineScope {
                 val detailsDeferred = async { eventApi.getEventDetails(eventId.value) }
                 val participantsDeferred = async { eventApi.getEventParticipants(eventId.value) }
 
-                println("DEBUG: [2] Waiting for API calls to complete...")
-
                 val eventDetailsResult = detailsDeferred.await()
-                println(
-                    "DEBUG: [3] eventApi.getEventDetails finished with success=${eventDetailsResult.isSuccess}",
-                )
                 val eventResponse = eventDetailsResult.getOrThrow()
 
                 val participantsResult = participantsDeferred.await()
-                println(
-                    "DEBUG: [4] eventApi.getEventParticipants finished with success=${participantsResult.isSuccess}",
-                )
                 val participantsResponse = participantsResult.getOrThrow()
-
-                println("DEBUG: [5] Mapping responses to domain objects...")
-                println("DEBUG: Raw EventResponse from API: $eventResponse")
 
                 val event = eventResponse.toEvent()
                 val participants = participantsResponse.map { it.toUserInfo() }
 
-                println("DEBUG: Mapped Event object: $event")
-                println("DEBUG: Mapped Event has pendingOrganizerId = ${event.pendingOrganizerId}")
-
-                println("DEBUG: [6] Inserting into cache...")
                 eventCache.insertEvents(listOf(event))
                 userCache.insertUsers(participants.map { it.toUserCacheInfo() })
-                println("DEBUG: [7] Finished inserting into cache. Returning success bundle.")
 
                 EventDetailsBundle(event, participants)
             }
         }.recoverCatching { throwable ->
-            println("DEBUG: [ERROR] Entered recoverCatching. The error was: $throwable")
-
             val cachedEvent = eventCache.getEventById(eventId)
-            println("DEBUG: [CACHE] Trying to use cache. Found event: $cachedEvent")
 
             if (cachedEvent != null) {
                 val cachedParticipants =
                     userCache.getUsersByIds(cachedEvent.participantsIds.toList())
                 if (cachedParticipants.size == cachedEvent.participantsIds.size) {
-                    println("DEBUG: [CACHE] Successfully created bundle from cache.")
                     EventDetailsBundle(cachedEvent, cachedParticipants.map { it.toUserInfo() })
                 } else {
-                    println(
-                        "DEBUG: [CACHE] Found event but participants are missing. Re-throwing error.",
-                    )
                     throw throwable
                 }
             } else {
-                println("DEBUG: [CACHE] Event not found in cache. Re-throwing error.")
                 throw throwable
             }
         }

@@ -12,7 +12,9 @@ sealed interface EventDetailsEvent : UiEvent {
 
     data object NavigateBack : EventDetailsEvent
 
-    data class NavigateToUpdateZone(val zoneId: Id) : EventDetailsEvent
+    data class NavigateToUpdateZone(
+        val zoneId: Id,
+    ) : EventDetailsEvent
 
     data class NavigateToManageAttendance(
         val eventId: Id,

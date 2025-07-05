@@ -7,7 +7,7 @@ import pt.isel.keepmyplanet.domain.user.UserStats
 
 class UserStatsCacheRepository(
     database: KeepMyPlanetCache,
-) {
+) : CleanableCache {
     private val queries = database.userStatsCacheQueries
 
     fun getStatsByUserId(userId: Id): UserStats? =
@@ -30,7 +30,7 @@ class UserStatsCacheRepository(
         )
     }
 
-    suspend fun deleteExpiredStats(ttlSeconds: Long) {
+    override suspend fun cleanupExpiredData(ttlSeconds: Long) {
         val expirationTime = Clock.System.now().epochSeconds - ttlSeconds
         queries.deleteExpiredStats(expirationTime)
     }

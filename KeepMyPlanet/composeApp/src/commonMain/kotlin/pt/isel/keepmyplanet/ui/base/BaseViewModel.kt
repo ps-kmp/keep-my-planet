@@ -14,17 +14,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.http.ApiException
 
-abstract class ViewModel {
+abstract class BaseViewModel<S : UiState>(
+    initialState: S,
+) {
     val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     open fun onCleared() {
         viewModelScope.cancel()
     }
-}
 
-abstract class BaseViewModel<S : UiState>(
-    initialState: S,
-) : ViewModel() {
     private val _uiState = MutableStateFlow(initialState)
     val uiState: StateFlow<S> = _uiState.asStateFlow()
 

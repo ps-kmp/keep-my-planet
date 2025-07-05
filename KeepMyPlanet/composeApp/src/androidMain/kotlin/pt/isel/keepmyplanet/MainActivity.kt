@@ -13,18 +13,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.lifecycleScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
 import pt.isel.keepmyplanet.data.service.CacheCleanupService
 import pt.isel.keepmyplanet.di.appModule
 import pt.isel.keepmyplanet.di.cacheModule
@@ -49,8 +45,7 @@ class KeepMyPlanetApplication : Application() {
         val channel =
             NotificationChannel(FirebasePushNotificationService.CHANNEL_ID, name, importance)
                 .apply { description = descriptionText }
-        val notificationManager: NotificationManager =
-            getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
     }
 }
@@ -61,8 +56,7 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_EVENT_ID = "event_id"
     }
 
-    private val deviceRepository: DefaultDeviceRepository by lazy { get() }
-    private val appViewModel: AppViewModel by lazy { get() }
+    private val appViewModel: AppViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,8 +64,7 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
 
         setContent {
-            val navStack by appViewModel.navStack.collectAsState()
-            val userSession by appViewModel.userSession.collectAsState()
+            val uiState by appViewModel.uiState.collectAsState()
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val notificationPermissionState =
@@ -85,13 +78,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            LaunchedEffect(userSession) {
-                if (userSession != null) {
+            LaunchedEffect(uiState.userSession) {
+                if (uiState.userSession != null) {
                     registerDeviceToken()
                 }
             }
 
-            BackHandler(enabled = navStack.size > 1) {
+            BackHandler(enabled = uiState.navStack.size > 1) {
                 appViewModel.navigateBack()
             }
             App()
@@ -121,12 +114,7 @@ class MainActivity : ComponentActivity() {
                 val token = task.result
                 Log.d("FCM_REG", "Token is $token. Registering with server.")
 
-                lifecycleScope.launch {
-                    deviceRepository
-                        .registerDevice(token, "ANDROID")
-                        .onSuccess { Log.d("FCM_REG", "Server registration successful.") }
-                        .onFailure { Log.e("FCM_REG", "Server registration failed.", it) }
-                }
+                appViewModel.registerDeviceToken(token)
             },
         )
     }

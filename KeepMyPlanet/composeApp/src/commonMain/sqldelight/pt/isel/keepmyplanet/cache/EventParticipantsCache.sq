@@ -1,0 +1,18 @@
+CREATE TABLE EventParticipantsCache (
+    event_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    PRIMARY KEY (event_id, user_id)
+);
+
+insertParticipant:
+INSERT OR REPLACE INTO EventParticipantsCache(event_id, user_id) VALUES (?, ?);
+
+insertParticipants:
+INSERT OR REPLACE INTO EventParticipantsCache(event_id, user_id)
+VALUES (:event_id, :user_id);
+
+getParticipantsByEventId:
+SELECT user_id FROM EventParticipantsCache WHERE event_id = ?;
+
+deleteParticipantsByEventId:
+DELETE FROM EventParticipantsCache WHERE event_id = ?;

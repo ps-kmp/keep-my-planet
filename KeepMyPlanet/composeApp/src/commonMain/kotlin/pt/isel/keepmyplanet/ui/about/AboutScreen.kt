@@ -18,7 +18,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -91,7 +92,11 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
 
-            Divider(modifier = Modifier.padding(vertical = 24.dp))
+            HorizontalDivider(
+                Modifier.padding(vertical = 24.dp),
+                DividerDefaults.Thickness,
+                DividerDefaults.color,
+            )
 
             Text(
                 text = "Core Features",

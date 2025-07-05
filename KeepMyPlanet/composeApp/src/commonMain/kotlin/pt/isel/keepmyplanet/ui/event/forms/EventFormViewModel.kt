@@ -124,6 +124,7 @@ class EventFormViewModel(
             onFinally = { copy(actionState = EventFormUiState.ActionState.Idle) },
             block = { eventRepository.updateEvent(eventId, request) },
             onSuccess = {
+                eventRepository.invalidateEventCache(eventId)
                 sendEvent(EventFormEvent.ShowSnackbar("Event updated successfully"))
                 sendEvent(EventFormEvent.NavigateBack)
             },
@@ -153,7 +154,7 @@ class EventFormViewModel(
                             "Invalid date format (YYYY-MM-DDTHH:MM:SS)"
                         }
                     } else {
-                        null // Optional, so empty is valid
+                        null
                     },
                 maxParticipantsError =
                     if (currentState.maxParticipants.isNotEmpty()) {

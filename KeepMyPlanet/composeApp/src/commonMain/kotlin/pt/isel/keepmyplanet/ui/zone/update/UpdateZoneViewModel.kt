@@ -21,7 +21,7 @@ class UpdateZoneViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = { zoneRepository.getZoneDetails(zoneId, forceNetwork = true) },
+            block = { zoneRepository.getZoneDetails(zoneId) },
             onSuccess = { zone ->
                 setState {
                     copy(
@@ -32,7 +32,8 @@ class UpdateZoneViewModel(
                 }
                 if (zone.status == ZoneStatus.CLEANING_SCHEDULED) {
                     viewModelScope.launch {
-                        zoneRepository.revertToReported(zoneId)
+                        zoneRepository
+                            .revertToReported(zoneId)
                             .onFailure {
                                 handleErrorWithMessage("Could not auto-revert zone status.")
                             }
@@ -78,6 +79,7 @@ class UpdateZoneViewModel(
                 zoneRepository.updateZone(zoneId, request)
             },
             onSuccess = {
+                zoneRepository.invalidateZoneCache(zoneId)
                 sendEvent(UpdateZoneEvent.ShowSnackbar("Zone updated successfully!"))
                 sendEvent(UpdateZoneEvent.UpdateSuccessful)
             },

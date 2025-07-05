@@ -6,7 +6,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 
 class PhotoCacheRepository(
     database: KeepMyPlanetCache,
-) {
+) : CleanableCache {
     private val queries = database.photoCacheQueries
 
     suspend fun insertPhotoUrl(
@@ -16,7 +16,6 @@ class PhotoCacheRepository(
         queries.insertPhotoUrl(
             id = id.value.toLong(),
             url = url,
-            id_ = id.value.toLong(),
             timestamp = Clock.System.now().epochSeconds,
         )
     }
@@ -34,7 +33,7 @@ class PhotoCacheRepository(
     fun getPhotoUrl(id: Id): String? =
         queries.getPhotoUrlById(id.value.toLong()).executeAsOneOrNull()
 
-    suspend fun deleteExpiredPhotos(ttlSeconds: Long) {
+    override suspend fun cleanupExpiredData(ttlSeconds: Long) {
         val expirationTime = Clock.System.now().epochSeconds - ttlSeconds
         queries.deleteExpiredPhotos(expirationTime)
     }

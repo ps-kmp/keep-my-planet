@@ -110,25 +110,29 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                     val newSeverity: ZoneSeverity? =
                         request.newSeverity?.let { severityString ->
                             safeValueOf<ZoneSeverity>(severityString)
-                                ?: throw ValidationException("Invalid severity value provided: '$severityString'")
+                                ?: throw ValidationException(
+                                    "Invalid severity value provided: '$severityString'",
+                                )
                         }
 
-                    zoneService.confirmZoneCleanliness(
-                        zoneId = zoneId,
-                        organizerId = organizerId,
-                        wasCleaned = request.wasCleaned,
-                        eventId = eventId,
-                        newSeverity = newSeverity,
-                    ).onSuccess { updatedZone ->
-                        call.respond(HttpStatusCode.OK, updatedZone.toResponse())
-                    }.onFailure { throw it }
+                    zoneService
+                        .confirmZoneCleanliness(
+                            zoneId = zoneId,
+                            organizerId = organizerId,
+                            wasCleaned = request.wasCleaned,
+                            eventId = eventId,
+                            newSeverity = newSeverity,
+                        ).onSuccess { updatedZone ->
+                            call.respond(HttpStatusCode.OK, updatedZone.toResponse())
+                        }.onFailure { throw it }
                 }
 
                 post("/revert-to-reported") {
                     val zoneId = call.getZoneId()
                     val userId = call.getCurrentUserId()
 
-                    zoneService.revertZoneToReported(zoneId, userId)
+                    zoneService
+                        .revertZoneToReported(zoneId, userId)
                         .onSuccess { updatedZone ->
                             call.respond(HttpStatusCode.OK, updatedZone.toResponse())
                         }.onFailure { throw it }

@@ -1,7 +1,6 @@
 package pt.isel.keepmyplanet.data.cache.mappers
 
 import kotlinx.datetime.LocalDateTime
-import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.cache.EventCache
 import pt.isel.keepmyplanet.cache.EventStatusHistoryCache
 import pt.isel.keepmyplanet.cache.MessageCache
@@ -26,7 +25,7 @@ import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
 import pt.isel.keepmyplanet.dto.user.UserInfoSummaryResponse
 import pt.isel.keepmyplanet.utils.safeValueOf
 
-fun EventCache.toEvent(): Event =
+fun EventCache.toEvent(participantIds: Set<Id>): Event =
     Event(
         id = Id(id.toUInt()),
         title = Title(title),
@@ -36,8 +35,7 @@ fun EventCache.toEvent(): Event =
         organizerId = Id(organizerId.toUInt()),
         status = safeValueOf<EventStatus>(status) ?: EventStatus.UNKNOWN,
         maxParticipants = maxParticipants?.toInt(),
-        participantsIds =
-            Json.decodeFromString<Set<UInt>>(participantIds_json).map { Id(it) }.toSet(),
+        participantsIds = participantIds,
         pendingOrganizerId = pendingOrganizerId?.let { Id(it.toUInt()) },
         transferRequestTime = transferRequestTime?.let { LocalDateTime.parse(it) },
         createdAt = LocalDateTime.parse(createdAt),

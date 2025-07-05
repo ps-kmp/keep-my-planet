@@ -10,22 +10,17 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.get
-import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
+import kotlinx.coroutines.cancel
 
 class FirebasePushNotificationService : FirebaseMessagingService() {
-    private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.IO + job)
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d("FCM", "New token: $token")
-        sendTokenToServer(token)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -45,16 +40,6 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
                 Log.d("FCM", "Message Notification Body: ${it.body}")
                 sendNotification(it.title ?: "New Notification", it.body ?: "", null)
             }
-        }
-    }
-
-    private fun sendTokenToServer(token: String) {
-        val deviceRepository: DefaultDeviceRepository = get()
-        scope.launch {
-            deviceRepository
-                .registerDevice(token, "ANDROID")
-                .onSuccess { Log.d("FCM", "Token registered successfully") }
-                .onFailure { Log.e("FCM", "Failed to register token", it) }
         }
     }
 
@@ -93,17 +78,18 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
         ) {
-            val notificationId = eventId?.hashCode() ?: Random.nextInt()
+            val notificationId = eventId?.hashCode() ?: GENERAL_NOTIFICATION_ID
             notificationManager.notify(notificationId, notification)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        job.cancel()
+        serviceScope.cancel()
     }
 
     companion object {
         const val CHANNEL_ID = "keepmyplanet_notifications"
+        private const val GENERAL_NOTIFICATION_ID = 1
     }
 }

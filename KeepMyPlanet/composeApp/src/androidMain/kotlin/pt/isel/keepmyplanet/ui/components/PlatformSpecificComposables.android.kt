@@ -12,19 +12,19 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material.Button
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
@@ -42,13 +42,6 @@ import kotlinx.coroutines.withContext
 
 actual val isQrScanningAvailable: Boolean = true
 
-@Composable
-actual fun ManageAttendanceButton(onClick: () -> Unit) {
-    Button(onClick = onClick) {
-        Text("Manage Attendance (QR)")
-    }
-}
-
 @ExperimentalGetImage
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -56,10 +49,15 @@ actual fun QrCodeScannerView(
     modifier: Modifier,
     onQrCodeScanned: (String) -> Unit,
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraExecutor.shutdown()
+        }
+    }
 
     LaunchedEffect(key1 = true) {
         if (!cameraPermissionState.status.isGranted) {
@@ -99,9 +97,7 @@ actual fun QrCodeScannerView(
                                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                                 .build()
                                 .also {
-                                    it.setAnalyzer(
-                                        Executors.newSingleThreadExecutor(),
-                                    ) { imageProxy ->
+                                    it.setAnalyzer(cameraExecutor) { imageProxy ->
                                         val mediaImage = imageProxy.image
                                         if (mediaImage != null) {
                                             val image =
@@ -139,7 +135,7 @@ actual fun QrCodeScannerView(
                                 preview,
                                 imageAnalyzer,
                             )
-                        } catch (exc: Exception) {
+                        } catch (_: Exception) {
                             // Handle errors
                         }
                     },
@@ -176,8 +172,7 @@ actual fun QrCodeDisplay(
                         }
                     }
                     bmp
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                     null
                 }
             }

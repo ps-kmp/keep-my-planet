@@ -2,7 +2,7 @@ package pt.isel.keepmyplanet.ui.components
 
 import androidx.compose.runtime.Composable
 
-interface GpsLocationProvider {
+interface LocationProvider {
     val isPermissionGranted: Boolean
 
     fun requestPermission()
@@ -11,8 +11,8 @@ interface GpsLocationProvider {
 }
 
 @Composable
-expect fun rememberGpsLocationProvider(
+expect fun rememberLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
-): GpsLocationProvider
+): LocationProvider
 
 expect val shouldShowUserLocationMarker: Boolean

@@ -1,4 +1,3 @@
-/*
 package pt.isel.keepmyplanet.api
 
 import io.ktor.client.request.delete
@@ -6,6 +5,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -23,10 +23,12 @@ import kotlin.time.Duration.Companion.hours
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.event.Period
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
@@ -35,7 +37,6 @@ import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
 import pt.isel.keepmyplanet.service.NotificationService
 import pt.isel.keepmyplanet.service.ZoneStateChangeService
-import pt.isel.keepmyplanet.repository.memory.InMemoryZoneStateChangeRepository
 import pt.isel.keepmyplanet.utils.minus
 import pt.isel.keepmyplanet.utils.now
 import pt.isel.keepmyplanet.utils.plus
@@ -47,11 +48,11 @@ class EventWebApiTest : BaseWebApiTest() {
             config = testConfigForNotifications,
         )
 
-    private val zoneStateChangeService = ZoneStateChangeService(
-        zoneRepository = fakeZoneRepository,
-        zoneStateChangeRepository = fakeZoneStateChangeRepository,
-        notificationService = notificationService
-    )
+    private val fakeZoneStateChangeService =
+        ZoneStateChangeService(
+            zoneRepository = fakeZoneRepository,
+            zoneStateChangeRepository = fakeZoneStateChangeRepository,
+        )
     private val eventService =
         EventService(
             eventRepository = fakeEventRepository,
@@ -60,7 +61,7 @@ class EventWebApiTest : BaseWebApiTest() {
             messageRepository = fakeMessageRepository,
             notificationService = notificationService,
             userDeviceRepository = fakeUserDeviceRepository,
-            zoneStateChangeService = zoneStateChangeService(),
+            zoneStateChangeService = fakeZoneStateChangeService,
         )
     private val eventChangeStateService =
         EventStateChangeService(
@@ -68,7 +69,7 @@ class EventWebApiTest : BaseWebApiTest() {
             zoneRepository = fakeZoneRepository,
             eventStateChangeRepository = fakeEventStateChangeRepository,
             notificationService = notificationService,
-            zoneStateChangeService = zoneStateChangeService(),
+            zoneStateChangeService = fakeZoneStateChangeService,
         )
 
     private val futureStart = now().plus(7.days)
@@ -645,20 +646,21 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
- */
-/*
     @Test
-    fun `POST cancel event - should succeed as organizer`() =
+    fun `PUT cancel event - should succeed as organizer`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.PLANNED)
             linkEventToZone(zone.id, event.id)
             val token = generateTestToken(organizer.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.CANCELLED)
 
             val response =
-                client.post("/events/${event.id.value}/cancel") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<EventResponse>(response.bodyAsText())
@@ -675,16 +677,19 @@ class EventWebApiTest : BaseWebApiTest() {
         }
 
     @Test
-    fun `POST cancel event - should succeed as organizer for IN_PROGRESS event`() =
+    fun `PUT cancel event - should succeed as organizer for IN_PROGRESS event`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.IN_PROGRESS)
             val token = generateTestToken(organizer.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.CANCELLED)
 
             val response =
-                client.post("/events/${event.id.value}/cancel") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val cancelledEvent = fakeEventRepository.getById(event.id)
@@ -693,53 +698,62 @@ class EventWebApiTest : BaseWebApiTest() {
         }
 
     @Test
-    fun `POST cancel event - should fail with 403 if not organizer`() =
+    fun `PUT cancel event - should fail with 403 if not organizer`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val otherUser = createTestUser(name = Name("Other"), email = Email("other@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.PLANNED)
             val token = generateTestToken(otherUser.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.CANCELLED)
 
             val response =
-                client.post("/events/${event.id.value}/cancel") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
 
     @Test
-    fun `POST cancel event - should fail with 409 if event already CANCELLED`() =
+    fun `PUT cancel event - should fail with 409 if event already CANCELLED`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.CANCELLED)
             val token = generateTestToken(organizer.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.CANCELLED)
 
             val response =
-                client.post("/events/${event.id.value}/cancel") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
     @Test
-    fun `POST cancel event - should fail with 409 if event already COMPLETED`() =
+    fun `PUT cancel event - should fail with 409 if event already COMPLETED`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.COMPLETED)
             val token = generateTestToken(organizer.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.CANCELLED)
 
             val response =
-                client.post("/events/${event.id.value}/cancel") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
     @Test
-    fun `POST complete event - should succeed as organizer for IN_PROGRESS event`() =
+    fun `PUT complete event - should succeed as organizer for IN_PROGRESS event`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
@@ -752,10 +766,13 @@ class EventWebApiTest : BaseWebApiTest() {
                 )
             linkEventToZone(zone.id, event.id)
             val token = generateTestToken(organizer.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.COMPLETED)
 
             val response =
-                client.post("/events/${event.id.value}/complete") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             val responseBody = Json.decodeFromString<EventResponse>(response.bodyAsText())
@@ -772,77 +789,59 @@ class EventWebApiTest : BaseWebApiTest() {
         }
 
     @Test
-    fun `POST complete event - should succeed as organizer for PLANNED event if period has passed`() =
-        testApp({ eventWebApi(eventService, eventChangeStateService) }) {
-            val organizer = createTestUser()
-            val zone = createTestZone(reporterId = organizer.id)
-            val event =
-                createTestEvent(
-                    zoneId = zone.id,
-                    organizerId = organizer.id,
-                    status = EventStatus.PLANNED,
-                    period = Period(now().minus(2.days).minus(2.hours), now().minus(1.days)),
-                )
-            val token = generateTestToken(organizer.id)
-
-            val response =
-                client.post("/events/${event.id.value}/complete") {
-                    header(HttpHeaders.Authorization, "Bearer $token")
-                }
-            assertEquals(HttpStatusCode.OK, response.status)
-            val completedEvent = fakeEventRepository.getById(event.id)
-            assertNotNull(completedEvent)
-            assertEquals(EventStatus.COMPLETED, completedEvent.status)
-        }
-
-    @Test
-    fun `POST complete event - should fail with 403 if not organizer`() =
+    fun `PUT complete event - should fail with 403 if not organizer`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser(name = Name("Org"), email = Email("org@test.com"))
             val otherUser = createTestUser(name = Name("Other"), email = Email("other@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.IN_PROGRESS)
             val token = generateTestToken(otherUser.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.COMPLETED)
 
             val response =
-                client.post("/events/${event.id.value}/complete") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
 
     @Test
-    fun `POST complete event - should fail with 409 if event already COMPLETED`() =
+    fun `PUT complete event - should fail with 409 if event already COMPLETED`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.COMPLETED)
             val token = generateTestToken(organizer.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.COMPLETED)
 
             val response =
-                client.post("/events/${event.id.value}/complete") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
     @Test
-    fun `POST complete event - should fail with 409 if event is CANCELLED`() =
+    fun `PUT complete event - should fail with 409 if event is CANCELLED`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zone.id, organizer.id, status = EventStatus.CANCELLED)
             val token = generateTestToken(organizer.id)
+            val requestBody = ChangeEventStatusRequest(newStatus = EventStatus.COMPLETED)
 
             val response =
-                client.post("/events/${event.id.value}/complete") {
+                client.put("/events/${event.id.value}/status") {
                     header(HttpHeaders.Authorization, "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
- */
-/*
-
 
     @Test
     fun `POST join event - should succeed for PLANNED event`() =
@@ -908,8 +907,6 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
- */
-/*
     @Test
     fun `POST join event - should fail with 409 if event is IN_PROGRESS`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
@@ -925,9 +922,6 @@ class EventWebApiTest : BaseWebApiTest() {
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
- */
-/*
-
 
     @Test
     fun `POST join event - should fail with 409 if event is CANCELLED`() =
@@ -961,8 +955,6 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
 
- */
-/*
     @Test
     fun `POST join event - should fail with 409 if user is the organizer`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
@@ -977,9 +969,6 @@ class EventWebApiTest : BaseWebApiTest() {
                 }
             assertEquals(HttpStatusCode.Conflict, response.status)
         }
- */
-/*
-
 
     @Test
     fun `POST leave event - should succeed if participant`() =
@@ -1116,32 +1105,37 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals("[]", response.bodyAsText())
         }
 
- */
-/*
     @Test
-    fun `POST cancel event - should fail with 401 Unauthorized if no token`() =
+    fun `PUT cancel event - should fail with 401 Unauthorized if no token`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
             val organizer = createTestUser()
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+            val requestBody = ChangeEventStatusRequest(EventStatus.CANCELLED)
 
-            val response = client.post("/events/${event.id.value}/cancel")
+            val response =
+                client.put("/events/${event.id.value}/status") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
             assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 
     @Test
-    fun `POST complete event - should fail with 401 Unauthorized if no token`() =
+    fun `PUT complete event - should fail with 401 Unauthorized if no token`() =
         testApp({ eventWebApi(eventService, eventChangeStateService) }) {
-            val organizer = createTestUser()
+            val organizer = createTestUser(name = Name("org"), email = Email("org@test.com"))
             val zone = createTestZone(reporterId = organizer.id)
             val event = createTestEvent(zoneId = zone.id, organizerId = organizer.id)
+            val requestBody = ChangeEventStatusRequest(EventStatus.COMPLETED)
 
-            val response = client.post("/events/${event.id.value}/complete")
+            val response =
+                client.put("/events/${event.id.value}/status") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Json.encodeToString(requestBody))
+                }
             assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
- */
-/*
-
 
     @Test
     fun `POST join event - should fail with 401 Unauthorized if no token`() =
@@ -1165,4 +1159,3 @@ class EventWebApiTest : BaseWebApiTest() {
             assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
 }
-*/

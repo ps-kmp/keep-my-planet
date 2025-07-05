@@ -97,13 +97,19 @@ class EventStateChangeService(
                     )
                 zoneRepository.update(updatedZone.copy(eventId = null))
             }
+
             EventStatus.COMPLETED -> {
-                zoneRepository.update(zone.copy(eventId = null))
-                println(
-                    "LOG: Event ${event.id} completed. Awaiting organizer confirmation for zone ${zone.id} status.",
-                )
-                // notificationService.sendOrganizerConfirmationRequest(event.organizerId, zone.id, event.id)
+                val cleanedZone =
+                    zoneStateChangeService.changeZoneStatus(
+                        zone = zone,
+                        newStatus = ZoneStatus.CLEANED,
+                        changedBy = requestingUserId,
+                        triggeredByEventId = event.id,
+                    )
+                val finalZone = cleanedZone.copy(eventId = null)
+                zoneRepository.update(finalZone)
             }
+
             else -> {
                 // No action needed for other statuses
             }

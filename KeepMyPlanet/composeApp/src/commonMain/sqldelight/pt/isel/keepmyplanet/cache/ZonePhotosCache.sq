@@ -1,0 +1,18 @@
+CREATE TABLE ZonePhotosCache (
+    zone_id INTEGER NOT NULL,
+    photo_id INTEGER NOT NULL,
+    PRIMARY KEY (zone_id, photo_id)
+);
+
+insertPhoto:
+INSERT OR REPLACE INTO ZonePhotosCache(zone_id, photo_id) VALUES (?, ?);
+
+insertPhotos:
+INSERT OR REPLACE INTO ZonePhotosCache(zone_id, photo_id)
+VALUES (:zone_id, :photo_id);
+
+getPhotosByZoneId:
+SELECT photo_id FROM ZonePhotosCache WHERE zone_id = ?;
+
+deletePhotosByZoneId:
+DELETE FROM ZonePhotosCache WHERE zone_id = ?;

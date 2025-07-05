@@ -8,7 +8,7 @@ import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
 
 class EventStatusHistoryCacheRepository(
     database: KeepMyPlanetCache,
-) {
+) : CleanableCache {
     private val queries = database.eventStatusHistoryCacheQueries
 
     fun getHistoryByEventId(eventId: Id): List<EventStateChangeResponse> =
@@ -33,7 +33,7 @@ class EventStatusHistoryCacheRepository(
         }
     }
 
-    suspend fun deleteExpiredHistory(ttlSeconds: Long) {
+    override suspend fun cleanupExpiredData(ttlSeconds: Long) {
         val expirationTime = Clock.System.now().epochSeconds - ttlSeconds
         queries.deleteExpiredHistory(expirationTime)
     }

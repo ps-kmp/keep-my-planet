@@ -6,13 +6,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 
 @Composable
-actual fun rememberGpsLocationProvider(
+actual fun rememberLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
-): GpsLocationProvider {
+): LocationProvider {
     val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
 
     return remember {
-        object : GpsLocationProvider {
+        object : LocationProvider {
             override val isPermissionGranted: Boolean = true
 
             override fun requestPermission() {}

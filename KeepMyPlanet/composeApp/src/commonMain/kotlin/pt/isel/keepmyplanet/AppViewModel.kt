@@ -1,59 +1,88 @@
 package pt.isel.keepmyplanet
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.session.SessionManager
-import pt.isel.keepmyplanet.ui.base.ViewModel
+import pt.isel.keepmyplanet.ui.app.states.AppEvent
+import pt.isel.keepmyplanet.ui.app.states.AppUiState
+import pt.isel.keepmyplanet.ui.base.BaseViewModel
 
 class AppViewModel(
+    private val deviceRepository: DefaultDeviceRepository,
     private val sessionManager: SessionManager,
-) : ViewModel() {
-    val userSession: StateFlow<UserSession?> = sessionManager.userSession
-    private val _navStack = MutableStateFlow(listOf(determineInitialRoute(userSession.value)))
-    val navStack: StateFlow<List<AppRoute>> = _navStack.asStateFlow()
-
-    val currentRoute: StateFlow<AppRoute> =
-        navStack
-            .map { it.last() }
-            .stateIn(viewModelScope, SharingStarted.Eagerly, _navStack.value.last())
-
+) : BaseViewModel<AppUiState>(
+        initialState =
+            AppUiState().let {
+                val session = sessionManager.userSession.value
+                val initialRoute = determineInitialRoute(session)
+                it.copy(
+                    userSession = session,
+                    navStack = listOf(initialRoute),
+                    currentRoute = initialRoute,
+                )
+            },
+    ) {
     init {
         viewModelScope.launch {
-            userSession.map { it != null }.distinctUntilChanged().collect {
-                _navStack.value = listOf(determineInitialRoute(userSession.value))
+            sessionManager.userSession.map { it != null }.distinctUntilChanged().collect {
+                val newInitialRoute = determineInitialRoute(sessionManager.userSession.value)
+                setState {
+                    copy(
+                        userSession = sessionManager.userSession.value,
+                        navStack = listOf(newInitialRoute),
+                        currentRoute = newInitialRoute,
+                    )
+                }
             }
         }
     }
 
+    override fun handleErrorWithMessage(message: String) {
+        sendEvent(AppEvent.ShowSnackbar(message))
+    }
+
     fun navigate(route: AppRoute) {
-        val resolvedRoute = resolveRoute(route, userSession.value)
-        if (_navStack.value.lastOrNull() != resolvedRoute) {
-            _navStack.update { it + resolvedRoute }
+        val resolvedRoute = resolveRoute(route, currentState.userSession)
+        if (currentState.navStack.lastOrNull() != resolvedRoute) {
+            val newStack = currentState.navStack + resolvedRoute
+            setState {
+                copy(
+                    navStack = newStack,
+                    currentRoute = newStack.last(),
+                )
+            }
         }
     }
 
     fun navigateAndReplace(route: AppRoute) {
-        val resolvedRoute = resolveRoute(route, userSession.value)
-        if (_navStack.value.lastOrNull() != resolvedRoute) {
-            _navStack.update { it.dropLast(1) + resolvedRoute }
+        val resolvedRoute = resolveRoute(route, currentState.userSession)
+        if (currentState.navStack.lastOrNull() != resolvedRoute) {
+            val newStack = currentState.navStack.dropLast(1) + resolvedRoute
+            setState {
+                copy(
+                    navStack = newStack,
+                    currentRoute = newStack.last(),
+                )
+            }
         }
     }
 
     fun navigateBack() {
-        if (_navStack.value.size > 1) {
-            _navStack.update { it.dropLast(1) }
+        if (currentState.navStack.size > 1) {
+            val newStack = currentState.navStack.dropLast(1)
+            setState {
+                copy(
+                    navStack = newStack,
+                    currentRoute = newStack.last(),
+                )
+            }
         }
     }
 
@@ -82,26 +111,34 @@ class AppViewModel(
     }
 
     fun onProfileUpdated(updatedUserInfo: UserInfo) {
-        val currentSession = userSession.value
+        val currentSession = currentState.userSession
         if (currentSession != null) {
             sessionManager.saveSession(currentSession.copy(userInfo = updatedUserInfo))
         }
     }
 
-    private fun determineInitialRoute(session: UserSession?): AppRoute =
-        if (session != null) {
-            AppRoute.Home
-        } else {
-            AppRoute.Login
-        }
+    companion object {
+        private fun determineInitialRoute(session: UserSession?): AppRoute =
+            if (session != null) {
+                AppRoute.Home
+            } else {
+                AppRoute.Login
+            }
+    }
 
     fun handleNotificationNavigation(eventId: String) {
         val eventIdAsUInt = eventId.toUIntOrNull() ?: return
         val eventIdDomain = Id(eventIdAsUInt)
         val chatInfo = ChatInfo(eventIdDomain, null)
 
-        if (userSession.value != null) {
+        if (currentState.userSession != null) {
             navigate(AppRoute.Chat(chatInfo))
+        }
+    }
+
+    fun registerDeviceToken(token: String) {
+        viewModelScope.launch {
+            deviceRepository.registerDevice(token, "ANDROID")
         }
     }
 }

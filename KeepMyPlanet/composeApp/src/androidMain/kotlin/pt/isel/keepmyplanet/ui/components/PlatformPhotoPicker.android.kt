@@ -17,9 +17,7 @@ actual fun rememberPhotoPicker(
         ) { uri ->
             uri?.let {
                 val contentResolver = context.contentResolver
-                val inputStream = contentResolver.openInputStream(uri)
-                val bytes = inputStream?.readBytes()
-                inputStream?.close()
+                val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() }
 
                 var filename = "profile_image.jpg"
                 contentResolver.query(uri, null, null, null, null)?.use { cursor ->

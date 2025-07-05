@@ -66,7 +66,7 @@ import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
-import pt.isel.keepmyplanet.ui.components.rememberGpsLocationProvider
+import pt.isel.keepmyplanet.ui.components.rememberLocationProvider
 import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.theme.backgroundLight
@@ -93,7 +93,7 @@ fun MapScreen(
     val (currentCalloutId, setCurrentCalloutId) = remember { mutableStateOf<String?>(null) }
 
     val locationProvider =
-        rememberGpsLocationProvider { lat, lon ->
+        rememberLocationProvider { lat, lon ->
             viewModel.onLocationUpdateReceived(lat, lon)
         }
 

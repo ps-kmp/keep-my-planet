@@ -149,12 +149,13 @@ class DatabaseEventRepository(
         updatedAt: LocalDateTime,
     ): Event? {
         val dbEvent =
-            eventQueries.updateTransferStatus(
-                id = eventId,
-                new_organizer_id = newOrganizerId,
-                pending_organizer_id = pendingOrganizerId,
-                updated_at = updatedAt,
-            ).executeAsOneOrNull()
+            eventQueries
+                .updateTransferStatus(
+                    id = eventId,
+                    new_organizer_id = newOrganizerId,
+                    pending_organizer_id = pendingOrganizerId,
+                    updated_at = updatedAt,
+                ).executeAsOneOrNull()
         return dbEvent?.let { getEventWithParticipants(it.id) }
     }
 
@@ -320,9 +321,10 @@ class DatabaseEventRepository(
         timeThreshold: LocalDateTime,
     ): List<Event> {
         val dbEvents =
-            eventQueries.findCompletedEventsPendingConfirmation(
-                timeThreshold,
-            ).executeAsList()
+            eventQueries
+                .findCompletedEventsPendingConfirmation(
+                    timeThreshold,
+                ).executeAsList()
         return mapEventsToDomain(dbEvents)
     }
 }

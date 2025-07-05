@@ -26,11 +26,8 @@ fun InfoRow(
     onClick: (() -> Unit)? = null,
 ) {
     val rowModifier =
-        if (isClickable && onClick != null) {
-            modifier.clickable(onClick = onClick)
-        } else {
-            modifier
-        }
+        if (isClickable && onClick != null) modifier.clickable(onClick = onClick) else modifier
+
     Row(
         modifier = rowModifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,

@@ -7,7 +7,7 @@ CREATE TABLE PhotoCache (
 
 insertPhotoUrl:
 INSERT OR REPLACE INTO PhotoCache(id, url, image_data, timestamp)
-VALUES (?, ?, (SELECT image_data FROM PhotoCache WHERE id = ?), ?);
+VALUES (?, ?, NULL, ?);
 
 updatePhotoData:
 UPDATE PhotoCache SET image_data = ? WHERE id = ?;

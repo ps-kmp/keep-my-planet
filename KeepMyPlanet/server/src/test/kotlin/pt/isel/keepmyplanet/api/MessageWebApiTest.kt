@@ -39,7 +39,6 @@ class MessageWebApiTest : BaseWebApiTest() {
             notificationService = notificationService,
         )
 
-    /*
     @Test
     fun `POST message - should create message successfully as organizer`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
@@ -71,7 +70,6 @@ class MessageWebApiTest : BaseWebApiTest() {
             assertEquals(requestBody.content, createdMessage.content.value)
             assertEquals(0, createdMessage.chatPosition)
         }
-     */
 
     @Test
     fun `POST message - should create message successfully as participant`() =
@@ -104,7 +102,6 @@ class MessageWebApiTest : BaseWebApiTest() {
             assertEquals(0, createdMessage.chatPosition)
         }
 
-    /*
     @Test
     fun `POST message - should assign incremental sequence numbers (chatPosition)`() =
         testApp({ messageWebApi(messageService, chatSseService) }) {
@@ -147,7 +144,6 @@ class MessageWebApiTest : BaseWebApiTest() {
             assertEquals(requestBody2.content, messages[1].content.value)
             assertEquals(user2.id, messages[1].senderId)
         }
-     */
 
     @Test
     fun `POST message - should fail with 404 if event not found`() =

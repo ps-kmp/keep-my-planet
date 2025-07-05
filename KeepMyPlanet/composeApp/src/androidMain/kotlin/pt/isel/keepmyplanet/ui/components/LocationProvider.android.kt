@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.ui.components
 import android.Manifest
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -17,12 +18,19 @@ import com.google.android.gms.tasks.CancellationTokenSource
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-actual fun rememberGpsLocationProvider(
+actual fun rememberLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
-): GpsLocationProvider {
+): LocationProvider {
     val context = LocalContext.current
     val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
+    val cancellationTokenSource = remember { CancellationTokenSource() }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cancellationTokenSource.cancel()
+        }
+    }
 
     val permissionState =
         rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION) { isGranted ->
@@ -30,7 +38,7 @@ actual fun rememberGpsLocationProvider(
                 locationClient
                     .getCurrentLocation(
                         Priority.PRIORITY_HIGH_ACCURACY,
-                        CancellationTokenSource().token,
+                        cancellationTokenSource.token,
                     ).addOnSuccessListener { location ->
                         location?.let { onLocationUpdatedState(it.latitude, it.longitude) }
                     }
@@ -38,7 +46,7 @@ actual fun rememberGpsLocationProvider(
         }
 
     return remember(permissionState, locationClient, onLocationUpdatedState) {
-        object : GpsLocationProvider {
+        object : LocationProvider {
             override val isPermissionGranted: Boolean
                 get() = permissionState.status.isGranted
 
@@ -51,7 +59,7 @@ actual fun rememberGpsLocationProvider(
                     locationClient
                         .getCurrentLocation(
                             Priority.PRIORITY_HIGH_ACCURACY,
-                            CancellationTokenSource().token,
+                            cancellationTokenSource.token,
                         ).addOnSuccessListener { location ->
                             location?.let { onLocationUpdatedState(it.latitude, it.longitude) }
                         }
@@ -61,4 +69,4 @@ actual fun rememberGpsLocationProvider(
     }
 }
 
-actual val shouldShowUserLocationMarker: Boolean = false
+actual val shouldShowUserLocationMarker: Boolean = true

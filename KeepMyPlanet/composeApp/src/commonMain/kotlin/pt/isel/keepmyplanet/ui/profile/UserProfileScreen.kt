@@ -68,9 +68,7 @@ fun UserProfileScreen(
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is UserProfileEvent.ShowSnackbar ->
-                    snackbarHostState.showSnackbar(message = event.message)
-
+                is UserProfileEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
                 is UserProfileEvent.AccountDeleted -> onAccountDeleted()
                 is UserProfileEvent.ProfileUpdated -> onProfileUpdated(event.userInfo)
             }
@@ -177,10 +175,7 @@ private fun UserProfileDetails(
             Button(
                 onClick = onNavigateToStats,
                 modifier = Modifier.fillMaxWidth(),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = primaryLight,
-                    ),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryLight),
             ) {
                 Text("View My Stats")
             }
@@ -191,10 +186,7 @@ private fun UserProfileDetails(
                 Button(
                     onClick = onPasswordChangeToggled,
                     modifier = Modifier.fillMaxWidth(),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = primaryLight,
-                        ),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryLight),
                 ) {
                     Text(if (uiState.showPasswordChangeSection) "Cancel" else "Change Password")
                 }

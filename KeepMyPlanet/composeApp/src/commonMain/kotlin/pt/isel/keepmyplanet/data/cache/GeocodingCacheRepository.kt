@@ -7,7 +7,7 @@ import pt.isel.keepmyplanet.domain.common.Place
 
 class GeocodingCacheRepository(
     database: KeepMyPlanetCache,
-) {
+) : CleanableCache {
     private val queries = database.geocodingCacheQueries
 
     fun getResult(query: String): List<Place>? {
@@ -26,7 +26,7 @@ class GeocodingCacheRepository(
         )
     }
 
-    suspend fun deleteExpiredResults(ttlSeconds: Long) {
+    override suspend fun cleanupExpiredData(ttlSeconds: Long) {
         val expirationTime = Clock.System.now().epochSeconds - ttlSeconds
         queries.deleteExpiredResults(expirationTime)
     }

@@ -23,9 +23,9 @@ private data class IpLocationResponse(
 )
 
 @Composable
-actual fun rememberGpsLocationProvider(
+actual fun rememberLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
-): GpsLocationProvider {
+): LocationProvider {
     val coroutineScope = rememberCoroutineScope()
     val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
     val httpClient =
@@ -37,8 +37,8 @@ actual fun rememberGpsLocationProvider(
             }
         }
 
-    return remember {
-        object : GpsLocationProvider {
+    return remember(httpClient) {
+        object : LocationProvider {
             override val isPermissionGranted: Boolean = true
 
             override fun requestPermission() {}
@@ -47,7 +47,7 @@ actual fun rememberGpsLocationProvider(
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
                         val response: IpLocationResponse =
-                            httpClient.get("http://ip-api.com/json").body()
+                            httpClient.get("https://ip-api.com/json").body()
                         if (response.status == "success" &&
                             response.lat != null &&
                             response.lon != null

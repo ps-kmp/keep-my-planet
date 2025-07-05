@@ -14,7 +14,7 @@ INSERT OR REPLACE INTO MessageCache(id, eventId, senderId, senderName, content, 
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
 getMessagesByEventId:
-SELECT * FROM MessageCache WHERE eventId = ? ORDER BY chatPosition ASC;
+SELECT * FROM MessageCache WHERE eventId = ? ORDER BY timestamp ASC, id ASC;
 
 clearAllMessages:
 DELETE FROM MessageCache;

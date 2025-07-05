@@ -72,6 +72,7 @@ class ZoneDetailsViewModel(
             onFinally = { copy(actionState = ZoneDetailsUiState.ActionState.IDLE) },
             block = { zoneRepository.deleteZone(zoneId) },
             onSuccess = {
+                zoneRepository.invalidateZoneCache(zoneId)
                 sendEvent(ZoneDetailsEvent.ShowSnackbar("Zone deleted successfully"))
                 sendEvent(ZoneDetailsEvent.ZoneDeleted)
             },

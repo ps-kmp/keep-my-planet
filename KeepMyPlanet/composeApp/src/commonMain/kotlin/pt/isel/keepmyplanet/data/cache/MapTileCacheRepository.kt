@@ -5,7 +5,7 @@ import pt.isel.keepmyplanet.cache.KeepMyPlanetCache
 
 class MapTileCacheRepository(
     database: KeepMyPlanetCache,
-) {
+) : CleanableCache {
     private val queries = database.mapTileCacheQueries
 
     fun getTile(
@@ -29,7 +29,7 @@ class MapTileCacheRepository(
         )
     }
 
-    suspend fun deleteExpiredTiles(ttlSeconds: Long) {
+    override suspend fun cleanupExpiredData(ttlSeconds: Long) {
         val expirationTime = Clock.System.now().epochSeconds - ttlSeconds
         queries.deleteExpiredTiles(expirationTime)
     }

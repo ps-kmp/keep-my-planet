@@ -6,7 +6,7 @@ import org.koin.compose.koinInject
 import org.koin.core.parameter.ParametersDefinition
 
 @Composable
-inline fun <reified T : ViewModel> koinViewModel(
+inline fun <reified T : BaseViewModel<*>> koinViewModel(
     noinline parameters: ParametersDefinition? = null,
 ): T {
     val vm =

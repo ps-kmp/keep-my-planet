@@ -2,9 +2,6 @@ package pt.isel.keepmyplanet.repository.memory
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.text.compareTo
-import kotlin.text.get
-import kotlin.text.set
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
@@ -164,13 +161,10 @@ class InMemoryEventRepository : EventRepository {
 
     override suspend fun findCompletedEventsPendingConfirmation(
         timeThreshold: LocalDateTime,
-    ): List<Event> {
-        return events.values
-            .filter {
-                it.status == EventStatus.COMPLETED && it.updatedAt < timeThreshold
-            }
+    ): List<Event> =
+        events.values
+            .filter { it.status == EventStatus.COMPLETED && it.updatedAt < timeThreshold }
             .sortedBy { it.updatedAt }
-    }
 
     override suspend fun updateTransferStatus(
         eventId: Id,

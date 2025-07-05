@@ -12,6 +12,16 @@ import pt.isel.keepmyplanet.data.api.GeocodingApi
 import pt.isel.keepmyplanet.data.api.PhotoApi
 import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
+import pt.isel.keepmyplanet.data.cache.CleanableCache
+import pt.isel.keepmyplanet.data.cache.EventCacheRepository
+import pt.isel.keepmyplanet.data.cache.EventStatusHistoryCacheRepository
+import pt.isel.keepmyplanet.data.cache.GeocodingCacheRepository
+import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
+import pt.isel.keepmyplanet.data.cache.MessageCacheRepository
+import pt.isel.keepmyplanet.data.cache.PhotoCacheRepository
+import pt.isel.keepmyplanet.data.cache.UserCacheRepository
+import pt.isel.keepmyplanet.data.cache.UserStatsCacheRepository
+import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
 import pt.isel.keepmyplanet.data.http.createHttpClient
 import pt.isel.keepmyplanet.data.repository.DefaultAuthRepository
 import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
@@ -41,21 +51,34 @@ import pt.isel.keepmyplanet.ui.stats.UserStatsViewModel
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsViewModel
 import pt.isel.keepmyplanet.ui.zone.update.UpdateZoneViewModel
 
-val appModule =
+private val serviceModule =
     module {
         // Session
         single { ConnectivityService(get()) }
         single { SyncService(get(), get(), get(), get()) }
-        single {
-            CacheCleanupService(get(), get(), get(), get(), get(), get(), get(), get(), get())
+        single<List<CleanableCache>> {
+            listOf(
+                get<EventCacheRepository>(),
+                get<MapTileCacheRepository>(),
+                get<PhotoCacheRepository>(),
+                get<UserStatsCacheRepository>(),
+                get<UserCacheRepository>(),
+                get<MessageCacheRepository>(),
+                get<ZoneCacheRepository>(),
+                get<GeocodingCacheRepository>(),
+                get<EventStatusHistoryCacheRepository>(),
+            )
         }
+        single { CacheCleanupService(get()) }
 
         single { SessionManager() }
 
         // Network
         single { createHttpClient(get()) }
+    }
 
-        // APIs
+private val apiModule =
+    module {
         single { AuthApi(get()) }
         single { UserApi(get()) }
         single { EventApi(get()) }
@@ -64,8 +87,10 @@ val appModule =
         single { PhotoApi(get()) }
         single { DeviceApi(get()) }
         single { GeocodingApi(get(), get()) }
+    }
 
-        // Repositories
+private val repositoryModule =
+    module {
         single { DefaultAuthRepository(get()) }
         single { DefaultDeviceRepository(get()) }
         single { DefaultEventRepository(get(), get(), get(), get()) }
@@ -74,9 +99,11 @@ val appModule =
         single { DefaultPhotoRepository(get(), get(), get()) }
         single { DefaultUserRepository(get(), get(), get()) }
         single { DefaultZoneRepository(get(), get(), get()) }
+    }
 
-        // ViewModels
-        single { AppViewModel(get()) }
+private val viewModelModule =
+    module {
+        single { AppViewModel(get(), get()) }
         factoryOf(::LoginViewModel)
         factoryOf(::RegisterViewModel)
         factoryOf(::EventListViewModel)
@@ -92,6 +119,11 @@ val appModule =
         factoryOf(::ManageAttendanceViewModel)
         factory { params -> UserStatsViewModel(get(), get(), params.get()) }
         factory { params -> ParticipantListViewModel(params.get(), get()) }
+    }
+
+val appModule =
+    module {
+        includes(serviceModule, apiModule, repositoryModule, viewModelModule)
     }
 
 fun initKoin() {

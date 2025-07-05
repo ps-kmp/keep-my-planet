@@ -30,10 +30,7 @@ class EventDetailsViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = {
-                eventRepository.invalidateEventCache(eventId)
-                eventRepository.getEventDetailsBundle(eventId)
-            },
+            block = { eventRepository.getEventDetailsBundle(eventId) },
             onSuccess = { bundle ->
                 setState {
                     copy(
@@ -94,11 +91,13 @@ class EventDetailsViewModel(
         }
 
     fun changeEventStatus(newStatus: EventStatus) {
+        val eventId = getEventId() ?: return
+
         val actionState =
             when (newStatus) {
                 EventStatus.CANCELLED -> EventDetailsUiState.ActionState.CANCELLING
                 EventStatus.COMPLETED -> EventDetailsUiState.ActionState.COMPLETING
-                else -> EventDetailsUiState.ActionState.IDLE
+                else -> return
             }
         val successMessage =
             when (newStatus) {
@@ -113,14 +112,19 @@ class EventDetailsViewModel(
                 else -> "Failed to update event status"
             }
 
-        performAction(
-            actionState = actionState,
-            successMessage = successMessage,
-            errorMessagePrefix = errorMessagePrefix,
-            apiCall = { eventId ->
+        launchWithResult(
+            onStart = { copy(actionState = actionState) },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
+            block = {
                 val request = ChangeEventStatusRequest(newStatus)
                 eventRepository.changeEventStatus(eventId, request)
             },
+            onSuccess = { eventResponse ->
+                updateEventInState(eventResponse)
+                sendEvent(EventDetailsEvent.ShowSnackbar(successMessage))
+                loadEventDetails(eventId)
+            },
+            onError = { handleErrorWithMessage(getErrorMessage(errorMessagePrefix, it)) },
         )
     }
 
@@ -131,6 +135,7 @@ class EventDetailsViewModel(
             onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
             block = { eventRepository.deleteEvent(eventId) },
             onSuccess = {
+                eventRepository.invalidateEventCache(eventId)
                 sendEvent(EventDetailsEvent.ShowSnackbar("Event deleted successfully"))
                 sendEvent(EventDetailsEvent.EventDeleted)
             },
@@ -231,7 +236,8 @@ class EventDetailsViewModel(
             block = { eventRepository.respondToTransfer(eventId, accepted) },
             onSuccess = { updatedEvent ->
                 updateEventInState(updatedEvent)
-                val message = if (accepted) "You are now the new organizer!" else "Transfer request declined."
+                val message =
+                    if (accepted) "You are now the new organizer!" else "Transfer request declined."
                 sendEvent(EventDetailsEvent.ShowSnackbar(message))
                 loadEventDetails(eventId)
             },

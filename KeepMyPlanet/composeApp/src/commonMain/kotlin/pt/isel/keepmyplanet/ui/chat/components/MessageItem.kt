@@ -27,7 +27,8 @@ fun MessageItem(
 
     val alignment = if (isCurr) Alignment.CenterEnd else Alignment.CenterStart
     val backgroundColor = if (isCurr) primaryLight else MaterialTheme.colorScheme.surface
-    val textColor = if (isCurr) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    val textColor =
+        if (isCurr) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
     val startPadding = if (isCurr) 48.dp else 8.dp
     val endPadding = if (isCurr) 8.dp else 48.dp
 

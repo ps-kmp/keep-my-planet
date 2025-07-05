@@ -8,7 +8,7 @@ import pt.isel.keepmyplanet.domain.user.UserCacheInfo
 
 class UserCacheRepository(
     database: KeepMyPlanetCache,
-) {
+) : CleanableCache {
     private val queries = database.userCacheQueries
 
     suspend fun insertUsers(users: List<UserCacheInfo>) {
@@ -34,7 +34,7 @@ class UserCacheRepository(
             .executeAsList()
             .map { it.toUserCacheInfo() }
 
-    suspend fun deleteExpiredUsers(ttlSeconds: Long) {
+    override suspend fun cleanupExpiredData(ttlSeconds: Long) {
         val expirationTime = Clock.System.now().epochSeconds - ttlSeconds
         queries.deleteExpiredUsers(expirationTime)
     }

@@ -232,7 +232,8 @@ fun Route.eventWebApi(
                     val request = call.receive<InitiateTransferRequest>()
                     val nomineeId = Id(request.nomineeId)
 
-                    eventService.initiateTransfer(eventId, currentOrganizerId, nomineeId)
+                    eventService
+                        .initiateTransfer(eventId, currentOrganizerId, nomineeId)
                         .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }
@@ -242,7 +243,8 @@ fun Route.eventWebApi(
                     val nomineeId = call.getCurrentUserId()
                     val request = call.receive<RespondToTransferRequest>()
 
-                    eventService.respondToTransfer(eventId, nomineeId, request.accept)
+                    eventService
+                        .respondToTransfer(eventId, nomineeId, request.accept)
                         .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }

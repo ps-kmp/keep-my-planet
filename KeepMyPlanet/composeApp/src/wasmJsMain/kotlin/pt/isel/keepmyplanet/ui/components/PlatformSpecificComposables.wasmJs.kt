@@ -6,10 +6,6 @@ import androidx.compose.ui.Modifier
 actual val isQrScanningAvailable: Boolean = false
 
 @Composable
-actual fun ManageAttendanceButton(onClick: () -> Unit) {
-}
-
-@Composable
 actual fun QrCodeScannerView(
     modifier: Modifier,
     onQrCodeScanned: (String) -> Unit,

@@ -27,10 +27,7 @@ fun TransferOwnershipBanner(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
-            ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
         elevation = CardDefaults.cardElevation(4.dp),
     ) {
         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {

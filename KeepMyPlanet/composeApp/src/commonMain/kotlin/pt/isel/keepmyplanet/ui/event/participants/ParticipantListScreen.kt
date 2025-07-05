@@ -1,3 +1,5 @@
+package pt.isel.keepmyplanet.ui.event.participants
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +23,6 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
-import pt.isel.keepmyplanet.ui.event.participants.ParticipantListViewModel
 import pt.isel.keepmyplanet.ui.event.participants.states.ParticipantListEvent
 
 @Composable
@@ -52,10 +53,7 @@ fun ParticipantListScreen(
         },
     ) { paddingValues ->
         Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
         ) {
             when {
                 uiState.isLoading -> FullScreenLoading()
@@ -64,12 +62,16 @@ fun ParticipantListScreen(
                         viewModel.loadParticipants()
                     }
                 }
+
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
                     ) {
-                        items(uiState.participants, key = { it.id.value }) { participant ->
+                        items(
+                            uiState.participants,
+                            key = { it.id.value.toString() },
+                        ) { participant ->
                             ParticipantRow(
                                 participant = participant,
                                 isOrganizer = participant.id == uiState.event?.organizerId,

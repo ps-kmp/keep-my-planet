@@ -38,11 +38,13 @@ fun Route.userWebApi(userService: UserService) {
                 .onFailure { throw it }
         }
 
-        get {
-            userService
-                .getAllUsers()
-                .onSuccess { call.respond(HttpStatusCode.OK, it.map { user -> user.toResponse() }) }
-                .onFailure { throw it }
+        authenticate("auth-jwt") {
+            get {
+                userService
+                    .getAllUsers()
+                    .onSuccess { call.respond(HttpStatusCode.OK, it.map { u -> u.toResponse() }) }
+                    .onFailure { throw it }
+            }
         }
 
         route("/{id}") {
