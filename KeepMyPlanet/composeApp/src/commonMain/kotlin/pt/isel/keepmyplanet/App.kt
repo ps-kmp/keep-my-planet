@@ -42,12 +42,17 @@ fun App() {
             when (currentRoute) {
                 is AppRoute.Home ->
                     HomeScreen(
-                        user = currentUserInfo,
                         onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
                         onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
                         onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
                         onLogout = { appViewModel.logout() },
                         onNavigateToAbout = { appViewModel.navigate(AppRoute.About) },
+                        onNavigateToEventDetails = { eventId ->
+                            appViewModel.navigate(AppRoute.EventDetails(eventId))
+                        },
+                        onNavigateToZoneDetails = { zoneId ->
+                            appViewModel.navigate(AppRoute.ZoneDetails(zoneId))
+                        },
                     )
 
                 is AppRoute.EventList ->

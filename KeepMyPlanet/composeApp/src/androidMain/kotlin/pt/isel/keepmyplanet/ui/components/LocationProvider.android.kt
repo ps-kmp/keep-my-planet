@@ -20,10 +20,12 @@ import com.google.android.gms.tasks.CancellationTokenSource
 @Composable
 actual fun rememberLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
+    onLocationError: () -> Unit,
 ): LocationProvider {
     val context = LocalContext.current
     val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
+    val onLocationErrorState by rememberUpdatedState(onLocationError)
     val cancellationTokenSource = remember { CancellationTokenSource() }
 
     DisposableEffect(Unit) {
@@ -41,7 +43,10 @@ actual fun rememberLocationProvider(
                         cancellationTokenSource.token,
                     ).addOnSuccessListener { location ->
                         location?.let { onLocationUpdatedState(it.latitude, it.longitude) }
-                    }
+                            ?: onLocationErrorState()
+                    }.addOnFailureListener { onLocationErrorState() }
+            } else {
+                onLocationErrorState()
             }
         }
 
@@ -62,7 +67,12 @@ actual fun rememberLocationProvider(
                             cancellationTokenSource.token,
                         ).addOnSuccessListener { location ->
                             location?.let { onLocationUpdatedState(it.latitude, it.longitude) }
+                                ?: onLocationErrorState()
+                        }.addOnFailureListener {
+                            onLocationErrorState()
                         }
+                } else {
+                    onLocationErrorState()
                 }
             }
         }

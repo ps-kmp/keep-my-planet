@@ -25,9 +25,11 @@ private data class IpLocationResponse(
 @Composable
 actual fun rememberLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
+    onLocationError: () -> Unit,
 ): LocationProvider {
     val coroutineScope = rememberCoroutineScope()
     val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
+    val onLocationErrorState by rememberUpdatedState(onLocationError)
     val httpClient =
         remember {
             HttpClient {
@@ -47,15 +49,21 @@ actual fun rememberLocationProvider(
                 coroutineScope.launch(Dispatchers.IO) {
                     try {
                         val response: IpLocationResponse =
-                            httpClient.get("https://ip-api.com/json").body()
+                            httpClient
+                                .get(
+                                    "http://ip-api.com/json",
+                                ).body()
                         if (response.status == "success" &&
                             response.lat != null &&
                             response.lon != null
                         ) {
                             onLocationUpdatedState(response.lat, response.lon)
+                        } else {
+                            onLocationErrorState()
                         }
                     } catch (e: Exception) {
                         println("Could not fetch IP-based location: ${e.message}")
+                        onLocationErrorState()
                     }
                 }
             }

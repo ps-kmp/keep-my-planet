@@ -42,6 +42,7 @@ import pt.isel.keepmyplanet.ui.event.forms.EventFormViewModel
 import pt.isel.keepmyplanet.ui.event.history.EventStatusHistoryViewModel
 import pt.isel.keepmyplanet.ui.event.list.EventListViewModel
 import pt.isel.keepmyplanet.ui.event.participants.ParticipantListViewModel
+import pt.isel.keepmyplanet.ui.home.HomeViewModel
 import pt.isel.keepmyplanet.ui.login.LoginViewModel
 import pt.isel.keepmyplanet.ui.map.MapViewModel
 import pt.isel.keepmyplanet.ui.profile.UserProfileViewModel
@@ -106,6 +107,7 @@ private val viewModelModule =
         single { AppViewModel(get(), get()) }
         factoryOf(::LoginViewModel)
         factoryOf(::RegisterViewModel)
+        factoryOf(::HomeViewModel)
         factoryOf(::EventListViewModel)
         factory { EventDetailsViewModel(get(), get(), get()) }
         factoryOf(::EventStatusHistoryViewModel)

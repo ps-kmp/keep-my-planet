@@ -13,6 +13,7 @@ interface LocationProvider {
 @Composable
 expect fun rememberLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
+    onLocationError: () -> Unit,
 ): LocationProvider
 
 expect val shouldShowUserLocationMarker: Boolean

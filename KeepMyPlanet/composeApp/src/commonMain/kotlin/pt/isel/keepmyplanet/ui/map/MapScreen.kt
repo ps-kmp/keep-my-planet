@@ -93,9 +93,14 @@ fun MapScreen(
     val (currentCalloutId, setCurrentCalloutId) = remember { mutableStateOf<String?>(null) }
 
     val locationProvider =
-        rememberLocationProvider { lat, lon ->
-            viewModel.onLocationUpdateReceived(lat, lon)
-        }
+        rememberLocationProvider(
+            onLocationUpdated = { lat, lon ->
+                viewModel.onLocationUpdateReceived(lat, lon)
+            },
+            onLocationError = {
+                viewModel.onLocationError()
+            },
+        )
 
     LaunchedEffect(Unit) {
         viewModel.requestLocationPermissionOrUpdate()

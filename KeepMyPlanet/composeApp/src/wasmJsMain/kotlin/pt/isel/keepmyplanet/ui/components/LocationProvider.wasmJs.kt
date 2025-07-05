@@ -8,8 +8,10 @@ import androidx.compose.runtime.rememberUpdatedState
 @Composable
 actual fun rememberLocationProvider(
     onLocationUpdated: (latitude: Double, longitude: Double) -> Unit,
+    onLocationError: () -> Unit,
 ): LocationProvider {
     val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
+    val onLocationErrorState by rememberUpdatedState(onLocationError)
 
     return remember {
         object : LocationProvider {
@@ -20,7 +22,7 @@ actual fun rememberLocationProvider(
             override fun requestLocationUpdate() {
                 jsRequestLocation(
                     onSuccess = { lat, lon -> onLocationUpdatedState(lat, lon) },
-                    onError = { _, _ -> },
+                    onError = { _, _ -> onLocationErrorState() },
                 )
             }
         }

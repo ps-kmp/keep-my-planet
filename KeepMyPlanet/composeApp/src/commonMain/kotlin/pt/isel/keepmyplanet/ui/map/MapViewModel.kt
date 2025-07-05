@@ -268,6 +268,11 @@ class MapViewModel(
         setState { copy(isLocatingUser = false) }
     }
 
+    fun onLocationError() {
+        setState { copy(isLocatingUser = false) }
+        handleErrorWithMessage("Unable to retrieve your location.")
+    }
+
     fun requestLocationPermissionOrUpdate() {
         setState { copy(isLocatingUser = true) }
         sendEvent(MapEvent.RequestLocation)
