@@ -25,10 +25,10 @@ class UserCacheRepository(
         }
     }
 
-    fun getUserById(id: Id): UserCacheInfo? =
+    suspend fun getUserById(id: Id): UserCacheInfo? =
         queries.getUserById(id.value.toLong()).executeAsOneOrNull()?.toUserCacheInfo()
 
-    fun getUsersByIds(ids: List<Id>): List<UserCacheInfo> =
+    suspend fun getUsersByIds(ids: List<Id>): List<UserCacheInfo> =
         queries
             .getUsersByIds(ids.map { it.value.toLong() })
             .executeAsList()

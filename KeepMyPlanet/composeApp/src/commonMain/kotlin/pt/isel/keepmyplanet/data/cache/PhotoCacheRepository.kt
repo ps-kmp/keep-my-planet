@@ -27,10 +27,10 @@ class PhotoCacheRepository(
         queries.updatePhotoData(data, id.value.toLong())
     }
 
-    fun getPhotoData(id: Id): ByteArray? =
+    suspend fun getPhotoData(id: Id): ByteArray? =
         queries.getPhotoDataById(id.value.toLong()).executeAsOneOrNull()?.image_data
 
-    fun getPhotoUrl(id: Id): String? =
+    suspend fun getPhotoUrl(id: Id): String? =
         queries.getPhotoUrlById(id.value.toLong()).executeAsOneOrNull()
 
     override suspend fun cleanupExpiredData(ttlSeconds: Long) {

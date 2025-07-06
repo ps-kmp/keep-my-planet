@@ -8,6 +8,7 @@ import pt.isel.keepmyplanet.ui.base.UiState
 data class HomeUiState(
     val user: UserInfo? = null,
     val isLoading: Boolean = true,
+    val isLoadingZones: Boolean = false,
     val isLocating: Boolean = false,
     val upcomingEvents: List<EventListItem> = emptyList(),
     val nearbyZones: List<Zone> = emptyList(),

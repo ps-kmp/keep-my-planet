@@ -194,12 +194,10 @@ fun ZoneDetailsScreen(
                                 LazyRow(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    itemsIndexed(uiState.beforePhotos, key = {
-                                        _,
-                                        item,
-                                        ->
-                                        item.first.value
-                                    }) { _, model ->
+                                    itemsIndexed(
+                                        uiState.beforePhotos,
+                                        key = { _, item -> item.first.value },
+                                    ) { _, model ->
                                         Card(
                                             modifier =
                                                 Modifier
@@ -244,12 +242,10 @@ fun ZoneDetailsScreen(
                                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                                         contentPadding = PaddingValues(horizontal = 8.dp),
                                     ) {
-                                        itemsIndexed(uiState.afterPhotos, key = {
-                                            _,
-                                            item,
-                                            ->
-                                            item.first.value
-                                        }) { _, model ->
+                                        itemsIndexed(
+                                            uiState.afterPhotos,
+                                            key = { _, item -> item.first.value },
+                                        ) { _, model ->
                                             Card(
                                                 modifier =
                                                     Modifier
@@ -295,7 +291,7 @@ fun ZoneDetailsScreen(
                                             enabled = !uiState.isActionInProgress,
                                         ) {
                                             if (uiState.actionState ==
-                                                ZoneDetailsUiState.ActionState.ADDING_PHOTO
+                                                ZoneDetailsUiState.ActionState.ADDINGPHOTO
                                             ) {
                                                 CircularProgressIndicator(
                                                     modifier = Modifier.size(24.dp),

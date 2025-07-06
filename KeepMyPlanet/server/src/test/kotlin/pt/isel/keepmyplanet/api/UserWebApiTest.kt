@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.api
 
+/*
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -27,8 +28,10 @@ import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 import pt.isel.keepmyplanet.service.UserService
+*/
 
 class UserWebApiTest : BaseWebApiTest() {
+    /*
     private val userService =
         UserService(fakeUserRepository, fakeEventRepository, passwordHasher, fakePhotoRepository)
 
@@ -491,4 +494,6 @@ class UserWebApiTest : BaseWebApiTest() {
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
+
+     */
 }

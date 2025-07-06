@@ -10,17 +10,19 @@ import pt.isel.keepmyplanet.dto.zone.ConfirmCleanlinessRequest
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.mapper.zone.toZone
+import pt.isel.keepmyplanet.utils.calculateBoundingBox
+import pt.isel.keepmyplanet.utils.haversineDistance
 
 class DefaultZoneRepository(
     private val zoneApi: ZoneApi,
-    private val zoneCache: ZoneCacheRepository,
+    private val zoneCache: ZoneCacheRepository?,
     private val userRepository: DefaultUserRepository,
 ) {
     suspend fun reportZone(request: ReportZoneRequest): Result<Zone> =
         zoneApi.reportZone(request).map { it.toZone() }
 
     suspend fun invalidateZoneCache(zoneId: Id) {
-        zoneCache.deleteById(zoneId)
+        zoneCache?.deleteById(zoneId)
     }
 
     suspend fun getZoneDetailsBundle(zoneId: Id): Result<ZoneDetailsBundle> =
@@ -41,16 +43,16 @@ class DefaultZoneRepository(
     ): Result<Zone> =
         runCatching {
             if (!forceNetwork) {
-                val cachedZone = zoneCache.getZoneById(zoneId)
+                val cachedZone = zoneCache?.getZoneById(zoneId)
                 if (cachedZone != null) return@runCatching cachedZone
             }
             val networkResult = zoneApi.getZoneDetails(zoneId.value)
             if (networkResult.isSuccess) {
                 val zone = networkResult.getOrThrow().toZone()
-                zoneCache.insertZones(listOf(zone))
+                zoneCache?.insertZones(listOf(zone))
                 zone
             } else {
-                zoneCache.getZoneById(zoneId) ?: throw networkResult.exceptionOrNull()!!
+                zoneCache?.getZoneById(zoneId) ?: throw networkResult.exceptionOrNull()!!
             }
         }
 
@@ -60,18 +62,48 @@ class DefaultZoneRepository(
         radius: Double,
     ): Result<List<Zone>> =
         runCatching {
-            val networkResult = zoneApi.findZonesByLocation(latitude, longitude, radius)
-            if (networkResult.isSuccess) {
-                val zones = networkResult.getOrThrow().map { it.toZone() }
-                zoneCache.insertZones(zones)
-                zones
-            } else {
-                zoneCache
-                    .getZonesInBoundingBox(
-                        min = Location(latitude - 0.1, longitude - 0.1),
-                        max = Location(latitude + 0.1, longitude + 0.1),
-                    ).ifEmpty { throw networkResult.exceptionOrNull()!! }
+            val center = Location(latitude, longitude)
+            val radiusInKm = radius / 1000.0
+            val (minCoords, maxCoords) = calculateBoundingBox(center, radiusInKm)
+
+            // 1. Try from cache first.
+            val cachedZones =
+                zoneCache?.getZonesInBoundingBox(min = minCoords, max = maxCoords)?.filter {
+                    haversineDistance(
+                        it.location.latitude,
+                        it.location.longitude,
+                        latitude,
+                        longitude,
+                    ) <=
+                        radius
+                }
+            if (!cachedZones.isNullOrEmpty()) {
+                return@runCatching cachedZones
             }
+
+            // 2. Go to network
+            val networkResult = zoneApi.findZonesByLocation(latitude, longitude, radiusInKm)
+            val zones = networkResult.getOrThrow().map { it.toZone() }
+            zoneCache?.insertZones(zones)
+            zones
+        }.recoverCatching {
+            val radiusInKm = radius / 1000.0
+            val (minCoords, maxCoords) =
+                calculateBoundingBox(
+                    Location(latitude, longitude),
+                    radiusInKm,
+                )
+            val cachedZones =
+                zoneCache?.getZonesInBoundingBox(min = minCoords, max = maxCoords)?.filter {
+                    haversineDistance(
+                        it.location.latitude,
+                        it.location.longitude,
+                        latitude,
+                        longitude,
+                    ) <=
+                        radius
+                }
+            cachedZones ?: throw it
         }
 
     suspend fun updateZone(
@@ -80,7 +112,7 @@ class DefaultZoneRepository(
     ): Result<Zone> =
         zoneApi.updateZone(zoneId.value, request).map {
             val zone = it.toZone()
-            zoneCache.insertZones(listOf(zone))
+            zoneCache?.insertZones(listOf(zone))
             zone
         }
 
@@ -91,7 +123,7 @@ class DefaultZoneRepository(
     ): Result<Zone> =
         zoneApi.addPhotoToZone(zoneId.value, photoId.value, type).map {
             val zone = it.toZone()
-            zoneCache.insertZones(listOf(zone))
+            zoneCache?.insertZones(listOf(zone))
             zone
         }
 
@@ -109,7 +141,7 @@ class DefaultZoneRepository(
             )
         return zoneApi.confirmCleanliness(zoneId.value, request).map {
             val updatedZone = it.toZone()
-            zoneCache.insertZones(listOf(updatedZone))
+            zoneCache?.insertZones(listOf(updatedZone))
             updatedZone
         }
     }

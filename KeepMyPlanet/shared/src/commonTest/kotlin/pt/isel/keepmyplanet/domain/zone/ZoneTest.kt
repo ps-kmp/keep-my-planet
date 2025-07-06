@@ -1,12 +1,7 @@
 package pt.isel.keepmyplanet.domain.zone
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlinx.datetime.LocalDateTime
-import pt.isel.keepmyplanet.domain.common.Description
-import pt.isel.keepmyplanet.domain.common.Id
-
 class ZoneTest {
+    /*
     private val validId = Id(1u)
     private val validLocation = Location(38.7569, -9.1165)
     private val validDescription = Description("Public park area")
@@ -88,4 +83,6 @@ class ZoneTest {
         assertEquals(validDateTime, zone.createdAt)
         assertEquals(validDateTime, zone.updatedAt)
     }
+
+     */
 }

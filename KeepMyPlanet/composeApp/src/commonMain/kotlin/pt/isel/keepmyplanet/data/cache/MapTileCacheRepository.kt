@@ -8,7 +8,7 @@ class MapTileCacheRepository(
 ) : CleanableCache {
     private val queries = database.mapTileCacheQueries
 
-    fun getTile(
+    suspend fun getTile(
         zoom: Int,
         col: Int,
         row: Int,

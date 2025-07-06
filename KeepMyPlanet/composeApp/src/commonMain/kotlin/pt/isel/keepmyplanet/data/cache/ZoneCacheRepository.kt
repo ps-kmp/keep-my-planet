@@ -54,7 +54,7 @@ class ZoneCacheRepository(
         }
     }
 
-    fun getZonesInBoundingBox(
+    suspend fun getZonesInBoundingBox(
         min: Location,
         max: Location,
     ): List<Zone> =
@@ -81,7 +81,7 @@ class ZoneCacheRepository(
         queries.clearAllZones()
     }
 
-    fun getZoneById(id: Id): Zone? {
+    suspend fun getZoneById(id: Id): Zone? {
         val dbZone = queries.getById(id.value.toLong()).executeAsOneOrNull() ?: return null
         val beforePhotoIds =
             photoQueries

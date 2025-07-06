@@ -37,7 +37,7 @@ class OfflineReportQueueRepository(
         )
     }
 
-    fun peekNextReport(): QueuedReport? {
+    suspend fun peekNextReport(): QueuedReport? {
         val dbReport = queries.peekNextReport().executeAsOneOrNull() ?: return null
         val photos =
             Json.decodeFromString<List<QueuedAction>>(dbReport.photos_json).map {

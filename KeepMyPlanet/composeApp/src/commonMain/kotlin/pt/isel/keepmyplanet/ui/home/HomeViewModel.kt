@@ -1,11 +1,14 @@
 package pt.isel.keepmyplanet.ui.home
 
 import kotlinx.coroutines.launch
+import pt.isel.keepmyplanet.data.cache.EventCacheRepository
+import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
 import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
 import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.mapper.event.toListItem
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.home.states.HomeEvent
@@ -16,6 +19,8 @@ class HomeViewModel(
     private val eventRepository: DefaultEventRepository,
     private val zoneRepository: DefaultZoneRepository,
     private val sessionManager: SessionManager,
+    private val eventCache: EventCacheRepository?,
+    private val zoneCache: ZoneCacheRepository?,
 ) : BaseViewModel<HomeUiState>(HomeUiState()) {
     init {
         val user = sessionManager.userSession.value?.userInfo
@@ -35,38 +40,26 @@ class HomeViewModel(
         latitude: Double,
         longitude: Double,
     ) {
-        if (currentState.nearbyZones.isNotEmpty() || currentState.isLoading) return
-        loadNearbyZones(latitude, longitude)
-    }
-
-    private fun loadUpcomingEvents() {
         viewModelScope.launch {
-            setState { copy(isLoading = true) }
-            try {
-                val organizedResult =
-                    eventRepository.searchEvents(EventFilterType.ORGANIZED, null, 5, 0)
-                val joinedResult = eventRepository.searchEvents(EventFilterType.JOINED, null, 5, 0)
+            val cachedZones =
+                zoneCache
+                    ?.getZonesInBoundingBox(
+                        min =
+                            pt.isel.keepmyplanet.domain.zone
+                                .Location(latitude - 0.1, longitude - 0.1),
+                        max =
+                            pt.isel.keepmyplanet.domain.zone
+                                .Location(latitude + 0.1, longitude + 0.1),
+                    )?.filter { it.status == ZoneStatus.REPORTED }
+                    ?.sortedBy { it.zoneSeverity.ordinal }
+                    ?.take(5)
 
-                val upcomingEvents =
-                    (organizedResult.getOrNull().orEmpty() + joinedResult.getOrNull().orEmpty())
-                        .distinctBy { it.id }
-                        .filter { it.status == EventStatus.PLANNED && it.period.start > now() }
-                        .sortedBy { it.period.start }
-                        .take(5)
-
-                setState { copy(upcomingEvents = upcomingEvents) }
-            } finally {
-                setState { copy(isLoading = false) }
+            if (cachedZones?.isNotEmpty() == true) {
+                setState { copy(nearbyZones = cachedZones) }
+            } else {
+                setState { copy(isLoadingZones = true) }
             }
-        }
-    }
 
-    private fun loadNearbyZones(
-        latitude: Double,
-        longitude: Double,
-    ) {
-        viewModelScope.launch {
-            setState { copy(isLoading = true, error = null) }
             zoneRepository
                 .findZonesByLocation(latitude, longitude, radius = 10000.0)
                 .onSuccess { zones ->
@@ -75,15 +68,52 @@ class HomeViewModel(
                             .filter { it.status == ZoneStatus.REPORTED }
                             .sortedBy { it.zoneSeverity.ordinal }
                             .take(5)
-                    setState { copy(nearbyZones = reportedZones, isLoading = false) }
+                    setState { copy(nearbyZones = reportedZones, isLoadingZones = false) }
                 }.onFailure {
-                    setState {
-                        copy(
-                            isLoading = false,
-                            error = getErrorMessage("Could not load nearby zones", it),
-                        )
+                    setState { copy(isLoadingZones = false) }
+                    if (currentState.nearbyZones.isEmpty()) {
+                        handleErrorWithMessage(getErrorMessage("Could not load nearby zones", it))
                     }
                 }
+        }
+    }
+
+    private fun loadUpcomingEvents() {
+        viewModelScope.launch {
+            val user = currentState.user ?: return@launch
+
+            val cachedEvents =
+                eventCache
+                    ?.getAllEvents()
+                    ?.filter { it.organizerId == user.id || user.id in it.participantsIds }
+                    ?.distinctBy { it.id }
+                    ?.filter { it.status == EventStatus.PLANNED && it.period.start > now() }
+                    ?.sortedBy { it.period.start }
+                    ?.take(5)
+                    ?.map { it.toListItem() }
+
+            if (cachedEvents?.isNotEmpty() == true) {
+                setState { copy(upcomingEvents = cachedEvents, isLoading = false) }
+            } else {
+                setState { copy(isLoading = true) }
+            }
+
+            try {
+                val organizedResult =
+                    eventRepository.searchEvents(EventFilterType.ORGANIZED, null, 5, 0)
+                val joinedResult = eventRepository.searchEvents(EventFilterType.JOINED, null, 5, 0)
+
+                val networkEvents =
+                    (organizedResult.getOrNull().orEmpty() + joinedResult.getOrNull().orEmpty())
+                        .distinctBy { it.id }
+                        .filter { it.status == EventStatus.PLANNED && it.period.start > now() }
+                        .sortedBy { it.period.start }
+                        .take(5)
+
+                setState { copy(upcomingEvents = networkEvents) }
+            } finally {
+                setState { copy(isLoading = false) }
+            }
         }
     }
 

@@ -17,6 +17,7 @@ import kotlin.math.tan
 import kotlinx.io.Buffer
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
+import pt.isel.keepmyplanet.domain.zone.Location
 
 fun createOfflineFirstTileStreamProvider(
     httpClient: HttpClient,
@@ -35,7 +36,7 @@ fun createOfflineFirstTileStreamProvider(
         } else {
             null
         }
-    }.getOrNull()
+    }.getOrNull() ?: Buffer()
 }
 
 fun lonToX(lon: Double): Double = (lon + 180.0) / 360.0
@@ -58,14 +59,37 @@ fun haversineDistance(
     lat2: Double,
     lon2: Double,
 ): Double {
-    val r = 6371e3
-    val phi1 = lat1 * PI / 180.0
-    val phi2 = lat2 * PI / 180.0
-    val deltaPhi = (lat2 - lat1) * PI / 180.0
-    val deltaLambda = (lon2 - lon1) * PI / 180.0
+    val r = EARTH_RADIUS_KM * 1000
+    val phi1 = lat1.toRadians()
+    val phi2 = lat2.toRadians()
+    val deltaPhi = (lat2 - lat1).toRadians()
+    val deltaLambda = (lon2 - lon1).toRadians()
 
     val a = sin(deltaPhi / 2).pow(2) + cos(phi1) * cos(phi2) * sin(deltaLambda / 2).pow(2)
     val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     return r * c
 }
+
+private const val EARTH_RADIUS_KM = 6371.0
+
+fun calculateBoundingBox(
+    center: Location,
+    radiusKm: Double,
+): Pair<Location, Location> {
+    val latRad = center.latitude.toRadians()
+
+    val deltaLat = radiusKm / EARTH_RADIUS_KM
+    val deltaLon = radiusKm / (EARTH_RADIUS_KM * cos(latRad))
+
+    val minLat = center.latitude - deltaLat.toDegrees()
+    val maxLat = center.latitude + deltaLat.toDegrees()
+    val minLon = center.longitude - deltaLon.toDegrees()
+    val maxLon = center.longitude + deltaLon.toDegrees()
+
+    return Pair(Location(minLat, minLon), Location(maxLat, maxLon))
+}
+
+private fun Double.toRadians(): Double = this * PI / 180
+
+private fun Double.toDegrees(): Double = this * 180 / PI

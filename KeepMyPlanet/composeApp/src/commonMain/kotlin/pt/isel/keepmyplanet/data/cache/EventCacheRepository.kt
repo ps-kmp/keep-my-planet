@@ -41,7 +41,7 @@ class EventCacheRepository(
         }
     }
 
-    fun getEventById(id: Id): Event? {
+    suspend fun getEventById(id: Id): Event? {
         val dbEvent = queries.getEventById(id.value.toLong()).executeAsOneOrNull() ?: return null
         val participantIds =
             participantQueries
@@ -52,7 +52,7 @@ class EventCacheRepository(
         return dbEvent.toEvent(participantIds)
     }
 
-    fun getAllEvents(): List<Event> =
+    suspend fun getAllEvents(): List<Event> =
         queries.getAllEvents().executeAsList().map { dbEvent ->
             val participantIds =
                 participantQueries

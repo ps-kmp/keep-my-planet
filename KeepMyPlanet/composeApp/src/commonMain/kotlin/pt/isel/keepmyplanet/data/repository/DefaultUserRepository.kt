@@ -15,23 +15,23 @@ import pt.isel.keepmyplanet.mapper.user.toUserInfo
 
 class DefaultUserRepository(
     private val userApi: UserApi,
-    private val userCache: UserCacheRepository,
-    private val userStatsCache: UserStatsCacheRepository,
+    private val userCache: UserCacheRepository?,
+    private val userStatsCache: UserStatsCacheRepository?,
 ) {
     suspend fun registerUser(request: RegisterRequest): Result<UserInfo> =
         userApi.registerUser(request).map { it.toUserInfo() }
 
     suspend fun getUserDetails(userId: Id): Result<UserInfo> =
         runCatching {
-            val networkResult = userApi.getUserDetails(userId.value)
-            if (networkResult.isSuccess) {
-                val userInfo = networkResult.getOrThrow().toUserInfo()
-                userCache.insertUsers(listOf(userInfo.toUserCacheInfo()))
-                userInfo
-            } else {
-                userCache.getUserById(userId)?.toUserInfo()
-                    ?: throw networkResult.exceptionOrNull()!!
+            userCache?.getUserById(userId)?.let {
+                return@runCatching it.toUserInfo()
             }
+
+            val networkUser = userApi.getUserDetails(userId.value).getOrThrow().toUserInfo()
+            userCache?.insertUsers(listOf(networkUser.toUserCacheInfo()))
+            networkUser
+        }.recoverCatching {
+            userCache?.getUserById(userId)?.toUserInfo() ?: throw it
         }
 
     suspend fun updateUserProfile(
@@ -40,7 +40,7 @@ class DefaultUserRepository(
     ): Result<UserInfo> =
         userApi.updateUserProfile(userIdToUpdate.value, request).map {
             val userInfo = it.toUserInfo()
-            userCache.insertUsers(listOf(userInfo.toUserCacheInfo()))
+            userCache?.insertUsers(listOf(userInfo.toUserCacheInfo()))
             userInfo
         }
 
@@ -57,10 +57,10 @@ class DefaultUserRepository(
             val networkResult = userApi.getUserStats(userId.value)
             if (networkResult.isSuccess) {
                 val stats = networkResult.getOrThrow().toDomain()
-                userStatsCache.insertOrUpdateStats(userId, stats)
+                userStatsCache?.insertOrUpdateStats(userId, stats)
                 stats
             } else {
-                userStatsCache.getStatsByUserId(userId) ?: throw networkResult.exceptionOrNull()!!
+                userStatsCache?.getStatsByUserId(userId) ?: throw networkResult.exceptionOrNull()!!
             }
         }
 }

@@ -71,7 +71,7 @@ class ZoneDetailsViewModel(
     ) {
         val zone = currentState.zone ?: return
         viewModelScope.launch {
-            setState { copy(actionState = ZoneDetailsUiState.ActionState.ADDING_PHOTO) }
+            setState { copy(actionState = ZoneDetailsUiState.ActionState.ADDINGPHOTO) }
             photoRepository
                 .createPhoto(imageData, filename)
                 .onSuccess { photoResponse ->

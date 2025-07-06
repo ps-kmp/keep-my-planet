@@ -2,6 +2,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -42,18 +43,18 @@ kotlin {
     wasmJs {
         outputModuleName = "composeApp"
         browser {
-            // val rootDirPath = project.rootDir.path
-            // val projectDirPath = project.projectDir.path
+            val rootDirPath = project.rootDir.path
+            val projectDirPath = project.projectDir.path
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
-//                devServer =
-//                    (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-//                        static =
-//                            (static ?: mutableListOf()).apply {
-//                                add(rootDirPath)
-//                                add(projectDirPath)
-//                            }
-//                    }
+                devServer =
+                    (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+                        static =
+                            (static ?: mutableListOf()).apply {
+                                add(rootDirPath)
+                                add(projectDirPath)
+                            }
+                    }
             }
         }
         binaries.executable()
@@ -127,9 +128,6 @@ kotlin {
             dependencies {
                 implementation(libs.ktor.client.js)
                 implementation(libs.sqldelight.web.worker.driver)
-                implementation(
-                    npm("@cashapp/sqldelight-sqljs-worker", libs.versions.sqldelight.get()),
-                )
             }
         }
     }

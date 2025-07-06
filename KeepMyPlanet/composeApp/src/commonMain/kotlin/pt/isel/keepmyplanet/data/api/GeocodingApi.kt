@@ -3,21 +3,24 @@ package pt.isel.keepmyplanet.data.api
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.http.HttpMethod
 import io.ktor.http.path
 import pt.isel.keepmyplanet.data.cache.GeocodingCacheRepository
+import pt.isel.keepmyplanet.data.http.executeRequest
 import pt.isel.keepmyplanet.domain.common.Place
+import pt.isel.keepmyplanet.dto.geocoding.IpLocationResponse
 import pt.isel.keepmyplanet.dto.geocoding.NominatimResult
 import pt.isel.keepmyplanet.mapper.geocoding.toPlace
 
 class GeocodingApi(
     private val httpClient: HttpClient,
-    private val cacheRepository: GeocodingCacheRepository,
+    private val cacheRepository: GeocodingCacheRepository?,
 ) {
     suspend fun search(query: String): Result<List<Place>> =
         runCatching {
             if (query.isBlank() || query.length < 3) return@runCatching emptyList()
 
-            val cachedResult = cacheRepository.getResult(query)
+            val cachedResult = cacheRepository?.getResult(query)
             if (cachedResult != null) return@runCatching cachedResult
 
             val response: List<NominatimResult> =
@@ -33,7 +36,13 @@ class GeocodingApi(
                     }.body()
 
             val places = response.map { it.toPlace() }
-            cacheRepository.insertResult(query, places)
+            cacheRepository?.insertResult(query, places)
             places
+        }
+
+    suspend fun getIpLocation(): Result<IpLocationResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url { path("geocoding/ip-location") }
         }
 }

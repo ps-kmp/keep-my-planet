@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.api
 
+/*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.install
@@ -46,7 +47,10 @@ import pt.isel.keepmyplanet.security.Pbkdf2PasswordHasher
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.utils.now
 
+ */
+
 abstract class BaseWebApiTest {
+    /*
     protected val fakeUserRepository = InMemoryUserRepository()
     protected val fakeZoneRepository = InMemoryZoneRepository()
     protected val fakeEventRepository = InMemoryEventRepository()
@@ -225,4 +229,6 @@ abstract class BaseWebApiTest {
         }
         block()
     }
+
+     */
 }

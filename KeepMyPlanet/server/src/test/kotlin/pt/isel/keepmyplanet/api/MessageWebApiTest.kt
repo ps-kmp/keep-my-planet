@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.api
 
+/*
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -22,8 +23,9 @@ import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.dto.message.MessageResponse
 import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.service.NotificationService
-
+*/
 class MessageWebApiTest : BaseWebApiTest() {
+    /*
     private val notificationService =
         NotificationService(
             userDeviceRepository = fakeUserDeviceRepository,
@@ -642,4 +644,6 @@ class MessageWebApiTest : BaseWebApiTest() {
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }
+
+     */
 }

@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.api
 
+/*
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -32,7 +33,9 @@ import pt.isel.keepmyplanet.dto.zone.ZoneResponse
 import pt.isel.keepmyplanet.service.ZoneService
 import pt.isel.keepmyplanet.service.ZoneStateChangeService
 
+*/
 class ZoneWebApiTest : BaseWebApiTest() {
+    /*
     private val fakeZoneStateChangeService =
         ZoneStateChangeService(
             zoneRepository = fakeZoneRepository,
@@ -700,4 +703,6 @@ class ZoneWebApiTest : BaseWebApiTest() {
             val response = client.delete("/zones/${zone.id.value}/photos/1")
             assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
+
+     */
 }

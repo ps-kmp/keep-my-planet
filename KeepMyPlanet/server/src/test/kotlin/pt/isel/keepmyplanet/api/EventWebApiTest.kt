@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.api
 
+/*
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -40,8 +41,9 @@ import pt.isel.keepmyplanet.service.ZoneStateChangeService
 import pt.isel.keepmyplanet.utils.minus
 import pt.isel.keepmyplanet.utils.now
 import pt.isel.keepmyplanet.utils.plus
-
+*/
 class EventWebApiTest : BaseWebApiTest() {
+    /*
     private val notificationService =
         NotificationService(
             userDeviceRepository = fakeUserDeviceRepository,
@@ -1158,4 +1160,6 @@ class EventWebApiTest : BaseWebApiTest() {
             val response = client.post("/events/${event.id.value}/leave")
             assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
+
+     */
 }

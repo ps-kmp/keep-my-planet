@@ -29,7 +29,7 @@ class MessageCacheRepository(
         }
     }
 
-    fun getMessagesByEventId(eventId: Id): List<Message> =
+    suspend fun getMessagesByEventId(eventId: Id): List<Message> =
         queries.getMessagesByEventId(eventId.value.toLong()).executeAsList().map { it.toMessage() }
 
     suspend fun clearAllMessages() {

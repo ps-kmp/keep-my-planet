@@ -146,7 +146,9 @@ fun HomeScreen(
                     title = "Nearby Polluted Zones",
                     onViewAll = onNavigateToMap,
                 ) {
-                    if (uiState.isLocating) {
+                    if (uiState.isLocating ||
+                        (uiState.isLoadingZones && uiState.nearbyZones.isEmpty())
+                    ) {
                         CircularProgressIndicator()
                     } else if (uiState.nearbyZones.isNotEmpty()) {
                         LazyRow(

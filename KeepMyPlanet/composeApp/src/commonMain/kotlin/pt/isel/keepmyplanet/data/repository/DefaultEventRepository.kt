@@ -27,24 +27,39 @@ import pt.isel.keepmyplanet.mapper.user.toUserInfo
 
 class DefaultEventRepository(
     private val eventApi: EventApi,
-    private val eventCache: EventCacheRepository,
-    private val userCache: UserCacheRepository,
-    private val historyCache: EventStatusHistoryCacheRepository,
+    private val eventCache: EventCacheRepository?,
+    private val userCache: UserCacheRepository?,
+    private val historyCache: EventStatusHistoryCacheRepository?,
 ) {
     suspend fun getEventDetails(eventId: Id): Result<Event> =
         runCatching {
-            val networkResult = eventApi.getEventDetails(eventId.value).map { it.toEvent() }
-            if (networkResult.isSuccess) {
-                val event = networkResult.getOrThrow()
-                eventCache.insertEvents(listOf(event))
-                event
-            } else {
-                eventCache.getEventById(eventId) ?: throw networkResult.exceptionOrNull()!!
+            eventCache?.getEventById(eventId)?.let {
+                return@runCatching it
             }
+
+            val networkEvent = eventApi.getEventDetails(eventId.value).getOrThrow().toEvent()
+            eventCache?.insertEvents(listOf(networkEvent))
+            networkEvent
+        }.recoverCatching {
+            eventCache?.getEventById(eventId) ?: throw it
         }
 
     suspend fun getEventDetailsBundle(eventId: Id): Result<EventDetailsBundle> =
         runCatching {
+            val cachedEvent = eventCache?.getEventById(eventId)
+            if (cachedEvent != null) {
+                val cachedParticipants =
+                    userCache?.getUsersByIds(cachedEvent.participantsIds.toList())
+                if (cachedParticipants != null &&
+                    cachedParticipants.size == cachedEvent.participantsIds.size
+                ) {
+                    return@runCatching EventDetailsBundle(
+                        cachedEvent,
+                        cachedParticipants.map { it.toUserInfo() },
+                    )
+                }
+            }
+
             coroutineScope {
                 val detailsDeferred = async { eventApi.getEventDetails(eventId.value) }
                 val participantsDeferred = async { eventApi.getEventParticipants(eventId.value) }
@@ -58,18 +73,20 @@ class DefaultEventRepository(
                 val event = eventResponse.toEvent()
                 val participants = participantsResponse.map { it.toUserInfo() }
 
-                eventCache.insertEvents(listOf(event))
-                userCache.insertUsers(participants.map { it.toUserCacheInfo() })
+                eventCache?.insertEvents(listOf(event))
+                userCache?.insertUsers(participants.map { it.toUserCacheInfo() })
 
                 EventDetailsBundle(event, participants)
             }
         }.recoverCatching { throwable ->
-            val cachedEvent = eventCache.getEventById(eventId)
+            val cachedEvent = eventCache?.getEventById(eventId)
 
             if (cachedEvent != null) {
                 val cachedParticipants =
-                    userCache.getUsersByIds(cachedEvent.participantsIds.toList())
-                if (cachedParticipants.size == cachedEvent.participantsIds.size) {
+                    userCache?.getUsersByIds(cachedEvent.participantsIds.toList())
+                if (cachedParticipants != null &&
+                    cachedParticipants.size == cachedEvent.participantsIds.size
+                ) {
                     EventDetailsBundle(cachedEvent, cachedParticipants.map { it.toUserInfo() })
                 } else {
                     throw throwable
@@ -80,20 +97,33 @@ class DefaultEventRepository(
         }
 
     suspend fun invalidateEventCache(eventId: Id) {
-        eventCache.deleteEventById(eventId)
+        eventCache?.deleteEventById(eventId)
     }
 
     suspend fun getEventParticipants(eventId: Id): Result<List<UserInfo>> =
         runCatching {
-            val result = eventApi.getEventParticipants(eventId.value)
-            val participants = result.getOrThrow().map { it.toUserInfo() }
-            userCache.insertUsers(participants.map { it.toUserCacheInfo() })
-            participants
-        }.recoverCatching {
-            userCache
-                .getUsersByIds(
-                    eventCache.getEventById(eventId)?.participantsIds?.toList() ?: emptyList(),
-                ).map { it.toUserInfo() }
+            val event = eventCache?.getEventById(eventId)
+            if (event != null) {
+                val participants = userCache?.getUsersByIds(event.participantsIds.toList())
+                if (participants != null && participants.size == event.participantsIds.size) {
+                    return@runCatching participants.map { it.toUserInfo() }
+                }
+            }
+
+            val networkParticipants =
+                eventApi.getEventParticipants(eventId.value).getOrThrow().map { it.toUserInfo() }
+            userCache?.insertUsers(networkParticipants.map { it.toUserCacheInfo() })
+            networkParticipants
+        }.recoverCatching { throwable ->
+            val event = eventCache?.getEventById(eventId)
+            if (event != null) {
+                userCache
+                    ?.getUsersByIds(event.participantsIds.toList())
+                    ?.map { it.toUserInfo() }
+                    ?: throw throwable
+            } else {
+                throw throwable
+            }
         }
 
     suspend fun getEventAttendees(eventId: Id): Result<List<UserInfo>> =
@@ -105,10 +135,10 @@ class DefaultEventRepository(
         runCatching {
             val result = eventApi.getEventStatusHistory(eventId.value)
             val history = result.getOrThrow()
-            historyCache.insertHistory(eventId, history)
+            historyCache?.insertHistory(eventId, history)
             history
         }.recoverCatching {
-            historyCache.getHistoryByEventId(eventId)
+            historyCache?.getHistoryByEventId(eventId) ?: throw it
         }
 
     suspend fun searchEvents(
@@ -128,12 +158,12 @@ class DefaultEventRepository(
             val result = apiCall()
             val events = result.getOrThrow().map { it.toListItem() }
             if (offset == 0) {
-                eventCache.insertEvents(result.getOrThrow().map { it.toEvent() })
+                eventCache?.insertEvents(result.getOrThrow().map { it.toEvent() })
             }
             events
         }.recoverCatching {
             if (offset == 0) {
-                eventCache.getAllEvents().map { it.toListItem() }
+                eventCache?.getAllEvents()?.map { it.toListItem() } ?: emptyList()
             } else {
                 emptyList()
             }
@@ -179,7 +209,7 @@ class DefaultEventRepository(
         val request = InitiateTransferRequest(nomineeId.value)
         return eventApi.initiateTransfer(eventId.value, request).map {
             val updatedEvent = it.toEvent()
-            eventCache.insertEvents(listOf(updatedEvent))
+            eventCache?.insertEvents(listOf(updatedEvent))
             updatedEvent
         }
     }
@@ -191,7 +221,7 @@ class DefaultEventRepository(
         val request = RespondToTransferRequest(accept = accepted)
         return eventApi.respondToTransfer(eventId.value, request).map {
             val updatedEvent = it.toEvent()
-            eventCache.insertEvents(listOf(updatedEvent))
+            eventCache?.insertEvents(listOf(updatedEvent))
             updatedEvent
         }
     }

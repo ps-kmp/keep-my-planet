@@ -10,7 +10,7 @@ class GeocodingCacheRepository(
 ) : CleanableCache {
     private val queries = database.geocodingCacheQueries
 
-    fun getResult(query: String): List<Place>? {
+    suspend fun getResult(query: String): List<Place>? {
         val json = queries.getResultByQuery(query).executeAsOneOrNull() ?: return null
         return Json.decodeFromString<List<Place>>(json)
     }

@@ -3,8 +3,13 @@ package pt.isel.keepmyplanet.di
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import java.net.URI
+import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 import pt.isel.keepmyplanet.db.Database
 import pt.isel.keepmyplanet.repository.EventRepository
@@ -42,6 +47,7 @@ import pt.isel.keepmyplanet.service.CloudinaryStorageService
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
 import pt.isel.keepmyplanet.service.FileStorageService
+import pt.isel.keepmyplanet.service.IpGeocodingService
 import pt.isel.keepmyplanet.service.JwtService
 import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.service.NotificationService
@@ -64,6 +70,14 @@ import ptiselkeepmyplanetdb.Zones
 fun appModule(application: Application) =
     module {
         single { application.environment.config }
+
+        single {
+            HttpClient(CIO) {
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
+                }
+            }
+        }
 
         single<Database> {
             val appConfig = application.environment.config
@@ -234,4 +248,5 @@ fun appModule(application: Application) =
         single { MessageService(get(), get(), get(), get(), get()) }
         single { PhotoService(get(), get(), get()) }
         single { NotificationService(get(), get()) }
+        single { IpGeocodingService(get()) }
     }

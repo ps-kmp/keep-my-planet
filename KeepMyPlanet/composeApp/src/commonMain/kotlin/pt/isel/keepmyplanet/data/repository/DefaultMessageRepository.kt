@@ -11,21 +11,21 @@ import pt.isel.keepmyplanet.mapper.message.toMessage
 
 class DefaultMessageRepository(
     private val chatApi: ChatApi,
-    private val messageCache: MessageCacheRepository,
+    private val messageCache: MessageCacheRepository?,
 ) {
     suspend fun getMessages(
         eventId: Id,
         afterPosition: Int? = null,
     ): Result<List<Message>> =
         runCatching {
-            val cachedMessages = messageCache.getMessagesByEventId(eventId)
+            val cachedMessages = messageCache?.getMessagesByEventId(eventId) ?: emptyList()
             val lastPositionInCache = cachedMessages.maxOfOrNull { it.chatPosition }
             val fetchAfterPosition = afterPosition ?: lastPositionInCache
 
             val networkResult = chatApi.getMessages(eventId.value, fetchAfterPosition)
             if (networkResult.isSuccess) {
                 val newMessages = networkResult.getOrThrow().map { it.toMessage() }
-                messageCache.insertMessages(newMessages)
+                messageCache?.insertMessages(newMessages)
                 (cachedMessages + newMessages).distinctBy { it.id }.sortedBy { it.chatPosition }
             } else {
                 cachedMessages.ifEmpty { throw networkResult.exceptionOrNull()!! }
@@ -42,6 +42,6 @@ class DefaultMessageRepository(
             .listenToMessages(eventId.value)
             .map { result -> result.map { it.toMessage() } }
             .onEach { result ->
-                result.onSuccess { message -> messageCache.insertMessages(listOf(message)) }
+                result.onSuccess { message -> messageCache?.insertMessages(listOf(message)) }
             }
 }

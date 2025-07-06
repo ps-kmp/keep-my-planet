@@ -11,7 +11,7 @@ class EventStatusHistoryCacheRepository(
 ) : CleanableCache {
     private val queries = database.eventStatusHistoryCacheQueries
 
-    fun getHistoryByEventId(eventId: Id): List<EventStateChangeResponse> =
+    suspend fun getHistoryByEventId(eventId: Id): List<EventStateChangeResponse> =
         queries.getHistoryByEventId(eventId.value.toLong()).executeAsList().map { it.toResponse() }
 
     suspend fun insertHistory(

@@ -11,6 +11,7 @@ import pt.isel.keepmyplanet.Greeting
 import pt.isel.keepmyplanet.api.authWebApi
 import pt.isel.keepmyplanet.api.deviceWebApi
 import pt.isel.keepmyplanet.api.eventWebApi
+import pt.isel.keepmyplanet.api.ipGeocodingWebApi
 import pt.isel.keepmyplanet.api.messageWebApi
 import pt.isel.keepmyplanet.api.photoWebApi
 import pt.isel.keepmyplanet.api.userWebApi
@@ -19,6 +20,7 @@ import pt.isel.keepmyplanet.service.AuthService
 import pt.isel.keepmyplanet.service.ChatSseService
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
+import pt.isel.keepmyplanet.service.IpGeocodingService
 import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.service.NotificationService
 import pt.isel.keepmyplanet.service.PhotoService
@@ -35,6 +37,7 @@ fun Application.configureRouting() {
     val chatSseService by inject<ChatSseService>()
     val photoService by inject<PhotoService>()
     val notificationService by inject<NotificationService>()
+    val ipGeocodingService by inject<IpGeocodingService>()
 
     // Presentation Layer
     routing {
@@ -52,5 +55,6 @@ fun Application.configureRouting() {
         messageWebApi(messageService, chatSseService)
         photoWebApi(photoService)
         deviceWebApi(notificationService)
+        ipGeocodingWebApi(ipGeocodingService)
     }
 }

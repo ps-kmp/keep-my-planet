@@ -18,7 +18,7 @@ data class ZoneDetailsUiState(
     sealed interface ActionState {
         data object IDLE : ActionState
 
-        data object ADDING_PHOTO : ActionState
+        data object ADDINGPHOTO : ActionState
 
         data object DELETING : ActionState
     }

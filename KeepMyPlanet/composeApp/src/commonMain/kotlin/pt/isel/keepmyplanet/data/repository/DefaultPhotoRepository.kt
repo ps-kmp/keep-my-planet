@@ -10,7 +10,7 @@ import pt.isel.keepmyplanet.dto.photo.PhotoResponse
 
 class DefaultPhotoRepository(
     private val photoApi: PhotoApi,
-    private val photoCache: PhotoCacheRepository,
+    private val photoCache: PhotoCacheRepository?,
     private val httpClient: HttpClient,
 ) {
     suspend fun createPhoto(
@@ -20,22 +20,22 @@ class DefaultPhotoRepository(
 
     suspend fun getPhotoUrl(photoId: Id): Result<String> =
         runCatching {
-            photoCache.getPhotoUrl(photoId) ?: run {
+            photoCache?.getPhotoUrl(photoId) ?: run {
                 val networkResult = photoApi.getPhotoById(photoId)
                 val url = networkResult.getOrThrow().url
-                photoCache.insertPhotoUrl(photoId, url)
+                photoCache?.insertPhotoUrl(photoId, url)
                 url
             }
         }
 
     suspend fun getPhotoModel(photoId: Id): Result<Any> {
         return runCatching {
-            val cachedData = photoCache.getPhotoData(photoId)
+            val cachedData = photoCache?.getPhotoData(photoId)
             if (cachedData != null) return@runCatching cachedData
 
             val url = getPhotoUrl(photoId).getOrThrow()
             val networkData = httpClient.get(url).readRawBytes()
-            photoCache.updatePhotoData(photoId, networkData)
+            photoCache?.updatePhotoData(photoId, networkData)
             networkData
         }
     }

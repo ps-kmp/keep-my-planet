@@ -80,26 +80,26 @@ private val serviceModule =
 
 private val apiModule =
     module {
-        single { AuthApi(get()) }
-        single { UserApi(get()) }
-        single { EventApi(get()) }
-        single { ChatApi(get()) }
-        single { ZoneApi(get()) }
-        single { PhotoApi(get()) }
-        single { DeviceApi(get()) }
-        single { GeocodingApi(get(), get()) }
+        factoryOf(::AuthApi)
+        factoryOf(::UserApi)
+        factoryOf(::EventApi)
+        factoryOf(::ChatApi)
+        factoryOf(::ZoneApi)
+        factoryOf(::PhotoApi)
+        factoryOf(::DeviceApi)
+        single { GeocodingApi(get(), getOrNull()) }
     }
 
 private val repositoryModule =
     module {
-        single { DefaultAuthRepository(get()) }
-        single { DefaultDeviceRepository(get()) }
-        single { DefaultEventRepository(get(), get(), get(), get()) }
-        single { DefaultGeocodingRepository(get()) }
-        single { DefaultMessageRepository(get(), get()) }
-        single { DefaultPhotoRepository(get(), get(), get()) }
-        single { DefaultUserRepository(get(), get(), get()) }
-        single { DefaultZoneRepository(get(), get(), get()) }
+        factoryOf(::DefaultAuthRepository)
+        factoryOf(::DefaultDeviceRepository)
+        single { DefaultEventRepository(get(), getOrNull(), getOrNull(), getOrNull()) }
+        factoryOf(::DefaultGeocodingRepository)
+        single { DefaultMessageRepository(get(), getOrNull()) }
+        single { DefaultPhotoRepository(get(), getOrNull(), get()) }
+        single { DefaultUserRepository(get(), getOrNull(), getOrNull()) }
+        single { DefaultZoneRepository(get(), getOrNull(), get()) }
     }
 
 private val viewModelModule =
@@ -107,7 +107,7 @@ private val viewModelModule =
         single { AppViewModel(get(), get()) }
         factoryOf(::LoginViewModel)
         factoryOf(::RegisterViewModel)
-        factoryOf(::HomeViewModel)
+        factory { HomeViewModel(get(), get(), get(), getOrNull(), getOrNull()) }
         factoryOf(::EventListViewModel)
         factory { EventDetailsViewModel(get(), get(), get()) }
         factoryOf(::EventStatusHistoryViewModel)
@@ -125,11 +125,11 @@ private val viewModelModule =
 
 val appModule =
     module {
-        includes(serviceModule, apiModule, repositoryModule, viewModelModule)
+        includes(serviceModule, apiModule, repositoryModule, viewModelModule, cacheModule)
     }
 
 fun initKoin() {
     startKoin {
-        modules(appModule, cacheModule)
+        modules(appModule)
     }
 }

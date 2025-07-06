@@ -10,7 +10,7 @@ class UserStatsCacheRepository(
 ) : CleanableCache {
     private val queries = database.userStatsCacheQueries
 
-    fun getStatsByUserId(userId: Id): UserStats? =
+    suspend fun getStatsByUserId(userId: Id): UserStats? =
         queries.getStatsByUserId(userId.value.toLong()).executeAsOneOrNull()?.let {
             UserStats(
                 totalEventsAttended = it.total_events_attended.toInt(),
