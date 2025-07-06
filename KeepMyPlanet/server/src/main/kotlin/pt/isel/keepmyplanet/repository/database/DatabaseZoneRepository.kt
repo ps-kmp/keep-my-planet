@@ -44,6 +44,7 @@ class DatabaseZoneRepository(
                     .insert(
                         latitude = entity.location.latitude,
                         longitude = entity.location.longitude,
+                        radius = entity.radius,
                         description = entity.description,
                         reporter_id = entity.reporterId,
                         event_id = entity.eventId,
@@ -87,6 +88,7 @@ class DatabaseZoneRepository(
                         id = entity.id,
                         latitude = entity.location.latitude,
                         longitude = entity.location.longitude,
+                        radius = entity.radius,
                         description = entity.description,
                         reporter_id = entity.reporterId,
                         event_id = entity.eventId,

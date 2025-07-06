@@ -12,6 +12,7 @@ import pt.isel.keepmyplanet.domain.message.MessageContent
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.PasswordHash
+import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 
@@ -19,6 +20,12 @@ object IdAdapter : ColumnAdapter<Id, Long> {
     override fun decode(databaseValue: Long): Id = Id(databaseValue.toUInt())
 
     override fun encode(value: Id): Long = value.value.toLong()
+}
+
+object RadiusAdapter : ColumnAdapter<Radius, Double> {
+    override fun decode(databaseValue: Double): Radius = Radius(databaseValue)
+
+    override fun encode(value: Radius): Double = value.value
 }
 
 object EventStatusAdapter : ColumnAdapter<EventStatus, String> {

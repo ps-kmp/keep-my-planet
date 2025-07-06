@@ -7,6 +7,7 @@ data class ZoneResponse(
     val id: UInt,
     val latitude: Double,
     val longitude: Double,
+    val radius: Double,
     val description: String,
     val reporterId: UInt,
     val eventId: UInt?,

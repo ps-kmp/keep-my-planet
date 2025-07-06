@@ -7,6 +7,7 @@ data class QueuedReport(
     val id: Long,
     val latitude: Double,
     val longitude: Double,
+    val radius: Double,
     val description: String,
     val severity: ZoneSeverity,
     val photos: List<SelectedImage>,

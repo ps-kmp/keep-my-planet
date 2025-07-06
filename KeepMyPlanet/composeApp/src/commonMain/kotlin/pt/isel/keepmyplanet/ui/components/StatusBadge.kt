@@ -58,7 +58,6 @@ fun StatusBadge(
     }
 }
 
-@Composable
 fun getStatusColor(status: ZoneStatus): Color =
     when (status) {
         ZoneStatus.REPORTED -> Color(0xFFFFA000)
@@ -66,7 +65,6 @@ fun getStatusColor(status: ZoneStatus): Color =
         ZoneStatus.CLEANED -> Color(0xFF388E3C)
     }
 
-@Composable
 fun getStatusColor(status: EventStatus): Color =
     when (status) {
         EventStatus.PLANNED -> primaryLight
@@ -76,7 +74,6 @@ fun getStatusColor(status: EventStatus): Color =
         EventStatus.UNKNOWN -> Color.Gray
     }
 
-@Composable
 fun getSeverityColor(severity: ZoneSeverity): Color =
     when (severity) {
         ZoneSeverity.LOW -> Color(0xFF34A853)

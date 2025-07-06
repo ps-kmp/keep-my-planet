@@ -2,6 +2,7 @@ CREATE TABLE ZoneCache (
     id INTEGER NOT NULL PRIMARY KEY,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
+    radius REAL NOT NULL,
     description TEXT NOT NULL,
     reporterId INTEGER NOT NULL,
     eventId INTEGER,
@@ -13,8 +14,8 @@ CREATE TABLE ZoneCache (
 );
 
 insertZone:
-INSERT OR REPLACE INTO ZoneCache(id, latitude, longitude, description, reporterId, eventId, status, zoneSeverity, createdAt, updatedAt, timestamp)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO ZoneCache(id, latitude, longitude, radius, description, reporterId, eventId, status, zoneSeverity, createdAt, updatedAt, timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 getZonesInBoundingBox:
 SELECT * FROM ZoneCache

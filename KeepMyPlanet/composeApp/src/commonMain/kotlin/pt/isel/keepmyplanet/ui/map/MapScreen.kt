@@ -26,6 +26,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -48,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addCallout
@@ -82,7 +84,7 @@ import pt.isel.keepmyplanet.utils.yToLat
 fun MapScreen(
     viewModel: MapViewModel,
     onNavigateToZoneDetails: (zoneId: Id) -> Unit,
-    onNavigateToReportZone: (latitude: Double, longitude: Double) -> Unit,
+    onNavigateToReportZone: (latitude: Double, longitude: Double, radius: Double) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -162,6 +164,10 @@ fun MapScreen(
                             modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
+                            StatusBadge(
+                                text = "Radius: ${zone.radius.value}m",
+                                backgroundColor = MaterialTheme.colorScheme.secondary,
+                            )
                             StatusBadge(
                                 text = zone.zoneSeverity.name,
                                 backgroundColor = getSeverityColor(zone.zoneSeverity),
@@ -349,6 +355,23 @@ fun MapScreen(
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             )
+
+                            Text(
+                                "Radius: ${uiState.reportingRadius.roundToInt()} meters",
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Slider(
+                                value = uiState.reportingRadius.toFloat(),
+                                onValueChange = {
+                                    viewModel.onReportingRadiusChange(
+                                        it.toDouble(),
+                                    )
+                                },
+                                valueRange = 10f..500f,
+                                steps = 48,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -363,7 +386,7 @@ fun MapScreen(
                                     onClick = {
                                         val lon = xToLon(mapState.centroidX)
                                         val lat = yToLat(mapState.centroidY)
-                                        onNavigateToReportZone(lat, lon)
+                                        onNavigateToReportZone(lat, lon, uiState.reportingRadius)
                                         viewModel.exitReportingMode()
                                     },
                                 ) { Text("CONFIRM") }

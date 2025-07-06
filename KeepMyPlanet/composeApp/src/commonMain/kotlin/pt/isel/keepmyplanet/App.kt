@@ -162,8 +162,8 @@ fun App() {
                         onNavigateToZoneDetails = {
                             appViewModel.navigate(AppRoute.ZoneDetails(it))
                         },
-                        onNavigateToReportZone = { lat, lon ->
-                            appViewModel.navigate(AppRoute.ReportZone(lat, lon))
+                        onNavigateToReportZone = { lat, lon, radius ->
+                            appViewModel.navigate(AppRoute.ReportZone(lat, lon, radius))
                         },
                         onNavigateBack = { appViewModel.navigateBack() },
                     )
@@ -194,6 +194,7 @@ fun App() {
                         viewModel = koinViewModel(),
                         latitude = currentRoute.latitude,
                         longitude = currentRoute.longitude,
+                        radius = currentRoute.radius,
                         onNavigateBack = { appViewModel.navigateBack() },
                     )
 

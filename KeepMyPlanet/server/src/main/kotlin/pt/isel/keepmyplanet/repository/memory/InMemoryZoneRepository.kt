@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.Location
+import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -22,6 +23,7 @@ class InMemoryZoneRepository : ZoneRepository {
             Zone(
                 id = Id(1U),
                 location = Location(latitude = 38.736946, longitude = -9.142685),
+                radius = Radius(50.0),
                 description = Description("Zona de limpeza no Parque das Nações"),
                 reporterId = Id(1U),
                 eventId = null,
@@ -37,6 +39,7 @@ class InMemoryZoneRepository : ZoneRepository {
             Zone(
                 id = Id(2U),
                 location = Location(latitude = 41.157944, longitude = -8.629105),
+                radius = Radius(50.0),
                 description = Description("Zona de reflorestação no Parque da Cidade"),
                 reporterId = Id(2U),
                 eventId = null,

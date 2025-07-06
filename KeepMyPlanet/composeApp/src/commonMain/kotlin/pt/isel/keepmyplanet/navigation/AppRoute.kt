@@ -39,6 +39,7 @@ sealed class AppRoute {
     data class ReportZone(
         val latitude: Double,
         val longitude: Double,
+        val radius: Double,
     ) : AppRoute()
 
     data class ZoneDetails(

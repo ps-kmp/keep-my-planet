@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.ui.components.AppTopBar
@@ -42,14 +43,15 @@ fun ReportZoneScreen(
     viewModel: ReportZoneViewModel,
     latitude: Double,
     longitude: Double,
+    radius: Double,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val isActionInProgress = uiState.actionState is ReportZoneUiState.ActionState.Submitting
 
-    LaunchedEffect(latitude, longitude) {
-        viewModel.prepareReportForm(latitude, longitude)
+    LaunchedEffect(latitude, longitude, radius) {
+        viewModel.prepareReportForm(latitude, longitude, radius)
     }
 
     val launchPhotoPicker =
@@ -76,6 +78,10 @@ fun ReportZoneScreen(
         ) {
             Text(
                 "Reporting for location:\nLat: ${uiState.latitude}, Lon: ${uiState.longitude}",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                "Radius: ${uiState.radius.roundToInt()} meters",
                 style = MaterialTheme.typography.bodySmall,
             )
 

@@ -20,6 +20,7 @@ class ZoneCacheRepository(
                     id = zone.id.value.toLong(),
                     latitude = zone.location.latitude,
                     longitude = zone.location.longitude,
+                    radius = zone.radius.value,
                     description = zone.description.value,
                     reporterId = zone.reporterId.value.toLong(),
                     eventId = zone.eventId?.value?.toLong(),

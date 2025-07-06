@@ -6,6 +6,7 @@ import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
 import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.data.service.ConnectivityService
 import pt.isel.keepmyplanet.domain.common.Description
+import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.dto.zone.ReportZoneRequest
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
@@ -26,8 +27,9 @@ class ReportZoneViewModel(
     fun prepareReportForm(
         latitude: Double,
         longitude: Double,
+        radius: Double,
     ) {
-        setState { copy(latitude = latitude, longitude = longitude) }
+        setState { copy(latitude = latitude, longitude = longitude, radius = radius) }
     }
 
     fun onReportDescriptionChange(description: String) {
@@ -76,6 +78,7 @@ class ReportZoneViewModel(
                         ReportZoneRequest(
                             latitude = currentState.latitude,
                             longitude = currentState.longitude,
+                            radius = currentState.radius,
                             description = currentState.description,
                             severity = currentState.severity.name,
                             photoIds = photoIds,
@@ -96,6 +99,7 @@ class ReportZoneViewModel(
         offlineReportQueueRepository.queueReport(
             latitude = state.latitude,
             longitude = state.longitude,
+            radius = state.radius,
             description = state.description,
             severity = state.severity,
             photos = state.photos,
@@ -112,6 +116,7 @@ class ReportZoneViewModel(
             } catch (e: IllegalArgumentException) {
                 e.message
             }
+        Radius(currentState.radius)
         setState { copy(descriptionError = descriptionError) }
         return !currentState.hasError
     }

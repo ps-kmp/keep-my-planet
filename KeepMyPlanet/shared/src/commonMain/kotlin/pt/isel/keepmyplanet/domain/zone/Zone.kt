@@ -7,6 +7,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 data class Zone(
     val id: Id,
     val location: Location,
+    val radius: Radius,
     val description: Description,
     val reporterId: Id,
     val eventId: Id? = null,

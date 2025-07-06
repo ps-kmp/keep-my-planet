@@ -2,6 +2,7 @@ CREATE TABLE OfflineReportQueue (
     id INTEGER NOT NULL PRIMARY KEY,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
+    radius REAL NOT NULL,
     description TEXT NOT NULL,
     severity TEXT NOT NULL,
     photos_json TEXT NOT NULL,
@@ -10,8 +11,8 @@ CREATE TABLE OfflineReportQueue (
 );
 
 queueReport:
-INSERT INTO OfflineReportQueue(latitude, longitude, description, severity, photos_json, timestamp)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO OfflineReportQueue(latitude, longitude, radius, description, severity, photos_json, timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 peekNextReport:
 SELECT * FROM OfflineReportQueue ORDER BY timestamp ASC LIMIT 1;

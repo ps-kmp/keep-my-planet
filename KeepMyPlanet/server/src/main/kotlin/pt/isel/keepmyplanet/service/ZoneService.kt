@@ -6,6 +6,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Location
+import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -31,6 +32,7 @@ class ZoneService(
     suspend fun reportZone(
         location: Location,
         description: Description,
+        radius: Radius,
         photosIds: Set<Id>,
         reporterId: Id,
         zoneSeverity: ZoneSeverity = ZoneSeverity.UNKNOWN,
@@ -54,6 +56,7 @@ class ZoneService(
                 Zone(
                     id = Id(0U),
                     location = location,
+                    radius = radius,
                     description = description,
                     reporterId = reporterId,
                     beforePhotosIds = photosIds,
@@ -88,6 +91,7 @@ class ZoneService(
         zoneId: Id,
         userId: Id,
         description: Description? = null,
+        radius: Radius? = null,
         status: ZoneStatus? = null,
         severity: ZoneSeverity? = null,
     ): Result<Zone> =
@@ -101,6 +105,13 @@ class ZoneService(
             description?.let { newDescription ->
                 if (modifiedZone.description != newDescription) {
                     modifiedZone = modifiedZone.copy(description = newDescription)
+                    hasChanges = true
+                }
+            }
+
+            radius?.let { newRadius ->
+                if (modifiedZone.radius != newRadius) {
+                    modifiedZone = modifiedZone.copy(radius = newRadius)
                     hasChanges = true
                 }
             }

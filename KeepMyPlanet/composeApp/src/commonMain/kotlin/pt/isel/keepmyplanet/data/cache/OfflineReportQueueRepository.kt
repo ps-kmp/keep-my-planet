@@ -20,6 +20,7 @@ class OfflineReportQueueRepository(
     suspend fun queueReport(
         latitude: Double,
         longitude: Double,
+        radius: Double,
         description: String,
         severity: ZoneSeverity,
         photos: List<SelectedImage>,
@@ -30,6 +31,7 @@ class OfflineReportQueueRepository(
         queries.queueReport(
             latitude = latitude,
             longitude = longitude,
+            radius = radius,
             description = description,
             severity = severity.name,
             photos_json = photosJson,
@@ -47,6 +49,7 @@ class OfflineReportQueueRepository(
             id = dbReport.id,
             latitude = dbReport.latitude,
             longitude = dbReport.longitude,
+            radius = dbReport.radius,
             description = dbReport.description,
             severity = safeValueOf<ZoneSeverity>(dbReport.severity) ?: ZoneSeverity.UNKNOWN,
             photos = photos,

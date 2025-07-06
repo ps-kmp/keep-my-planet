@@ -19,7 +19,11 @@ class DefaultZoneRepository(
     private val userRepository: DefaultUserRepository,
 ) {
     suspend fun reportZone(request: ReportZoneRequest): Result<Zone> =
-        zoneApi.reportZone(request).map { it.toZone() }
+        zoneApi.reportZone(request).map {
+            val zone = it.toZone()
+            zoneCache?.insertZones(listOf(zone))
+            zone
+        }
 
     suspend fun invalidateZoneCache(zoneId: Id) {
         zoneCache?.deleteById(zoneId)
@@ -66,7 +70,6 @@ class DefaultZoneRepository(
             val radiusInKm = radius / 1000.0
             val (minCoords, maxCoords) = calculateBoundingBox(center, radiusInKm)
 
-            // 1. Try from cache first.
             val cachedZones =
                 zoneCache?.getZonesInBoundingBox(min = minCoords, max = maxCoords)?.filter {
                     haversineDistance(
@@ -81,7 +84,6 @@ class DefaultZoneRepository(
                 return@runCatching cachedZones
             }
 
-            // 2. Go to network
             val networkResult = zoneApi.findZonesByLocation(latitude, longitude, radiusInKm)
             val zones = networkResult.getOrThrow().map { it.toZone() }
             zoneCache?.insertZones(zones)

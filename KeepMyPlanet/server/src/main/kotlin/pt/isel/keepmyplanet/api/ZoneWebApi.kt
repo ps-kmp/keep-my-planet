@@ -14,6 +14,7 @@ import io.ktor.server.routing.route
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.Location
+import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -36,13 +37,14 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                 val request = call.receive<ReportZoneRequest>()
                 val reporterId = call.getCurrentUserId()
                 val location = Location(request.latitude, request.longitude)
+                val radius = Radius(request.radius)
                 val description = Description(request.description)
                 val zoneSeverity =
                     safeValueOf<ZoneSeverity>(request.severity) ?: ZoneSeverity.UNKNOWN
                 val photoIds = request.photoIds.map { Id(it) }.toSet()
 
                 zoneService
-                    .reportZone(location, description, photoIds, reporterId, zoneSeverity)
+                    .reportZone(location, description, radius, photoIds, reporterId, zoneSeverity)
                     .onSuccess { call.respond(HttpStatusCode.Created, it.toResponse()) }
                     .onFailure { throw it }
             }
@@ -75,6 +77,7 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                     val userId = call.getCurrentUserId()
                     val request = call.receive<UpdateZoneRequest>()
                     val description = request.description?.let { Description(it) }
+                    val radius = request.radius?.let { Radius(it) }
                     val status =
                         request.status?.let {
                             safeValueOf<ZoneStatus>(it)
@@ -87,7 +90,7 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                         }
 
                     zoneService
-                        .updateZone(zoneId, userId, description, status, severity)
+                        .updateZone(zoneId, userId, description, radius, status, severity)
                         .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }

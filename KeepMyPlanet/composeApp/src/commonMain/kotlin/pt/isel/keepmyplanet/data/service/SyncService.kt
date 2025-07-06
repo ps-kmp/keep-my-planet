@@ -53,6 +53,7 @@ class SyncService(
                         ReportZoneRequest(
                             latitude = reportToSync.latitude,
                             longitude = reportToSync.longitude,
+                            radius = reportToSync.radius,
                             description = reportToSync.description,
                             severity = reportToSync.severity.name,
                             photoIds = photoIds,

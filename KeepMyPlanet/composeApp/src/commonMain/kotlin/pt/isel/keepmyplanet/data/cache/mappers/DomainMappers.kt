@@ -18,6 +18,7 @@ import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.UserCacheInfo
 import pt.isel.keepmyplanet.domain.zone.Location
+import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -77,6 +78,7 @@ fun ZoneCache.toZone(
     Zone(
         id = Id(id.toUInt()),
         location = Location(latitude, longitude),
+        radius = Radius(this.radius),
         description = Description(description),
         reporterId = Id(reporterId.toUInt()),
         eventId = eventId?.let { Id(it.toUInt()) },

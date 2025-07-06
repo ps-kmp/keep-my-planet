@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -161,6 +162,10 @@ fun ZoneDetailsScreen(
                                     )
                                 }
 
+                                InfoRow(
+                                    icon = Icons.Default.Radar,
+                                    text = "Radius: ${zone.radius.value} meters",
+                                )
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.Flag,

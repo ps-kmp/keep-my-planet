@@ -31,13 +31,13 @@ INSERT INTO users (name, email, password_hash, created_at, updated_at) VALUES
 ('anon', 'anon@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- SEED ZONES
-INSERT INTO zones (latitude, longitude, description, reporter_id, status, zone_severity, is_active, created_at, updated_at) VALUES
-(38.716670, -9.133330, 'Praia da Figueirinha needs urgent cleaning. Lots of plastic bottles and fishing nets.', 1, 'REPORTED', 'HIGH', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(41.150000, -8.616670, 'Parque da Cidade has accumulated a lot of litter near the picnic areas.', 2, 'REPORTED', 'MEDIUM', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(39.750000, -8.800000, 'Minor debris along the Lis River banks after recent rains.', 3, 'REPORTED', 'LOW', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(37.016670, -7.933330, 'Forest trail near Faro is littered with camping waste.', 4, 'REPORTED', 'MEDIUM', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(38.7593, -9.1553, 'Litter scattered around Jardim do Campo Grande.', 5, 'REPORTED', 'HIGH', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(40.6405, -8.6538, 'Some trash found near the University of Aveiro campus.', 6, 'REPORTED', 'LOW', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO zones (latitude, longitude, radius, description, reporter_id, status, zone_severity, is_active, created_at, updated_at) VALUES
+(38.716670, -9.133330, 150.0, 'Praia da Figueirinha needs urgent cleaning. Lots of plastic bottles and fishing nets.', 1, 'REPORTED', 'HIGH', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(41.150000, -8.616670, 200.0, 'Parque da Cidade has accumulated a lot of litter near the picnic areas.', 2, 'REPORTED', 'MEDIUM', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(39.750000, -8.800000, 75.0, 'Minor debris along the Lis River banks after recent rains.', 3, 'REPORTED', 'LOW', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(37.016670, -7.933330, 120.0, 'Forest trail near Faro is littered with camping waste.', 4, 'REPORTED', 'MEDIUM', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(38.7593, -9.1553, 250.0, 'Litter scattered around Jardim do Campo Grande.', 5, 'REPORTED', 'HIGH', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(40.6405, -8.6538, 50.0, 'Some trash found near the University of Aveiro campus.', 6, 'REPORTED', 'LOW', TRUE,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- SEED EVENTS & LINK TO ZONES
 INSERT INTO events (title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, pending_organizer_id, transfer_request_time, created_at, updated_at) VALUES

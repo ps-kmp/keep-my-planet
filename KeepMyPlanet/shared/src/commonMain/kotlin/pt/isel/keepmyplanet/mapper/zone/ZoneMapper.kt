@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.Location
+import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -15,6 +16,7 @@ fun Zone.toResponse(): ZoneResponse =
         id = id.value,
         latitude = location.latitude,
         longitude = location.longitude,
+        radius = radius.value,
         description = description.value,
         reporterId = reporterId.value,
         eventId = eventId?.value,
@@ -30,6 +32,7 @@ fun ZoneResponse.toZone(): Zone =
     Zone(
         id = Id(id),
         location = Location(latitude, longitude),
+        radius = Radius(radius),
         description = Description(description),
         reporterId = Id(reporterId),
         eventId = eventId?.let { Id(it) },

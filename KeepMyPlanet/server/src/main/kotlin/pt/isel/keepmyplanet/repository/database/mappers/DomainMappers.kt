@@ -44,6 +44,7 @@ internal fun Zones.toDomainZone(
     Zone(
         id = this.id,
         location = Location(latitude = this.latitude, longitude = this.longitude),
+        radius = this.radius,
         description = this.description,
         reporterId = this.reporter_id,
         eventId = this.event_id,

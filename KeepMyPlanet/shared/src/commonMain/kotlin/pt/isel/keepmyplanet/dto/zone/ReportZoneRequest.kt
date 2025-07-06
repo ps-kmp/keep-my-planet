@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class ReportZoneRequest(
     val latitude: Double,
     val longitude: Double,
+    val radius: Double,
     val description: String,
     val photoIds: Set<UInt>,
     val severity: String? = null,

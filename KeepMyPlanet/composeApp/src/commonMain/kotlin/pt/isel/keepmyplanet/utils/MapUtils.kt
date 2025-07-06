@@ -90,6 +90,6 @@ fun calculateBoundingBox(
     return Pair(Location(minLat, minLon), Location(maxLat, maxLon))
 }
 
-private fun Double.toRadians(): Double = this * PI / 180
+fun Double.toRadians(): Double = this * PI / 180
 
-private fun Double.toDegrees(): Double = this * 180 / PI
+fun Double.toDegrees(): Double = this * 180 / PI
