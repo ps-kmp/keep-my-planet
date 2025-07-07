@@ -14,6 +14,7 @@ import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
 import pt.isel.keepmyplanet.dto.event.EventStatsResponse
 import pt.isel.keepmyplanet.dto.event.InitiateTransferRequest
+import pt.isel.keepmyplanet.dto.event.ManualNotificationRequest
 import pt.isel.keepmyplanet.dto.event.RespondToTransferRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
@@ -59,6 +60,8 @@ class EventApi(
         fun respondToTransfer(eventId: UInt) = "${eventById(eventId)}/respond-to-transfer"
 
         fun getEventStats(eventId: UInt) = "${eventById(eventId)}/stats"
+
+        fun notifyParticipants(eventId: UInt) = "${eventById(eventId)}/notify"
     }
 
     suspend fun searchAllEvents(
@@ -214,5 +217,15 @@ class EventApi(
         httpClient.executeRequest {
             method = HttpMethod.Get
             url(Endpoints.getEventStats(eventId))
+        }
+
+    suspend fun sendManualNotification(
+        eventId: UInt,
+        request: ManualNotificationRequest,
+    ): Result<Unit> =
+        httpClient.executeRequestUnit {
+            method = HttpMethod.Post
+            url(Endpoints.notifyParticipants(eventId))
+            setBody(request)
         }
 }

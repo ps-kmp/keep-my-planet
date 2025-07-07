@@ -22,6 +22,7 @@ import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.InitiateTransferRequest
+import pt.isel.keepmyplanet.dto.event.ManualNotificationRequest
 import pt.isel.keepmyplanet.dto.event.RespondToTransferRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.mapper.event.toResponse
@@ -233,6 +234,22 @@ fun Route.eventWebApi(
                         .leaveEvent(eventId, userId)
                         .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
                         .onFailure { throw it }
+                }
+
+                // Send a manual notification to all participants
+                post("/notify") {
+                    val eventId = call.getEventId()
+                    val userId = call.getCurrentUserId()
+                    val request = call.receive<ManualNotificationRequest>()
+
+                    eventService
+                        .sendManualNotification(eventId, userId, request.title, request.message)
+                        .onSuccess {
+                            call.respond(
+                                HttpStatusCode.OK,
+                                mapOf("message" to "Notification sent successfully."),
+                            )
+                        }.onFailure { throw it }
                 }
 
                 post("/initiate-transfer") {

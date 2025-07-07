@@ -31,6 +31,7 @@ class EventCacheRepository(
                     updatedAt = event.updatedAt.toString(),
                     timestamp = Clock.System.now().epochSeconds,
                 )
+                participantQueries.deleteParticipantsByEventId(event.id.value.toLong())
                 event.participantsIds.forEach { userId ->
                     participantQueries.insertParticipant(
                         event.id.value.toLong(),

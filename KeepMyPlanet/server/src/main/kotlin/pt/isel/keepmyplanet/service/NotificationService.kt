@@ -117,10 +117,14 @@ class NotificationService(
 
         try {
             val fcmError = Json.decodeFromString<FcmErrorResponse>(errorBody)
-            if (fcmError.error.status == "UNREGISTERED" ||
-                fcmError.error.status == "INVALID_ARGUMENT"
-            ) {
-                log.warn("Token $token is invalid. Removing from database.")
+            val errorCode =
+                fcmError.error.details
+                    ?.firstOrNull()
+                    ?.errorCode
+            if (errorCode == "UNREGISTERED" || fcmError.error.status == "INVALID_ARGUMENT") {
+                log.warn(
+                    "Token $token is invalid (reason: ${errorCode ?: fcmError.error.status}). Removing from database.",
+                )
                 userDeviceRepository.removeDevice(token)
             }
         } catch (e: Exception) {

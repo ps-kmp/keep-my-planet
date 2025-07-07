@@ -14,6 +14,10 @@ data class EventDetailsUiState(
     val isCurrentUserOrganizer: Boolean = false,
     val isCurrentUserParticipant: Boolean = false,
     val isCurrentUserPendingNominee: Boolean = false,
+    val showNotificationDialog: Boolean = false,
+    val notificationTitle: String = "",
+    val notificationMessage: String = "",
+    val notificationError: String? = null,
 ) : UiState {
     enum class ActionState {
         IDLE,
@@ -24,6 +28,7 @@ data class EventDetailsUiState(
         DELETING,
         INITIATING_TRANSFER,
         RESPONDING_TO_TRANSFER,
+        SENDING_NOTIFICATION,
     }
 
     val isActionInProgress: Boolean
@@ -91,4 +96,15 @@ data class EventDetailsUiState(
                 isCurrentUserOrganizer &&
                 event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS) &&
                 event.pendingOrganizerId == null
+
+    val canOrganizerSendNotification: Boolean
+        get() =
+            isCurrentUserOrganizer &&
+                event?.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
+
+    val isSendNotificationButtonEnabled: Boolean
+        get() =
+            notificationTitle.isNotBlank() &&
+                notificationMessage.isNotBlank() &&
+                !isActionInProgress
 }

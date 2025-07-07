@@ -11,3 +11,9 @@ data class CreateEventRequest(
     val zoneId: UInt,
     val maxParticipants: Int? = null,
 )
+
+@Serializable
+data class ManualNotificationRequest(
+    val title: String,
+    val message: String,
+)

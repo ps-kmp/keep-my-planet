@@ -12,10 +12,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -49,6 +51,7 @@ import pt.isel.keepmyplanet.ui.components.isQrScanningAvailable
 import pt.isel.keepmyplanet.ui.event.details.components.CleanlinessConfirmationDialog
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantRow
 import pt.isel.keepmyplanet.ui.event.details.components.ParticipantSelectionDialog
+import pt.isel.keepmyplanet.ui.event.details.components.SendNotificationDialog
 import pt.isel.keepmyplanet.ui.event.details.components.TransferOwnershipBanner
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
@@ -75,12 +78,17 @@ fun EventDetailsScreen(
     val showCancelDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf(false) }
     val showCleanlinessDialog = remember { mutableStateOf(false) }
+    val showNotificationDialog = remember { mutableStateOf(uiState.showNotificationDialog) }
     val showTransferDialog = remember { mutableStateOf(false) }
 
     if (uiState.showCleanlinessConfirmation && event != null) {
         LaunchedEffect(uiState.showCleanlinessConfirmation) {
             showCleanlinessDialog.value = true
         }
+    }
+
+    LaunchedEffect(uiState.showNotificationDialog) {
+        showNotificationDialog.value = uiState.showNotificationDialog
     }
 
     if (showCancelDialog.value) {
@@ -113,6 +121,19 @@ fun EventDetailsScreen(
                 showCleanlinessDialog.value = false
             },
             onDismissRequest = { showCleanlinessDialog.value = false },
+        )
+    }
+
+    if (showNotificationDialog.value) {
+        SendNotificationDialog(
+            title = uiState.notificationTitle,
+            message = uiState.notificationMessage,
+            onTitleChange = viewModel::onNotificationTitleChanged,
+            onMessageChange = viewModel::onNotificationMessageChanged,
+            onConfirm = viewModel::sendManualNotification,
+            onDismiss = viewModel::onDismissNotificationDialog,
+            isLoading = uiState.actionState == EventDetailsUiState.ActionState.SENDING_NOTIFICATION,
+            isSendEnabled = uiState.isSendNotificationButtonEnabled,
         )
     }
 
@@ -426,6 +447,19 @@ fun EventDetailsScreen(
                                             text = "Transfer Ownership",
                                             modifier = Modifier.fillMaxWidth(),
                                         )
+                                    }
+                                    if (uiState.canOrganizerSendNotification) {
+                                        Button(
+                                            onClick = viewModel::onShowNotificationDialog,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Notifications,
+                                                contentDescription = "Send Notification",
+                                                modifier = Modifier.padding(end = 8.dp),
+                                            )
+                                            Text("Notify Participants")
+                                        }
                                     }
                                 }
                             }

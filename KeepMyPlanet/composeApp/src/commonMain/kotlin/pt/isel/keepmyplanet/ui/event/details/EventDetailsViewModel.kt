@@ -6,6 +6,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.UserInfo
+import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
@@ -135,7 +136,6 @@ class EventDetailsViewModel(
             onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
             block = { eventRepository.deleteEvent(eventId) },
             onSuccess = {
-                eventRepository.invalidateEventCache(eventId)
                 sendEvent(EventDetailsEvent.ShowSnackbar("Event deleted successfully"))
                 sendEvent(EventDetailsEvent.EventDeleted)
             },
@@ -147,7 +147,7 @@ class EventDetailsViewModel(
         val event = currentState.event ?: return
 
         if (wasCleaned) {
-            launchWithResult(
+            launchWithResult<Zone>(
                 onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
                 onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
                 block = {
@@ -157,7 +157,7 @@ class EventDetailsViewModel(
                         wasCleaned = true,
                     )
                 },
-                onSuccess = {
+                onSuccess = { _ ->
                     sendEvent(
                         EventDetailsEvent.ShowSnackbar("Zone status confirmed successfully!"),
                     )
@@ -253,5 +253,68 @@ class EventDetailsViewModel(
         if (currentState.canTransferOwnership) {
             sendEvent(EventDetailsEvent.ShowParticipantSelectionDialog)
         }
+    }
+
+    fun onShowNotificationDialog() {
+        setState {
+            copy(
+                showNotificationDialog = true,
+                notificationTitle = "Update about '${event?.title?.value ?: "the event"}'",
+            )
+        }
+    }
+
+    fun onDismissNotificationDialog() {
+        setState {
+            copy(
+                showNotificationDialog = false,
+                notificationTitle = "",
+                notificationMessage = "",
+                notificationError = null,
+            )
+        }
+    }
+
+    fun onNotificationTitleChanged(title: String) {
+        setState { copy(notificationTitle = title, notificationError = null) }
+    }
+
+    fun onNotificationMessageChanged(message: String) {
+        setState { copy(notificationMessage = message, notificationError = null) }
+    }
+
+    fun sendManualNotification() {
+        val eventId = getEventId() ?: return
+        if (!currentState.isSendNotificationButtonEnabled) return
+
+        launchWithResult<Unit>(
+            onStart = { copy(actionState = EventDetailsUiState.ActionState.SENDING_NOTIFICATION) },
+            onFinally = {
+                copy(
+                    actionState = EventDetailsUiState.ActionState.IDLE,
+                    showNotificationDialog = false,
+                    notificationTitle = "",
+                    notificationMessage = "",
+                    notificationError = null,
+                )
+            },
+            block = {
+                eventRepository.sendManualNotification(
+                    eventId,
+                    currentState.notificationTitle,
+                    currentState.notificationMessage,
+                )
+            },
+            onSuccess = {
+                sendEvent(
+                    EventDetailsEvent.ShowSnackbar("Notification sent to all participants."),
+                )
+            },
+            onError = {
+                handleErrorWithMessage(
+                    getErrorMessage("Failed to send notification", it),
+                )
+            },
+        )
     }
 }

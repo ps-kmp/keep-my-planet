@@ -77,6 +77,14 @@ class EventService(
                 )
             val createdEvent = eventRepository.create(event)
 
+            val organizerTokens = userDeviceRepository.findTokensByUserId(organizerId)
+            if (organizerTokens.isNotEmpty()) {
+                notificationService.subscribeToTopic(
+                    organizerTokens,
+                    "event_${createdEvent.id.value}",
+                )
+            }
+
             val zoneAfterStatusChange =
                 zoneStateChangeService.changeZoneStatus(
                     zone = zone,
@@ -239,6 +247,33 @@ class EventService(
             eventRepository.update(updatedEvent)
         }
 
+    suspend fun sendManualNotification(
+        eventId: Id,
+        organizerId: Id,
+        title: String,
+        message: String,
+    ): Result<Unit> =
+        runCatching {
+            val event = findEventOrFail(eventId)
+            ensureOrganizerOrFail(event, organizerId)
+
+            if (title.isBlank() || message.isBlank()) {
+                throw ValidationException("Title and message cannot be blank.")
+            }
+
+            val notificationData =
+                mapOf(
+                    "title" to title,
+                    "body" to message,
+                    "eventId" to eventId.value.toString(),
+                    "type" to "MANUAL_UPDATE",
+                )
+            val recipients = event.participantsIds - organizerId
+            recipients.forEach {
+                notificationService.sendNotificationToUser(userId = it, data = notificationData)
+            }
+        }
+
     suspend fun initiateTransfer(
         eventId: Id,
         currentOrganizerId: Id,
@@ -273,9 +308,6 @@ class EventService(
 
             eventRepository.update(updatedEvent)
 
-            // Enviar notificação para o nomineeId
-            // notificationService.sendTransferRequestNotification(nomineeId, event)
-
             updatedEvent
         }
 
@@ -308,12 +340,9 @@ class EventService(
                         updatedEvent.copy(participantsIds = finalParticipants),
                     )
 
-                // Notificar o antigo organizador e os outros participantes da mudança.
                 finalEvent
             } else {
                 val updatedEvent = eventRepository.clearPendingTransfer(eventId, now())
-                // Notificar o organizador original que o pedido foi recusado.
-
                 updatedEvent
             }
         }

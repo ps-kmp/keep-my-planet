@@ -20,6 +20,7 @@ import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
 import pt.isel.keepmyplanet.dto.event.InitiateTransferRequest
+import pt.isel.keepmyplanet.dto.event.ManualNotificationRequest
 import pt.isel.keepmyplanet.dto.event.RespondToTransferRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
 import pt.isel.keepmyplanet.mapper.event.toDomain
@@ -175,20 +176,40 @@ class DefaultEventRepository(
     }
 
     suspend fun createEvent(request: CreateEventRequest): Result<Event> =
-        eventApi.createEvent(request).map { it.toEvent() }
+        eventApi.createEvent(request).map {
+            val event = it.toEvent()
+            eventCache?.insertEvents(listOf(event))
+            event
+        }
 
     suspend fun updateEvent(
         eventId: Id,
         request: UpdateEventRequest,
-    ): Result<Event> = eventApi.updateEventDetails(eventId.value, request).map { it.toEvent() }
+    ): Result<Event> =
+        eventApi.updateEventDetails(eventId.value, request).map {
+            val updatedEvent = it.toEvent()
+            eventCache?.insertEvents(listOf(updatedEvent))
+            updatedEvent
+        }
 
-    suspend fun deleteEvent(eventId: Id): Result<Unit> = eventApi.deleteEvent(eventId.value)
+    suspend fun deleteEvent(eventId: Id): Result<Unit> =
+        eventApi.deleteEvent(eventId.value).onSuccess {
+            invalidateEventCache(eventId)
+        }
 
     suspend fun joinEvent(eventId: Id): Result<Event> =
-        eventApi.joinEvent(eventId.value).map { it.toEvent() }
+        eventApi.joinEvent(eventId.value).map {
+            val updatedEvent = it.toEvent()
+            eventCache?.insertEvents(listOf(updatedEvent))
+            updatedEvent
+        }
 
     suspend fun leaveEvent(eventId: Id): Result<Event> =
-        eventApi.leaveEvent(eventId.value).map { it.toEvent() }
+        eventApi.leaveEvent(eventId.value).map {
+            val updatedEvent = it.toEvent()
+            eventCache?.insertEvents(listOf(updatedEvent))
+            updatedEvent
+        }
 
     suspend fun checkInUser(
         eventId: Id,
@@ -198,7 +219,12 @@ class DefaultEventRepository(
     suspend fun changeEventStatus(
         eventId: Id,
         request: ChangeEventStatusRequest,
-    ): Result<Event> = eventApi.changeEventStatus(eventId.value, request).map { it.toEvent() }
+    ): Result<Event> =
+        eventApi.changeEventStatus(eventId.value, request).map {
+            val updatedEvent = it.toEvent()
+            eventCache?.insertEvents(listOf(updatedEvent))
+            updatedEvent
+        }
 
     suspend fun getAttendedEvents(
         limit: Int,
@@ -242,4 +268,13 @@ class DefaultEventRepository(
                     ?: throw networkResult.exceptionOrNull()!!
             }
         }
+
+    suspend fun sendManualNotification(
+        eventId: Id,
+        title: String,
+        message: String,
+    ): Result<Unit> {
+        val request = ManualNotificationRequest(title, message)
+        return eventApi.sendManualNotification(eventId.value, request)
+    }
 }
