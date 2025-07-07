@@ -159,6 +159,26 @@ class InMemoryEventRepository : EventRepository {
             }.toDouble()
     }
 
+    override suspend fun calculateTotalHoursVolunteeredForEvent(eventId: Id): Double {
+        val event = events[eventId] ?: return 0.0
+        if (event.status != EventStatus.COMPLETED || event.period.end == null) {
+            return 0.0
+        }
+
+        val numberOfAttendees = attendances[eventId]?.size ?: 0
+        if (numberOfAttendees == 0) {
+            return 0.0
+        }
+
+        val durationInSeconds =
+            (
+                event.period.end!!.toInstant(TimeZone.UTC) -
+                    event.period.start.toInstant(TimeZone.UTC)
+            ).inWholeSeconds
+
+        return (durationInSeconds * numberOfAttendees).toDouble()
+    }
+
     override suspend fun findCompletedEventsPendingConfirmation(
         timeThreshold: LocalDateTime,
     ): List<Event> =

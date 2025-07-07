@@ -73,7 +73,7 @@ fun haversineDistance(
 
 private const val EARTH_RADIUS_KM = 6371.0
 
-fun calculateBoundingBox(
+internal fun calculateBoundingBox(
     center: Location,
     radiusKm: Double,
 ): Pair<Location, Location> {

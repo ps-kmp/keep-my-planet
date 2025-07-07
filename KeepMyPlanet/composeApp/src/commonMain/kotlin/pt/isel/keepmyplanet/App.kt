@@ -18,6 +18,7 @@ import pt.isel.keepmyplanet.ui.event.forms.UpdateEventScreen
 import pt.isel.keepmyplanet.ui.event.history.EventStatusHistoryScreen
 import pt.isel.keepmyplanet.ui.event.list.EventListScreen
 import pt.isel.keepmyplanet.ui.event.participants.ParticipantListScreen
+import pt.isel.keepmyplanet.ui.event.stats.EventStatsScreen
 import pt.isel.keepmyplanet.ui.home.HomeScreen
 import pt.isel.keepmyplanet.ui.login.LoginScreen
 import pt.isel.keepmyplanet.ui.map.MapScreen
@@ -92,6 +93,9 @@ fun App() {
                         onNavigateToParticipantList = {
                             appViewModel.navigate(AppRoute.ParticipantList(it))
                         },
+                        onNavigateToEventStats = {
+                            appViewModel.navigate(AppRoute.EventStats(it))
+                        },
                         onNavigateToZoneDetails = {
                             appViewModel.navigate(AppRoute.ZoneDetails(it))
                         },
@@ -153,6 +157,12 @@ fun App() {
                         viewModel = koinViewModel { parametersOf(currentRoute.userId) },
                         userName = currentUserInfo.name.value,
                         onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
+                        onNavigateBack = { appViewModel.navigateBack() },
+                    )
+
+                is AppRoute.EventStats ->
+                    EventStatsScreen(
+                        viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
                         onNavigateBack = { appViewModel.navigateBack() },
                     )
 

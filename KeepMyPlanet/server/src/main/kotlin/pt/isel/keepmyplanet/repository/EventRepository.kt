@@ -89,4 +89,6 @@ interface EventRepository : Repository<Event, Id> {
         eventId: Id,
         updatedAt: LocalDateTime,
     ): Event
+
+    suspend fun calculateTotalHoursVolunteeredForEvent(eventId: Id): Double
 }

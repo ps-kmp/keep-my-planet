@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
@@ -61,6 +62,7 @@ fun EventDetailsScreen(
     onNavigateToEditEvent: (Id) -> Unit,
     onNavigateToManageAttendance: (Id) -> Unit,
     onNavigateToMyQrCode: (userId: Id, organizerName: String) -> Unit,
+    onNavigateToEventStats: (Id) -> Unit,
     onNavigateToStatusHistory: (Id) -> Unit,
     onNavigateToUpdateZone: (Id) -> Unit,
     onNavigateToParticipantList: (Id) -> Unit,
@@ -255,6 +257,15 @@ fun EventDetailsScreen(
                                     },
                                     isClickable = true,
                                 )
+
+                                if (uiState.canSeeStats) {
+                                    InfoRow(
+                                        icon = Icons.Default.BarChart,
+                                        text = "View event statistics",
+                                        onClick = { onNavigateToEventStats(event.id) },
+                                        isClickable = true,
+                                    )
+                                }
 
                                 InfoRow(
                                     icon = Icons.Default.Schedule,

@@ -327,4 +327,11 @@ class DatabaseEventRepository(
                 ).executeAsList()
         return mapEventsToDomain(dbEvents)
     }
+
+    override suspend fun calculateTotalHoursVolunteeredForEvent(eventId: Id): Double =
+        eventQueries
+            .calculateTotalHoursVolunteeredForEvent(eventId)
+            .executeAsOneOrNull()
+            ?.total_seconds
+            ?: 0.0
 }

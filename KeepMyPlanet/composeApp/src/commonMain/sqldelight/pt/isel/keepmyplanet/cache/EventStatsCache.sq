@@ -1,0 +1,18 @@
+CREATE TABLE EventStatsCache (
+    event_id INTEGER NOT NULL PRIMARY KEY,
+    total_participants INTEGER NOT NULL,
+    total_attendees INTEGER NOT NULL,
+    check_in_rate REAL NOT NULL,
+    total_hours_volunteered REAL NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+getStatsByEventId:
+SELECT * FROM EventStatsCache WHERE event_id = ?;
+
+insertOrUpdateStats:
+INSERT OR REPLACE INTO EventStatsCache(event_id, total_participants, total_attendees, check_in_rate, total_hours_volunteered, timestamp)
+VALUES (?, ?, ?, ?, ?, ?);
+
+deleteExpiredStats:
+DELETE FROM EventStatsCache WHERE timestamp < ?;

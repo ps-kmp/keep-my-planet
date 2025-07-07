@@ -42,19 +42,28 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlin.math.asin
+import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import ovh.plrapps.mapcompose.api.DefaultCanvas
 import ovh.plrapps.mapcompose.api.addCallout
 import ovh.plrapps.mapcompose.api.centroidX
 import ovh.plrapps.mapcompose.api.centroidY
+import ovh.plrapps.mapcompose.api.fullSize
 import ovh.plrapps.mapcompose.api.maxScale
 import ovh.plrapps.mapcompose.api.minScale
 import ovh.plrapps.mapcompose.api.removeCallout
@@ -77,6 +86,8 @@ import pt.isel.keepmyplanet.ui.theme.primaryLight
 import pt.isel.keepmyplanet.ui.theme.surfaceLight
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
+import pt.isel.keepmyplanet.utils.toDegrees
+import pt.isel.keepmyplanet.utils.toRadians
 import pt.isel.keepmyplanet.utils.xToLon
 import pt.isel.keepmyplanet.utils.yToLat
 
@@ -330,6 +341,52 @@ fun MapScreen(
                         modifier = Modifier.size(40.dp),
                         tint = primaryLight,
                     )
+
+                    DefaultCanvas(modifier = Modifier.fillMaxSize(), mapState = mapState) {
+                        val radius = uiState.reportingRadius
+                        val xNorm = mapState.centroidX
+                        val yNorm = mapState.centroidY
+                        val lat = yToLat(yNorm)
+                        val lon = xToLon(xNorm)
+
+                        val path = Path()
+                        val earthRadiusMeters = 6371000.0
+                        val d = radius / earthRadiusMeters
+                        val lat1 = lat.toRadians()
+                        val lon1 = lon.toRadians()
+
+                        for (i in 0..360 step 5) {
+                            val brng = i.toDouble().toRadians()
+                            val lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng))
+                            val lon2 =
+                                lon1 +
+                                    atan2(
+                                        sin(brng) * sin(d) * cos(lat1),
+                                        cos(d) - sin(lat1) * sin(lat2),
+                                    )
+
+                            val x = lonToX(lon2.toDegrees()) * mapState.fullSize.width
+                            val y = latToY(lat2.toDegrees()) * mapState.fullSize.height
+
+                            if (i == 0) {
+                                path.moveTo(x.toFloat(), y.toFloat())
+                            } else {
+                                path.lineTo(x.toFloat(), y.toFloat())
+                            }
+                        }
+                        path.close()
+
+                        drawPath(
+                            path = path,
+                            color = primaryLight.copy(alpha = 0.3f),
+                            style = Fill,
+                        )
+                        drawPath(
+                            path = path,
+                            color = primaryLight.copy(alpha = 0.8f),
+                            style = Stroke(width = 2.dp.toPx() / mapState.scale.toFloat()),
+                        )
+                    }
 
                     Surface(
                         modifier =

@@ -35,10 +35,15 @@ data class EventDetailsUiState(
                 event.status == EventStatus.IN_PROGRESS &&
                 (isCurrentUserOrganizer || isCurrentUserParticipant)
 
+    val canSeeStats: Boolean
+        get() =
+            event != null &&
+                event.status in listOf(EventStatus.IN_PROGRESS, EventStatus.COMPLETED)
+
     val canUserJoin: Boolean
         get() =
             event != null &&
-                event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS) &&
+                event.status == EventStatus.PLANNED &&
                 !event.isFull &&
                 !isCurrentUserOrganizer &&
                 !isCurrentUserParticipant

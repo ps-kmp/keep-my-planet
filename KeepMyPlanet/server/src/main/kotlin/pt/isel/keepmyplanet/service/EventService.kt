@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.service
 
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
@@ -9,6 +11,7 @@ import pt.isel.keepmyplanet.domain.event.Title
 import pt.isel.keepmyplanet.domain.user.User
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.dto.event.EventStatsResponse
 import pt.isel.keepmyplanet.exception.AuthorizationException
 import pt.isel.keepmyplanet.exception.ConflictException
 import pt.isel.keepmyplanet.exception.InternalServerException
@@ -354,6 +357,45 @@ class EventService(
             val deleted = eventRepository.deleteById(eventId)
             if (!deleted) throw InternalServerException("Failed to delete event '$eventId'.")
             Unit
+        }
+
+    suspend fun getEventStatistics(eventId: Id): Result<EventStatsResponse> =
+        runCatching {
+            val event = findEventOrFail(eventId)
+
+            val totalParticipants = event.participantsIds.size
+            val totalAttendees = eventRepository.getAttendeesIds(eventId).size
+
+            val checkInRate =
+                if (totalParticipants > 0) {
+                    (totalAttendees.toDouble() / totalParticipants.toDouble()) * 100
+                } else {
+                    0.0
+                }
+
+            val totalSecondsVolunteered =
+                when (event.status) {
+                    EventStatus.COMPLETED ->
+                        eventRepository.calculateTotalHoursVolunteeredForEvent(eventId)
+
+                    EventStatus.IN_PROGRESS -> {
+                        val durationSeconds =
+                            (
+                                now().toInstant(TimeZone.UTC) -
+                                    event.period.start.toInstant(TimeZone.UTC)
+                            ).inWholeSeconds
+                        (durationSeconds * totalAttendees).toDouble()
+                    }
+
+                    else -> 0.0
+                }
+
+            EventStatsResponse(
+                totalParticipants = totalParticipants,
+                totalAttendees = totalAttendees,
+                checkInRate = checkInRate,
+                totalHoursVolunteered = totalSecondsVolunteered / 3600.0,
+            )
         }
 
     private suspend fun findUserOrFail(userId: Id): User =

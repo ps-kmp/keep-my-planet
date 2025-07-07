@@ -12,6 +12,7 @@ import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.EventResponse
 import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
+import pt.isel.keepmyplanet.dto.event.EventStatsResponse
 import pt.isel.keepmyplanet.dto.event.InitiateTransferRequest
 import pt.isel.keepmyplanet.dto.event.RespondToTransferRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
@@ -56,6 +57,8 @@ class EventApi(
         fun initiateTransfer(eventId: UInt) = "${eventById(eventId)}/initiate-transfer"
 
         fun respondToTransfer(eventId: UInt) = "${eventById(eventId)}/respond-to-transfer"
+
+        fun getEventStats(eventId: UInt) = "${eventById(eventId)}/stats"
     }
 
     suspend fun searchAllEvents(
@@ -205,5 +208,11 @@ class EventApi(
             method = HttpMethod.Post
             url(Endpoints.respondToTransfer(eventId))
             setBody(request)
+        }
+
+    suspend fun getEventStats(eventId: UInt): Result<EventStatsResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Get
+            url(Endpoints.getEventStats(eventId))
         }
 }

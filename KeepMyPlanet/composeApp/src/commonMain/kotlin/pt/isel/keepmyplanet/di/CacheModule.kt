@@ -4,6 +4,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import pt.isel.keepmyplanet.cache.KeepMyPlanetCache
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
+import pt.isel.keepmyplanet.data.cache.EventStatsCacheRepository
 import pt.isel.keepmyplanet.data.cache.EventStatusHistoryCacheRepository
 import pt.isel.keepmyplanet.data.cache.GeocodingCacheRepository
 import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
@@ -28,6 +29,7 @@ val cacheModule =
         single { UserCacheRepository(get()) }
         single { PhotoCacheRepository(get()) }
         single { UserStatsCacheRepository(get()) }
+        single { EventStatsCacheRepository(get()) }
         single { GeocodingCacheRepository(get()) }
         single { EventStatusHistoryCacheRepository(get()) }
     }

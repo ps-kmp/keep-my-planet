@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,22 +17,16 @@ import io.ktor.client.HttpClient
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.ExperimentalClusteringApi
 import ovh.plrapps.mapcompose.api.addClusterer
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
-import ovh.plrapps.mapcompose.api.centroidX
-import ovh.plrapps.mapcompose.api.centroidY
 import ovh.plrapps.mapcompose.api.hasMarker
-import ovh.plrapps.mapcompose.api.hasPath
 import ovh.plrapps.mapcompose.api.idleStateFlow
 import ovh.plrapps.mapcompose.api.makePathDataBuilder
 import ovh.plrapps.mapcompose.api.moveMarker
@@ -42,7 +35,6 @@ import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.removeMarker
 import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scrollTo
-import ovh.plrapps.mapcompose.api.updatePath
 import ovh.plrapps.mapcompose.api.visibleBoundingBox
 import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
@@ -74,8 +66,6 @@ import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
 import pt.isel.keepmyplanet.utils.xToLon
 import pt.isel.keepmyplanet.utils.yToLat
-
-private const val REPORTING_CIRCLE_ID = "reporting_circle"
 
 @OptIn(FlowPreview::class, ExperimentalClusteringApi::class)
 class MapViewModel(
@@ -126,26 +116,6 @@ class MapViewModel(
                         onMapIdle()
                     }
                 }
-        }
-
-        viewModelScope.launch {
-            val reportingFlow =
-                uiState
-                    .map { it.isReportingMode to it.reportingRadius }
-                    .distinctUntilChanged()
-
-            val centroidFlow =
-                snapshotFlow { mapState.centroidX to mapState.centroidY }
-                    .debounce(32) // Centroid changes rapidly, so debounce
-                    .distinctUntilChanged()
-
-            combine(reportingFlow, centroidFlow) { (isReporting, radius), _ ->
-                if (isReporting) {
-                    drawReportingCircle(radius)
-                } else {
-                    mapState.removePath(REPORTING_CIRCLE_ID)
-                }
-            }.collect()
         }
 
         viewModelScope.launch {
@@ -295,33 +265,6 @@ class MapViewModel(
             }
         }
         displayedZoneIds.value = newZoneIds
-    }
-
-    private fun drawReportingCircle(radius: Double) {
-        val lat = yToLat(mapState.centroidY)
-        val lon = xToLon(mapState.centroidX)
-
-        val circlePathData =
-            mapState
-                .makePathDataBuilder()
-                .apply {
-                    addCircle(lat, lon, radius)
-                }.build()
-
-        if (circlePathData != null) {
-            if (mapState.hasPath(REPORTING_CIRCLE_ID)) {
-                mapState.updatePath(REPORTING_CIRCLE_ID, pathData = circlePathData)
-            } else {
-                mapState.addPath(
-                    id = REPORTING_CIRCLE_ID,
-                    pathData = circlePathData,
-                    color = primaryLight.copy(alpha = 0.8f),
-                    width = 2.dp,
-                    fillColor = primaryLight.copy(alpha = 0.3f),
-                    zIndex = 1f,
-                )
-            }
-        }
     }
 
     fun onReportingRadiusChange(radius: Double) {

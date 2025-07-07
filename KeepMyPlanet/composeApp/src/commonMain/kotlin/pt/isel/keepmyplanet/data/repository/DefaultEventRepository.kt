@@ -4,6 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
+import pt.isel.keepmyplanet.data.cache.EventStatsCacheRepository
 import pt.isel.keepmyplanet.data.cache.EventStatusHistoryCacheRepository
 import pt.isel.keepmyplanet.data.cache.UserCacheRepository
 import pt.isel.keepmyplanet.domain.common.EventDetailsBundle
@@ -11,6 +12,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.domain.event.EventListItem
+import pt.isel.keepmyplanet.domain.event.EventStats
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
@@ -20,6 +22,7 @@ import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
 import pt.isel.keepmyplanet.dto.event.InitiateTransferRequest
 import pt.isel.keepmyplanet.dto.event.RespondToTransferRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
+import pt.isel.keepmyplanet.mapper.event.toDomain
 import pt.isel.keepmyplanet.mapper.event.toEvent
 import pt.isel.keepmyplanet.mapper.event.toListItem
 import pt.isel.keepmyplanet.mapper.user.toUserCacheInfo
@@ -30,6 +33,7 @@ class DefaultEventRepository(
     private val eventCache: EventCacheRepository?,
     private val userCache: UserCacheRepository?,
     private val historyCache: EventStatusHistoryCacheRepository?,
+    private val eventStatsCache: EventStatsCacheRepository?,
 ) {
     suspend fun getEventDetails(eventId: Id): Result<Event> =
         runCatching {
@@ -225,4 +229,17 @@ class DefaultEventRepository(
             updatedEvent
         }
     }
+
+    suspend fun getEventStats(eventId: Id): Result<EventStats> =
+        runCatching {
+            val networkResult = eventApi.getEventStats(eventId.value)
+            if (networkResult.isSuccess) {
+                val stats = networkResult.getOrThrow().toDomain()
+                eventStatsCache?.insertOrUpdateStats(eventId, stats)
+                stats
+            } else {
+                eventStatsCache?.getStatsByEventId(eventId)
+                    ?: throw networkResult.exceptionOrNull()!!
+            }
+        }
 }

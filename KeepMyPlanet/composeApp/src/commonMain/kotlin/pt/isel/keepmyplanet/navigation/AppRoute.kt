@@ -67,5 +67,9 @@ sealed class AppRoute {
         val userId: Id,
     ) : AppRoute()
 
+    data class EventStats(
+        val eventId: Id,
+    ) : AppRoute()
+
     data object About : AppRoute()
 }

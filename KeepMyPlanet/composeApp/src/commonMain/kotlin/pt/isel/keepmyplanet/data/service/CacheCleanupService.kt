@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.cache.CleanableCache
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
+import pt.isel.keepmyplanet.data.cache.EventStatsCacheRepository
 import pt.isel.keepmyplanet.data.cache.EventStatusHistoryCacheRepository
 import pt.isel.keepmyplanet.data.cache.GeocodingCacheRepository
 import pt.isel.keepmyplanet.data.cache.MessageCacheRepository
@@ -24,8 +25,10 @@ class CacheCleanupService(
                 val ttl =
                     when (cache) {
                         is GeocodingCacheRepository -> ONE_DAY_IN_SECONDS
-                        is EventCacheRepository, is EventStatusHistoryCacheRepository ->
-                            SEVEN_DAYS_IN_SECONDS
+                        is EventCacheRepository,
+                        is EventStatusHistoryCacheRepository,
+                        is EventStatsCacheRepository,
+                        -> SEVEN_DAYS_IN_SECONDS
 
                         is MessageCacheRepository -> THIRTY_DAYS_IN_SECONDS
                         else -> THIRTY_DAYS_IN_SECONDS

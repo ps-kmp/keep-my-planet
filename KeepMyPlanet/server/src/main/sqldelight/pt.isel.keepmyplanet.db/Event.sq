@@ -72,6 +72,14 @@ WHERE ea.user_id = :userId
   AND e.status = 'COMPLETED'
   AND e.end_datetime IS NOT NULL;
 
+calculateTotalHoursVolunteeredForEvent:
+SELECT
+  EXTRACT(EPOCH FROM (e.end_datetime - e.start_datetime)) * COUNT(ea.user_id) AS total_seconds
+FROM events AS e
+JOIN event_attendances AS ea ON e.id = ea.event_id
+WHERE e.id = :eventId AND e.status = 'COMPLETED' AND e.end_datetime IS NOT NULL
+GROUP BY e.id;
+
 insert:
 INSERT INTO events(title, description, start_datetime, end_datetime, zone_id, organizer_id, status, max_participants, pending_organizer_id, transfer_request_time, created_at, updated_at)
 VALUES (

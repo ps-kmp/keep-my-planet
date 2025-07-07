@@ -142,6 +142,15 @@ fun Route.eventWebApi(
                     }.onFailure { throw it }
             }
 
+            get("/stats") {
+                val eventId = call.getEventId()
+
+                eventService
+                    .getEventStatistics(eventId)
+                    .onSuccess { stats -> call.respond(HttpStatusCode.OK, stats) }
+                    .onFailure { throw it }
+            }
+
             authenticate("auth-jwt") {
                 // Update Event Details
                 patch {

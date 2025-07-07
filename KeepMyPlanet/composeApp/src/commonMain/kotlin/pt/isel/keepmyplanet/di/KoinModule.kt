@@ -14,6 +14,7 @@ import pt.isel.keepmyplanet.data.api.UserApi
 import pt.isel.keepmyplanet.data.api.ZoneApi
 import pt.isel.keepmyplanet.data.cache.CleanableCache
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
+import pt.isel.keepmyplanet.data.cache.EventStatsCacheRepository
 import pt.isel.keepmyplanet.data.cache.EventStatusHistoryCacheRepository
 import pt.isel.keepmyplanet.data.cache.GeocodingCacheRepository
 import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
@@ -42,6 +43,7 @@ import pt.isel.keepmyplanet.ui.event.forms.EventFormViewModel
 import pt.isel.keepmyplanet.ui.event.history.EventStatusHistoryViewModel
 import pt.isel.keepmyplanet.ui.event.list.EventListViewModel
 import pt.isel.keepmyplanet.ui.event.participants.ParticipantListViewModel
+import pt.isel.keepmyplanet.ui.event.stats.EventStatsViewModel
 import pt.isel.keepmyplanet.ui.home.HomeViewModel
 import pt.isel.keepmyplanet.ui.login.LoginViewModel
 import pt.isel.keepmyplanet.ui.map.MapViewModel
@@ -68,6 +70,7 @@ private val serviceModule =
                 get<ZoneCacheRepository>(),
                 get<GeocodingCacheRepository>(),
                 get<EventStatusHistoryCacheRepository>(),
+                get<EventStatsCacheRepository>(),
             )
         }
         single { CacheCleanupService(get()) }
@@ -94,7 +97,7 @@ private val repositoryModule =
     module {
         factoryOf(::DefaultAuthRepository)
         factoryOf(::DefaultDeviceRepository)
-        single { DefaultEventRepository(get(), getOrNull(), getOrNull(), getOrNull()) }
+        single { DefaultEventRepository(get(), getOrNull(), getOrNull(), getOrNull(), getOrNull()) }
         factoryOf(::DefaultGeocodingRepository)
         single { DefaultMessageRepository(get(), getOrNull()) }
         single { DefaultPhotoRepository(get(), getOrNull(), get()) }
@@ -119,6 +122,7 @@ private val viewModelModule =
         factoryOf(::UserProfileViewModel)
         factory { params -> ChatViewModel(get(), get(), get(), params.get()) }
         factoryOf(::ManageAttendanceViewModel)
+        factory { params -> EventStatsViewModel(get(), params.get()) }
         factory { params -> UserStatsViewModel(get(), get(), params.get()) }
         factory { params -> ParticipantListViewModel(params.get(), get()) }
     }
