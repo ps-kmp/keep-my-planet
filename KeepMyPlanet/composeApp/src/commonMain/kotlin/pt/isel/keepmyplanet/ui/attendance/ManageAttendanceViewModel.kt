@@ -10,17 +10,12 @@ import pt.isel.keepmyplanet.ui.base.BaseViewModel
 
 class ManageAttendanceViewModel(
     private val eventRepository: DefaultEventRepository,
-    private val eventId: Id,
 ) : BaseViewModel<ManageAttendanceUiState>(ManageAttendanceUiState()) {
-    init {
-        loadInitialData()
-    }
-
     override fun handleErrorWithMessage(message: String) {
         sendEvent(ManageAttendanceEvent.ShowSnackbar(message))
     }
 
-    fun loadInitialData() {
+    fun loadInitialData(eventId: Id) {
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
             val result =
@@ -61,6 +56,7 @@ class ManageAttendanceViewModel(
 
     private fun checkInUser(scannedUserId: Id) {
         if (currentState.isCheckingIn) return
+        val eventId = currentState.event?.id ?: return
         val participantInfo = currentState.participants.find { it.id == scannedUserId }
         if (participantInfo == null) {
             sendEvent(ManageAttendanceEvent.ShowSnackbar("User is not registered for this event."))
@@ -77,13 +73,13 @@ class ManageAttendanceViewModel(
                         "User ${participantInfo.name.value} checked in successfully!",
                     ),
                 )
-                refreshAttendees()
+                refreshAttendees(eventId)
             },
             onError = { handleErrorWithMessage(getErrorMessage("Check-in failed", it)) },
         )
     }
 
-    private fun refreshAttendees() {
+    private fun refreshAttendees(eventId: Id) {
         launchWithResult(
             block = { eventRepository.getEventAttendees(eventId) },
             onSuccess = { setState { copy(attendees = it) } },

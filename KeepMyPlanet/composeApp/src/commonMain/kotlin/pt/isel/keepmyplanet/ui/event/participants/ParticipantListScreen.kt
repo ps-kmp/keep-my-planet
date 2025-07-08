@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
@@ -28,6 +29,7 @@ import pt.isel.keepmyplanet.ui.event.participants.states.ParticipantListEvent
 @Composable
 fun ParticipantListScreen(
     viewModel: ParticipantListViewModel,
+    eventId: Id,
     onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -61,7 +63,7 @@ fun ParticipantListScreen(
                 uiState.isLoading -> FullScreenLoading()
                 uiState.error != null -> {
                     ErrorState(message = uiState.error!!) {
-                        viewModel.loadParticipants()
+                        viewModel.loadParticipants(eventId)
                     }
                 }
 

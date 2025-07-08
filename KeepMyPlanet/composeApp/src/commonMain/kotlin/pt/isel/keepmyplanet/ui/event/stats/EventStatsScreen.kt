@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
@@ -24,6 +25,7 @@ import pt.isel.keepmyplanet.ui.event.stats.states.EventStatsEvent
 @Composable
 fun EventStatsScreen(
     viewModel: EventStatsViewModel,
+    eventId: Id,
     onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -61,14 +63,14 @@ fun EventStatsScreen(
             } else if (uiState.error != null) {
                 ErrorState(
                     message = uiState.error!!,
-                    onRetry = { viewModel.loadStats() },
+                    onRetry = { viewModel.loadStats(eventId) },
                 )
             } else if (uiState.stats != null) {
                 EventStatsSummaryCard(stats = uiState.stats!!)
             } else {
                 ErrorState(
                     message = "Could not load event statistics.",
-                    onRetry = { viewModel.loadStats() },
+                    onRetry = { viewModel.loadStats(eventId) },
                 )
             }
         }

@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
 import pt.isel.keepmyplanet.data.repository.DefaultMessageRepository
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
@@ -16,30 +17,48 @@ class ChatViewModel(
     private val messageRepository: DefaultMessageRepository,
     private val eventRepository: DefaultEventRepository,
     sessionManager: SessionManager,
-    chatInfo: ChatInfo,
-) : BaseViewModel<ChatUiState>(ChatUiState(sessionManager.userSession.value?.userInfo, chatInfo)) {
+) : BaseViewModel<ChatUiState>(
+        ChatUiState(sessionManager.userSession.value?.userInfo, ChatInfo(Id(0U), null)),
+    ) {
     companion object {
         const val MAX_MESSAGE_LENGTH = 1000
     }
 
-    init {
+    fun load(chatInfo: ChatInfo) {
+        setState {
+            copy(
+                chatInfo = chatInfo,
+                messages = emptyList(),
+                error = null,
+                isLoading = true,
+            )
+        }
         if (currentState.user == null) {
-            setState { copy(error = "User is not logged in. Cannot display chat.") }
-        } else {
-            if (currentState.chatInfo.eventTitle == null) {
-                fetchEventDetails()
+            setState {
+                copy(
+                    error = "User is not logged in. Cannot display chat.",
+                    isLoading = false,
+                )
             }
-            loadMessages()
-            startListeningToMessages()
+        } else {
+            if (chatInfo.eventTitle == null) {
+                fetchEventDetails(chatInfo.eventId)
+            }
+            loadMessages(chatInfo.eventId)
+            startListeningToMessages(chatInfo.eventId)
         }
     }
 
-    private fun fetchEventDetails() {
+    private fun fetchEventDetails(eventId: Id) {
         viewModelScope.launch {
             eventRepository
-                .getEventDetails(currentState.chatInfo.eventId)
+                .getEventDetails(eventId)
                 .onSuccess { event ->
-                    setState { copy(chatInfo = chatInfo.copy(eventTitle = event.title)) }
+                    setState {
+                        copy(
+                            chatInfo = currentState.chatInfo.copy(eventTitle = event.title),
+                        )
+                    }
                 }.onFailure {
                     handleErrorWithMessage("Could not load event title.")
                 }
@@ -80,14 +99,14 @@ class ChatViewModel(
         )
     }
 
-    fun loadMessages() {
+    fun loadMessages(eventId: Id) {
         if (currentState.user == null) return
 
         setState { copy(isLoading = true, error = null) }
 
         viewModelScope.launch {
             messageRepository
-                .getMessages(currentState.chatInfo.eventId)
+                .getMessages(eventId)
                 .onSuccess { newMessages ->
                     setState {
                         copy(
@@ -123,12 +142,12 @@ class ChatViewModel(
             e.message
         }
 
-    private fun startListeningToMessages() {
+    private fun startListeningToMessages(eventId: Id) {
         if (currentState.user == null) return
 
         viewModelScope.launch {
             messageRepository
-                .listenToMessages(currentState.chatInfo.eventId)
+                .listenToMessages(eventId)
                 .catch { handleErrorWithMessage(getErrorMessage("Chat connection error", it)) }
                 .collect { messageResult ->
                     messageResult

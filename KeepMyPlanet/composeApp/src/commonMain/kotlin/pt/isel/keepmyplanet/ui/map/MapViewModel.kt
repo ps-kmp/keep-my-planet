@@ -99,8 +99,7 @@ class MapViewModel(
         initializeMap()
     }
 
-    override fun onCleared() {
-        super.onCleared()
+    override fun onViewModelCleared() {
         mapState.shutdown()
     }
 

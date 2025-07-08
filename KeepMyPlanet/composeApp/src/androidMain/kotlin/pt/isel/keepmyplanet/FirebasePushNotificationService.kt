@@ -26,8 +26,8 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        if (remoteMessage.data.isNotEmpty()) {
-            val data = remoteMessage.data
+        val data = remoteMessage.data
+        if (data.isNotEmpty()) {
             Log.d("FCM", "Message Data payload: $data")
 
             val title = data["title"] ?: "New Notification"
@@ -35,11 +35,6 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
             val eventId = data["eventId"]
 
             sendNotification(title, body, eventId)
-        } else {
-            remoteMessage.notification?.let {
-                Log.d("FCM", "Message Notification Body: ${it.body}")
-                sendNotification(it.title ?: "New Notification", it.body ?: "", null)
-            }
         }
     }
 
@@ -54,10 +49,12 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
                 putExtra(MainActivity.EXTRA_EVENT_ID, eventId)
             }
 
+        val requestCode = eventId?.toIntOrNull() ?: GENERAL_NOTIFICATION_ID
+
         val pendingIntent: PendingIntent =
             PendingIntent.getActivity(
                 this,
-                eventId?.hashCode() ?: 0,
+                requestCode,
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
@@ -78,8 +75,7 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
         ) {
-            val notificationId = eventId?.hashCode() ?: GENERAL_NOTIFICATION_ID
-            notificationManager.notify(notificationId, notification)
+            notificationManager.notify(requestCode, notification)
         }
     }
 

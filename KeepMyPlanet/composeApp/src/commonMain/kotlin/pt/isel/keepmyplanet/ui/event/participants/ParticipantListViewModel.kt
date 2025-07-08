@@ -7,14 +7,9 @@ import pt.isel.keepmyplanet.ui.event.participants.states.ParticipantListEvent
 import pt.isel.keepmyplanet.ui.event.participants.states.ParticipantListUiState
 
 class ParticipantListViewModel(
-    private val eventId: Id,
     private val eventRepository: DefaultEventRepository,
 ) : BaseViewModel<ParticipantListUiState>(ParticipantListUiState()) {
-    init {
-        loadParticipants()
-    }
-
-    fun loadParticipants() {
+    fun loadParticipants(eventId: Id) {
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },

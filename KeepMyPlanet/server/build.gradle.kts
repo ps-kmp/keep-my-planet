@@ -11,6 +11,7 @@ group = "pt.isel.keepmyplanet"
 version = "1.0.0"
 
 application {
+    mainClass.set("io.ktor.server.netty.EngineMain")
     applicationDefaultJvmArgs =
         listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }

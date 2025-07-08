@@ -1,10 +1,10 @@
 package pt.isel.keepmyplanet
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import org.koin.compose.koinInject
-import org.koin.core.parameter.parametersOf
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.about.AboutScreen
 import pt.isel.keepmyplanet.ui.admin.UserListScreen
@@ -12,6 +12,7 @@ import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceScreen
 import pt.isel.keepmyplanet.ui.attendance.MyQrCodeScreen
 import pt.isel.keepmyplanet.ui.base.koinViewModel
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
+import pt.isel.keepmyplanet.ui.chat.ChatViewModel
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.event.forms.CreateEventScreen
@@ -19,7 +20,9 @@ import pt.isel.keepmyplanet.ui.event.forms.UpdateEventScreen
 import pt.isel.keepmyplanet.ui.event.history.EventStatusHistoryScreen
 import pt.isel.keepmyplanet.ui.event.list.EventListScreen
 import pt.isel.keepmyplanet.ui.event.participants.ParticipantListScreen
+import pt.isel.keepmyplanet.ui.event.participants.ParticipantListViewModel
 import pt.isel.keepmyplanet.ui.event.stats.EventStatsScreen
+import pt.isel.keepmyplanet.ui.event.stats.EventStatsViewModel
 import pt.isel.keepmyplanet.ui.home.HomeScreen
 import pt.isel.keepmyplanet.ui.login.LoginScreen
 import pt.isel.keepmyplanet.ui.map.MapScreen
@@ -27,6 +30,7 @@ import pt.isel.keepmyplanet.ui.profile.UserProfileScreen
 import pt.isel.keepmyplanet.ui.register.RegisterScreen
 import pt.isel.keepmyplanet.ui.report.ReportZoneScreen
 import pt.isel.keepmyplanet.ui.stats.UserStatsScreen
+import pt.isel.keepmyplanet.ui.stats.UserStatsViewModel
 import pt.isel.keepmyplanet.ui.theme.KeepMyPlanetTheme
 import pt.isel.keepmyplanet.ui.zone.details.ZoneDetailsScreen
 import pt.isel.keepmyplanet.ui.zone.update.UpdateZoneScreen
@@ -127,12 +131,18 @@ fun App() {
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
-            is AppRoute.ParticipantList ->
+            is AppRoute.ParticipantList -> {
+                val viewModel: ParticipantListViewModel = koinViewModel()
+                LaunchedEffect(currentRoute.eventId) {
+                    viewModel.loadParticipants(currentRoute.eventId)
+                }
                 ParticipantListScreen(
-                    viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    viewModel = viewModel,
+                    eventId = currentRoute.eventId,
                     onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
+            }
 
             is AppRoute.EventStatusHistory ->
                 EventStatusHistoryScreen(
@@ -150,12 +160,17 @@ fun App() {
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
-            is AppRoute.Chat ->
+            is AppRoute.Chat -> {
+                val viewModel: ChatViewModel = koinViewModel()
+                LaunchedEffect(currentRoute.info) {
+                    viewModel.load(currentRoute.info)
+                }
                 ChatScreen(
-                    viewModel = koinViewModel { parametersOf(currentRoute.info) },
+                    viewModel = viewModel,
                     onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
+            }
 
             is AppRoute.UserProfile ->
                 UserProfileScreen(
@@ -171,12 +186,19 @@ fun App() {
                     onProfileUpdated = { appViewModel.onProfileUpdated(it) },
                 )
 
-            is AppRoute.ManageAttendance ->
+            is AppRoute.ManageAttendance -> {
+                val viewModel =
+                    koinViewModel<pt.isel.keepmyplanet.ui.attendance.ManageAttendanceViewModel>()
+                LaunchedEffect(currentRoute.eventId) {
+                    viewModel.loadInitialData(currentRoute.eventId)
+                }
                 ManageAttendanceScreen(
-                    viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    viewModel = viewModel,
+                    eventId = currentRoute.eventId,
                     onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
+            }
 
             is AppRoute.MyQrCode ->
                 MyQrCodeScreen(
@@ -186,21 +208,33 @@ fun App() {
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
-            is AppRoute.UserStats ->
+            is AppRoute.UserStats -> {
+                val viewModel: UserStatsViewModel = koinViewModel()
+                LaunchedEffect(currentRoute.userId) {
+                    viewModel.loadInitialData(currentRoute.userId)
+                }
                 UserStatsScreen(
-                    viewModel = koinViewModel { parametersOf(currentRoute.userId) },
+                    viewModel = viewModel,
+                    userId = currentRoute.userId,
                     userName = userSession?.userInfo?.name?.value ?: "User",
                     onNavigateToHome = { appViewModel.navigateToHome() },
                     onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
+            }
 
-            is AppRoute.EventStats ->
+            is AppRoute.EventStats -> {
+                val viewModel: EventStatsViewModel = koinViewModel()
+                LaunchedEffect(currentRoute.eventId) {
+                    viewModel.loadStats(currentRoute.eventId)
+                }
                 EventStatsScreen(
-                    viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    viewModel = viewModel,
+                    eventId = currentRoute.eventId,
                     onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
+            }
 
             is AppRoute.Map ->
                 MapScreen(

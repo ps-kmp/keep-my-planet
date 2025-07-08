@@ -123,7 +123,8 @@ class NotificationService(
                     ?.errorCode
             if (errorCode == "UNREGISTERED" || fcmError.error.status == "INVALID_ARGUMENT") {
                 log.warn(
-                    "Token $token is invalid (reason: ${errorCode ?: fcmError.error.status}). Removing from database.",
+                    "Token $token is invalid (reason: ${errorCode ?: fcmError.error.status}). " +
+                        "Removing from database.",
                 )
                 userDeviceRepository.removeDevice(token)
             }

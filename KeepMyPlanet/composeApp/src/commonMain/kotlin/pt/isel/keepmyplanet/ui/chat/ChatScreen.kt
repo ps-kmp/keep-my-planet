@@ -82,7 +82,13 @@ fun ChatScreen(
                 ErrorState(
                     message = uiState.error!!,
                     onRetry = {
-                        if (user == null) onNavigateBack() else viewModel.loadMessages()
+                        if (user ==
+                            null
+                        ) {
+                            onNavigateBack()
+                        } else {
+                            viewModel.loadMessages(uiState.chatInfo.eventId)
+                        }
                     },
                 )
             } else if (user != null) {

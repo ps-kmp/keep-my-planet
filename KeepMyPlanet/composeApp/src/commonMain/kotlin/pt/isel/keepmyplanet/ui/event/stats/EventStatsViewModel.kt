@@ -8,13 +8,8 @@ import pt.isel.keepmyplanet.ui.event.stats.states.EventStatsUiState
 
 class EventStatsViewModel(
     private val eventRepository: DefaultEventRepository,
-    private val eventId: Id,
 ) : BaseViewModel<EventStatsUiState>(EventStatsUiState()) {
-    init {
-        loadStats()
-    }
-
-    fun loadStats() {
+    fun loadStats(eventId: Id) {
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },

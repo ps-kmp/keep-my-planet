@@ -25,7 +25,7 @@ class UserListViewModel(
                 val currentUser = sessionManager.userSession.value?.userInfo
                 setState {
                     copy(
-                        users = users.filter { it.id != currentUser?.id }, // Exclude self
+                        users = users.filter { it.id != currentUser?.id },
                         currentUser = currentUser,
                     )
                 }

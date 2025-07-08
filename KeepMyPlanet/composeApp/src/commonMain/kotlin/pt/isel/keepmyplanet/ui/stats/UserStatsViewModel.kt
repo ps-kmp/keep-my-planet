@@ -13,17 +13,15 @@ import pt.isel.keepmyplanet.ui.stats.states.UserStatsUiState
 class UserStatsViewModel(
     private val userRepository: DefaultUserRepository,
     private val eventRepository: DefaultEventRepository,
-    private val userId: Id,
 ) : BaseViewModel<UserStatsUiState>(UserStatsUiState()) {
-    init {
-        loadInitialData()
-    }
+    private var userId: Id? = null
 
     override fun handleErrorWithMessage(message: String) {
         sendEvent(UserStatsEvent.ShowSnackbar(message))
     }
 
-    fun loadInitialData() {
+    fun loadInitialData(userId: Id) {
+        this.userId = userId
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
 
@@ -89,7 +87,7 @@ class UserStatsViewModel(
         launchWithResult(
             onStart = { copy(isAddingMore = true) },
             onFinally = { copy(isAddingMore = false) },
-            block = { eventRepository.getAttendedEvents(currentState.limit, currentState.offset) },
+            block = { eventRepository.getAttendedEvents(state.limit, state.offset) },
             onSuccess = { newEvents ->
                 setState {
                     copy(

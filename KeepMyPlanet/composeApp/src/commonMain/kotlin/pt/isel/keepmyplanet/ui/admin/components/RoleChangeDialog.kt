@@ -20,7 +20,8 @@ fun RoleChangeDialog(
         title = { Text("Change User Role") },
         text = {
             Text(
-                "Are you sure you want to change ${user.name.value}'s role from ${user.role} to $newRole?",
+                "Are you sure you want to change ${user.name.value}'s " +
+                    "role from ${user.role} to $newRole?",
             )
         },
         confirmButton = {

@@ -127,11 +127,11 @@ private val viewModelModule =
         factoryOf(::UpdateZoneViewModel)
         factoryOf(::ReportZoneViewModel)
         factoryOf(::UserProfileViewModel)
-        factory { params -> ChatViewModel(get(), get(), get(), params.get()) }
+        factoryOf(::ChatViewModel)
         factoryOf(::ManageAttendanceViewModel)
-        factory { params -> EventStatsViewModel(get(), params.get()) }
-        factory { params -> UserStatsViewModel(get(), get(), params.get()) }
-        factory { params -> ParticipantListViewModel(params.get(), get()) }
+        factoryOf(::EventStatsViewModel)
+        factoryOf(::UserStatsViewModel)
+        factoryOf(::ParticipantListViewModel)
         factoryOf(::UserListViewModel)
     }
 

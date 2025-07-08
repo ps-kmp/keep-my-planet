@@ -460,7 +460,8 @@ class EventService(
             principal.role != pt.isel.keepmyplanet.domain.user.UserRole.ADMIN
         ) {
             throw AuthorizationException(
-                "User '${principal.id}' is not authorized. Must be the event organizer or an admin.",
+                "User '${principal.id}' is not authorized. " +
+                    "Must be the event organizer or an admin.",
             )
         }
     }

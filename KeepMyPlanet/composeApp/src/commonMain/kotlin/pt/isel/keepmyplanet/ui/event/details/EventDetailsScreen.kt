@@ -400,7 +400,12 @@ fun EventDetailsScreen(
                                 pt.isel.keepmyplanet.domain.user.UserRole.ADMIN
                         if (isManager) {
                             DetailCard(
-                                title = if (uiState.isCurrentUserOrganizer) "Organizer Actions" else "Admin Actions",
+                                title =
+                                    if (uiState.isCurrentUserOrganizer) {
+                                        "Organizer Actions"
+                                    } else {
+                                        "Admin Actions"
+                                    },
                             ) {
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),

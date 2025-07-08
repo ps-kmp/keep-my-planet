@@ -71,7 +71,8 @@ fun UserListScreen(
             title = { Text("Delete User?") },
             text = {
                 Text(
-                    "Are you sure you want to permanently delete user '${uiState.userToDelete!!.name.value}'? This action cannot be undone.",
+                    "Are you sure you want to permanently delete user " +
+                        "'${uiState.userToDelete!!.name.value}'? This action cannot be undone.",
                 )
             },
             confirmButton = {

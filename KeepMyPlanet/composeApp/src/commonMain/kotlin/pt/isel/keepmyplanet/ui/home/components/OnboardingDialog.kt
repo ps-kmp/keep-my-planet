@@ -39,17 +39,23 @@ private val onboardingSteps =
         OnboardingStep(
             icon = Icons.Default.Map,
             title = "Explore the Map",
-            description = "Discover polluted zones reported by our community. See where help is needed most.",
+            description =
+                "Discover polluted zones reported by our community. " +
+                    "See where help is needed most.",
         ),
         OnboardingStep(
             icon = Icons.Default.AddLocationAlt,
             title = "Report Polluted Zones",
-            description = "Found a spot that needs cleaning? Report it on the map with a description and photos to rally support.",
+            description =
+                "Found a spot that needs cleaning? Report it on the map " +
+                    "with a description and photos to rally support.",
         ),
         OnboardingStep(
             icon = Icons.AutoMirrored.Filled.ListAlt,
             title = "Join Cleanup Events",
-            description = "Browse events created by others, join a team, and make a real difference together.",
+            description =
+                "Browse events created by others, join a team, " +
+                    "and make a real difference together.",
         ),
     )
 

@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.EmptyState
@@ -41,6 +42,7 @@ private const val PAGINATION_THRESHOLD = 3
 @Composable
 fun UserStatsScreen(
     viewModel: UserStatsViewModel,
+    userId: Id,
     userName: String,
     onNavigateToHome: () -> Unit,
     onEventSelected: (EventListItem) -> Unit,
@@ -93,7 +95,7 @@ fun UserStatsScreen(
             } else if (uiState.error != null) {
                 ErrorState(
                     message = uiState.error!!,
-                    onRetry = { viewModel.loadInitialData() },
+                    onRetry = { viewModel.loadInitialData(userId) },
                 )
             } else {
                 LazyColumn(

@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceEvent
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
@@ -31,6 +32,7 @@ import pt.isel.keepmyplanet.ui.components.QrCodeScannerView
 @Composable
 fun ManageAttendanceScreen(
     viewModel: ManageAttendanceViewModel,
+    eventId: Id,
     onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -64,7 +66,7 @@ fun ManageAttendanceScreen(
                 uiState.error != null ->
                     ErrorState(
                         message = uiState.error!!,
-                        onRetry = viewModel::loadInitialData,
+                        onRetry = { viewModel.loadInitialData(eventId) },
                     )
 
                 else -> {
