@@ -30,6 +30,7 @@ import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
 fun UpdateEventScreen(
     viewModel: EventFormViewModel,
     eventId: Id,
+    onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -53,7 +54,13 @@ fun UpdateEventScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { AppTopBar(title = "Edit Event", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Edit Event",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
     ) { paddingValues ->
         if (uiState.isLoading) {
             FullScreenLoading(modifier = Modifier.padding(paddingValues))

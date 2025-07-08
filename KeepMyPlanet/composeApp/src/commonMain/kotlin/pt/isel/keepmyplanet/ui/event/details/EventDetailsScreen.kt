@@ -62,6 +62,7 @@ import pt.isel.keepmyplanet.utils.toFormattedString
 fun EventDetailsScreen(
     viewModel: EventDetailsViewModel,
     eventId: Id,
+    onNavigateToHome: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToChat: (ChatInfo) -> Unit,
     onNavigateToEditEvent: (Id) -> Unit,
@@ -195,6 +196,7 @@ fun EventDetailsScreen(
         topBar = {
             AppTopBar(
                 title = event?.title?.value ?: "Event Details",
+                onNavigateToHome = onNavigateToHome,
                 onNavigateBack = onNavigateBack,
                 actions = {
                     if (uiState.canUseQrFeature && isQrScanningAvailable) {

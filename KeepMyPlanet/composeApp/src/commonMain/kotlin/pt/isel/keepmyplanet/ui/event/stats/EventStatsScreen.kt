@@ -24,6 +24,7 @@ import pt.isel.keepmyplanet.ui.event.stats.states.EventStatsEvent
 @Composable
 fun EventStatsScreen(
     viewModel: EventStatsViewModel,
+    onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -43,7 +44,13 @@ fun EventStatsScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar(title = "Event Statistics", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Event Statistics",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         Box(

@@ -143,7 +143,7 @@ class EventFormViewModel(
                         LocalDateTime.parse(currentState.startDate)
                         null
                     } catch (_: Exception) {
-                        "Invalid date format (YYYY-MM-DDTHH:MM:SS)"
+                        "Please select a valid start date"
                     },
                 endDateError =
                     if (currentState.endDate.isNotBlank()) {
@@ -151,7 +151,7 @@ class EventFormViewModel(
                             LocalDateTime.parse(currentState.endDate)
                             null
                         } catch (_: Exception) {
-                            "Invalid date format (YYYY-MM-DDTHH:MM:SS)"
+                            "Please select a valid end date"
                         }
                     } else {
                         null

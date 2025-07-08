@@ -72,6 +72,7 @@ import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsUiState
 fun ZoneDetailsScreen(
     viewModel: ZoneDetailsViewModel,
     zoneId: Id,
+    onNavigateToHome: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToCreateEvent: (zoneId: Id) -> Unit,
     onNavigateToEventDetails: (eventId: Id) -> Unit,
@@ -122,7 +123,13 @@ fun ZoneDetailsScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { AppTopBar(title = "Zone Details", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Zone Details",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
     ) { paddingValues ->
         Box(
             modifier = Modifier.fillMaxSize().padding(paddingValues),

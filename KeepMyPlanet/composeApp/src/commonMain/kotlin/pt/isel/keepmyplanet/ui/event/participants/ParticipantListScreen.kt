@@ -28,6 +28,7 @@ import pt.isel.keepmyplanet.ui.event.participants.states.ParticipantListEvent
 @Composable
 fun ParticipantListScreen(
     viewModel: ParticipantListViewModel,
+    onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -48,6 +49,7 @@ fun ParticipantListScreen(
         topBar = {
             AppTopBar(
                 title = "Event Participants",
+                onNavigateToHome = onNavigateToHome,
                 onNavigateBack = onNavigateBack,
             )
         },

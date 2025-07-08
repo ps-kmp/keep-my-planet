@@ -18,15 +18,11 @@ class AppViewModel(
     private val sessionManager: SessionManager,
 ) : BaseViewModel<AppUiState>(
         initialState =
-            AppUiState().let {
-                val session = sessionManager.userSession.value
-                val initialRoute = determineInitialRoute(session)
-                it.copy(
-                    userSession = session,
-                    navStack = listOf(initialRoute),
-                    currentRoute = initialRoute,
-                )
-            },
+            AppUiState().copy(
+                userSession = sessionManager.userSession.value,
+                navStack = listOf(AppRoute.Home),
+                currentRoute = AppRoute.Home,
+            ),
     ) {
     init {
         viewModelScope.launch {
@@ -45,8 +41,8 @@ class AppViewModel(
                         setState {
                             copy(
                                 userSession = null,
-                                navStack = listOf(AppRoute.Login),
-                                currentRoute = AppRoute.Login,
+                                navStack = listOf(AppRoute.Home),
+                                currentRoute = AppRoute.Home,
                             )
                         }
                         return@collect
@@ -127,11 +123,6 @@ class AppViewModel(
         }
     }
 
-    companion object {
-        private fun determineInitialRoute(session: UserSession?): AppRoute =
-            if (session == null) AppRoute.Login else AppRoute.Home
-    }
-
     fun handleNotificationNavigation(eventId: String) {
         val eventIdAsUInt = eventId.toUIntOrNull() ?: return
         val eventIdDomain = Id(eventIdAsUInt)
@@ -145,6 +136,13 @@ class AppViewModel(
     fun registerDeviceToken(token: String) {
         viewModelScope.launch {
             deviceRepository.registerDevice(token, "ANDROID")
+        }
+    }
+
+    fun navigateToHome() {
+        val homeRoute = AppRoute.Home
+        if (currentState.navStack.size > 1 || currentState.currentRoute != homeRoute) {
+            setState { copy(navStack = listOf(homeRoute), currentRoute = homeRoute) }
         }
     }
 }

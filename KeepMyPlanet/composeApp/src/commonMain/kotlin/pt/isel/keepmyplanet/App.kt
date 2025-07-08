@@ -44,6 +44,7 @@ fun App() {
                 LoginScreen(
                     viewModel = koinViewModel(),
                     onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
+                    onContinueAsGuest = { appViewModel.navigateAndReplace(AppRoute.Home) },
                     onLoginSuccess = { appViewModel.updateSession(it) },
                 )
             }
@@ -57,6 +58,7 @@ fun App() {
 
             is AppRoute.Home ->
                 HomeScreen(
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
                     onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
                     onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
@@ -78,6 +80,7 @@ fun App() {
             is AppRoute.EventList ->
                 EventListScreen(
                     viewModel = koinViewModel(),
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
                     onNavigateBack = { appViewModel.navigateBack() },
                     onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent()) },
@@ -86,6 +89,7 @@ fun App() {
             is AppRoute.CreateEvent ->
                 CreateEventScreen(
                     viewModel = koinViewModel(),
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     zoneId = currentRoute.zoneId,
                     onEventCreated = {
                         appViewModel.navigateAndReplace(AppRoute.EventDetails(it))
@@ -96,6 +100,7 @@ fun App() {
             is AppRoute.EventDetails ->
                 EventDetailsScreen(
                     viewModel = koinViewModel(),
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
                     eventId = currentRoute.eventId,
                     onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
@@ -125,6 +130,7 @@ fun App() {
             is AppRoute.ParticipantList ->
                 ParticipantListScreen(
                     viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
@@ -132,6 +138,7 @@ fun App() {
                 EventStatusHistoryScreen(
                     viewModel = koinViewModel(),
                     eventId = currentRoute.eventId,
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
@@ -139,18 +146,21 @@ fun App() {
                 UpdateEventScreen(
                     viewModel = koinViewModel(),
                     eventId = currentRoute.eventId,
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
             is AppRoute.Chat ->
                 ChatScreen(
                     viewModel = koinViewModel { parametersOf(currentRoute.info) },
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
             is AppRoute.UserProfile ->
                 UserProfileScreen(
                     viewModel = koinViewModel(),
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onAccountDeleted = { appViewModel.logout() },
                     onNavigateBack = { appViewModel.navigateBack() },
                     onNavigateToStats = {
@@ -164,12 +174,14 @@ fun App() {
             is AppRoute.ManageAttendance ->
                 ManageAttendanceScreen(
                     viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
             is AppRoute.MyQrCode ->
                 MyQrCodeScreen(
                     userId = currentRoute.userId,
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     organizerName = currentRoute.organizerName,
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
@@ -178,6 +190,7 @@ fun App() {
                 UserStatsScreen(
                     viewModel = koinViewModel { parametersOf(currentRoute.userId) },
                     userName = userSession?.userInfo?.name?.value ?: "User",
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
@@ -185,12 +198,14 @@ fun App() {
             is AppRoute.EventStats ->
                 EventStatsScreen(
                     viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
             is AppRoute.Map ->
                 MapScreen(
                     viewModel = koinViewModel(),
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateToZoneDetails = {
                         appViewModel.navigate(AppRoute.ZoneDetails(it))
                     },
@@ -204,6 +219,7 @@ fun App() {
             is AppRoute.ZoneDetails ->
                 ZoneDetailsScreen(
                     viewModel = koinViewModel(),
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
                     zoneId = currentRoute.zoneId,
                     onNavigateToUpdateZone = { appViewModel.navigate(AppRoute.UpdateZone(it)) },
@@ -219,6 +235,7 @@ fun App() {
             is AppRoute.UpdateZone ->
                 UpdateZoneScreen(
                     viewModel = koinViewModel(),
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     zoneId = currentRoute.zoneId,
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
@@ -226,6 +243,7 @@ fun App() {
             is AppRoute.ReportZone ->
                 ReportZoneScreen(
                     viewModel = koinViewModel(),
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     latitude = currentRoute.latitude,
                     longitude = currentRoute.longitude,
                     radius = currentRoute.radius,
@@ -234,10 +252,15 @@ fun App() {
 
             is AppRoute.UserManagement ->
                 UserListScreen(
+                    onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
-            is AppRoute.About -> AboutScreen(onNavigateBack = { appViewModel.navigateBack() })
+            is AppRoute.About ->
+                AboutScreen(
+                    onNavigateToHome = { appViewModel.navigateToHome() },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
             null -> FullScreenLoading()
         }
     }

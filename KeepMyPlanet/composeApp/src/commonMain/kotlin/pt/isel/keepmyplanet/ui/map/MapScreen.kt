@@ -96,6 +96,7 @@ import pt.isel.keepmyplanet.utils.yToLat
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
+    onNavigateToHome: () -> Unit,
     onNavigateToZoneDetails: (zoneId: Id) -> Unit,
     onNavigateToReportZone: (latitude: Double, longitude: Double, radius: Double) -> Unit,
     onNavigateBack: () -> Unit,
@@ -218,7 +219,13 @@ fun MapScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { AppTopBar(title = "Map", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Map",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
         floatingActionButton = {
             Column(
                 horizontalAlignment = Alignment.End,

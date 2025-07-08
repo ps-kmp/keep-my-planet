@@ -25,6 +25,7 @@ import pt.isel.keepmyplanet.ui.event.history.components.StatusHistoryItem
 fun EventStatusHistoryScreen(
     viewModel: EventStatusHistoryViewModel,
     eventId: Id,
+    onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -34,7 +35,13 @@ fun EventStatusHistoryScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar(title = "Status History", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Status History",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when {

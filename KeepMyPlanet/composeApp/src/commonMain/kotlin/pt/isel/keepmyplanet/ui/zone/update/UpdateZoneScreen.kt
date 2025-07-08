@@ -35,6 +35,7 @@ import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneEvent
 @Composable
 fun UpdateZoneScreen(
     viewModel: UpdateZoneViewModel,
+    onNavigateToHome: () -> Unit,
     zoneId: Id,
     onNavigateBack: () -> Unit,
 ) {
@@ -57,7 +58,13 @@ fun UpdateZoneScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { AppTopBar("Edit Zone", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                "Edit Zone",
+                onNavigateToHome = onNavigateToHome,
+                onNavigateBack = onNavigateBack,
+            )
+        },
     ) { paddingValues ->
         Box(
             modifier = Modifier.fillMaxSize().padding(paddingValues),

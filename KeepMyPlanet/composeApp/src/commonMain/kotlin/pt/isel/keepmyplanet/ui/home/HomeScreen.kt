@@ -55,6 +55,7 @@ import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 @Composable
 fun HomeScreen(
+    onNavigateToHome: () -> Unit,
     onNavigateToEventList: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToMap: () -> Unit,
@@ -104,6 +105,7 @@ fun HomeScreen(
                 if (user != null) {
                     AppTopBar(
                         title = "KeepMyPlanet",
+                        onNavigateToHome = onNavigateToHome,
                         actions = {
                             IconButton(onClick = onNavigateToAbout) {
                                 Icon(
@@ -119,6 +121,7 @@ fun HomeScreen(
                 } else {
                     AppTopBar(
                         title = "KeepMyPlanet",
+                        onNavigateToHome = onNavigateToHome,
                         actions = {
                             TextButton(onClick = onNavigateToLogin) { Text("Login") }
                             TextButton(onClick = onNavigateToRegister) { Text("Register") }

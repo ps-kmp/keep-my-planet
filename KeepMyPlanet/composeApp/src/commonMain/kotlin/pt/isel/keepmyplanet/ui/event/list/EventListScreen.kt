@@ -45,6 +45,7 @@ private const val PAGINATION_THRESHOLD = 3
 @Composable
 fun EventListScreen(
     viewModel: EventListViewModel,
+    onNavigateToHome: () -> Unit,
     onEventSelected: (event: EventListItem) -> Unit,
     onNavigateBack: () -> Unit,
     onCreateEventClick: () -> Unit,
@@ -81,7 +82,13 @@ fun EventListScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { AppTopBar(title = "Events", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Events",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
         floatingActionButton =
             {
                 if (!uiState.isGuest) {

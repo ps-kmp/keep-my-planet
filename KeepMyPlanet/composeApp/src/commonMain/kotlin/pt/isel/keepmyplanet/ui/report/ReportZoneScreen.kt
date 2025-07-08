@@ -41,6 +41,7 @@ import pt.isel.keepmyplanet.ui.report.states.ReportZoneUiState
 @Composable
 fun ReportZoneScreen(
     viewModel: ReportZoneViewModel,
+    onNavigateToHome: () -> Unit,
     latitude: Double,
     longitude: Double,
     radius: Double,
@@ -70,7 +71,13 @@ fun ReportZoneScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { AppTopBar(title = "Report Polluted Zone", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Report Polluted Zone",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),

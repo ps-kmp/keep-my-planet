@@ -52,6 +52,7 @@ import pt.isel.keepmyplanet.ui.theme.primaryLight
 @Composable
 fun UserProfileScreen(
     viewModel: UserProfileViewModel,
+    onNavigateToHome: () -> Unit,
     onAccountDeleted: () -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToStats: () -> Unit,
@@ -77,7 +78,13 @@ fun UserProfileScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = { AppTopBar(title = "User Profile", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "User Profile",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when {

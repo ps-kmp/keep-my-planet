@@ -49,9 +49,18 @@ private const val ABOUT_TEXT =
         "real and increasingly relevant and emerging problem."
 
 @Composable
-fun AboutScreen(onNavigateBack: () -> Unit) {
+fun AboutScreen(
+    onNavigateToHome: () -> Unit,
+    onNavigateBack: () -> Unit,
+) {
     Scaffold(
-        topBar = { AppTopBar(title = "About KeepMyPlanet", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "About KeepMyPlanet",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
     ) { paddingValues ->
         Column(
             modifier =

@@ -30,16 +30,19 @@ class HomeViewModel(
 ) : BaseViewModel<HomeUiState>(HomeUiState(), sessionManager) {
     init {
         viewModelScope.launch {
+            val onboardingCompleted = settings.getBoolean(ONBOARDING_COMPLETED_KEY, false)
             val user = sessionManager.userSession.value?.userInfo
-            if (user == null) {
-                val onboardingCompleted = settings.getBoolean(ONBOARDING_COMPLETED_KEY, false)
-                setState {
-                    copy(isLoading = false, user = null, showOnboarding = !onboardingCompleted)
-                }
-                return@launch
+
+            if (!onboardingCompleted) {
+                setState { copy(showOnboarding = true) }
             }
-            setState { copy(user = user, isUserAdmin = user.role == UserRole.ADMIN) }
-            loadUpcomingEvents()
+
+            if (user == null) {
+                setState { copy(isLoading = false, user = null, isUserAdmin = false) }
+            } else {
+                setState { copy(user = user, isUserAdmin = user.role == UserRole.ADMIN) }
+                loadUpcomingEvents()
+            }
         }
     }
 

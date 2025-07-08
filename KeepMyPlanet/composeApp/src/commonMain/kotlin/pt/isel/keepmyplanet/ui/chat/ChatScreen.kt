@@ -35,6 +35,7 @@ import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
+    onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -67,6 +68,7 @@ fun ChatScreen(
         topBar = {
             AppTopBar(
                 title = uiState.chatInfo.eventTitle?.value ?: "Chat",
+                onNavigateToHome = onNavigateToHome,
                 onNavigateBack = onNavigateBack,
             )
         },

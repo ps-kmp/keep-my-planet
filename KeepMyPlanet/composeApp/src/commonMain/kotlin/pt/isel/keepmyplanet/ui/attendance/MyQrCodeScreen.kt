@@ -22,10 +22,13 @@ import pt.isel.keepmyplanet.ui.components.QrCodeDisplay
 @Composable
 fun MyQrCodeScreen(
     userId: Id,
+    onNavigateToHome: () -> Unit,
     organizerName: String,
     onNavigateBack: () -> Unit,
 ) {
-    Scaffold(topBar = { AppTopBar("My Check-in Code", onNavigateBack) }) { padding ->
+    Scaffold(
+        topBar = { AppTopBar("My Check-in Code", onNavigateToHome, onNavigateBack) },
+    ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -31,6 +31,7 @@ import pt.isel.keepmyplanet.ui.components.QrCodeScannerView
 @Composable
 fun ManageAttendanceScreen(
     viewModel: ManageAttendanceViewModel,
+    onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -48,7 +49,13 @@ fun ManageAttendanceScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar(title = "Manage Attendance", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Manage Attendance",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {

@@ -11,8 +11,12 @@ import pt.isel.keepmyplanet.domain.user.UserSession
 class SessionManager {
     private val settings: Settings = Settings()
 
-    private val _userSession = MutableStateFlow(loadSession())
+    private val _userSession = MutableStateFlow<UserSession?>(null)
     val userSession = _userSession.asStateFlow()
+
+    init {
+        _userSession.value = loadSession()
+    }
 
     fun saveSession(session: UserSession?) {
         _userSession.value = session
@@ -27,13 +31,13 @@ class SessionManager {
         }
     }
 
-    fun loadSession(): UserSession? {
+    private fun loadSession(): UserSession? {
         val sessionJson = settings.getStringOrNull(USER_SESSION_KEY)
         return if (sessionJson != null) {
             try {
                 Json.decodeFromString<UserSession>(sessionJson)
             } catch (_: SerializationException) {
-                clearSession()
+                settings.remove(USER_SESSION_KEY)
                 null
             }
         } else {

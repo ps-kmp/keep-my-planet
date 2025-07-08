@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -27,6 +28,7 @@ import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.ui.components.FormApiError
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
+import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.login.states.LoginEvent
 import pt.isel.keepmyplanet.ui.login.states.LoginUiState
 
@@ -34,6 +36,7 @@ import pt.isel.keepmyplanet.ui.login.states.LoginUiState
 fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
+    onContinueAsGuest: () -> Unit,
     onLoginSuccess: (UserSession) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -69,6 +72,7 @@ fun LoginScreen(
                 onPasswordChanged = viewModel::onPasswordChanged,
                 onLoginClicked = viewModel::onLoginClicked,
                 onNavigateToRegister = onNavigateToRegister,
+                onContinueAsGuest = onContinueAsGuest,
             )
         }
     }
@@ -81,6 +85,7 @@ private fun LoginContent(
     onPasswordChanged: (String) -> Unit,
     onLoginClicked: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onContinueAsGuest: () -> Unit,
 ) {
     val isActionInProgress = uiState.actionState is LoginUiState.ActionState.LoggingIn
 
@@ -123,5 +128,15 @@ private fun LoginContent(
         TextButton(onClick = onNavigateToRegister) {
             Text("Don't have an account? Register")
         }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+        LoadingOutlinedButton(
+            onClick = onContinueAsGuest,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            enabled = !isActionInProgress,
+            isLoading = false,
+            text = "Continue as Guest",
+        )
     }
 }

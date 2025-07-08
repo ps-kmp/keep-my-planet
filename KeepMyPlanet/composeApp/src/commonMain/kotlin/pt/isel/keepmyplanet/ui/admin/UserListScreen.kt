@@ -37,6 +37,7 @@ import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 @Composable
 fun UserListScreen(
     viewModel: UserListViewModel = koinViewModel(),
+    onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -93,7 +94,13 @@ fun UserListScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar(title = "User Management", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "User Management",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {

@@ -1,6 +1,8 @@
 package pt.isel.keepmyplanet.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -36,17 +39,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import keepmyplanet.composeapp.generated.resources.Res
+import keepmyplanet.composeapp.generated.resources.ic_app_logo
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.painterResource
 import pt.isel.keepmyplanet.ui.theme.secondaryLight
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
 fun AppTopBar(
     title: String,
+    onNavigateToHome: () -> Unit,
     onNavigateBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
-        title = { Text(title) },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(Res.drawable.ic_app_logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier.size(32.dp).clickable(onClick = onNavigateToHome),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(title)
+            }
+        },
         colors =
             TopAppBarDefaults.topAppBarColors(
                 containerColor = secondaryLight,
@@ -54,7 +72,6 @@ fun AppTopBar(
                 actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
                 navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
             ),
-        modifier = Modifier.statusBarsPadding(),
         navigationIcon =
             {
                 onNavigateBack?.let {
@@ -66,6 +83,7 @@ fun AppTopBar(
                     }
                 }
             },
+        modifier = Modifier.statusBarsPadding(),
         actions = actions,
     )
 }

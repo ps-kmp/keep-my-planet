@@ -42,6 +42,7 @@ private const val PAGINATION_THRESHOLD = 3
 fun UserStatsScreen(
     viewModel: UserStatsViewModel,
     userName: String,
+    onNavigateToHome: () -> Unit,
     onEventSelected: (EventListItem) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -77,7 +78,13 @@ fun UserStatsScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar(title = "$userName's Statistics", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "$userName's Statistics",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {

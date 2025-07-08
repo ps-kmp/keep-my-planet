@@ -28,6 +28,7 @@ import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
 @Composable
 fun CreateEventScreen(
     viewModel: EventFormViewModel,
+    onNavigateToHome: () -> Unit,
     zoneId: Id?,
     onEventCreated: (eventId: Id) -> Unit,
     onNavigateBack: () -> Unit,
@@ -54,7 +55,13 @@ fun CreateEventScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { AppTopBar(title = "Create Event", onNavigateBack = onNavigateBack) },
+        topBar = {
+            AppTopBar(
+                title = "Create Event",
+                onNavigateBack = onNavigateBack,
+                onNavigateToHome = onNavigateToHome,
+            )
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
