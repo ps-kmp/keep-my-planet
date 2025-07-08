@@ -375,8 +375,14 @@ fun EventDetailsScreen(
                             }
                         }
 
-                        if (uiState.isCurrentUserOrganizer) {
-                            DetailCard(title = "Organizer Actions") {
+                        val isManager =
+                            uiState.isCurrentUserOrganizer ||
+                                uiState.currentUser?.role ==
+                                pt.isel.keepmyplanet.domain.user.UserRole.ADMIN
+                        if (isManager) {
+                            DetailCard(
+                                title = if (uiState.isCurrentUserOrganizer) "Organizer Actions" else "Admin Actions",
+                            ) {
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -388,12 +394,10 @@ fun EventDetailsScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                         ) { Text("Edit Event Details") }
                                     }
-                                    if (uiState.canOrganizerComplete) {
+                                    if (uiState.canCompleteEvent) {
                                         LoadingButton(
                                             onClick = {
-                                                viewModel.changeEventStatus(
-                                                    EventStatus.COMPLETED,
-                                                )
+                                                viewModel.changeEventStatus(EventStatus.COMPLETED)
                                             },
                                             isLoading =
                                                 uiState.actionState ==
@@ -403,7 +407,7 @@ fun EventDetailsScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                         )
                                     }
-                                    if (uiState.canOrganizerCancel) {
+                                    if (uiState.canCancelEvent) {
                                         LoadingOutlinedButton(
                                             onClick = { showCancelDialog.value = true },
                                             modifier = Modifier.fillMaxWidth(),
@@ -419,7 +423,7 @@ fun EventDetailsScreen(
                                             loadingIndicatorColor = MaterialTheme.colorScheme.error,
                                         )
                                     }
-                                    if (uiState.canOrganizerDelete) {
+                                    if (uiState.canEventBeDeleted) {
                                         LoadingOutlinedButton(
                                             onClick = { showDeleteDialog.value = true },
                                             modifier = Modifier.fillMaxWidth(),

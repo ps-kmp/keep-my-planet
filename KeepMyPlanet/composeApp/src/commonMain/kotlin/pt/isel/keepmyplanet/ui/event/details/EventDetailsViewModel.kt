@@ -6,7 +6,6 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.UserInfo
-import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.dto.event.ChangeEventStatusRequest
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
@@ -17,11 +16,10 @@ class EventDetailsViewModel(
     private val eventRepository: DefaultEventRepository,
     private val zoneRepository: DefaultZoneRepository,
     private val sessionManager: SessionManager,
-) : BaseViewModel<EventDetailsUiState>(EventDetailsUiState()) {
-    private val currentUser: UserInfo
-        get() =
-            sessionManager.userSession.value?.userInfo
-                ?: throw IllegalStateException("EventDetailsViewModel requires a logged-in user.")
+) : BaseViewModel<EventDetailsUiState>(
+        EventDetailsUiState(currentUser = sessionManager.userSession.value?.userInfo),
+    ) {
+    private val currentUser: UserInfo? get() = sessionManager.userSession.value?.userInfo
 
     override fun handleErrorWithMessage(message: String) {
         sendEvent(EventDetailsEvent.ShowSnackbar(message))
@@ -34,16 +32,7 @@ class EventDetailsViewModel(
             block = { eventRepository.getEventDetailsBundle(eventId) },
             onSuccess = { bundle ->
                 setState {
-                    copy(
-                        event = bundle.event,
-                        isCurrentUserOrganizer = bundle.event.organizerId == currentUser.id,
-                        isCurrentUserParticipant =
-                            bundle.event.participantsIds.contains(currentUser.id),
-                        isCurrentUserPendingNominee =
-                            bundle.event.pendingOrganizerId == currentUser.id,
-                        participants = bundle.participants,
-                        error = null,
-                    )
+                    copy(event = bundle.event, participants = bundle.participants, error = null)
                 }
             },
             onError = { error ->
@@ -66,7 +55,6 @@ class EventDetailsViewModel(
             block = { apiCall(eventId) },
             onSuccess = { eventResponse ->
                 updateEventInState(eventResponse)
-                sendEvent(EventDetailsEvent.ShowSnackbar(successMessage))
                 loadEventDetails(eventId)
             },
             onError = { handleErrorWithMessage(getErrorMessage(errorMessagePrefix, it)) },
@@ -122,7 +110,6 @@ class EventDetailsViewModel(
             },
             onSuccess = { eventResponse ->
                 updateEventInState(eventResponse)
-                sendEvent(EventDetailsEvent.ShowSnackbar(successMessage))
                 loadEventDetails(eventId)
             },
             onError = { handleErrorWithMessage(getErrorMessage(errorMessagePrefix, it)) },
@@ -147,7 +134,7 @@ class EventDetailsViewModel(
         val event = currentState.event ?: return
 
         if (wasCleaned) {
-            launchWithResult<Zone>(
+            launchWithResult(
                 onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
                 onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
                 block = {
@@ -178,6 +165,7 @@ class EventDetailsViewModel(
         val state = currentState
         if (!state.canUseQrFeature) return
         val event = state.event ?: return
+        val user = currentUser ?: return
 
         if (state.isCurrentUserOrganizer) {
             sendEvent(EventDetailsEvent.NavigateToManageAttendance(event.id))
@@ -186,7 +174,7 @@ class EventDetailsViewModel(
             val organizerName = organizerInfo?.name?.value
 
             if (organizerName != null) {
-                sendEvent(EventDetailsEvent.NavigateToMyQrCode(currentUser.id, organizerName))
+                sendEvent(EventDetailsEvent.NavigateToMyQrCode(user.id, organizerName))
             } else {
                 handleErrorWithMessage("Could not retrieve organizer's name.")
             }
@@ -196,14 +184,7 @@ class EventDetailsViewModel(
     private fun getEventId(): Id? = currentState.event?.id
 
     private fun updateEventInState(updatedEvent: Event) {
-        setState {
-            copy(
-                event = updatedEvent,
-                isCurrentUserOrganizer = updatedEvent.organizerId == currentUser.id,
-                isCurrentUserParticipant = updatedEvent.participantsIds.contains(currentUser.id),
-                isCurrentUserPendingNominee = updatedEvent.pendingOrganizerId == currentUser.id,
-            )
-        }
+        setState { copy(event = updatedEvent) }
     }
 
     fun initiateTransfer(nomineeId: Id) {

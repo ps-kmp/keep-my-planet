@@ -24,15 +24,15 @@ class InMemoryPhotoRepository : PhotoRepository {
         limit: Int,
         offset: Int,
     ): List<Photo> =
-        throw UnsupportedOperationException(
-            "getAll is not implemented for InMemoryPhotoRepository.",
-        )
+        photos.values
+            .sortedBy { it.id.value }
+            .drop(offset)
+            .take(limit)
 
     override suspend fun update(entity: Photo): Photo =
         throw UnsupportedOperationException("Photos are immutable in this system.")
 
-    override suspend fun deleteById(id: Id): Boolean =
-        throw UnsupportedOperationException("Deleting photos is not supported.")
+    override suspend fun deleteById(id: Id): Boolean = photos.remove(id) != null
 
     fun clear() {
         photos.clear()

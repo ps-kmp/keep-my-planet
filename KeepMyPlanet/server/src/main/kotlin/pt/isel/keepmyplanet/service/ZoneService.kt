@@ -19,6 +19,7 @@ import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.PhotoRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
+import pt.isel.keepmyplanet.utils.AuthPrincipal
 import pt.isel.keepmyplanet.utils.minus
 import pt.isel.keepmyplanet.utils.now
 
@@ -89,7 +90,7 @@ class ZoneService(
 
     suspend fun updateZone(
         zoneId: Id,
-        userId: Id,
+        actingPrincipal: AuthPrincipal,
         description: Description? = null,
         radius: Radius? = null,
         status: ZoneStatus? = null,
@@ -97,7 +98,7 @@ class ZoneService(
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
-            hasPermissionsOrFail(zone, userId)
+            ensureManagementPermissions(zone, actingPrincipal)
 
             var modifiedZone = zone
             var hasChanges = false
@@ -135,18 +136,18 @@ class ZoneService(
 
     suspend fun addPhotoToZone(
         zoneId: Id,
-        userId: Id,
+        actingPrincipal: AuthPrincipal,
         photoId: Id,
         photoType: String,
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
-            hasPermissionsOrFail(zone, userId)
+            ensureManagementPermissions(zone, actingPrincipal)
 
             val photo =
-                photoRepository.getById(photoId)
+                photoRepository.getById(photoId) // This is a validation
                     ?: throw ValidationException("Photo with ID '$photoId' not found.")
-            if (photo.uploaderId != userId) {
+            if (photo.uploaderId != actingPrincipal.id) {
                 throw AuthorizationException(
                     "Cannot use photo '$photoId' as it was not uploaded by you.",
                 )
@@ -180,12 +181,12 @@ class ZoneService(
 
     suspend fun removePhotoFromZone(
         zoneId: Id,
-        userId: Id,
+        actingPrincipal: AuthPrincipal,
         photoId: Id,
     ): Result<Zone> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
-            hasPermissionsOrFail(zone, userId)
+            ensureManagementPermissions(zone, actingPrincipal)
 
             if (photoId !in zone.beforePhotosIds && photoId !in zone.afterPhotosIds) {
                 throw NotFoundException("Photo '$photoId' not found in zone '$zoneId'.")
@@ -202,11 +203,11 @@ class ZoneService(
 
     suspend fun deleteZone(
         zoneId: Id,
-        userId: Id,
+        actingPrincipal: AuthPrincipal,
     ): Result<Unit> =
         runCatching {
             val zone = findZoneOrFail(zoneId)
-            hasPermissionsOrFail(zone, userId)
+            ensureManagementPermissions(zone, actingPrincipal)
 
             if (zone.eventId != null && zone.status == ZoneStatus.CLEANING_SCHEDULED) {
                 throw ConflictException(
@@ -332,25 +333,21 @@ class ZoneService(
         userRepository.getById(userId)
             ?: throw NotFoundException("User '$userId' not found.")
 
-    private suspend fun hasPermissionsOrFail(
+    private suspend fun ensureManagementPermissions(
         zone: Zone,
-        userId: Id,
+        principal: AuthPrincipal,
     ) {
-        findUserOrFail(userId)
-        when (val eventId = zone.eventId) {
-            null ->
-                if (userId != zone.reporterId) {
-                    throw AuthorizationException("User '$userId' is not reporter.")
-                }
+        val isReporter = zone.reporterId == principal.id
+        val isEventOrganizer =
+            zone.eventId?.let { eventId ->
+                eventRepository.getById(eventId)?.organizerId == principal.id
+            } ?: false
+        val isAdmin = principal.role == pt.isel.keepmyplanet.domain.user.UserRole.ADMIN
 
-            else -> {
-                val event =
-                    eventRepository.getById(eventId)
-                        ?: throw NotFoundException("Event '$eventId' not found.")
-                if (userId != event.organizerId) {
-                    throw AuthorizationException("User '$userId' is not event organizer.")
-                }
-            }
+        if (!isReporter && !isEventOrganizer && !isAdmin) {
+            throw AuthorizationException(
+                "User '${principal.id}' is not authorized to manage this zone.",
+            )
         }
     }
 }

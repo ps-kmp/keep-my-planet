@@ -14,4 +14,5 @@ data class HomeUiState(
     val nearbyZones: List<Zone> = emptyList(),
     val error: String? = null,
     val locationError: Boolean = false,
+    val isUserAdmin: Boolean = false,
 ) : UiState

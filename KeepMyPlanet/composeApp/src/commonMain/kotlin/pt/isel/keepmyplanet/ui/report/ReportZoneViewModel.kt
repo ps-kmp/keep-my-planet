@@ -1,10 +1,8 @@
 package pt.isel.keepmyplanet.ui.report
 
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.cache.OfflineReportQueueRepository
 import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
 import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
-import pt.isel.keepmyplanet.data.service.ConnectivityService
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
@@ -17,8 +15,6 @@ import pt.isel.keepmyplanet.ui.report.states.SelectedImage
 class ReportZoneViewModel(
     private val zoneRepository: DefaultZoneRepository,
     private val photoRepository: DefaultPhotoRepository,
-    private val connectivityService: ConnectivityService,
-    private val offlineReportQueueRepository: OfflineReportQueueRepository,
 ) : BaseViewModel<ReportZoneUiState>(ReportZoneUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(ReportZoneEvent.ShowSnackbar(message))
@@ -59,11 +55,6 @@ class ReportZoneViewModel(
         if (!validateForm() || !currentState.canSubmit) return
 
         viewModelScope.launch {
-            if (!connectivityService.isOnline.value) {
-                queueReportForOfflineSubmission()
-                return@launch
-            }
-
             launchWithResult(
                 onStart = { copy(actionState = ReportZoneUiState.ActionState.Submitting) },
                 onFinally = { copy(actionState = ReportZoneUiState.ActionState.Idle) },
@@ -92,20 +83,6 @@ class ReportZoneViewModel(
                 onError = { handleErrorWithMessage(getErrorMessage("Failed to report zone", it)) },
             )
         }
-    }
-
-    private suspend fun queueReportForOfflineSubmission() {
-        val state = currentState
-        offlineReportQueueRepository.queueReport(
-            latitude = state.latitude,
-            longitude = state.longitude,
-            radius = state.radius,
-            description = state.description,
-            severity = state.severity,
-            photos = state.photos,
-        )
-        sendEvent(ReportZoneEvent.ShowSnackbar("You're offline. Report queued for later."))
-        sendEvent(ReportZoneEvent.ReportSuccessful)
     }
 
     private fun validateForm(): Boolean {

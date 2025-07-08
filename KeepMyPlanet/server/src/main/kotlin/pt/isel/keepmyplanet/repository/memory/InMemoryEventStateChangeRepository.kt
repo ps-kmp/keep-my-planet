@@ -6,7 +6,6 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStateChange
 import pt.isel.keepmyplanet.domain.event.EventStateChangeDetails
 import pt.isel.keepmyplanet.domain.user.Name
-import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.repository.EventStateChangeRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 
@@ -23,25 +22,22 @@ class InMemoryEventStateChangeRepository(
         return newChange
     }
 
-    override suspend fun update(entity: EventStateChange): EventStateChange {
-        if (!changes.containsKey(
-                entity.id,
-            )
-        ) {
-            throw NotFoundException("StateChange ${entity.id} not found.")
-        }
-        changes[entity.id] = entity
-        return entity
-    }
+    override suspend fun update(entity: EventStateChange): EventStateChange =
+        throw UnsupportedOperationException("Updating a state change log is not permitted.")
 
     override suspend fun getById(id: Id): EventStateChange? = changes[id]
 
     override suspend fun getAll(
         limit: Int,
         offset: Int,
-    ): List<EventStateChange> = changes.values.sortedBy { it.changeTime }
+    ): List<EventStateChange> =
+        changes.values
+            .sortedBy { it.changeTime }
+            .drop(offset)
+            .take(limit)
 
-    override suspend fun deleteById(id: Id): Boolean = changes.remove(id) != null
+    override suspend fun deleteById(id: Id): Boolean =
+        throw UnsupportedOperationException("Deleting a state change log is not permitted.")
 
     override suspend fun findByEventId(eventId: Id): List<EventStateChange> =
         changes.values.filter { it.eventId == eventId }.sortedBy { it.changeTime }

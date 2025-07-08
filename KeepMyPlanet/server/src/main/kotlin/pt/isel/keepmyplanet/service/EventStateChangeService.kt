@@ -13,6 +13,7 @@ import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.EventStateChangeRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
+import pt.isel.keepmyplanet.utils.AuthPrincipal
 import pt.isel.keepmyplanet.utils.now
 
 class EventStateChangeService(
@@ -25,14 +26,14 @@ class EventStateChangeService(
     suspend fun changeEventStatus(
         eventId: Id,
         newStatus: EventStatus,
-        requestingUserId: Id,
+        actingPrincipal: AuthPrincipal,
     ): Result<Event> =
         runCatching {
             val event = findEventOrFail(eventId)
 
-            if (!canUserChangeStatus(requestingUserId, event)) {
+            if (!canUserChangeStatus(actingPrincipal, event)) {
                 throw AuthorizationException(
-                    "User $requestingUserId is not authorized to change event status.",
+                    "User ${actingPrincipal.id} is not authorized to change event status.",
                 )
             }
             if (!isValidTransition(event.status, newStatus)) {
@@ -47,14 +48,14 @@ class EventStateChangeService(
                     event.copy(status = newStatus)
                 }
             eventRepository.update(updatedEvent)
-            handleZoneStatusChange(event, newStatus, requestingUserId)
+            handleZoneStatusChange(event, newStatus, actingPrincipal.id)
 
             val stateChange =
                 EventStateChange(
                     id = Id(0u),
                     eventId = eventId,
                     newStatus = newStatus,
-                    changedBy = requestingUserId,
+                    changedBy = actingPrincipal.id,
                     changeTime = now,
                 )
             eventStateChangeRepository.save(stateChange)
@@ -147,32 +148,37 @@ class EventStateChangeService(
         }
 
     private fun canUserChangeStatus(
-        userId: Id,
+        principal: AuthPrincipal,
         event: Event,
-    ): Boolean = userId == event.organizerId
+    ): Boolean =
+        principal.id == event.organizerId ||
+            principal.role == pt.isel.keepmyplanet.domain.user.UserRole.ADMIN
 
     private suspend fun findEventOrFail(eventId: Id): Event =
         eventRepository.getById(eventId)
             ?: throw NotFoundException("Event '$eventId' not found.")
 
     suspend fun transitionEventsToInProgress() {
-        val eventsToStart = eventRepository.findEventsToStart()
+        val eventsToStart: List<Event> = eventRepository.findEventsToStart()
         eventsToStart.forEach { event ->
-            changeEventStatus(event.id, EventStatus.IN_PROGRESS, event.organizerId)
-                .onSuccess {
-                    runCatching {
-                        if (!eventRepository.hasAttended(event.id, event.organizerId)) {
-                            eventRepository.addAttendance(event.id, event.organizerId, now())
-                        }
-                    }.onFailure { e ->
-                        println(
-                            "Failed to auto-check-in organizer ${event.organizerId} " +
-                                "for event ${event.id}: $e",
-                        )
+            changeEventStatus(
+                event.id,
+                EventStatus.IN_PROGRESS,
+                AuthPrincipal(event.organizerId, pt.isel.keepmyplanet.domain.user.UserRole.USER),
+            ).onSuccess {
+                runCatching {
+                    if (!eventRepository.hasAttended(event.id, event.organizerId)) {
+                        eventRepository.addAttendance(event.id, event.organizerId, now())
                     }
-                }.onFailure {
-                    println("Failed to transition event ${event.id} to IN_PROGRESS: $it")
+                }.onFailure { e ->
+                    println(
+                        "Failed to auto-check-in organizer ${event.organizerId} " +
+                            "for event ${event.id}: $e",
+                    )
                 }
+            }.onFailure {
+                println("Failed to transition event ${event.id} to IN_PROGRESS: $it")
+            }
         }
     }
 }

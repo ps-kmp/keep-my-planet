@@ -22,6 +22,7 @@ import pt.isel.keepmyplanet.repository.MessageRepository
 import pt.isel.keepmyplanet.repository.UserDeviceRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.repository.ZoneRepository
+import pt.isel.keepmyplanet.utils.AuthPrincipal
 import pt.isel.keepmyplanet.utils.now
 
 class EventService(
@@ -149,7 +150,7 @@ class EventService(
 
     suspend fun updateEventDetails(
         eventId: Id,
-        userId: Id,
+        actingPrincipal: AuthPrincipal,
         title: Title?,
         description: Description?,
         period: Period?,
@@ -157,7 +158,7 @@ class EventService(
     ): Result<Event> =
         runCatching {
             val event = findEventOrFail(eventId)
-            ensureOrganizerOrFail(event, userId)
+            ensureAdminOrOrganizerOrFail(event, actingPrincipal)
 
             if (event.status != EventStatus.PLANNED) {
                 throw ConflictException(
@@ -249,13 +250,13 @@ class EventService(
 
     suspend fun sendManualNotification(
         eventId: Id,
-        organizerId: Id,
+        actingPrincipal: AuthPrincipal,
         title: String,
         message: String,
     ): Result<Unit> =
         runCatching {
             val event = findEventOrFail(eventId)
-            ensureOrganizerOrFail(event, organizerId)
+            ensureAdminOrOrganizerOrFail(event, actingPrincipal)
 
             if (title.isBlank() || message.isBlank()) {
                 throw ValidationException("Title and message cannot be blank.")
@@ -263,12 +264,12 @@ class EventService(
 
             val notificationData =
                 mapOf(
-                    "title" to title,
+                    "title" to "New message in ${event.title.value}",
                     "body" to message,
                     "eventId" to eventId.value.toString(),
                     "type" to "MANUAL_UPDATE",
                 )
-            val recipients = event.participantsIds - organizerId
+            val recipients = event.participantsIds - actingPrincipal.id
             recipients.forEach {
                 notificationService.sendNotificationToUser(userId = it, data = notificationData)
             }
@@ -355,11 +356,11 @@ class EventService(
 
     suspend fun deleteEvent(
         eventId: Id,
-        userId: Id,
+        actingPrincipal: AuthPrincipal,
     ): Result<Unit> =
         runCatching {
             val event = findEventOrFail(eventId)
-            ensureOrganizerOrFail(event, userId)
+            ensureAdminOrOrganizerOrFail(event, actingPrincipal)
 
             if (event.status != EventStatus.PLANNED && event.status != EventStatus.CANCELLED) {
                 throw ConflictException(
@@ -374,7 +375,7 @@ class EventService(
                     zoneStateChangeService.changeZoneStatus(
                         zone = zone,
                         newStatus = ZoneStatus.REPORTED,
-                        changedBy = userId,
+                        changedBy = actingPrincipal.id,
                         triggeredByEventId = event.id,
                     )
                 val finalZone = zoneAfterStatusChange.copy(eventId = null)
@@ -451,15 +452,28 @@ class EventService(
         }
     }
 
+    private fun ensureAdminOrOrganizerOrFail(
+        event: Event,
+        principal: AuthPrincipal,
+    ) {
+        if (event.organizerId != principal.id &&
+            principal.role != pt.isel.keepmyplanet.domain.user.UserRole.ADMIN
+        ) {
+            throw AuthorizationException(
+                "User '${principal.id}' is not authorized. Must be the event organizer or an admin.",
+            )
+        }
+    }
+
     suspend fun checkInUserToEvent(
         eventId: Id,
         userIdToCheckIn: Id,
-        actingUserId: Id,
+        actingPrincipal: AuthPrincipal,
     ): Result<Unit> =
         runCatching {
             val event = findEventOrFail(eventId)
 
-            ensureOrganizerOrFail(event, actingUserId)
+            ensureAdminOrOrganizerOrFail(event, actingPrincipal)
 
             if (userIdToCheckIn == event.organizerId) {
                 throw ConflictException(

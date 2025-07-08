@@ -18,8 +18,10 @@ import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
+import pt.isel.keepmyplanet.dto.user.UpdateUserRoleRequest
 import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.service.UserService
+import pt.isel.keepmyplanet.utils.getAuthPrincipal
 import pt.isel.keepmyplanet.utils.getCurrentUserId
 import pt.isel.keepmyplanet.utils.getPathUIntId
 
@@ -40,8 +42,9 @@ fun Route.userWebApi(userService: UserService) {
 
         authenticate("auth-jwt") {
             get {
+                val actingPrincipal = call.getAuthPrincipal()
                 userService
-                    .getAllUsers()
+                    .getAllUsers(actingPrincipal)
                     .onSuccess { call.respond(HttpStatusCode.OK, it.map { u -> u.toResponse() }) }
                     .onFailure { throw it }
             }
@@ -62,7 +65,7 @@ fun Route.userWebApi(userService: UserService) {
             authenticate("auth-jwt") {
                 patch {
                     val userIdToUpdate = call.getUserId()
-                    val actingUserId = call.getCurrentUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
                     val request = call.receive<UpdateProfileRequest>()
 
                     val name = request.name?.let { Name(it) }
@@ -70,17 +73,32 @@ fun Route.userWebApi(userService: UserService) {
                     val profilePicId = request.profilePictureId?.let { Id(it) }
 
                     userService
-                        .updateUserProfile(userIdToUpdate, actingUserId, name, email, profilePicId)
+                        .updateUserProfile(
+                            userIdToUpdate,
+                            actingPrincipal,
+                            name,
+                            email,
+                            profilePicId,
+                        ).onSuccess { user -> call.respond(HttpStatusCode.OK, user.toResponse()) }
+                        .onFailure { throw it }
+                }
+
+                patch("/role") {
+                    val userIdToUpdate = call.getUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
+                    val request = call.receive<UpdateUserRoleRequest>()
+
+                    userService
+                        .updateUserRole(userIdToUpdate, actingPrincipal, request.role)
                         .onSuccess { user -> call.respond(HttpStatusCode.OK, user.toResponse()) }
                         .onFailure { throw it }
                 }
 
                 delete {
                     val userIdToDelete = call.getUserId()
-                    val actingUserId = call.getCurrentUserId()
-
+                    val actingPrincipal = call.getAuthPrincipal()
                     userService
-                        .deleteUser(userIdToDelete, actingUserId)
+                        .deleteUser(userIdToDelete, actingPrincipal)
                         .onSuccess { call.respond(HttpStatusCode.NoContent) }
                         .onFailure { throw it }
                 }

@@ -4,6 +4,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.User
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.exception.ConflictException
 import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.repository.UserRepository
@@ -22,6 +23,7 @@ class DatabaseUserRepository(
                     name = entity.name,
                     email = entity.email,
                     password_hash = entity.passwordHash,
+                    role = entity.role,
                     profile_picture_id = entity.profilePictureId,
                     created_at = currentTime,
                     updated_at = currentTime,
@@ -72,11 +74,26 @@ class DatabaseUserRepository(
                     name = entity.name,
                     email = entity.email,
                     password_hash = entity.passwordHash,
+                    role = entity.role,
                     profile_picture_id = entity.profilePictureId,
                     updated_at = now(),
                 ).executeAsOne()
                 .toDomainUser()
         }
+    }
+
+    override suspend fun updateUserRole(
+        userId: Id,
+        newRole: UserRole,
+    ): User {
+        getById(userId) ?: throw NotFoundException("User '$userId' not found.")
+        return userQueries
+            .updateUserRole(
+                id = userId,
+                role = newRole,
+                updated_at = now(),
+            ).executeAsOne()
+            .toDomainUser()
     }
 
     override suspend fun deleteById(id: Id): Boolean {

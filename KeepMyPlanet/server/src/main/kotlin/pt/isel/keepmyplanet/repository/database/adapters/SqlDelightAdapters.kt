@@ -12,6 +12,7 @@ import pt.isel.keepmyplanet.domain.message.MessageContent
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.PasswordHash
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -87,4 +88,15 @@ object MessageContentAdapter : ColumnAdapter<MessageContent, String> {
     override fun decode(databaseValue: String): MessageContent = MessageContent(databaseValue)
 
     override fun encode(value: MessageContent): String = value.value
+}
+
+object UserRoleAdapter : ColumnAdapter<UserRole, String> {
+    override fun decode(databaseValue: String): UserRole =
+        try {
+            UserRole.valueOf(databaseValue)
+        } catch (_: IllegalArgumentException) {
+            UserRole.USER
+        }
+
+    override fun encode(value: UserRole): String = value.name
 }

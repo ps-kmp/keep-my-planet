@@ -17,9 +17,10 @@ class ZoneDetailsViewModel(
     private val zoneRepository: DefaultZoneRepository,
     private val photoRepository: DefaultPhotoRepository,
     private val sessionManager: SessionManager,
-) : BaseViewModel<ZoneDetailsUiState>(ZoneDetailsUiState()) {
-    private val currentUser: UserInfo?
-        get() = sessionManager.userSession.value?.userInfo
+) : BaseViewModel<ZoneDetailsUiState>(
+        ZoneDetailsUiState(currentUser = sessionManager.userSession.value?.userInfo),
+    ) {
+    private val currentUser: UserInfo? get() = sessionManager.userSession.value?.userInfo
 
     override fun handleErrorWithMessage(message: String) {
         sendEvent(ZoneDetailsEvent.ShowSnackbar(message))
@@ -31,13 +32,7 @@ class ZoneDetailsViewModel(
             onFinally = { copy(isLoading = false) },
             block = { zoneRepository.getZoneDetailsBundle(zoneId) },
             onSuccess = { bundle ->
-                setState {
-                    copy(
-                        zone = bundle.zone,
-                        reporter = bundle.reporter,
-                        canUserManageZone = bundle.zone.reporterId == currentUser?.id,
-                    )
-                }
+                setState { copy(zone = bundle.zone, reporter = bundle.reporter) }
                 fetchAndCachePhotos(bundle.zone.beforePhotosIds + bundle.zone.afterPhotosIds)
             },
             onError = {

@@ -25,6 +25,7 @@ import pt.isel.keepmyplanet.dto.zone.UpdateZoneRequest
 import pt.isel.keepmyplanet.exception.ValidationException
 import pt.isel.keepmyplanet.mapper.zone.toResponse
 import pt.isel.keepmyplanet.service.ZoneService
+import pt.isel.keepmyplanet.utils.getAuthPrincipal
 import pt.isel.keepmyplanet.utils.getCurrentUserId
 import pt.isel.keepmyplanet.utils.getPathUIntId
 import pt.isel.keepmyplanet.utils.getQueryDoubleParameter
@@ -74,7 +75,7 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
             authenticate("auth-jwt") {
                 patch {
                     val zoneId = call.getZoneId()
-                    val userId = call.getCurrentUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
                     val request = call.receive<UpdateZoneRequest>()
                     val description = request.description?.let { Description(it) }
                     val radius = request.radius?.let { Radius(it) }
@@ -90,16 +91,16 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                         }
 
                     zoneService
-                        .updateZone(zoneId, userId, description, radius, status, severity)
+                        .updateZone(zoneId, actingPrincipal, description, radius, status, severity)
                         .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }
 
                 delete {
                     val zoneId = call.getZoneId()
-                    val userId = call.getCurrentUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
                     zoneService
-                        .deleteZone(zoneId, userId)
+                        .deleteZone(zoneId, actingPrincipal)
                         .onSuccess { call.respond(HttpStatusCode.NoContent) }
                         .onFailure { throw it }
                 }
@@ -144,12 +145,12 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                 route("/photos") {
                     post {
                         val zoneId = call.getZoneId()
-                        val userId = call.getCurrentUserId()
+                        val actingPrincipal = call.getAuthPrincipal()
                         val request = call.receive<AddPhotoRequest>()
                         val photoId = Id(request.photoId)
 
                         zoneService
-                            .addPhotoToZone(zoneId, userId, photoId, request.type)
+                            .addPhotoToZone(zoneId, actingPrincipal, photoId, request.type)
                             .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                             .onFailure { throw it }
                     }
@@ -157,11 +158,11 @@ fun Route.zoneWebApi(zoneService: ZoneService) {
                     delete("/{photoId}") {
                         fun ApplicationCall.getPhotoId(): Id = getPathUIntId("photoId", "Photo ID")
                         val zoneId = call.getZoneId()
-                        val userId = call.getCurrentUserId()
+                        val actingPrincipal = call.getAuthPrincipal()
                         val photoId = call.getPhotoId()
 
                         zoneService
-                            .removePhotoFromZone(zoneId, userId, photoId)
+                            .removePhotoFromZone(zoneId, actingPrincipal, photoId)
                             .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                             .onFailure { throw it }
                     }

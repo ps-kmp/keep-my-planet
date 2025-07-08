@@ -9,4 +9,5 @@ data class UserInfo(
     val name: Name,
     val email: Email,
     val profilePictureId: Id?,
+    val role: UserRole,
 )

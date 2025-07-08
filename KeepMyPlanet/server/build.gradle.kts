@@ -11,7 +11,6 @@ group = "pt.isel.keepmyplanet"
 version = "1.0.0"
 
 application {
-    mainClass.set("pt.isel.keepmyplanet.ApplicationKt")
     applicationDefaultJvmArgs =
         listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }

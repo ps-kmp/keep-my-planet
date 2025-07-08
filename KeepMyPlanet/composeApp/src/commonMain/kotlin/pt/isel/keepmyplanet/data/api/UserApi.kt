@@ -9,6 +9,7 @@ import pt.isel.keepmyplanet.data.http.executeRequestUnit
 import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
+import pt.isel.keepmyplanet.dto.user.UpdateUserRoleRequest
 import pt.isel.keepmyplanet.dto.user.UserResponse
 import pt.isel.keepmyplanet.dto.user.UserStatsResponse
 
@@ -31,6 +32,8 @@ class UserApi(
         fun getUserStats(userId: UInt) = "${userById(userId)}/stats"
 
         fun changePassword(userId: UInt) = "${userById(userId)}/password"
+
+        fun updateUserRole(userId: UInt) = "${userById(userId)}/role"
     }
 
     suspend fun registerUser(request: RegisterRequest): Result<UserResponse> =
@@ -82,5 +85,15 @@ class UserApi(
         httpClient.executeRequest {
             method = HttpMethod.Get
             url(Endpoints.getUserStats(userId))
+        }
+
+    suspend fun updateUserRole(
+        userId: UInt,
+        request: UpdateUserRoleRequest,
+    ): Result<UserResponse> =
+        httpClient.executeRequest {
+            method = HttpMethod.Patch
+            url(Endpoints.updateUserRole(userId))
+            setBody(request)
         }
 }

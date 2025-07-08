@@ -9,6 +9,7 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.user.UserRole
 
 class JwtService(
     config: ApplicationConfig,
@@ -21,10 +22,14 @@ class JwtService(
 
     companion object {
         private const val USER_ID_CLAIM = "userId"
+        private const val USER_ROLE_CLAIM = "role"
     }
 
     @OptIn(ExperimentalTime::class)
-    fun generateToken(userId: Id): String {
+    fun generateToken(
+        userId: Id,
+        role: UserRole,
+    ): String {
         val now = Clock.System.now()
         val expiresAt = now.plus(validity)
 
@@ -33,6 +38,7 @@ class JwtService(
             .withAudience(audience)
             .withIssuer(issuer)
             .withClaim(USER_ID_CLAIM, userId.value.toString())
+            .withClaim(USER_ROLE_CLAIM, role.name)
             .withIssuedAt(now.toJavaInstant())
             .withExpiresAt(expiresAt.toJavaInstant())
             .sign(algorithm)

@@ -4,8 +4,15 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.exception.AuthenticationException
+import pt.isel.keepmyplanet.exception.AuthorizationException
 import pt.isel.keepmyplanet.exception.ValidationException
+
+data class AuthPrincipal(
+    val id: Id,
+    val role: UserRole,
+)
 
 fun ApplicationCall.getPathIntParameter(
     paramName: String,
@@ -48,16 +55,37 @@ fun ApplicationCall.getQueryIntParameter(
     default: Int,
 ): Int = this.request.queryParameters[name]?.toIntOrNull() ?: default
 
-fun ApplicationCall.getCurrentUserId(): Id {
+fun ApplicationCall.getAuthPrincipal(): AuthPrincipal {
     val principal =
         principal<JWTPrincipal>()
             ?: throw AuthenticationException("Missing or invalid authentication token.")
     val userIdString =
         principal.payload.getClaim("userId").asString()
             ?: throw AuthenticationException("User ID not found in token.")
+
+    val userRoleString =
+        principal.payload.getClaim("role").asString()
+            ?: throw AuthenticationException("User role not found in token.")
+
     val userIdUInt =
         userIdString.toUIntOrNull()
             ?: throw AuthenticationException("Invalid User ID format in token.")
     if (userIdUInt == 0U) throw AuthenticationException("Invalid User ID in token.")
-    return Id(userIdUInt)
+
+    val userRole =
+        try {
+            UserRole.valueOf(userRoleString)
+        } catch (e: Exception) {
+            UserRole.USER
+        }
+
+    return AuthPrincipal(Id(userIdUInt), userRole)
+}
+
+fun ApplicationCall.getCurrentUserId(): Id = getAuthPrincipal().id
+
+fun ensureAdminOrFail(principal: AuthPrincipal) {
+    if (principal.role != UserRole.ADMIN) {
+        throw AuthorizationException("This action requires admin privileges.")
+    }
 }

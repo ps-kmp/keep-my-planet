@@ -29,6 +29,7 @@ import pt.isel.keepmyplanet.mapper.event.toResponse
 import pt.isel.keepmyplanet.mapper.user.toResponse
 import pt.isel.keepmyplanet.service.EventService
 import pt.isel.keepmyplanet.service.EventStateChangeService
+import pt.isel.keepmyplanet.utils.getAuthPrincipal
 import pt.isel.keepmyplanet.utils.getCurrentUserId
 import pt.isel.keepmyplanet.utils.getPathUIntId
 import pt.isel.keepmyplanet.utils.getQueryIntParameter
@@ -156,7 +157,7 @@ fun Route.eventWebApi(
                 // Update Event Details
                 patch {
                     val eventId = call.getEventId()
-                    val userId = call.getCurrentUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
                     val request = call.receive<UpdateEventRequest>()
 
                     val title = request.title?.let { Title(it) }
@@ -171,30 +172,36 @@ fun Route.eventWebApi(
                     val max = request.maxParticipants
 
                     eventService
-                        .updateEventDetails(eventId, userId, title, description, period, max)
-                        .onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
+                        .updateEventDetails(
+                            eventId,
+                            actingPrincipal,
+                            title,
+                            description,
+                            period,
+                            max,
+                        ).onSuccess { event -> call.respond(HttpStatusCode.OK, event.toResponse()) }
                         .onFailure { throw it }
                 }
 
                 // Delete Event
                 delete {
                     val eventId = call.getEventId()
-                    val userId = call.getCurrentUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
 
                     eventService
-                        .deleteEvent(eventId, userId)
+                        .deleteEvent(eventId, actingPrincipal)
                         .onSuccess { call.respond(HttpStatusCode.NoContent) }
                         .onFailure { throw it }
                 }
 
                 post("/check-in") {
                     val eventId = call.getEventId()
-                    val actingUserId = call.getCurrentUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
                     val request = call.receive<CheckInRequest>()
                     val userIdToCheckIn = Id(request.userId)
 
                     eventService
-                        .checkInUserToEvent(eventId, userIdToCheckIn, actingUserId)
+                        .checkInUserToEvent(eventId, userIdToCheckIn, actingPrincipal)
                         .onSuccess {
                             call.respond(
                                 HttpStatusCode.OK,
@@ -205,11 +212,11 @@ fun Route.eventWebApi(
 
                 put("/status") {
                     val eventId = call.getEventId()
-                    val userId = call.getCurrentUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
                     val request = call.receive<ChangeEventStatusRequest>()
 
                     eventStateChangeService
-                        .changeEventStatus(eventId, request.newStatus, userId)
+                        .changeEventStatus(eventId, request.newStatus, actingPrincipal)
                         .onSuccess { call.respond(HttpStatusCode.OK, it.toResponse()) }
                         .onFailure { throw it }
                 }
@@ -239,12 +246,16 @@ fun Route.eventWebApi(
                 // Send a manual notification to all participants
                 post("/notify") {
                     val eventId = call.getEventId()
-                    val userId = call.getCurrentUserId()
+                    val actingPrincipal = call.getAuthPrincipal()
                     val request = call.receive<ManualNotificationRequest>()
 
                     eventService
-                        .sendManualNotification(eventId, userId, request.title, request.message)
-                        .onSuccess {
+                        .sendManualNotification(
+                            eventId,
+                            actingPrincipal,
+                            request.title,
+                            request.message,
+                        ).onSuccess {
                             call.respond(
                                 HttpStatusCode.OK,
                                 mapOf("message" to "Notification sent successfully."),

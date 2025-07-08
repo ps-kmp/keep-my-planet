@@ -27,8 +27,8 @@ class AuthApi(
         fun login() = "$AUTH_BASE/login"
     }
 
-    suspend fun login(request: LoginRequest): Result<LoginResponse> {
-        return try {
+    suspend fun login(request: LoginRequest): Result<LoginResponse> =
+        try {
             val response: HttpResponse =
                 httpClient.post(Endpoints.login()) {
                     contentType(ContentType.Application.Json)
@@ -55,5 +55,4 @@ class AuthApi(
                 InternalServerException("Could not connect or an unexpected error occurred.", e),
             )
         }
-    }
 }

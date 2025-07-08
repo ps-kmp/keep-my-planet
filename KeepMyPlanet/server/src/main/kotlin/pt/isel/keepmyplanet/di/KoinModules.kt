@@ -38,6 +38,7 @@ import pt.isel.keepmyplanet.repository.database.adapters.NameAdapter
 import pt.isel.keepmyplanet.repository.database.adapters.PasswordHashAdapter
 import pt.isel.keepmyplanet.repository.database.adapters.RadiusAdapter
 import pt.isel.keepmyplanet.repository.database.adapters.TitleAdapter
+import pt.isel.keepmyplanet.repository.database.adapters.UserRoleAdapter
 import pt.isel.keepmyplanet.repository.database.adapters.ZoneSeverityAdapter
 import pt.isel.keepmyplanet.repository.database.adapters.ZoneStatusAdapter
 import pt.isel.keepmyplanet.security.PasswordHasher
@@ -125,6 +126,7 @@ fun appModule(application: Application) =
                         nameAdapter = NameAdapter,
                         emailAdapter = EmailAdapter,
                         password_hashAdapter = PasswordHashAdapter,
+                        roleAdapter = UserRoleAdapter,
                         profile_picture_idAdapter = IdAdapter,
                         created_atAdapter = LocalDateTimeAdapter,
                         updated_atAdapter = LocalDateTimeAdapter,

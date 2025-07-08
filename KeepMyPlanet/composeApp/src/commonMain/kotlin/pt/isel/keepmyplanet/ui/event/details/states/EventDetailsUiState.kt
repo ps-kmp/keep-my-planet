@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet.ui.event.details.states
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.UserInfo
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.ui.base.UiState
 
 data class EventDetailsUiState(
@@ -11,9 +12,7 @@ data class EventDetailsUiState(
     val isLoading: Boolean = false,
     val actionState: ActionState = ActionState.IDLE,
     val error: String? = null,
-    val isCurrentUserOrganizer: Boolean = false,
-    val isCurrentUserParticipant: Boolean = false,
-    val isCurrentUserPendingNominee: Boolean = false,
+    val currentUser: UserInfo? = null,
     val showNotificationDialog: Boolean = false,
     val notificationTitle: String = "",
     val notificationMessage: String = "",
@@ -30,6 +29,16 @@ data class EventDetailsUiState(
         RESPONDING_TO_TRANSFER,
         SENDING_NOTIFICATION,
     }
+
+    val isCurrentUserOrganizer: Boolean
+        get() = event != null && currentUser != null && event.organizerId == currentUser.id
+
+    private val isCurrentUserParticipant: Boolean
+        get() =
+            event != null && currentUser != null && event.participantsIds.contains(currentUser.id)
+
+    val isCurrentUserPendingNominee: Boolean
+        get() = event != null && currentUser != null && event.pendingOrganizerId == currentUser.id
 
     val isActionInProgress: Boolean
         get() = actionState != ActionState.IDLE
@@ -66,25 +75,27 @@ data class EventDetailsUiState(
     val isChatReadOnly: Boolean
         get() = event?.status in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
 
-    val canUserEdit: Boolean
-        get() = event != null && isCurrentUserOrganizer && event.status == EventStatus.PLANNED
+    val canUserEdit: Boolean get() =
+        event != null &&
+            (isCurrentUserOrganizer || currentUser?.role == UserRole.ADMIN) &&
+            event.status == EventStatus.PLANNED
 
-    val canOrganizerComplete: Boolean
+    val canCompleteEvent: Boolean
         get() =
             event != null &&
-                isCurrentUserOrganizer &&
+                (isCurrentUserOrganizer || currentUser?.role == UserRole.ADMIN) &&
                 event.status == EventStatus.IN_PROGRESS
 
-    val canOrganizerCancel: Boolean
+    val canCancelEvent: Boolean
         get() =
             event != null &&
-                isCurrentUserOrganizer &&
+                (isCurrentUserOrganizer || currentUser?.role == UserRole.ADMIN) &&
                 event.status in listOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
 
-    val canOrganizerDelete: Boolean
+    val canEventBeDeleted: Boolean
         get() =
             event != null &&
-                isCurrentUserOrganizer &&
+                (isCurrentUserOrganizer || currentUser?.role == UserRole.ADMIN) &&
                 event.status in listOf(EventStatus.PLANNED, EventStatus.CANCELLED)
 
     val showCleanlinessConfirmation: Boolean

@@ -72,4 +72,6 @@ sealed class AppRoute {
     ) : AppRoute()
 
     data object About : AppRoute()
+
+    data object UserManagement : AppRoute()
 }

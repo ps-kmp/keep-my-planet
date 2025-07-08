@@ -32,6 +32,7 @@ internal fun Users.toDomainUser(): User =
         name = this.name,
         email = this.email,
         passwordHash = this.password_hash,
+        role = this.role,
         profilePictureId = this.profile_picture_id,
         createdAt = this.created_at,
         updatedAt = this.updated_at,

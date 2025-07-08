@@ -7,6 +7,7 @@ import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
 import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.domain.event.EventStatus
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.mapper.event.toListItem
 import pt.isel.keepmyplanet.session.SessionManager
@@ -27,7 +28,7 @@ class HomeViewModel(
         if (user == null) {
             setState { copy(error = "User not logged in.") }
         } else {
-            setState { copy(user = user) }
+            setState { copy(user = user, isUserAdmin = user.role == UserRole.ADMIN) }
             loadUpcomingEvents()
         }
     }

@@ -7,6 +7,7 @@ import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.about.AboutScreen
+import pt.isel.keepmyplanet.ui.admin.UserListScreen
 import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceScreen
 import pt.isel.keepmyplanet.ui.attendance.MyQrCodeScreen
 import pt.isel.keepmyplanet.ui.base.koinViewModel
@@ -53,6 +54,9 @@ fun App() {
                         },
                         onNavigateToZoneDetails = { zoneId ->
                             appViewModel.navigate(AppRoute.ZoneDetails(zoneId))
+                        },
+                        onNavigateToUserManagement = {
+                            appViewModel.navigate(AppRoute.UserManagement)
                         },
                     )
 
@@ -205,6 +209,11 @@ fun App() {
                         latitude = currentRoute.latitude,
                         longitude = currentRoute.longitude,
                         radius = currentRoute.radius,
+                        onNavigateBack = { appViewModel.navigateBack() },
+                    )
+
+                is AppRoute.UserManagement ->
+                    UserListScreen(
                         onNavigateBack = { appViewModel.navigateBack() },
                     )
 

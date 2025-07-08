@@ -33,9 +33,8 @@ import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
 import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
 import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.data.service.CacheCleanupService
-import pt.isel.keepmyplanet.data.service.ConnectivityService
-import pt.isel.keepmyplanet.data.service.SyncService
 import pt.isel.keepmyplanet.session.SessionManager
+import pt.isel.keepmyplanet.ui.admin.UserListViewModel
 import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceViewModel
 import pt.isel.keepmyplanet.ui.chat.ChatViewModel
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsViewModel
@@ -57,8 +56,6 @@ import pt.isel.keepmyplanet.ui.zone.update.UpdateZoneViewModel
 private val serviceModule =
     module {
         // Session
-        single { ConnectivityService(get()) }
-        single { SyncService(get(), get(), get(), get()) }
         single<List<CleanableCache>> {
             listOf(
                 get<EventCacheRepository>(),
@@ -125,6 +122,7 @@ private val viewModelModule =
         factory { params -> EventStatsViewModel(get(), params.get()) }
         factory { params -> UserStatsViewModel(get(), get(), params.get()) }
         factory { params -> ParticipantListViewModel(params.get(), get()) }
+        factoryOf(::UserListViewModel)
     }
 
 val appModule =

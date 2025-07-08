@@ -22,13 +22,13 @@ ALTER SEQUENCE event_state_changes_id_seq RESTART WITH 1;
 ALTER SEQUENCE zone_state_changes_id_seq RESTART WITH 1;
 
 -- SEED USERS
-INSERT INTO users (name, email, password_hash, created_at, updated_at) VALUES
-('rafael', 'rafael@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('diogo', 'diogo@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('palex', 'palex@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('alice', 'alice@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('bob', 'bob@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('anon', 'anon@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO users (name, email, password_hash, role, created_at, updated_at) VALUES
+('rafael', 'rafael@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('diogo', 'diogo@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', 'USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('palex', 'palex@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', 'USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('alice', 'alice@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', 'USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('bob', 'bob@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', 'USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('anon', 'anon@example.com', '310000:k5WWtU34hbJAWj6rfvNxyQ==:N3MqTsrmCeqoRYIY4PWIA6Db/NTdy/DBoy8oFMo0E3o=', 'USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- SEED ZONES
 INSERT INTO zones (latitude, longitude, radius, description, reporter_id, status, zone_severity, is_active, created_at, updated_at) VALUES

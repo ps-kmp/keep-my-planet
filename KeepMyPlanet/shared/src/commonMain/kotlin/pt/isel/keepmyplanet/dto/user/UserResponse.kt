@@ -8,6 +8,7 @@ data class UserResponse(
     val name: String,
     val email: String,
     val profilePictureId: UInt?,
+    val role: String,
     val createdAt: String,
     val updatedAt: String,
 )

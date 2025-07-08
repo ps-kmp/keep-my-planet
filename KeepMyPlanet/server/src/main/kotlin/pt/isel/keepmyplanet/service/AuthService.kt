@@ -27,7 +27,7 @@ class AuthService(
                 throw AuthenticationException("Invalid email or password.")
             }
 
-            val token = jwtService.generateToken(user.id)
+            val token = jwtService.generateToken(user.id, user.role)
             LoginResponse(token = token, user = user.toResponse())
         }
 }

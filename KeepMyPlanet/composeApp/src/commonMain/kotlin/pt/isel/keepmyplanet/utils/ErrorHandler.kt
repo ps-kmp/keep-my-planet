@@ -8,8 +8,8 @@ import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.exception.ValidationException
 
 object ErrorHandler {
-    fun map(throwable: Throwable): AppError {
-        return when (throwable) {
+    fun map(throwable: Throwable): AppError =
+        when (throwable) {
             is AuthenticationException,
             is ValidationException,
             is ConflictException,
@@ -25,5 +25,4 @@ object ErrorHandler {
             // Para qualquer outro erro não esperado
             else -> AppError.GeneralError("An unknown error occurred.")
         }
-    }
 }

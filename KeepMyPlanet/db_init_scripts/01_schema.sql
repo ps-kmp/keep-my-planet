@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'USER',
     profile_picture_id BIGINT,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL

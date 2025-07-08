@@ -9,7 +9,6 @@ import pt.isel.keepmyplanet.data.cache.EventStatusHistoryCacheRepository
 import pt.isel.keepmyplanet.data.cache.GeocodingCacheRepository
 import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
 import pt.isel.keepmyplanet.data.cache.MessageCacheRepository
-import pt.isel.keepmyplanet.data.cache.OfflineReportQueueRepository
 import pt.isel.keepmyplanet.data.cache.PhotoCacheRepository
 import pt.isel.keepmyplanet.data.cache.UserCacheRepository
 import pt.isel.keepmyplanet.data.cache.UserStatsCacheRepository
@@ -23,7 +22,6 @@ val cacheModule =
         single { KeepMyPlanetCache(get()) }
         single { MapTileCacheRepository(get()) }
         single { ZoneCacheRepository(get()) }
-        single { OfflineReportQueueRepository(get()) }
         single { EventCacheRepository(get()) }
         single { MessageCacheRepository(get()) }
         single { UserCacheRepository(get()) }

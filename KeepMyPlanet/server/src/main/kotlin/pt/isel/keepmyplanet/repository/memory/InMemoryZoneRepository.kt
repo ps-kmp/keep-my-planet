@@ -2,10 +2,8 @@ package pt.isel.keepmyplanet.repository.memory
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
-import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.Location
-import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -17,43 +15,6 @@ import pt.isel.keepmyplanet.utils.now
 class InMemoryZoneRepository : ZoneRepository {
     private val zones = ConcurrentHashMap<Id, Zone>()
     private val nextId = AtomicInteger(1)
-
-    init {
-        val zone1 =
-            Zone(
-                id = Id(1U),
-                location = Location(latitude = 38.736946, longitude = -9.142685),
-                radius = Radius(50.0),
-                description = Description("Zona de limpeza no Parque das Nações"),
-                reporterId = Id(1U),
-                eventId = null,
-                status = ZoneStatus.REPORTED,
-                zoneSeverity = ZoneSeverity.LOW,
-                beforePhotosIds = emptySet(),
-                afterPhotosIds = emptySet(),
-                createdAt = now(),
-                updatedAt = now(),
-            )
-
-        val zone2 =
-            Zone(
-                id = Id(2U),
-                location = Location(latitude = 41.157944, longitude = -8.629105),
-                radius = Radius(50.0),
-                description = Description("Zona de reflorestação no Parque da Cidade"),
-                reporterId = Id(2U),
-                eventId = null,
-                status = ZoneStatus.REPORTED,
-                zoneSeverity = ZoneSeverity.MEDIUM,
-                beforePhotosIds = emptySet(),
-                afterPhotosIds = emptySet(),
-                createdAt = now(),
-                updatedAt = now(),
-            )
-
-        zones[zone1.id] = zone1
-        zones[zone2.id] = zone2
-    }
 
     override suspend fun create(entity: Zone): Zone {
         val newId = Id(nextId.getAndIncrement().toUInt())

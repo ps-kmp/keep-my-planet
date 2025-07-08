@@ -5,8 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
-import pt.isel.keepmyplanet.domain.user.PasswordHash
 import pt.isel.keepmyplanet.domain.user.User
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.exception.ConflictException
 import pt.isel.keepmyplanet.exception.NotFoundException
 import pt.isel.keepmyplanet.repository.UserRepository
@@ -15,40 +15,6 @@ import pt.isel.keepmyplanet.utils.now
 class InMemoryUserRepository : UserRepository {
     private val users = ConcurrentHashMap<Id, User>()
     private val nextId = AtomicInteger(1)
-
-    init {
-        val now = now()
-        val testUser1 =
-            User(
-                id = Id(1U),
-                name = Name("rafael"),
-                email = Email("rafael@example.com"),
-                passwordHash = PasswordHash("Password1!"),
-                createdAt = now,
-                updatedAt = now,
-            )
-        val testUser2 =
-            User(
-                id = Id(2U),
-                name = Name("diogo"),
-                email = Email("diogo@example.com"),
-                passwordHash = PasswordHash("Password1!"),
-                createdAt = now,
-                updatedAt = now,
-            )
-        val testUser3 =
-            User(
-                id = Id(3U),
-                name = Name("user"),
-                email = Email("user@example.com"),
-                passwordHash = PasswordHash("Password1!"),
-                createdAt = now,
-                updatedAt = now,
-            )
-        users[testUser1.id] = testUser1
-        users[testUser2.id] = testUser2
-        users[testUser3.id] = testUser3
-    }
 
     override suspend fun create(entity: User): User {
         if (users.values.any { it.email == entity.email }) {
@@ -102,6 +68,16 @@ class InMemoryUserRepository : UserRepository {
         } else {
             users.filterKeys { it in ids }.values.toList()
         }
+
+    override suspend fun updateUserRole(
+        userId: Id,
+        newRole: UserRole,
+    ): User {
+        val user = getById(userId) ?: throw NotFoundException("User '$userId' not found.")
+        val updatedUser = user.copy(role = newRole, updatedAt = now())
+        users[userId] = updatedUser
+        return updatedUser
+    }
 
     fun clear() {
         users.clear()

@@ -6,6 +6,7 @@ import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.domain.user.User
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.domain.user.UserStats
 import pt.isel.keepmyplanet.exception.AuthorizationException
 import pt.isel.keepmyplanet.exception.ConflictException
@@ -16,6 +17,8 @@ import pt.isel.keepmyplanet.repository.EventRepository
 import pt.isel.keepmyplanet.repository.PhotoRepository
 import pt.isel.keepmyplanet.repository.UserRepository
 import pt.isel.keepmyplanet.security.PasswordHasher
+import pt.isel.keepmyplanet.utils.AuthPrincipal
+import pt.isel.keepmyplanet.utils.ensureAdminOrFail
 import pt.isel.keepmyplanet.utils.now
 
 class UserService(
@@ -53,21 +56,25 @@ class UserService(
             findUserOrFail(userId)
         }
 
-    suspend fun getAllUsers(): Result<List<User>> =
+    suspend fun getAllUsers(actingPrincipal: AuthPrincipal): Result<List<User>> =
         runCatching {
+            ensureAdminOrFail(actingPrincipal)
             userRepository.getAll()
         }
 
     suspend fun updateUserProfile(
         userId: Id,
-        actingUserId: Id,
+        actingPrincipal: AuthPrincipal,
         name: Name?,
         email: Email?,
         profilePictureId: Id?,
     ): Result<User> =
         runCatching {
             val user = findUserOrFail(userId)
-            ensureSelfActionOrFail(userId, actingUserId, "update profile")
+
+            if (actingPrincipal.id != userId) {
+                ensureAdminOrFail(actingPrincipal)
+            }
 
             if (email != null && email != user.email) {
                 ensureEmailIsAvailableOrFail(email)
@@ -81,8 +88,7 @@ class UserService(
                 val photo =
                     photoRepository.getById(profilePictureId)
                         ?: throw ValidationException("Photo with ID '$profilePictureId' not found.")
-
-                if (photo.uploaderId != actingUserId) {
+                if (photo.uploaderId != actingPrincipal.id) {
                     throw AuthorizationException("Cannot use a photo that was not uploaded by you.")
                 }
             }
@@ -123,11 +129,18 @@ class UserService(
 
     suspend fun deleteUser(
         userId: Id,
-        actingUserId: Id,
+        actingPrincipal: AuthPrincipal,
     ): Result<Unit> =
         runCatching {
-            findUserOrFail(userId)
-            ensureSelfActionOrFail(userId, actingUserId, "delete account")
+            val userToDelete = findUserOrFail(userId)
+
+            if (actingPrincipal.id != userId) {
+                ensureAdminOrFail(actingPrincipal)
+            }
+
+            if (userToDelete.role == UserRole.ADMIN) {
+                throw AuthorizationException("Admins cannot be deleted.")
+            }
 
             val activeEventStatus = setOf(EventStatus.PLANNED, EventStatus.IN_PROGRESS)
             val organizedEvents = eventRepository.findByOrganizerId(userId, 1, 0)
@@ -156,6 +169,24 @@ class UserService(
                 totalEventsAttended = totalEvents.toInt(),
                 totalHoursVolunteered = totalHours,
             )
+        }
+
+    suspend fun updateUserRole(
+        userId: Id,
+        actingPrincipal: AuthPrincipal,
+        newRole: UserRole,
+    ): Result<User> =
+        runCatching {
+            ensureAdminOrFail(actingPrincipal)
+            val userToUpdate =
+                findUserOrFail(userId)
+            if (userToUpdate.id == actingPrincipal.id) {
+                throw AuthorizationException("Admins cannot change their own role.")
+            }
+            if (userToUpdate.role == newRole) {
+                return@runCatching userToUpdate
+            }
+            userRepository.updateUserRole(userId, newRole)
         }
 
     private suspend fun findUserOrFail(userId: Id): User =

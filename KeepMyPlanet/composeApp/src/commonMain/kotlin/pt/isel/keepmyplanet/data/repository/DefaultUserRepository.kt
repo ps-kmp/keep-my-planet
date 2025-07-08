@@ -5,10 +5,12 @@ import pt.isel.keepmyplanet.data.cache.UserCacheRepository
 import pt.isel.keepmyplanet.data.cache.UserStatsCacheRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.UserInfo
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.domain.user.UserStats
 import pt.isel.keepmyplanet.dto.auth.ChangePasswordRequest
 import pt.isel.keepmyplanet.dto.auth.RegisterRequest
 import pt.isel.keepmyplanet.dto.user.UpdateProfileRequest
+import pt.isel.keepmyplanet.dto.user.UpdateUserRoleRequest
 import pt.isel.keepmyplanet.mapper.user.toDomain
 import pt.isel.keepmyplanet.mapper.user.toUserCacheInfo
 import pt.isel.keepmyplanet.mapper.user.toUserInfo
@@ -20,6 +22,9 @@ class DefaultUserRepository(
 ) {
     suspend fun registerUser(request: RegisterRequest): Result<UserInfo> =
         userApi.registerUser(request).map { it.toUserInfo() }
+
+    suspend fun getAllUsers(): Result<List<UserInfo>> =
+        userApi.getAllUsers().map { users -> users.map { it.toUserInfo() } }
 
     suspend fun getUserDetails(userId: Id): Result<UserInfo> =
         runCatching {
@@ -63,4 +68,12 @@ class DefaultUserRepository(
                 userStatsCache?.getStatsByUserId(userId) ?: throw networkResult.exceptionOrNull()!!
             }
         }
+
+    suspend fun updateUserRole(
+        userId: Id,
+        newRole: UserRole,
+    ): Result<UserInfo> {
+        val request = UpdateUserRoleRequest(role = newRole)
+        return userApi.updateUserRole(userId.value, request).map { it.toUserInfo() }
+    }
 }

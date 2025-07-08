@@ -8,6 +8,7 @@ data class User(
     val name: Name,
     val email: Email,
     val passwordHash: PasswordHash,
+    val role: UserRole = UserRole.USER,
     val profilePictureId: Id? = null,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,

@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
@@ -55,6 +56,7 @@ fun HomeScreen(
     onNavigateToEventDetails: (Id) -> Unit,
     onNavigateToZoneDetails: (Id) -> Unit,
     onLogout: () -> Unit,
+    onNavigateToUserManagement: () -> Unit,
 ) {
     val viewModel: HomeViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -196,6 +198,15 @@ fun HomeScreen(
                         description = "Find and join events organized by the community.",
                         onClick = onNavigateToEventList,
                     )
+
+                    if (uiState.isUserAdmin) {
+                        DashboardItem(
+                            icon = Icons.Default.AdminPanelSettings,
+                            title = "User Management",
+                            description = "View all users and manage their roles.",
+                            onClick = onNavigateToUserManagement,
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))

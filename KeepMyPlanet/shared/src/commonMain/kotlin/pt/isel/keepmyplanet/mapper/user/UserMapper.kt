@@ -9,6 +9,7 @@ fun User.toResponse(): UserResponse =
         name = name.value,
         email = email.value,
         profilePictureId = profilePictureId?.value,
+        role = role.name,
         createdAt = createdAt.toString(),
         updatedAt = updatedAt.toString(),
     )
