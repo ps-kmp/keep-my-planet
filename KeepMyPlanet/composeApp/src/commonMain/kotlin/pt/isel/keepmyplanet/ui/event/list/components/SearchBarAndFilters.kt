@@ -10,13 +10,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 
@@ -26,6 +29,7 @@ fun SearchBarAndFilters(
     onQueryChange: (String) -> Unit,
     activeFilter: EventFilterType,
     onFilterChange: (EventFilterType) -> Unit,
+    isGuest: Boolean,
     isLoading: Boolean,
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -43,16 +47,30 @@ fun SearchBarAndFilters(
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             val filtersEnabled = !isLoading
-            FilterButton("All", activeFilter == EventFilterType.ALL, filtersEnabled) {
+            FilterButton(
+                "All",
+                isActive = activeFilter == EventFilterType.ALL,
+                enabled = filtersEnabled,
+            ) {
                 onFilterChange(EventFilterType.ALL)
             }
-            Spacer(Modifier.width(8.dp))
-            FilterButton("Organized", activeFilter == EventFilterType.ORGANIZED, filtersEnabled) {
-                onFilterChange(EventFilterType.ORGANIZED)
-            }
-            Spacer(Modifier.width(8.dp))
-            FilterButton("Joined", activeFilter == EventFilterType.JOINED, filtersEnabled) {
-                onFilterChange(EventFilterType.JOINED)
+            if (!isGuest) {
+                Spacer(Modifier.width(8.dp))
+                FilterButton(
+                    "Organized",
+                    isActive = activeFilter == EventFilterType.ORGANIZED,
+                    enabled = filtersEnabled,
+                ) {
+                    onFilterChange(EventFilterType.ORGANIZED)
+                }
+                Spacer(Modifier.width(8.dp))
+                FilterButton(
+                    "Joined",
+                    isActive = activeFilter == EventFilterType.JOINED,
+                    enabled = filtersEnabled,
+                ) {
+                    onFilterChange(EventFilterType.JOINED)
+                }
             }
         }
     }
@@ -68,9 +86,16 @@ private fun FilterButton(
     TextButton(
         onClick = onClick,
         enabled = enabled,
+        colors =
+            if (isActive) {
+                ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            } else {
+                ButtonDefaults.textButtonColors()
+            },
     ) {
         Text(
             text = text,
+            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
         )
     }
 }

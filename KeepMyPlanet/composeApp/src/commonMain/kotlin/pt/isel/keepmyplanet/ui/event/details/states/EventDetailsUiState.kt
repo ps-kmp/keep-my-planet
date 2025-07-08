@@ -30,6 +30,9 @@ data class EventDetailsUiState(
         SENDING_NOTIFICATION,
     }
 
+    val isGuest: Boolean
+        get() = currentUser == null
+
     val isCurrentUserOrganizer: Boolean
         get() = event != null && currentUser != null && event.organizerId == currentUser.id
 

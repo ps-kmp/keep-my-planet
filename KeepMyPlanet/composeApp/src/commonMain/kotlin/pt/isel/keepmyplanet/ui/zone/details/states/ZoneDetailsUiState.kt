@@ -24,6 +24,9 @@ data class ZoneDetailsUiState(
         data object DELETING : ActionState
     }
 
+    val isGuest: Boolean
+        get() = currentUser == null
+
     val beforePhotos: List<Pair<Id, Any>>
         get() =
             zone

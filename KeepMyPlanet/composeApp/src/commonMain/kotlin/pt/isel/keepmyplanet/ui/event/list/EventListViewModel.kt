@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
+import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.event.list.states.EventListEvent
 import pt.isel.keepmyplanet.ui.event.list.states.EventListUiState
@@ -14,7 +15,11 @@ private const val SEARCH_DEBOUNCE_DELAY_MS = 500L
 
 class EventListViewModel(
     private val eventRepository: DefaultEventRepository,
-) : BaseViewModel<EventListUiState>(EventListUiState()) {
+    sessionManager: SessionManager,
+) : BaseViewModel<EventListUiState>(
+        EventListUiState(isGuest = sessionManager.userSession.value == null),
+        sessionManager,
+    ) {
     private var searchJob: Job? = null
 
     val listStates = EventFilterType.entries.associateWith { LazyListState() }
@@ -55,7 +60,11 @@ class EventListViewModel(
     }
 
     fun onFilterChanged(filterType: EventFilterType) {
-        if (currentState.filter == filterType) return
+        if (currentState.filter == filterType ||
+            (currentState.isGuest && filterType != EventFilterType.ALL)
+        ) {
+            return
+        }
         setState { copy(filter = filterType) }
         loadEvents(isRefresh = true, clearPrevious = true)
     }

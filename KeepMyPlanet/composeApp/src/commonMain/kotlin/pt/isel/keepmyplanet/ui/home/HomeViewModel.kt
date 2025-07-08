@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.ui.home
 
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.set
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
 import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
@@ -16,21 +18,34 @@ import pt.isel.keepmyplanet.ui.home.states.HomeEvent
 import pt.isel.keepmyplanet.ui.home.states.HomeUiState
 import pt.isel.keepmyplanet.utils.now
 
+private const val ONBOARDING_COMPLETED_KEY = "onboarding_completed"
+
 class HomeViewModel(
     private val eventRepository: DefaultEventRepository,
     private val zoneRepository: DefaultZoneRepository,
     private val sessionManager: SessionManager,
+    private val settings: Settings,
     private val eventCache: EventCacheRepository?,
     private val zoneCache: ZoneCacheRepository?,
-) : BaseViewModel<HomeUiState>(HomeUiState()) {
+) : BaseViewModel<HomeUiState>(HomeUiState(), sessionManager) {
     init {
-        val user = sessionManager.userSession.value?.userInfo
-        if (user == null) {
-            setState { copy(error = "User not logged in.") }
-        } else {
+        viewModelScope.launch {
+            val user = sessionManager.userSession.value?.userInfo
+            if (user == null) {
+                val onboardingCompleted = settings.getBoolean(ONBOARDING_COMPLETED_KEY, false)
+                setState {
+                    copy(isLoading = false, user = null, showOnboarding = !onboardingCompleted)
+                }
+                return@launch
+            }
             setState { copy(user = user, isUserAdmin = user.role == UserRole.ADMIN) }
             loadUpcomingEvents()
         }
+    }
+
+    fun completeOnboarding() {
+        settings[ONBOARDING_COMPLETED_KEY] = true
+        setState { copy(showOnboarding = false) }
     }
 
     override fun handleErrorWithMessage(message: String) {

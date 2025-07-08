@@ -13,9 +13,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.http.ApiException
+import pt.isel.keepmyplanet.exception.AuthenticationException
+import pt.isel.keepmyplanet.session.SessionManager
 
 abstract class BaseViewModel<S : UiState>(
     initialState: S,
+    private val sessionManager: SessionManager? = null,
 ) {
     val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -56,7 +59,13 @@ abstract class BaseViewModel<S : UiState>(
                 if (result.isSuccess) {
                     onSuccess(result.getOrThrow())
                 } else {
-                    onError(result.exceptionOrNull() ?: Exception("Unknown error in result"))
+                    val error = result.exceptionOrNull() ?: Exception("Unknown error in result")
+                    if (error is AuthenticationException) {
+                        sessionManager?.clearSession()
+                        handleErrorWithMessage("Your session has expired. Please log in again.")
+                    } else {
+                        onError(error)
+                    }
                 }
             } finally {
                 onFinally?.let { setState(it) }

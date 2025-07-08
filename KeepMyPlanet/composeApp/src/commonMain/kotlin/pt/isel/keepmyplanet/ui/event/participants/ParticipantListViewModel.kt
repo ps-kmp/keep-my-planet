@@ -18,17 +18,8 @@ class ParticipantListViewModel(
         launchWithResult(
             onStart = { copy(isLoading = true, error = null) },
             onFinally = { copy(isLoading = false) },
-            block = {
-                eventRepository.getEventDetailsBundle(eventId)
-            },
-            onSuccess = { bundle ->
-                setState {
-                    copy(
-                        event = bundle.event,
-                        participants = bundle.participants,
-                    )
-                }
-            },
+            block = { eventRepository.getEventDetailsBundle(eventId) },
+            onSuccess = { setState { copy(event = it.event, participants = it.participants) } },
             onError = { error ->
                 val message = getErrorMessage("Failed to load participants", error)
                 handleErrorWithMessage(message)

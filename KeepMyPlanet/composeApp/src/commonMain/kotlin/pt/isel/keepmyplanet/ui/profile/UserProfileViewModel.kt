@@ -21,7 +21,7 @@ class UserProfileViewModel(
     private val userRepository: DefaultUserRepository,
     private val photoRepository: DefaultPhotoRepository,
     private val sessionManager: SessionManager,
-) : BaseViewModel<UserProfileUiState>(UserProfileUiState()) {
+) : BaseViewModel<UserProfileUiState>(UserProfileUiState(), sessionManager) {
     private val user: UserInfo
         get() =
             sessionManager.userSession.value?.userInfo

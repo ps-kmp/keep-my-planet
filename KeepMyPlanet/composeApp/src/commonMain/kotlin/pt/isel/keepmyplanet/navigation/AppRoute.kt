@@ -75,3 +75,20 @@ sealed class AppRoute {
 
     data object UserManagement : AppRoute()
 }
+
+fun isRoutePublic(route: AppRoute): Boolean =
+    when (route) {
+        is AppRoute.Home,
+        is AppRoute.EventList,
+        is AppRoute.Map,
+        is AppRoute.EventDetails,
+        is AppRoute.ZoneDetails,
+        is AppRoute.About,
+        is AppRoute.Login,
+        is AppRoute.Register,
+        is AppRoute.EventStatusHistory,
+        is AppRoute.ParticipantList,
+        is AppRoute.EventStats,
+        -> true
+        else -> false
+    }

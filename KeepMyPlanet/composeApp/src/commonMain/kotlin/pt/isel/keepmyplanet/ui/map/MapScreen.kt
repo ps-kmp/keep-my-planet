@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -78,6 +79,7 @@ import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.rememberLocationProvider
+import pt.isel.keepmyplanet.ui.map.components.GuestPromptBanner
 import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.theme.backgroundLight
@@ -97,11 +99,13 @@ fun MapScreen(
     onNavigateToZoneDetails: (zoneId: Id) -> Unit,
     onNavigateToReportZone: (latitude: Double, longitude: Double, radius: Double) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToLogin: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val mapState = viewModel.mapState
+    var showGuestBanner by remember(uiState.isGuest) { mutableStateOf(uiState.isGuest) }
 
     val (currentCalloutId, setCurrentCalloutId) = remember { mutableStateOf<String?>(null) }
 
@@ -237,15 +241,17 @@ fun MapScreen(
                             )
                         }
                     }
-                    FloatingActionButton(
-                        onClick = { viewModel.enterReportingMode() },
-                        containerColor = backgroundLight,
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = "Report Zone",
-                            tint = primaryLight,
-                        )
+                    if (!uiState.isGuest) {
+                        FloatingActionButton(
+                            onClick = { viewModel.enterReportingMode() },
+                            containerColor = backgroundLight,
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Report Zone",
+                                tint = primaryLight,
+                            )
+                        }
                     }
                 }
             }
@@ -452,6 +458,12 @@ fun MapScreen(
                     }
                 }
             }
+            GuestPromptBanner(
+                isVisible = showGuestBanner,
+                onDismiss = { showGuestBanner = false },
+                onLoginClick = onNavigateToLogin,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
     }
 }

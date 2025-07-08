@@ -20,6 +20,13 @@ import pt.isel.keepmyplanet.utils.getPathUIntId
 
 fun Route.photoWebApi(photoService: PhotoService) {
     route("/photos") {
+        get("/{id}") {
+            val photoId = call.getPathUIntId("id", "Photo ID")
+            photoService
+                .getPhotoDetails(photoId)
+                .onSuccess { photo -> call.respond(HttpStatusCode.OK, photo.toResponse()) }
+                .onFailure { throw it }
+        }
         authenticate("auth-jwt") {
             post {
                 val uploaderId = call.getCurrentUserId()
@@ -44,14 +51,6 @@ fun Route.photoWebApi(photoService: PhotoService) {
                 photoService
                     .createPhoto(imageData, filename!!, uploaderId)
                     .onSuccess { photo -> call.respond(HttpStatusCode.Created, photo.toResponse()) }
-                    .onFailure { throw it }
-            }
-
-            get("/{id}") {
-                val photoId = call.getPathUIntId("id", "Photo ID")
-                photoService
-                    .getPhotoDetails(photoId)
-                    .onSuccess { photo -> call.respond(HttpStatusCode.OK, photo.toResponse()) }
                     .onFailure { throw it }
             }
         }

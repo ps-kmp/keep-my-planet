@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.di
 
+import com.russhwolf.settings.Settings
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -55,7 +56,7 @@ import pt.isel.keepmyplanet.ui.zone.update.UpdateZoneViewModel
 
 private val serviceModule =
     module {
-        // Session
+        // Session & Settings
         single<List<CleanableCache>> {
             listOf(
                 get<EventCacheRepository>(),
@@ -73,9 +74,10 @@ private val serviceModule =
         single { CacheCleanupService(get()) }
 
         single { SessionManager() }
+        factory { Settings() }
 
         // Network
-        single { createHttpClient(get()) }
+        factory { createHttpClient(get()) }
     }
 
 private val apiModule =
@@ -87,19 +89,27 @@ private val apiModule =
         factoryOf(::ZoneApi)
         factoryOf(::PhotoApi)
         factoryOf(::DeviceApi)
-        single { GeocodingApi(get(), getOrNull()) }
+        factory { GeocodingApi(get(), getOrNull()) }
     }
 
 private val repositoryModule =
     module {
         factoryOf(::DefaultAuthRepository)
         factoryOf(::DefaultDeviceRepository)
-        single { DefaultEventRepository(get(), getOrNull(), getOrNull(), getOrNull(), getOrNull()) }
+        factory {
+            DefaultEventRepository(
+                get(),
+                getOrNull(),
+                getOrNull(),
+                getOrNull(),
+                getOrNull(),
+            )
+        }
         factoryOf(::DefaultGeocodingRepository)
-        single { DefaultMessageRepository(get(), getOrNull()) }
-        single { DefaultPhotoRepository(get(), getOrNull(), get()) }
-        single { DefaultUserRepository(get(), getOrNull(), getOrNull()) }
-        single { DefaultZoneRepository(get(), getOrNull(), get()) }
+        factory { DefaultMessageRepository(get(), getOrNull()) }
+        factory { DefaultPhotoRepository(get(), getOrNull(), get()) }
+        factory { DefaultUserRepository(get(), getOrNull(), getOrNull()) }
+        factory { DefaultZoneRepository(get(), getOrNull(), get()) }
     }
 
 private val viewModelModule =
@@ -107,12 +117,12 @@ private val viewModelModule =
         single { AppViewModel(get(), get()) }
         factoryOf(::LoginViewModel)
         factoryOf(::RegisterViewModel)
-        factory { HomeViewModel(get(), get(), get(), getOrNull(), getOrNull()) }
-        factoryOf(::EventListViewModel)
+        factory { HomeViewModel(get(), get(), get(), get(), getOrNull(), getOrNull()) }
+        factory { EventListViewModel(get(), get()) }
         factory { EventDetailsViewModel(get(), get(), get()) }
         factoryOf(::EventStatusHistoryViewModel)
         factory { EventFormViewModel(get(), get()) }
-        factoryOf(::MapViewModel)
+        factory { MapViewModel(get(), get(), get(), get(), get()) }
         factoryOf(::ZoneDetailsViewModel)
         factoryOf(::UpdateZoneViewModel)
         factoryOf(::ReportZoneViewModel)

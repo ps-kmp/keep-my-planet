@@ -15,4 +15,5 @@ data class MapUiState(
     val searchQuery: String = "",
     val searchResults: List<Place> = emptyList(),
     val isSearching: Boolean = false,
+    val isGuest: Boolean = false,
 ) : UiState

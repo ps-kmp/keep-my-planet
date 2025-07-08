@@ -72,6 +72,7 @@ import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsUiState
 fun ZoneDetailsScreen(
     viewModel: ZoneDetailsViewModel,
     zoneId: Id,
+    onNavigateToLogin: () -> Unit,
     onNavigateToCreateEvent: (zoneId: Id) -> Unit,
     onNavigateToEventDetails: (eventId: Id) -> Unit,
     onNavigateToUpdateZone: (zoneId: Id) -> Unit,
@@ -343,17 +344,27 @@ fun ZoneDetailsScreen(
                                 )
                                 Text("View Associated Event")
                             }
-                        } else if (zone.status == ZoneStatus.REPORTED) {
-                            Button(
-                                onClick = { onNavigateToCreateEvent(zone.id) },
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Icon(
-                                    Icons.Default.CalendarToday,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(end = 8.dp),
-                                )
-                                Text("Create Cleanup Event")
+                        } else {
+                            when {
+                                uiState.isGuest ->
+                                    Button(
+                                        onClick = onNavigateToLogin,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Text("Login to Create Event")
+                                    }
+                                zone.status == ZoneStatus.REPORTED ->
+                                    Button(
+                                        onClick = { onNavigateToCreateEvent(zone.id) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                    ) {
+                                        Icon(
+                                            Icons.Default.CalendarToday,
+                                            contentDescription = null,
+                                            modifier = Modifier.padding(end = 8.dp),
+                                        )
+                                        Text("Create Cleanup Event")
+                                    }
                             }
                         }
                     }

@@ -39,207 +39,206 @@ fun App() {
         val userSession = uiState.userSession
         val currentRoute = uiState.currentRoute
 
-        if (userSession != null) {
-            val currentUserInfo = userSession.userInfo
-            when (currentRoute) {
-                is AppRoute.Home ->
-                    HomeScreen(
-                        onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
-                        onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
-                        onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
-                        onLogout = { appViewModel.logout() },
-                        onNavigateToAbout = { appViewModel.navigate(AppRoute.About) },
-                        onNavigateToEventDetails = { eventId ->
-                            appViewModel.navigate(AppRoute.EventDetails(eventId))
-                        },
-                        onNavigateToZoneDetails = { zoneId ->
-                            appViewModel.navigate(AppRoute.ZoneDetails(zoneId))
-                        },
-                        onNavigateToUserManagement = {
-                            appViewModel.navigate(AppRoute.UserManagement)
-                        },
-                    )
-
-                is AppRoute.EventList ->
-                    EventListScreen(
-                        viewModel = koinViewModel(),
-                        onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                        onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent()) },
-                    )
-
-                is AppRoute.CreateEvent ->
-                    CreateEventScreen(
-                        viewModel = koinViewModel(),
-                        zoneId = currentRoute.zoneId,
-                        onEventCreated = {
-                            appViewModel.navigateAndReplace(AppRoute.EventDetails(it))
-                        },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.EventDetails ->
-                    EventDetailsScreen(
-                        viewModel = koinViewModel(),
-                        eventId = currentRoute.eventId,
-                        onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
-                        onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(it)) },
-                        onNavigateToUpdateZone = { appViewModel.navigate(AppRoute.UpdateZone(it)) },
-                        onNavigateToManageAttendance = {
-                            appViewModel.navigate(AppRoute.ManageAttendance(it))
-                        },
-                        onNavigateToMyQrCode = { userId, organizerName ->
-                            appViewModel.navigate(AppRoute.MyQrCode(userId, organizerName))
-                        },
-                        onNavigateToStatusHistory = {
-                            appViewModel.navigate(AppRoute.EventStatusHistory(it))
-                        },
-                        onNavigateToParticipantList = {
-                            appViewModel.navigate(AppRoute.ParticipantList(it))
-                        },
-                        onNavigateToEventStats = {
-                            appViewModel.navigate(AppRoute.EventStats(it))
-                        },
-                        onNavigateToZoneDetails = {
-                            appViewModel.navigate(AppRoute.ZoneDetails(it))
-                        },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.ParticipantList ->
-                    ParticipantListScreen(
-                        viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.EventStatusHistory ->
-                    EventStatusHistoryScreen(
-                        viewModel = koinViewModel(),
-                        eventId = currentRoute.eventId,
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.EditEvent ->
-                    UpdateEventScreen(
-                        viewModel = koinViewModel(),
-                        eventId = currentRoute.eventId,
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.Chat ->
-                    ChatScreen(
-                        viewModel = koinViewModel { parametersOf(currentRoute.info) },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.UserProfile ->
-                    UserProfileScreen(
-                        viewModel = koinViewModel(),
-                        onAccountDeleted = { appViewModel.logout() },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                        onNavigateToStats = {
-                            appViewModel.navigate(AppRoute.UserStats(currentUserInfo.id))
-                        },
-                        onProfileUpdated = { appViewModel.onProfileUpdated(it) },
-                    )
-
-                is AppRoute.ManageAttendance ->
-                    ManageAttendanceScreen(
-                        viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.MyQrCode ->
-                    MyQrCodeScreen(
-                        userId = currentRoute.userId,
-                        organizerName = currentRoute.organizerName,
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.UserStats ->
-                    UserStatsScreen(
-                        viewModel = koinViewModel { parametersOf(currentRoute.userId) },
-                        userName = currentUserInfo.name.value,
-                        onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.EventStats ->
-                    EventStatsScreen(
-                        viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.Map ->
-                    MapScreen(
-                        viewModel = koinViewModel(),
-                        onNavigateToZoneDetails = {
-                            appViewModel.navigate(AppRoute.ZoneDetails(it))
-                        },
-                        onNavigateToReportZone = { lat, lon, radius ->
-                            appViewModel.navigate(AppRoute.ReportZone(lat, lon, radius))
-                        },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.ZoneDetails ->
-                    ZoneDetailsScreen(
-                        viewModel = koinViewModel(),
-                        zoneId = currentRoute.zoneId,
-                        onNavigateToUpdateZone = { appViewModel.navigate(AppRoute.UpdateZone(it)) },
-                        onNavigateToCreateEvent = {
-                            appViewModel.navigate(AppRoute.CreateEvent(it))
-                        },
-                        onNavigateToEventDetails = {
-                            appViewModel.navigate(AppRoute.EventDetails(it))
-                        },
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.UpdateZone ->
-                    UpdateZoneScreen(
-                        viewModel = koinViewModel(),
-                        zoneId = currentRoute.zoneId,
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.ReportZone ->
-                    ReportZoneScreen(
-                        viewModel = koinViewModel(),
-                        latitude = currentRoute.latitude,
-                        longitude = currentRoute.longitude,
-                        radius = currentRoute.radius,
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.UserManagement ->
-                    UserListScreen(
-                        onNavigateBack = { appViewModel.navigateBack() },
-                    )
-
-                is AppRoute.About -> AboutScreen(onNavigateBack = { appViewModel.navigateBack() })
-                is AppRoute.Login, is AppRoute.Register -> FullScreenLoading()
-                null -> FullScreenLoading()
+        when (currentRoute) {
+            is AppRoute.Login -> {
+                LoginScreen(
+                    viewModel = koinViewModel(),
+                    onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
+                    onLoginSuccess = { appViewModel.updateSession(it) },
+                )
             }
-        } else {
-            when (currentRoute) {
-                is AppRoute.Login -> {
-                    LoginScreen(
-                        viewModel = koinViewModel(),
-                        onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
-                        onLoginSuccess = { appViewModel.updateSession(it) },
-                    )
-                }
 
-                is AppRoute.Register -> {
-                    RegisterScreen(
-                        viewModel = koinViewModel(),
-                        onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
-                    )
-                }
-
-                else -> FullScreenLoading()
+            is AppRoute.Register -> {
+                RegisterScreen(
+                    viewModel = koinViewModel(),
+                    onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
+                )
             }
+
+            is AppRoute.Home ->
+                HomeScreen(
+                    onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
+                    onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
+                    onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
+                    onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
+                    onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
+                    onLogout = { appViewModel.logout() },
+                    onNavigateToAbout = { appViewModel.navigate(AppRoute.About) },
+                    onNavigateToEventDetails = { eventId ->
+                        appViewModel.navigate(AppRoute.EventDetails(eventId))
+                    },
+                    onNavigateToZoneDetails = { zoneId ->
+                        appViewModel.navigate(AppRoute.ZoneDetails(zoneId))
+                    },
+                    onNavigateToUserManagement = {
+                        appViewModel.navigate(AppRoute.UserManagement)
+                    },
+                )
+
+            is AppRoute.EventList ->
+                EventListScreen(
+                    viewModel = koinViewModel(),
+                    onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                    onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent()) },
+                )
+
+            is AppRoute.CreateEvent ->
+                CreateEventScreen(
+                    viewModel = koinViewModel(),
+                    zoneId = currentRoute.zoneId,
+                    onEventCreated = {
+                        appViewModel.navigateAndReplace(AppRoute.EventDetails(it))
+                    },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.EventDetails ->
+                EventDetailsScreen(
+                    viewModel = koinViewModel(),
+                    onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
+                    eventId = currentRoute.eventId,
+                    onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
+                    onNavigateToEditEvent = { appViewModel.navigate(AppRoute.EditEvent(it)) },
+                    onNavigateToUpdateZone = { appViewModel.navigate(AppRoute.UpdateZone(it)) },
+                    onNavigateToManageAttendance = {
+                        appViewModel.navigate(AppRoute.ManageAttendance(it))
+                    },
+                    onNavigateToMyQrCode = { userId, organizerName ->
+                        appViewModel.navigate(AppRoute.MyQrCode(userId, organizerName))
+                    },
+                    onNavigateToStatusHistory = {
+                        appViewModel.navigate(AppRoute.EventStatusHistory(it))
+                    },
+                    onNavigateToParticipantList = {
+                        appViewModel.navigate(AppRoute.ParticipantList(it))
+                    },
+                    onNavigateToEventStats = {
+                        appViewModel.navigate(AppRoute.EventStats(it))
+                    },
+                    onNavigateToZoneDetails = {
+                        appViewModel.navigate(AppRoute.ZoneDetails(it))
+                    },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.ParticipantList ->
+                ParticipantListScreen(
+                    viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.EventStatusHistory ->
+                EventStatusHistoryScreen(
+                    viewModel = koinViewModel(),
+                    eventId = currentRoute.eventId,
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.EditEvent ->
+                UpdateEventScreen(
+                    viewModel = koinViewModel(),
+                    eventId = currentRoute.eventId,
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.Chat ->
+                ChatScreen(
+                    viewModel = koinViewModel { parametersOf(currentRoute.info) },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.UserProfile ->
+                UserProfileScreen(
+                    viewModel = koinViewModel(),
+                    onAccountDeleted = { appViewModel.logout() },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                    onNavigateToStats = {
+                        userSession?.userInfo?.id?.let {
+                            appViewModel.navigate(AppRoute.UserStats(it))
+                        }
+                    },
+                    onProfileUpdated = { appViewModel.onProfileUpdated(it) },
+                )
+
+            is AppRoute.ManageAttendance ->
+                ManageAttendanceScreen(
+                    viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.MyQrCode ->
+                MyQrCodeScreen(
+                    userId = currentRoute.userId,
+                    organizerName = currentRoute.organizerName,
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.UserStats ->
+                UserStatsScreen(
+                    viewModel = koinViewModel { parametersOf(currentRoute.userId) },
+                    userName = userSession?.userInfo?.name?.value ?: "User",
+                    onEventSelected = { appViewModel.navigate(AppRoute.EventDetails(it.id)) },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.EventStats ->
+                EventStatsScreen(
+                    viewModel = koinViewModel { parametersOf(currentRoute.eventId) },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.Map ->
+                MapScreen(
+                    viewModel = koinViewModel(),
+                    onNavigateToZoneDetails = {
+                        appViewModel.navigate(AppRoute.ZoneDetails(it))
+                    },
+                    onNavigateToReportZone = { lat, lon, radius ->
+                        appViewModel.navigate(AppRoute.ReportZone(lat, lon, radius))
+                    },
+                    onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.ZoneDetails ->
+                ZoneDetailsScreen(
+                    viewModel = koinViewModel(),
+                    onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
+                    zoneId = currentRoute.zoneId,
+                    onNavigateToUpdateZone = { appViewModel.navigate(AppRoute.UpdateZone(it)) },
+                    onNavigateToCreateEvent = {
+                        appViewModel.navigate(AppRoute.CreateEvent(it))
+                    },
+                    onNavigateToEventDetails = {
+                        appViewModel.navigate(AppRoute.EventDetails(it))
+                    },
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.UpdateZone ->
+                UpdateZoneScreen(
+                    viewModel = koinViewModel(),
+                    zoneId = currentRoute.zoneId,
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.ReportZone ->
+                ReportZoneScreen(
+                    viewModel = koinViewModel(),
+                    latitude = currentRoute.latitude,
+                    longitude = currentRoute.longitude,
+                    radius = currentRoute.radius,
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.UserManagement ->
+                UserListScreen(
+                    onNavigateBack = { appViewModel.navigateBack() },
+                )
+
+            is AppRoute.About -> AboutScreen(onNavigateBack = { appViewModel.navigateBack() })
+            null -> FullScreenLoading()
         }
     }
 }

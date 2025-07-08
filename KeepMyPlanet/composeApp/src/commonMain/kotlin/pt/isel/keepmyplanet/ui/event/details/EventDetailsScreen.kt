@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -61,6 +62,7 @@ import pt.isel.keepmyplanet.utils.toFormattedString
 fun EventDetailsScreen(
     viewModel: EventDetailsViewModel,
     eventId: Id,
+    onNavigateToLogin: () -> Unit,
     onNavigateToChat: (ChatInfo) -> Unit,
     onNavigateToEditEvent: (Id) -> Unit,
     onNavigateToManageAttendance: (Id) -> Unit,
@@ -224,6 +226,21 @@ fun EventDetailsScreen(
                                 .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
+                        if (uiState.isGuest) {
+                            Card(modifier = Modifier.fillMaxWidth()) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text("You are viewing as a guest.")
+                                    Button(onClick = onNavigateToLogin) {
+                                        Text("Login or Register to Join")
+                                    }
+                                }
+                            }
+                        }
+
                         if (uiState.isCurrentUserPendingNominee) {
                             TransferOwnershipBanner(
                                 isLoading =

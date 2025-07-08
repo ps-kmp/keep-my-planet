@@ -15,4 +15,5 @@ data class HomeUiState(
     val error: String? = null,
     val locationError: Boolean = false,
     val isUserAdmin: Boolean = false,
+    val showOnboarding: Boolean = false,
 ) : UiState

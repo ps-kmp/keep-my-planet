@@ -1,7 +1,5 @@
 package pt.isel.keepmyplanet
 
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
 import pt.isel.keepmyplanet.domain.common.Id
@@ -9,6 +7,7 @@ import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.navigation.AppRoute
+import pt.isel.keepmyplanet.navigation.isRoutePublic
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.app.states.AppEvent
 import pt.isel.keepmyplanet.ui.app.states.AppUiState
@@ -31,16 +30,40 @@ class AppViewModel(
     ) {
     init {
         viewModelScope.launch {
-            sessionManager.userSession.map { it != null }.distinctUntilChanged().collect {
-                val newInitialRoute = determineInitialRoute(sessionManager.userSession.value)
-                setState {
-                    copy(
-                        userSession = sessionManager.userSession.value,
-                        navStack = listOf(newInitialRoute),
-                        currentRoute = newInitialRoute,
-                    )
+            sessionManager.userSession
+                .collect { newSession ->
+                    val oldSession = currentState.userSession
+                    val wasLoggedIn = oldSession != null
+                    val isNowLoggedIn = newSession != null
+
+                    if (wasLoggedIn && isNowLoggedIn && oldSession.token == newSession.token) {
+                        setState { copy(userSession = newSession) }
+                        return@collect
+                    }
+
+                    if (wasLoggedIn && !isNowLoggedIn) {
+                        setState {
+                            copy(
+                                userSession = null,
+                                navStack = listOf(AppRoute.Login),
+                                currentRoute = AppRoute.Login,
+                            )
+                        }
+                        return@collect
+                    }
+
+                    if (!wasLoggedIn && isNowLoggedIn) {
+                        setState {
+                            copy(
+                                userSession = newSession,
+                                navStack = listOf(AppRoute.Home),
+                                currentRoute = AppRoute.Home,
+                            )
+                        }
+                        return@collect
+                    }
+                    setState { copy(userSession = newSession) }
                 }
-            }
         }
     }
 
@@ -52,12 +75,7 @@ class AppViewModel(
         val resolvedRoute = resolveRoute(route, currentState.userSession)
         if (currentState.navStack.lastOrNull() != resolvedRoute) {
             val newStack = currentState.navStack + resolvedRoute
-            setState {
-                copy(
-                    navStack = newStack,
-                    currentRoute = newStack.last(),
-                )
-            }
+            setState { copy(navStack = newStack, currentRoute = newStack.last()) }
         }
     }
 
@@ -77,12 +95,7 @@ class AppViewModel(
     fun navigateBack() {
         if (currentState.navStack.size > 1) {
             val newStack = currentState.navStack.dropLast(1)
-            setState {
-                copy(
-                    navStack = newStack,
-                    currentRoute = newStack.last(),
-                )
-            }
+            setState { copy(navStack = newStack, currentRoute = newStack.last()) }
         }
     }
 
@@ -90,16 +103,13 @@ class AppViewModel(
         requestedRoute: AppRoute,
         session: UserSession?,
     ): AppRoute =
-        if (session != null) {
+        if (session != null) { // Logged in user
             when (requestedRoute) {
                 is AppRoute.Login, is AppRoute.Register -> AppRoute.Home
                 else -> requestedRoute
             }
-        } else {
-            when (requestedRoute) {
-                is AppRoute.Login, is AppRoute.Register -> requestedRoute
-                else -> AppRoute.Login
-            }
+        } else { // Guest user
+            if (isRoutePublic(requestedRoute)) requestedRoute else AppRoute.Login
         }
 
     fun updateSession(newSession: UserSession?) {
@@ -119,11 +129,7 @@ class AppViewModel(
 
     companion object {
         private fun determineInitialRoute(session: UserSession?): AppRoute =
-            if (session != null) {
-                AppRoute.Home
-            } else {
-                AppRoute.Login
-            }
+            if (session == null) AppRoute.Login else AppRoute.Home
     }
 
     fun handleNotificationNavigation(eventId: String) {

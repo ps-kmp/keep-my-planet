@@ -15,4 +15,5 @@ data class EventListUiState(
     val offset: Int = 0,
     val hasMorePages: Boolean = true,
     val error: String? = null,
+    val isGuest: Boolean = false,
 ) : UiState

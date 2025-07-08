@@ -45,6 +45,7 @@ import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
 import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.shouldShowUserLocationMarker
@@ -73,7 +74,11 @@ class MapViewModel(
     private val zoneRepository: DefaultZoneRepository,
     private val geocodingRepository: DefaultGeocodingRepository,
     private val mapTileCacheRepository: MapTileCacheRepository,
-) : BaseViewModel<MapUiState>(MapUiState()) {
+    sessionManager: SessionManager,
+) : BaseViewModel<MapUiState>(
+        MapUiState(isGuest = sessionManager.userSession.value == null),
+        sessionManager,
+    ) {
     private val _userLocation = MutableStateFlow<Location?>(null)
     val userLocation = _userLocation.asStateFlow()
 
@@ -288,6 +293,10 @@ class MapViewModel(
     }
 
     fun enterReportingMode() {
+        if (currentState.isGuest) {
+            sendEvent(MapEvent.ShowSnackbar("Please log in to report a zone."))
+            return
+        }
         setState {
             hideCallout()
             copy(isReportingMode = true)

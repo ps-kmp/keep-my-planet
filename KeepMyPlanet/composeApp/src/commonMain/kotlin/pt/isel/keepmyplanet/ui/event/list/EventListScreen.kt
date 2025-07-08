@@ -82,11 +82,14 @@ fun EventListScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { AppTopBar(title = "Events", onNavigateBack = onNavigateBack) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onCreateEventClick) {
-                Icon(Icons.Default.Add, contentDescription = "Create Event")
-            }
-        },
+        floatingActionButton =
+            {
+                if (!uiState.isGuest) {
+                    FloatingActionButton(onClick = onCreateEventClick) {
+                        Icon(Icons.Default.Add, contentDescription = "Create Event")
+                    }
+                }
+            },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             SearchBarAndFilters(
@@ -94,6 +97,7 @@ fun EventListScreen(
                 onQueryChange = viewModel::onSearchQueryChanged,
                 activeFilter = uiState.filter,
                 onFilterChange = viewModel::onFilterChanged,
+                isGuest = uiState.isGuest,
                 isLoading = uiState.isLoading,
             )
 
