@@ -18,6 +18,8 @@ import pt.isel.keepmyplanet.service.PhotoService
 import pt.isel.keepmyplanet.utils.getCurrentUserId
 import pt.isel.keepmyplanet.utils.getPathUIntId
 
+private val ALLOWED_IMAGE_TYPES = setOf("image/jpeg", "image/png", "image/webp")
+
 fun Route.photoWebApi(photoService: PhotoService) {
     route("/photos") {
         get("/{id}") {
@@ -37,6 +39,14 @@ fun Route.photoWebApi(photoService: PhotoService) {
                 multipart.forEachPart { part ->
                     if (part is PartData.FileItem && part.name == "image") {
                         filename = part.originalFileName
+                        val contentType = part.contentType?.toString()
+                        if (contentType !in ALLOWED_IMAGE_TYPES) {
+                            throw ValidationException(
+                                "Unsupported image type: $contentType. " +
+                                    "Only JPEG, PNG, and WebP are allowed.",
+                            )
+                        }
+
                         imageData = part.provider().readRemaining().readByteArray()
                     }
                     part.dispose()

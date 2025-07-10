@@ -88,7 +88,7 @@ actual fun QrCodeScannerView(
                         // Configure preview
                         val preview =
                             Preview.Builder().build().also {
-                                it.setSurfaceProvider(previewView.surfaceProvider)
+                                it.surfaceProvider = previewView.surfaceProvider
                             }
 
                         // Configure ImageAnalysis to ML Kit
@@ -120,7 +120,11 @@ actual fun QrCodeScannerView(
                                                             }
                                                     }
                                                 }.addOnFailureListener { e ->
-                                                    // Handle processing failures
+                                                    Log.e(
+                                                        "QrCodeScannerView",
+                                                        "Barcode scanning failed",
+                                                        e,
+                                                    )
                                                 }.addOnCompleteListener {
                                                     imageProxy.close()
                                                 }
@@ -173,7 +177,8 @@ actual fun QrCodeDisplay(
                         }
                     }
                     bmp
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e("QrCodeDisplay", "Error generating QR code", e)
                     null
                 }
             }

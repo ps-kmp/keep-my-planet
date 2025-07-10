@@ -20,21 +20,13 @@ abstract class BaseViewModel<S : UiState>(
     initialState: S,
     private val sessionManager: SessionManager? = null,
 ) {
-    val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    /**
-     * Final method to ensure the CoroutineScope is always cancelled.
-     * Calls a protected hook for subclasses to perform their own cleanup.
-     */
     fun onCleared() {
         onViewModelCleared()
         viewModelScope.cancel()
     }
 
-    /**
-     * Protected hook for subclasses to add their own cleanup logic.
-     * This is called before the viewModelScope is cancelled.
-     */
     protected open fun onViewModelCleared() {
         // Default implementation is empty
     }
