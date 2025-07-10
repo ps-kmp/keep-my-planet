@@ -1,14 +1,10 @@
 package pt.isel.keepmyplanet.plugins
 
 import io.ktor.server.application.Application
-import io.ktor.server.http.content.staticFiles
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.get
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import java.io.File
 import org.koin.ktor.ext.inject
-import pt.isel.keepmyplanet.Greeting
 import pt.isel.keepmyplanet.api.authWebApi
 import pt.isel.keepmyplanet.api.deviceWebApi
 import pt.isel.keepmyplanet.api.eventWebApi
@@ -42,10 +38,7 @@ fun Application.configureRouting() {
 
     // Presentation Layer
     routing {
-        route("/api") {
-            get("/") {
-                call.respondText("Ktor: ${Greeting().greet()}")
-            }
+        route("/") {
             authWebApi(authService)
             userWebApi(userService)
             zoneWebApi(zoneService)
@@ -56,9 +49,7 @@ fun Application.configureRouting() {
             ipGeocodingWebApi(ipGeocodingService)
         }
 
-        staticFiles("/static/images", File("uploads/images"))
-
-        staticFiles("/", File("build/resources/main/static")) {
+        staticResources("/", "static") {
             default("index.html")
         }
     }

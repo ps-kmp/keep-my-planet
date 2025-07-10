@@ -17,7 +17,7 @@ application {
 }
 
 val copyWasmApp by tasks.registering(Copy::class) {
-    from(project(":composeApp").tasks.getByName("wasmJsProcessResources"))
+    from(project(":composeApp").tasks.getByName("wasmJsBrowserDistribution"))
     into(layout.buildDirectory.dir("resources/main/static"))
 }
 tasks.getByName("processResources").dependsOn(copyWasmApp)
