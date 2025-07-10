@@ -1,6 +1,6 @@
 FROM gradle:8.13-jdk17-focal AS builder
 WORKDIR /home/gradle/project
-COPY . .
+COPY .. .
 RUN chmod +x ./gradlew
 RUN ./gradlew --no-daemon :server:build :server:installDist
 
