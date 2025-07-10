@@ -2,6 +2,8 @@ package pt.isel.keepmyplanet.plugins
 
 import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticResources
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.koin.ktor.ext.inject
@@ -38,6 +40,10 @@ fun Application.configureRouting() {
 
     // Presentation Layer
     routing {
+        get("/healthz") {
+            call.respondText("OK")
+        }
+
         route("/") {
             authWebApi(authService)
             userWebApi(userService)
