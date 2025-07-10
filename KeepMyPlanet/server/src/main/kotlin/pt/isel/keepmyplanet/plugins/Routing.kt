@@ -4,6 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import java.io.File
 import org.koin.ktor.ext.inject
@@ -41,20 +42,24 @@ fun Application.configureRouting() {
 
     // Presentation Layer
     routing {
-        get("/") {
-            call.respondText("Ktor: ${Greeting().greet()}")
+        route("/api") {
+            get("/") {
+                call.respondText("Ktor: ${Greeting().greet()}")
+            }
+            authWebApi(authService)
+            userWebApi(userService)
+            zoneWebApi(zoneService)
+            eventWebApi(eventService, eventStateChangeService)
+            messageWebApi(messageService, chatSseService)
+            photoWebApi(photoService)
+            deviceWebApi(notificationService)
+            ipGeocodingWebApi(ipGeocodingService)
         }
 
         staticFiles("/static/images", File("uploads/images"))
 
-        // API Routes
-        authWebApi(authService)
-        userWebApi(userService)
-        zoneWebApi(zoneService)
-        eventWebApi(eventService, eventStateChangeService)
-        messageWebApi(messageService, chatSseService)
-        photoWebApi(photoService)
-        deviceWebApi(notificationService)
-        ipGeocodingWebApi(ipGeocodingService)
+        staticFiles("/", File("build/resources/main/static")) {
+            default("index.html")
+        }
     }
 }

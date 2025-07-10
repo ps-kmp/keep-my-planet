@@ -16,6 +16,12 @@ application {
         listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
+val copyWasmApp by tasks.registering(Copy::class) {
+    from(project(":composeApp").tasks.getByName("wasmJsBrowserDistribution"))
+    into(layout.buildDirectory.dir("resources/main/static"))
+}
+tasks.getByName("processResources").dependsOn(copyWasmApp)
+
 ktlint {
     android.set(true)
     filter {

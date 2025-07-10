@@ -89,8 +89,9 @@ fun appModule(application: Application) =
                 if (databaseUrl != null) {
                     val dbUri = URI(databaseUrl)
                     val (user, password) = dbUri.userInfo.split(":", limit = 2)
+                    val port = if (dbUri.port != -1) dbUri.port else 5432
                     val jdbcUrl =
-                        "jdbc:postgresql://${dbUri.host}:${dbUri.port}${dbUri.path}?sslmode=require"
+                        "jdbc:postgresql://${dbUri.host}:$port${dbUri.path}?sslmode=require"
 
                     HikariConfig().apply {
                         this.driverClassName = "org.postgresql.Driver"

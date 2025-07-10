@@ -16,7 +16,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.ApplicationConfig
-import java.io.ByteArrayInputStream
+import java.io.FileInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -47,15 +47,13 @@ class NotificationService(
     private val fcmUrl = "https://fcm.googleapis.com/v1/projects/$fcmProjectId/messages:send"
     private val log = LoggerFactory.getLogger(NotificationService::class.java)
 
+    private val serviceAccountPath =
+        System.getenv("FCM_SERVICE_ACCOUNT_PATH") ?: "/etc/secrets/fcm_service_account.json"
+
     private val firebaseMessaging: FirebaseMessaging by lazy {
         if (FirebaseApp.getApps().isEmpty()) {
-            val serviceAccountJson =
-                System.getenv("FCM_SERVICE_ACCOUNT_JSON")
-                    ?: throw IllegalStateException(
-                        "FCM_SERVICE_ACCOUNT_JSON environment variable not set.",
-                    )
-            val credentials =
-                GoogleCredentials.fromStream(ByteArrayInputStream(serviceAccountJson.toByteArray()))
+            val serviceAccountStream = FileInputStream(serviceAccountPath)
+            val credentials = GoogleCredentials.fromStream(serviceAccountStream)
             val options =
                 FirebaseOptions
                     .builder()
@@ -166,14 +164,10 @@ class NotificationService(
 
     private suspend fun getAccessToken(): String =
         withContext(Dispatchers.IO) {
-            val serviceAccountJson =
-                System.getenv("FCM_SERVICE_ACCOUNT_JSON")
-                    ?: throw IllegalStateException(
-                        "FCM_SERVICE_ACCOUNT_JSON environment variable not set.",
-                    )
+            val serviceAccountStream = FileInputStream(serviceAccountPath)
             val credentials =
                 GoogleCredentials
-                    .fromStream(ByteArrayInputStream(serviceAccountJson.toByteArray()))
+                    .fromStream(serviceAccountStream)
                     .createScoped(listOf("https://www.googleapis.com/auth/firebase.messaging"))
             credentials.refreshIfExpired()
             credentials.accessToken.tokenValue
