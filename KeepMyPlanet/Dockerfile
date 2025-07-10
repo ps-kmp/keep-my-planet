@@ -2,7 +2,7 @@ FROM gradle:8.13-jdk17-focal AS builder
 WORKDIR /home/gradle/project
 COPY . .
 RUN chmod +x ./gradlew
-RUN ./gradlew :server:installDist --no-daemon -Dorg.gradle.jvmargs="-Xmx1536M"
+RUN ./gradlew :server:installDist
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
