@@ -1,3 +1,6 @@
 package pt.isel.keepmyplanet
 
-actual val BASE_URL: String = "/api"
+@JsName("API_BASE_URL")
+private external val apiBaseUrl: String
+
+actual val BASE_URL: String = apiBaseUrl
