@@ -101,9 +101,7 @@ fun ChatScreen(
                 ErrorState(
                     message = uiState.error!!,
                     onRetry = {
-                        if (user ==
-                            null
-                        ) {
+                        if (user == null) {
                             onNavigateBack()
                         } else {
                             viewModel.load(uiState.chatInfo)
@@ -120,7 +118,7 @@ fun ChatScreen(
                 ) {
                     items(
                         uiState.messages,
-                        key = { it.temporaryId ?: it.message.id.toString() },
+                        key = { it.temporaryId?.value?.toString() ?: it.message.id.toString() },
                     ) { uiMessage ->
                         MessageItem(
                             modifier = Modifier.animateItem(),

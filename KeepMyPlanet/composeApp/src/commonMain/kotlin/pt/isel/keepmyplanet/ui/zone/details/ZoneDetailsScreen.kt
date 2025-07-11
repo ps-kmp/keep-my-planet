@@ -216,9 +216,7 @@ fun ZoneDetailsScreen(
                                                 Modifier
                                                     .size(120.dp)
                                                     .clickable {
-                                                        viewModel.onPhotoClicked(
-                                                            model.second,
-                                                        )
+                                                        viewModel.onPhotoClicked(model.second)
                                                     },
                                             shape = RoundedCornerShape(8.dp),
                                             elevation = CardDefaults.cardElevation(8.dp),
@@ -257,7 +255,7 @@ fun ZoneDetailsScreen(
                                     ) {
                                         itemsIndexed(
                                             uiState.afterPhotos,
-                                            key = { _, item -> item.first.value },
+                                            key = { _, item -> item.first.value.toString() },
                                         ) { _, model ->
                                             Card(
                                                 modifier =
@@ -358,6 +356,7 @@ fun ZoneDetailsScreen(
                                     ) {
                                         Text("Login to Create Event")
                                     }
+
                                 zone.status == ZoneStatus.REPORTED ->
                                     Button(
                                         onClick = { onNavigateToCreateEvent(zone.id) },

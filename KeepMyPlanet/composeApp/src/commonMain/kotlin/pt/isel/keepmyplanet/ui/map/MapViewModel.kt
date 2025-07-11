@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -164,16 +165,25 @@ class MapViewModel(
         }
     }
 
+    @OptIn(ExperimentalClusteringApi::class)
     private fun setupClusterer() {
         mapState.addClusterer(ZONE_CLUSTER_ID) { clusterIds ->
             {
+                val clusterSize = clusterIds.size
+                val (bgColor, size) =
+                    when {
+                        clusterSize > 25 -> MaterialTheme.colorScheme.errorContainer to 50.dp
+                        clusterSize > 10 -> Color(0xFFFFA000) to 45.dp
+                        else -> primaryLight to 40.dp
+                    }
+
                 Box(
                     modifier =
-                        Modifier.size(40.dp).background(primaryLight, CircleShape),
+                        Modifier.size(size).background(bgColor, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = clusterIds.size.toString(),
+                        text = clusterSize.toString(),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                     )
@@ -217,6 +227,7 @@ class MapViewModel(
         )
     }
 
+    @OptIn(ExperimentalClusteringApi::class)
     private fun updateZoneMarkersOnMap(zones: List<Zone>) {
         val newZonesMap = zones.associateBy { it.id.value.toString() }
         val newZoneIds = newZonesMap.keys

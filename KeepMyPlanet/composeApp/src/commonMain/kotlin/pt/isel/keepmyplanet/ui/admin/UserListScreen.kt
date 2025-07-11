@@ -108,16 +108,17 @@ fun UserListScreen(
             when {
                 uiState.isLoading -> FullScreenLoading()
                 uiState.error != null ->
-                    ErrorState(
-                        message = uiState.error!!,
-                    ) { viewModel.loadUsers() }
+                    ErrorState(message = uiState.error!!) {
+                        viewModel.loadUsers()
+                    }
+
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        items(uiState.users, key = { it.id.value }) { user ->
+                        items(uiState.users, key = { it.id.value.toString() }) { user ->
                             UserListItem(
                                 user = user,
                                 isUpdatingRole =
