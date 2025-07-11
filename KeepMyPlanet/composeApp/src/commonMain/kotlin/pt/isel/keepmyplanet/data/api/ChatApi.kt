@@ -6,7 +6,9 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.data.http.executeRequest
@@ -47,21 +49,20 @@ class ChatApi(
 
     fun listenToMessages(eventId: UInt): Flow<Result<MessageResponse>> =
         flow {
-            try {
-                httpClient.sse(Endpoints.messagesSse(eventId)) {
-                    incoming.collect { event ->
-                        val jsonString = event.data
-                        if (!jsonString.isNullOrBlank()) {
-                            val parseResult =
-                                runCatching {
-                                    Json.decodeFromString<MessageResponse>(jsonString)
-                                }
-                            emit(parseResult)
-                        }
+            httpClient.sse(Endpoints.messagesSse(eventId)) {
+                incoming.collect { event ->
+                    val jsonString = event.data
+                    if (!jsonString.isNullOrBlank()) {
+                        val parseResult =
+                            runCatching {
+                                Json.decodeFromString<MessageResponse>(jsonString)
+                            }
+                        emit(parseResult)
                     }
                 }
-            } catch (e: Exception) {
-                emit(Result.failure(e))
             }
+        }.catch { e ->
+            if (e is CancellationException) throw e
+            emit(Result.failure(e))
         }
 }

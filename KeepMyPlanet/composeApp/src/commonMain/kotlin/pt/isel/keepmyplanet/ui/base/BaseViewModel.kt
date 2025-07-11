@@ -2,8 +2,9 @@ package pt.isel.keepmyplanet.ui.base
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,7 @@ abstract class BaseViewModel<S : UiState>(
 
     fun onCleared() {
         onViewModelCleared()
-        viewModelScope.cancel()
+        viewModelScope.coroutineContext.cancelChildren()
     }
 
     protected open fun onViewModelCleared() {
@@ -56,7 +57,7 @@ abstract class BaseViewModel<S : UiState>(
         block: suspend () -> Result<T>,
         onSuccess: suspend (T) -> Unit,
         onError: (Throwable) -> Unit = { handleError(it) },
-    ) {
+    ): Job =
         viewModelScope.launch {
             onStart?.let { setState(it) }
             try {
@@ -76,7 +77,6 @@ abstract class BaseViewModel<S : UiState>(
                 onFinally?.let { setState(it) }
             }
         }
-    }
 
     protected fun getErrorMessage(
         prefix: String,

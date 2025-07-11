@@ -76,6 +76,7 @@ fun UpdateEventScreen(
                     onDescriptionChanged = viewModel::onDescriptionChanged,
                     onStartDateChanged = viewModel::onStartDateChanged,
                     onEndDateChanged = viewModel::onEndDateChanged,
+                    onEndDateCleared = viewModel::onEndDateCleared,
                     onMaxParticipantsChanged = viewModel::onMaxParticipantsChanged,
                 )
 

@@ -16,8 +16,9 @@ fun EventForm(
     formUiState: EventFormUiState,
     onTitleChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
-    onStartDateChanged: (String) -> Unit,
-    onEndDateChanged: (String) -> Unit,
+    onStartDateChanged: (kotlinx.datetime.LocalDateTime) -> Unit,
+    onEndDateChanged: (kotlinx.datetime.LocalDateTime) -> Unit,
+    onEndDateCleared: () -> Unit,
     onMaxParticipantsChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -54,6 +55,8 @@ fun EventForm(
         DateTimePicker(
             value = formUiState.endDate,
             onValueChange = onEndDateChanged,
+            onClear = onEndDateCleared,
+            isOptional = true,
             label = "End Date and Time (Optional)",
             errorText = formUiState.endDateError,
             enabled = formUiState.actionState == EventFormUiState.ActionState.Idle,

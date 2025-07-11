@@ -1,13 +1,14 @@
 package pt.isel.keepmyplanet.ui.event.forms.states
 
+import kotlinx.datetime.LocalDateTime
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.base.UiState
 
 data class EventFormUiState(
     val title: String = "",
     val description: String = "",
-    val startDate: String = "",
-    val endDate: String = "",
+    val startDate: LocalDateTime? = null,
+    val endDate: LocalDateTime? = null,
     val maxParticipants: String = "",
     val zoneId: String = "",
     val isLoading: Boolean = false,

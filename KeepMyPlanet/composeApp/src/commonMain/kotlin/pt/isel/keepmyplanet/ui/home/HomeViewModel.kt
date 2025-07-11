@@ -2,11 +2,13 @@ package pt.isel.keepmyplanet.ui.home
 
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
 import pt.isel.keepmyplanet.data.repository.EventApiRepository
+import pt.isel.keepmyplanet.data.repository.GeocodingApiRepository
 import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.domain.event.EventStatus
@@ -24,6 +26,7 @@ private const val ONBOARDING_COMPLETED_KEY = "onboarding_completed"
 class HomeViewModel(
     private val eventRepository: EventApiRepository,
     private val zoneRepository: ZoneApiRepository,
+    private val geocodingRepository: GeocodingApiRepository,
     private val sessionManager: SessionManager,
     private val settings: Settings,
     private val eventCache: EventCacheRepository?,
@@ -42,7 +45,6 @@ class HomeViewModel(
             } else {
                 setState { copy(user = user, isUserAdmin = user.role == UserRole.ADMIN) }
                 loadDashboardData()
-                onFindNearbyZonesRequested()
             }
         }
     }
@@ -56,7 +58,8 @@ class HomeViewModel(
         sendEvent(HomeEvent.ShowSnackbar(message))
     }
 
-    fun onFindNearbyZonesRequested() {
+    fun requestLocation() {
+        if (currentState.isFindingZones) return
         setState { copy(isFindingZones = true, zonesFound = null, nearbyZones = emptyList()) }
         sendEvent(HomeEvent.RequestLocation)
     }
@@ -72,7 +75,7 @@ class HomeViewModel(
                     val reportedZones =
                         zones
                             .filter { it.status == ZoneStatus.REPORTED }
-                            .sortedBy { it.zoneSeverity.ordinal }
+                            .sortedByDescending { it.zoneSeverity.ordinal }
                             .take(5)
                     setState {
                         copy(
@@ -89,10 +92,26 @@ class HomeViewModel(
     }
 
     fun onLocationError() {
-        setState { copy(isFindingZones = false, zonesFound = false) }
-        handleErrorWithMessage(
-            "Unable to retrieve your location. Please check permissions and try again.",
-        )
+        viewModelScope.launch {
+            geocodingRepository
+                .getIpLocation()
+                .onSuccess { response ->
+                    val (latStr, lonStr) = response.loc.split(',')
+                    val lat = latStr.toDoubleOrNull()
+                    val lon = lonStr.toDoubleOrNull()
+                    if (lat != null && lon != null) {
+                        onLocationAvailable(lat, lon)
+                    } else {
+                        setState { copy(isFindingZones = false, zonesFound = false) }
+                        handleErrorWithMessage("Could not parse IP-based location.")
+                    }
+                }.onFailure {
+                    setState { copy(isFindingZones = false, zonesFound = false) }
+                    handleErrorWithMessage(
+                        "Unable to retrieve your location. Please check permissions or network and try again.",
+                    )
+                }
+        }
     }
 
     private fun loadDashboardData() {
@@ -167,6 +186,8 @@ class HomeViewModel(
                         )
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 handleErrorWithMessage(getErrorMessage("Failed to refresh dashboard data", e))
             } finally {

@@ -3,11 +3,14 @@ package pt.isel.keepmyplanet.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -24,23 +27,16 @@ import pt.isel.keepmyplanet.utils.toFormattedString
 
 @Composable
 actual fun DateTimePicker(
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: LocalDateTime?,
+    onValueChange: (LocalDateTime) -> Unit,
     label: String,
     modifier: Modifier,
     errorText: String?,
     enabled: Boolean,
+    isOptional: Boolean,
+    onClear: (() -> Unit)?,
 ) {
-    val initialDateTime =
-        remember(value) {
-            try {
-                LocalDateTime.parse(value)
-            } catch (_: Exception) {
-                null
-            }
-        }
-
-    val displayValue = initialDateTime?.toFormattedString() ?: value
+    val displayValue = remember(value) { value?.toFormattedString() ?: "" }
 
     Column(modifier = modifier) {
         Box {
@@ -49,14 +45,31 @@ actual fun DateTimePicker(
                 onValueChange = {},
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(label) },
-                trailingIcon = { Icon(Icons.Default.DateRange, "Select Date") },
+                trailingIcon = {
+                    Row {
+                        if (isOptional && onClear != null && value != null) {
+                            IconButton(onClick = onClear, enabled = enabled) {
+                                Icon(Icons.Default.Clear, "Clear")
+                            }
+                        }
+                        Icon(Icons.Default.DateRange, "Select Date")
+                    }
+                },
                 readOnly = true,
                 enabled = false,
                 isError = errorText != null,
                 colors =
                     OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledTextColor =
+                            MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = if (value != null) 1f else 0.6f,
+                            ),
+                        disabledBorderColor =
+                            if (errorText != null) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.outline
+                            },
                         disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -69,11 +82,11 @@ actual fun DateTimePicker(
                             (document.createElement("input") as HTMLInputElement).apply {
                                 type = "datetime-local"
                                 style.display = "none"
-                                this.value = initialDateTime?.toString()?.take(16) ?: ""
+                                this.value = value?.toString()?.take(16) ?: ""
                                 onchange = { event: Event ->
                                     val result = (event.target as? HTMLInputElement)?.value
                                     if (result != null && result.isNotEmpty()) {
-                                        onValueChange("$result:00")
+                                        onValueChange(LocalDateTime.parse("$result:00"))
                                     }
                                 }
                             }

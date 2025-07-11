@@ -20,7 +20,7 @@ class EventListViewModel(
         EventListUiState(isGuest = sessionManager.userSession.value == null),
         sessionManager,
     ) {
-    private var searchJob: Job? = null
+    private var loadEventsJob: Job? = null
 
     val listStates = EventFilterType.entries.associateWith { LazyListState() }
 
@@ -38,24 +38,29 @@ class EventListViewModel(
 
     fun refreshEvents() {
         setState { copy(error = null) }
-        loadEvents(isRefresh = true, clearPrevious = false)
+        loadEventsJob?.cancel()
+        loadEventsJob = launchLoadEvents(isRefresh = true, clearPrevious = false)
     }
 
     fun loadNextPage() {
         val state = currentState
-        if (state.isLoading || state.isAddingMore || !state.hasMorePages) {
+        if (state.isLoading ||
+            state.isAddingMore ||
+            !state.hasMorePages ||
+            loadEventsJob?.isActive == true
+        ) {
             return
         }
-        loadEvents(isRefresh = false, clearPrevious = false)
+        loadEventsJob = launchLoadEvents(isRefresh = false, clearPrevious = false)
     }
 
     fun onSearchQueryChanged(query: String) {
         setState { copy(query = query) }
-        searchJob?.cancel()
-        searchJob =
+        loadEventsJob?.cancel()
+        loadEventsJob =
             viewModelScope.launch {
                 delay(SEARCH_DEBOUNCE_DELAY_MS)
-                loadEvents(isRefresh = true, clearPrevious = true)
+                launchLoadEvents(isRefresh = true, clearPrevious = true)
             }
     }
 
@@ -66,18 +71,17 @@ class EventListViewModel(
             return
         }
         setState { copy(filter = filterType) }
-        loadEvents(isRefresh = true, clearPrevious = true)
+        loadEventsJob?.cancel()
+        loadEventsJob = launchLoadEvents(isRefresh = true, clearPrevious = true)
     }
 
-    private fun loadEvents(
+    private fun launchLoadEvents(
         isRefresh: Boolean,
         clearPrevious: Boolean,
-    ) {
+    ): Job {
         val offset = if (isRefresh) 0 else currentState.offset
 
-        if (isRefresh.not() && (currentState.isLoading || currentState.isAddingMore)) return
-
-        launchWithResult(
+        return launchWithResult(
             onStart = {
                 copy(
                     isLoading = isRefresh,
@@ -98,9 +102,10 @@ class EventListViewModel(
             onSuccess = { newEvents ->
                 setState {
                     val currentEvents = if (isRefresh) emptyList() else this.events
+                    val oldOffset = if (isRefresh) 0 else this.offset
                     copy(
                         events = (currentEvents + newEvents).distinctBy { it.id },
-                        offset = if (isRefresh) 0 else this.offset + newEvents.size,
+                        offset = oldOffset + newEvents.size,
                         hasMorePages = newEvents.size == this.limit,
                         error = null,
                     )

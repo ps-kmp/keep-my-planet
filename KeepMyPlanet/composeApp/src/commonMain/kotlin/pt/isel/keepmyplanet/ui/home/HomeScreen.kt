@@ -153,7 +153,7 @@ fun HomeScreen(
                 onNavigateToZoneDetails = onNavigateToZoneDetails,
                 onNavigateToUserManagement = onNavigateToUserManagement,
                 onLogout = onLogout,
-                onFindNearbyZones = viewModel::onFindNearbyZonesRequested,
+                onFindNearbyZones = viewModel::requestLocation,
                 onNavigateToMap = onNavigateToMap,
             )
         } else {

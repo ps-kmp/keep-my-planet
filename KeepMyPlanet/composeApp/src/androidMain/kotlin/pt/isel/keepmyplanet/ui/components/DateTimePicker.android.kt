@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.ui.components
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,11 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -28,68 +31,83 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
+import pt.isel.keepmyplanet.utils.toFormattedString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 actual fun DateTimePicker(
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: LocalDateTime?,
+    onValueChange: (LocalDateTime) -> Unit,
     label: String,
     modifier: Modifier,
     errorText: String?,
     enabled: Boolean,
+    isOptional: Boolean,
+    onClear: (() -> Unit)?,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    val initialDateTime =
-        remember(value) {
-            try {
-                LocalDateTime.parse(value)
-            } catch (_: Exception) {
-                null
-            }
-        }
+    val displayValue = remember(value) { value?.toFormattedString() ?: "" }
 
+    val now = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) }
     val datePickerState =
         rememberDatePickerState(
             initialSelectedDateMillis =
-                initialDateTime?.toInstant(TimeZone.UTC)?.toEpochMilliseconds(),
+                value
+                    ?.toInstant(
+                        TimeZone.currentSystemDefault(),
+                    )?.toEpochMilliseconds(),
         )
     val timePickerState =
         rememberTimePickerState(
-            initialHour = initialDateTime?.hour ?: 0,
-            initialMinute = initialDateTime?.minute ?: 0,
-            is24Hour = true,
+            initialHour = value?.hour ?: now.hour,
+            initialMinute = value?.minute ?: now.minute,
+            is24Hour = DateFormat.is24HourFormat(context),
         )
 
     Column(modifier = modifier) {
         Box {
             OutlinedTextField(
-                value =
-                    initialDateTime
-                        ?.toJavaLocalDateTime()
-                        ?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) ?: value,
+                value = displayValue,
                 onValueChange = {},
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(label) },
-                trailingIcon = { Icon(Icons.Default.DateRange, "Select Date") },
+                trailingIcon = {
+                    Row {
+                        if (isOptional && onClear != null && value != null) {
+                            IconButton(onClick = onClear, enabled = enabled) {
+                                Icon(Icons.Default.Clear, "Clear")
+                            }
+                        }
+                        Icon(Icons.Default.DateRange, "Select Date")
+                    }
+                },
                 readOnly = true,
-                enabled = false,
+                enabled = false, // Visually disabled
                 isError = errorText != null,
                 colors =
                     OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledTextColor =
+                            MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = if (value != null) 1f else 0.6f,
+                            ),
+                        disabledBorderColor =
+                            if (errorText != null) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.outline
+                            },
                         disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -97,12 +115,9 @@ actual fun DateTimePicker(
             )
             Box(
                 modifier =
-                    Modifier
-                        .matchParentSize()
-                        .clickable(enabled = enabled) {
-                            showDatePicker =
-                                true
-                        },
+                    Modifier.matchParentSize().clickable(
+                        enabled = enabled,
+                    ) { showDatePicker = true },
             )
         }
         if (errorText != null) {
@@ -128,44 +143,40 @@ actual fun DateTimePicker(
                 ) { Text("OK") }
             },
             dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancel") } },
-        ) { DatePicker(state = datePickerState) }
+        ) {
+            DatePicker(state = datePickerState)
+        }
     }
 
     if (showTimePicker) {
-        val selectedDate =
-            remember(datePickerState.selectedDateMillis) {
-                datePickerState.selectedDateMillis?.let {
-                    Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC)
-                }
-            }
+        val selectedDateMillis = datePickerState.selectedDateMillis ?: return
 
-        if (selectedDate != null) {
-            TimePickerDialog(
-                onDismissRequest = { showTimePicker = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            val newDateTime =
-                                LocalDateTime(
-                                    year = selectedDate.year,
-                                    monthNumber = selectedDate.monthNumber,
-                                    dayOfMonth = selectedDate.dayOfMonth,
-                                    hour = timePickerState.hour,
-                                    minute = timePickerState.minute,
-                                    second = 0,
-                                    nanosecond = 0,
-                                )
-                            onValueChange(newDateTime.toString())
-                            showTimePicker = false
-                        },
-                    ) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { showTimePicker = false },
-                    ) { Text("Cancel") }
-                },
-            ) { TimePicker(state = timePickerState) }
+        TimePickerDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val selectedInstant = Instant.fromEpochMilliseconds(selectedDateMillis)
+                        val selectedDate = selectedInstant.toLocalDateTime(TimeZone.UTC)
+
+                        val newDateTime =
+                            LocalDateTime(
+                                year = selectedDate.year,
+                                monthNumber = selectedDate.monthNumber,
+                                dayOfMonth = selectedDate.dayOfMonth,
+                                hour = timePickerState.hour,
+                                minute = timePickerState.minute,
+                                second = 0,
+                                nanosecond = 0,
+                            )
+                        onValueChange(newDateTime)
+                        showTimePicker = false
+                    },
+                ) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("Cancel") } },
+        ) {
+            TimePicker(state = timePickerState)
         }
     }
 }

@@ -33,8 +33,8 @@ class EventFormViewModel(
                     copy(
                         title = event.title.value,
                         description = event.description.value,
-                        startDate = event.period.start.toString(),
-                        endDate = event.period.end?.toString() ?: "",
+                        startDate = event.period.start,
+                        endDate = event.period.end,
                         maxParticipants = event.maxParticipants?.toString() ?: "",
                     )
                 }
@@ -55,15 +55,40 @@ class EventFormViewModel(
             copy(description = description, descriptionError = null)
         }
 
-    fun onStartDateChanged(startDate: String) =
+    fun onStartDateChanged(newStartDate: LocalDateTime) {
+        val currentEndDate = currentState.endDate
         setState {
-            copy(startDate = startDate, startDateError = null)
+            copy(
+                startDate = newStartDate,
+                startDateError = null,
+                endDateError =
+                    if (currentEndDate != null && newStartDate > currentEndDate) {
+                        "End date must be after start date"
+                    } else {
+                        null
+                    },
+            )
         }
+    }
 
-    fun onEndDateChanged(endDate: String) =
+    fun onEndDateChanged(newEndDate: LocalDateTime) {
+        val currentStartDate = currentState.startDate
         setState {
-            copy(endDate = endDate, endDateError = null)
+            copy(
+                endDate = newEndDate,
+                endDateError =
+                    if (currentStartDate != null && newEndDate < currentStartDate) {
+                        "End date must be after start date"
+                    } else {
+                        null
+                    },
+            )
         }
+    }
+
+    fun onEndDateCleared() {
+        setState { copy(endDate = null, endDateError = null) }
+    }
 
     fun onMaxParticipantsChanged(maxParticipants: String) =
         setState {
@@ -86,8 +111,8 @@ class EventFormViewModel(
             CreateEventRequest(
                 title = currentState.title,
                 description = currentState.description,
-                startDate = currentState.startDate,
-                endDate = currentState.endDate,
+                startDate = currentState.startDate!!.toString(),
+                endDate = currentState.endDate?.toString(),
                 zoneId = currentState.zoneId.toUInt(),
                 maxParticipants = currentState.maxParticipants.toIntOrNull(),
             )
@@ -97,9 +122,7 @@ class EventFormViewModel(
             onFinally = { copy(actionState = EventFormUiState.ActionState.Idle) },
             block = { eventRepository.createEvent(request) },
             onSuccess = { createdEvent ->
-                viewModelScope.launch {
-                    zoneRepository.invalidateZoneCache(createdEvent.zoneId)
-                }
+                viewModelScope.launch { zoneRepository.invalidateZoneCache(createdEvent.zoneId) }
                 sendEvent(EventFormEvent.EventCreated(createdEvent.id))
             },
             onError = { handleErrorWithMessage(getErrorMessage("Failed to create event", it)) },
@@ -114,8 +137,8 @@ class EventFormViewModel(
             UpdateEventRequest(
                 title = currentState.title,
                 description = currentState.description,
-                startDate = currentState.startDate,
-                endDate = currentState.endDate.takeIf { it.isNotBlank() },
+                startDate = currentState.startDate!!.toString(),
+                endDate = currentState.endDate?.toString(),
                 maxParticipants = currentState.maxParticipants.toIntOrNull(),
             )
 
@@ -133,32 +156,29 @@ class EventFormViewModel(
     }
 
     private fun validateForm(): Boolean {
+        val state = currentState
         val stateWithErrors =
-            currentState.copy(
-                titleError = if (currentState.title.isBlank()) "Title cannot be empty" else null,
-                descriptionError =
-                    if (currentState.description.isBlank()) "Description cannot be empty" else null,
+            state.copy(
+                titleError = if (state.title.isBlank()) "Title cannot be empty" else null,
+                descriptionError = if (state.description.isBlank()) "Description cannot be empty" else null,
                 startDateError =
-                    try {
-                        LocalDateTime.parse(currentState.startDate)
+                    if (state.startDate == null) {
+                        "Start date cannot be empty"
+                    } else {
                         null
-                    } catch (_: Exception) {
-                        "Please select a valid start date"
                     },
                 endDateError =
-                    if (currentState.endDate.isNotBlank()) {
-                        try {
-                            LocalDateTime.parse(currentState.endDate)
-                            null
-                        } catch (_: Exception) {
-                            "Please select a valid end date"
-                        }
+                    if (state.endDate != null &&
+                        state.startDate != null &&
+                        state.endDate < state.startDate
+                    ) {
+                        "End date must be after start date"
                     } else {
                         null
                     },
                 maxParticipantsError =
-                    if (currentState.maxParticipants.isNotEmpty()) {
-                        val number = currentState.maxParticipants.toIntOrNull()
+                    if (state.maxParticipants.isNotEmpty()) {
+                        val number = state.maxParticipants.toIntOrNull()
                         if (number == null) {
                             "Must be a valid number"
                         } else if (number <= 0) {

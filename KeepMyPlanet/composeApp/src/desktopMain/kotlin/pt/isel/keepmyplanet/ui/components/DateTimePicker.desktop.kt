@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -30,48 +32,59 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import pt.isel.keepmyplanet.utils.toFormattedString
 
 @Composable
 actual fun DateTimePicker(
-    value: String,
-    onValueChange: (String) -> Unit,
+    value: LocalDateTime?,
+    onValueChange: (LocalDateTime) -> Unit,
     label: String,
     modifier: Modifier,
     errorText: String?,
     enabled: Boolean,
+    isOptional: Boolean,
+    onClear: (() -> Unit)?,
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
-    val initialDateTime =
-        remember(value) {
-            try {
-                LocalDateTime.parse(value)
-            } catch (_: Exception) {
-                null
-            }
-        }
+    val displayValue = remember(value) { value?.toFormattedString() ?: "" }
 
     Column(modifier = modifier) {
         Box {
             OutlinedTextField(
-                value =
-                    initialDateTime
-                        ?.toJavaLocalDateTime()
-                        ?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) ?: value,
+                value = displayValue,
                 onValueChange = {},
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(label) },
-                trailingIcon = { Icon(Icons.Default.DateRange, "Select Date") },
+                trailingIcon = {
+                    Row {
+                        if (isOptional && onClear != null && value != null) {
+                            IconButton(onClick = onClear, enabled = enabled) {
+                                Icon(Icons.Default.Clear, "Clear")
+                            }
+                        }
+                        Icon(Icons.Default.DateRange, "Select Date")
+                    }
+                },
                 readOnly = true,
                 enabled = false,
                 isError = errorText != null,
                 colors =
                     OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledTextColor =
+                            MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = if (value != null) 1f else 0.6f,
+                            ),
+                        disabledBorderColor =
+                            if (errorText != null) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.outline
+                            },
                         disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -93,20 +106,33 @@ actual fun DateTimePicker(
     }
 
     if (showDialog) {
-        var year by remember { mutableStateOf(initialDateTime?.year?.toString() ?: "") }
-        var month by remember { mutableStateOf(initialDateTime?.monthNumber?.toString() ?: "") }
-        var day by remember { mutableStateOf(initialDateTime?.dayOfMonth?.toString() ?: "") }
-        var hour by remember { mutableStateOf(initialDateTime?.hour?.toString() ?: "") }
-        var minute by remember { mutableStateOf(initialDateTime?.minute?.toString() ?: "") }
+        val now = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) }
 
-        val isFormValid by remember {
+        var year by remember { mutableStateOf(value?.year?.toString() ?: now.year.toString()) }
+        var month by remember {
+            mutableStateOf(value?.monthNumber?.toString() ?: now.monthNumber.toString())
+        }
+        var day by remember {
+            mutableStateOf(value?.dayOfMonth?.toString() ?: now.dayOfMonth.toString())
+        }
+        var hour by remember { mutableStateOf(value?.hour?.toString() ?: now.hour.toString()) }
+        var minute by remember {
+            mutableStateOf(
+                value?.minute?.toString() ?: now.minute.toString(),
+            )
+        }
+
+        val isFormValid by remember(year, month, day, hour, minute) {
             derivedStateOf {
-                val y = year.toIntOrNull()
-                val mo = month.toIntOrNull()
-                val d = day.toIntOrNull()
-                val h = hour.toIntOrNull()
-                val m = minute.toIntOrNull()
-                y != null && mo in 1..12 && d in 1..31 && h in 0..23 && m in 0..59
+                runCatching {
+                    LocalDateTime(
+                        year.toInt(),
+                        month.toInt(),
+                        day.toInt(),
+                        hour.toInt(),
+                        minute.toInt(),
+                    )
+                }.isSuccess
             }
         }
 
@@ -138,13 +164,19 @@ actual fun DateTimePicker(
                                 hour.toInt(),
                                 minute.toInt(),
                             )
-                        onValueChange(dateTime.toString())
+                        onValueChange(dateTime)
                         showDialog = false
                     },
                     enabled = isFormValid,
-                ) { Text("OK") }
+                ) {
+                    Text("OK")
+                }
             },
-            dismissButton = { TextButton(onClick = { showDialog = false }) { Text("Cancel") } },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            },
         )
     }
 }
