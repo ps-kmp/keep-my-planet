@@ -1,8 +1,8 @@
 package pt.isel.keepmyplanet.ui.report
 
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
-import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
+import pt.isel.keepmyplanet.data.repository.PhotoApiRepository
+import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.zone.Radius
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
@@ -13,8 +13,8 @@ import pt.isel.keepmyplanet.ui.report.states.ReportZoneUiState
 import pt.isel.keepmyplanet.ui.report.states.SelectedImage
 
 class ReportZoneViewModel(
-    private val zoneRepository: DefaultZoneRepository,
-    private val photoRepository: DefaultPhotoRepository,
+    private val zoneRepository: ZoneApiRepository,
+    private val photoRepository: PhotoApiRepository,
 ) : BaseViewModel<ReportZoneUiState>(ReportZoneUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(ReportZoneEvent.ShowSnackbar(message))

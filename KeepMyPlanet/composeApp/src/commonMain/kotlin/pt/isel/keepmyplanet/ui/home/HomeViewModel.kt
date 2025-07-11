@@ -5,8 +5,8 @@ import com.russhwolf.settings.set
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
 import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
-import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
+import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.UserRole
@@ -21,8 +21,8 @@ import pt.isel.keepmyplanet.utils.now
 private const val ONBOARDING_COMPLETED_KEY = "onboarding_completed"
 
 class HomeViewModel(
-    private val eventRepository: DefaultEventRepository,
-    private val zoneRepository: DefaultZoneRepository,
+    private val eventRepository: EventApiRepository,
+    private val zoneRepository: ZoneApiRepository,
     private val sessionManager: SessionManager,
     private val settings: Settings,
     private val eventCache: EventCacheRepository?,

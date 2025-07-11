@@ -1,9 +1,9 @@
 package pt.isel.keepmyplanet.ui.components
 
-import pt.isel.keepmyplanet.data.repository.DefaultGeocodingRepository
+import pt.isel.keepmyplanet.data.repository.GeocodingApiRepository
 
 internal suspend fun fetchIpBasedLocation(
-    geocodingRepository: DefaultGeocodingRepository,
+    geocodingRepository: GeocodingApiRepository,
     onSuccess: (latitude: Double, longitude: Double) -> Unit,
     onError: () -> Unit,
 ) {

@@ -4,7 +4,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
@@ -14,7 +14,7 @@ import pt.isel.keepmyplanet.ui.event.list.states.EventListUiState
 private const val SEARCH_DEBOUNCE_DELAY_MS = 500L
 
 class EventListViewModel(
-    private val eventRepository: DefaultEventRepository,
+    private val eventRepository: EventApiRepository,
     sessionManager: SessionManager,
 ) : BaseViewModel<EventListUiState>(
         EventListUiState(isGuest = sessionManager.userSession.value == null),

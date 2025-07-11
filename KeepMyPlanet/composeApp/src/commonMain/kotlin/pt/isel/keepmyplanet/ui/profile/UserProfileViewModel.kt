@@ -1,8 +1,8 @@
 package pt.isel.keepmyplanet.ui.profile
 
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
-import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
+import pt.isel.keepmyplanet.data.repository.PhotoApiRepository
+import pt.isel.keepmyplanet.data.repository.UserApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
@@ -18,8 +18,8 @@ import pt.isel.keepmyplanet.utils.AppError
 import pt.isel.keepmyplanet.utils.ErrorHandler
 
 class UserProfileViewModel(
-    private val userRepository: DefaultUserRepository,
-    private val photoRepository: DefaultPhotoRepository,
+    private val userRepository: UserApiRepository,
+    private val photoRepository: PhotoApiRepository,
     private val sessionManager: SessionManager,
 ) : BaseViewModel<UserProfileUiState>(UserProfileUiState(), sessionManager) {
     private val user: UserInfo

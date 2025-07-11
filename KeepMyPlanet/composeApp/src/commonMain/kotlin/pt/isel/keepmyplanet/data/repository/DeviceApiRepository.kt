@@ -2,7 +2,7 @@ package pt.isel.keepmyplanet.data.repository
 
 import pt.isel.keepmyplanet.data.api.DeviceApi
 
-class DefaultDeviceRepository(
+class DeviceApiRepository(
     private val deviceApi: DeviceApi,
 ) {
     suspend fun registerDevice(

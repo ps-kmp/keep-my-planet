@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.details
 
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
-import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
+import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
@@ -13,8 +13,8 @@ import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
 
 class EventDetailsViewModel(
-    private val eventRepository: DefaultEventRepository,
-    private val zoneRepository: DefaultZoneRepository,
+    private val eventRepository: EventApiRepository,
+    private val zoneRepository: ZoneApiRepository,
     private val sessionManager: SessionManager,
 ) : BaseViewModel<EventDetailsUiState>(
         EventDetailsUiState(currentUser = sessionManager.userSession.value?.userInfo),

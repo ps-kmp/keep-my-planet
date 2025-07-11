@@ -7,7 +7,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-import pt.isel.keepmyplanet.data.repository.DefaultGeocodingRepository
+import pt.isel.keepmyplanet.data.repository.GeocodingApiRepository
 
 @Composable
 actual fun rememberLocationProvider(
@@ -17,7 +17,7 @@ actual fun rememberLocationProvider(
     val coroutineScope = rememberCoroutineScope()
     val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
     val onLocationErrorState by rememberUpdatedState(onLocationError)
-    val geocodingRepository: DefaultGeocodingRepository = koinInject()
+    val geocodingRepository: GeocodingApiRepository = koinInject()
 
     fun requestIpLocationFallback() {
         coroutineScope.launch {

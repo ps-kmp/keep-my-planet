@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.attendance
 
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceEvent
@@ -9,7 +9,7 @@ import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceUiState
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 
 class ManageAttendanceViewModel(
-    private val eventRepository: DefaultEventRepository,
+    private val eventRepository: EventApiRepository,
 ) : BaseViewModel<ManageAttendanceUiState>(ManageAttendanceUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(ManageAttendanceEvent.ShowSnackbar(message))

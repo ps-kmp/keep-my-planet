@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.ui.register
 
-import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
+import pt.isel.keepmyplanet.data.repository.UserApiRepository
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Name
 import pt.isel.keepmyplanet.domain.user.Password
@@ -12,7 +12,7 @@ import pt.isel.keepmyplanet.utils.AppError
 import pt.isel.keepmyplanet.utils.ErrorHandler
 
 class RegisterViewModel(
-    private val userRepository: DefaultUserRepository,
+    private val userRepository: UserApiRepository,
 ) : BaseViewModel<RegisterUiState>(RegisterUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(RegisterEvent.ShowSnackbar(message))

@@ -40,8 +40,8 @@ import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
 import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
 import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
-import pt.isel.keepmyplanet.data.repository.DefaultGeocodingRepository
-import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
+import pt.isel.keepmyplanet.data.repository.GeocodingApiRepository
+import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
@@ -71,8 +71,8 @@ import pt.isel.keepmyplanet.utils.yToLat
 @OptIn(FlowPreview::class, ExperimentalClusteringApi::class)
 class MapViewModel(
     private val httpClient: HttpClient,
-    private val zoneRepository: DefaultZoneRepository,
-    private val geocodingRepository: DefaultGeocodingRepository,
+    private val zoneRepository: ZoneApiRepository,
+    private val geocodingRepository: GeocodingApiRepository,
     private val mapTileCacheRepository: MapTileCacheRepository,
     sessionManager: SessionManager,
 ) : BaseViewModel<MapUiState>(

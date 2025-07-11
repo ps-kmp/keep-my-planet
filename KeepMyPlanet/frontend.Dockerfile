@@ -11,6 +11,4 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY frontend/nginx.conf /etc/nginx/conf.d/keepmyplanet.conf
 COPY --from=builder /home/gradle/project/composeApp/build/dist/wasmJs/productionExecutable /usr/share/nginx/html
 EXPOSE 10000
-
-# The command to start Nginx in the foreground.
 CMD ["nginx", "-g", "daemon off;"]

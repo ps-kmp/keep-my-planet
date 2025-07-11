@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet.ui.zone.update
 
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
+import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
@@ -11,7 +11,7 @@ import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneEvent
 import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneUiState
 
 class UpdateZoneViewModel(
-    private val zoneRepository: DefaultZoneRepository,
+    private val zoneRepository: ZoneApiRepository,
 ) : BaseViewModel<UpdateZoneUiState>(UpdateZoneUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(UpdateZoneEvent.ShowSnackbar(message))

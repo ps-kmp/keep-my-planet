@@ -15,7 +15,7 @@ import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-import pt.isel.keepmyplanet.data.repository.DefaultGeocodingRepository
+import pt.isel.keepmyplanet.data.repository.GeocodingApiRepository
 
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
@@ -29,7 +29,7 @@ actual fun rememberLocationProvider(
     val locationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val onLocationUpdatedState by rememberUpdatedState(onLocationUpdated)
     val onLocationErrorState by rememberUpdatedState(onLocationError)
-    val geocodingRepository: DefaultGeocodingRepository = koinInject()
+    val geocodingRepository: GeocodingApiRepository = koinInject()
 
     fun requestIpLocationFallback() {
         coroutineScope.launch(Dispatchers.IO) {

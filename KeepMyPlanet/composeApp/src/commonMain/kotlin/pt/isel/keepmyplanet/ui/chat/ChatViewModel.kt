@@ -2,8 +2,8 @@ package pt.isel.keepmyplanet.ui.chat
 
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
-import pt.isel.keepmyplanet.data.repository.DefaultMessageRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
+import pt.isel.keepmyplanet.data.repository.MessageApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.message.Message
@@ -14,8 +14,8 @@ import pt.isel.keepmyplanet.ui.chat.states.ChatEvent
 import pt.isel.keepmyplanet.ui.chat.states.ChatUiState
 
 class ChatViewModel(
-    private val messageRepository: DefaultMessageRepository,
-    private val eventRepository: DefaultEventRepository,
+    private val messageRepository: MessageApiRepository,
+    private val eventRepository: EventApiRepository,
     sessionManager: SessionManager,
 ) : BaseViewModel<ChatUiState>(
         ChatUiState(sessionManager.userSession.value?.userInfo, ChatInfo(Id(0U), null)),

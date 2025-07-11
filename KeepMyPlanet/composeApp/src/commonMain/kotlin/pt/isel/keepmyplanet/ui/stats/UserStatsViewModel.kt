@@ -3,16 +3,16 @@ package pt.isel.keepmyplanet.ui.stats
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
-import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
+import pt.isel.keepmyplanet.data.repository.UserApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.stats.states.UserStatsEvent
 import pt.isel.keepmyplanet.ui.stats.states.UserStatsUiState
 
 class UserStatsViewModel(
-    private val userRepository: DefaultUserRepository,
-    private val eventRepository: DefaultEventRepository,
+    private val userRepository: UserApiRepository,
+    private val eventRepository: EventApiRepository,
 ) : BaseViewModel<UserStatsUiState>(UserStatsUiState()) {
     private var userId: Id? = null
 

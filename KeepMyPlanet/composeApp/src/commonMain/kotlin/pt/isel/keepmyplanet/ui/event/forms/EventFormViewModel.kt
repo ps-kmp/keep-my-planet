@@ -2,8 +2,8 @@ package pt.isel.keepmyplanet.ui.event.forms
 
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
-import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
+import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.event.CreateEventRequest
 import pt.isel.keepmyplanet.dto.event.UpdateEventRequest
@@ -12,8 +12,8 @@ import pt.isel.keepmyplanet.ui.event.forms.states.EventFormEvent
 import pt.isel.keepmyplanet.ui.event.forms.states.EventFormUiState
 
 class EventFormViewModel(
-    private val eventRepository: DefaultEventRepository,
-    private val zoneRepository: DefaultZoneRepository,
+    private val eventRepository: EventApiRepository,
+    private val zoneRepository: ZoneApiRepository,
 ) : BaseViewModel<EventFormUiState>(EventFormUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(EventFormEvent.ShowSnackbar(message))

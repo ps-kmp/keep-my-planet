@@ -1,7 +1,7 @@
 package pt.isel.keepmyplanet
 
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
+import pt.isel.keepmyplanet.data.repository.DeviceApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.user.UserInfo
@@ -14,7 +14,7 @@ import pt.isel.keepmyplanet.ui.app.states.AppUiState
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 
 class AppViewModel(
-    private val deviceRepository: DefaultDeviceRepository,
+    private val deviceRepository: DeviceApiRepository,
     private val sessionManager: SessionManager,
 ) : BaseViewModel<AppUiState>(
         initialState =

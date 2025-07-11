@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.ui.admin
 
-import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
+import pt.isel.keepmyplanet.data.repository.UserApiRepository
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.session.SessionManager
@@ -9,7 +9,7 @@ import pt.isel.keepmyplanet.ui.admin.states.UserListUiState
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 
 class UserListViewModel(
-    private val userRepository: DefaultUserRepository,
+    private val userRepository: UserApiRepository,
     private val sessionManager: SessionManager,
 ) : BaseViewModel<UserListUiState>(UserListUiState()) {
     init {

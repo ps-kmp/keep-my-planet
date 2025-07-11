@@ -13,10 +13,10 @@ import pt.isel.keepmyplanet.mapper.zone.toZone
 import pt.isel.keepmyplanet.utils.calculateBoundingBox
 import pt.isel.keepmyplanet.utils.haversineDistance
 
-class DefaultZoneRepository(
+class ZoneApiRepository(
     private val zoneApi: ZoneApi,
     private val zoneCache: ZoneCacheRepository?,
-    private val userRepository: DefaultUserRepository,
+    private val userRepository: UserApiRepository,
 ) {
     suspend fun reportZone(request: ReportZoneRequest): Result<Zone> =
         zoneApi.reportZone(request).map {

@@ -29,7 +29,7 @@ import pt.isel.keepmyplanet.mapper.event.toListItem
 import pt.isel.keepmyplanet.mapper.user.toUserCacheInfo
 import pt.isel.keepmyplanet.mapper.user.toUserInfo
 
-class DefaultEventRepository(
+class EventApiRepository(
     private val eventApi: EventApi,
     private val eventCache: EventCacheRepository?,
     private val userCache: UserCacheRepository?,

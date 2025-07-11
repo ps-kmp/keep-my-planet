@@ -25,14 +25,14 @@ import pt.isel.keepmyplanet.data.cache.UserCacheRepository
 import pt.isel.keepmyplanet.data.cache.UserStatsCacheRepository
 import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
 import pt.isel.keepmyplanet.data.http.createHttpClient
-import pt.isel.keepmyplanet.data.repository.DefaultAuthRepository
-import pt.isel.keepmyplanet.data.repository.DefaultDeviceRepository
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
-import pt.isel.keepmyplanet.data.repository.DefaultGeocodingRepository
-import pt.isel.keepmyplanet.data.repository.DefaultMessageRepository
-import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
-import pt.isel.keepmyplanet.data.repository.DefaultUserRepository
-import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
+import pt.isel.keepmyplanet.data.repository.AuthApiRepository
+import pt.isel.keepmyplanet.data.repository.DeviceApiRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
+import pt.isel.keepmyplanet.data.repository.GeocodingApiRepository
+import pt.isel.keepmyplanet.data.repository.MessageApiRepository
+import pt.isel.keepmyplanet.data.repository.PhotoApiRepository
+import pt.isel.keepmyplanet.data.repository.UserApiRepository
+import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.data.service.CacheCleanupService
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.admin.UserListViewModel
@@ -94,10 +94,10 @@ private val apiModule =
 
 private val repositoryModule =
     module {
-        factoryOf(::DefaultAuthRepository)
-        factoryOf(::DefaultDeviceRepository)
+        factoryOf(::AuthApiRepository)
+        factoryOf(::DeviceApiRepository)
         factory {
-            DefaultEventRepository(
+            EventApiRepository(
                 get(),
                 getOrNull(),
                 getOrNull(),
@@ -105,11 +105,11 @@ private val repositoryModule =
                 getOrNull(),
             )
         }
-        factoryOf(::DefaultGeocodingRepository)
-        factory { DefaultMessageRepository(get(), getOrNull()) }
-        factory { DefaultPhotoRepository(get(), getOrNull(), get()) }
-        factory { DefaultUserRepository(get(), getOrNull(), getOrNull()) }
-        factory { DefaultZoneRepository(get(), getOrNull(), get()) }
+        factoryOf(::GeocodingApiRepository)
+        factory { MessageApiRepository(get(), getOrNull()) }
+        factory { PhotoApiRepository(get(), getOrNull(), get()) }
+        factory { UserApiRepository(get(), getOrNull(), getOrNull()) }
+        factory { ZoneApiRepository(get(), getOrNull(), get()) }
     }
 
 private val viewModelModule =

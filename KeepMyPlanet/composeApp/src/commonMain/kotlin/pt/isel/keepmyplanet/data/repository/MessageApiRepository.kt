@@ -9,7 +9,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.mapper.message.toMessage
 
-class DefaultMessageRepository(
+class MessageApiRepository(
     private val chatApi: ChatApi,
     private val messageCache: MessageCacheRepository?,
 ) {

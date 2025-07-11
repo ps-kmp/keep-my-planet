@@ -1,13 +1,13 @@
 package pt.isel.keepmyplanet.ui.event.participants
 
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.event.participants.states.ParticipantListEvent
 import pt.isel.keepmyplanet.ui.event.participants.states.ParticipantListUiState
 
 class ParticipantListViewModel(
-    private val eventRepository: DefaultEventRepository,
+    private val eventRepository: EventApiRepository,
 ) : BaseViewModel<ParticipantListUiState>(ParticipantListUiState()) {
     fun loadParticipants(eventId: Id) {
         launchWithResult(

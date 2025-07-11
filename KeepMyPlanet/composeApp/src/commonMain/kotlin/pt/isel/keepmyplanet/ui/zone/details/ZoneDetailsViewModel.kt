@@ -4,24 +4,21 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import pt.isel.keepmyplanet.data.repository.DefaultPhotoRepository
-import pt.isel.keepmyplanet.data.repository.DefaultZoneRepository
+import pt.isel.keepmyplanet.data.repository.PhotoApiRepository
+import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsEvent
 import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsUiState
 
 class ZoneDetailsViewModel(
-    private val zoneRepository: DefaultZoneRepository,
-    private val photoRepository: DefaultPhotoRepository,
+    private val zoneRepository: ZoneApiRepository,
+    private val photoRepository: PhotoApiRepository,
     private val sessionManager: SessionManager,
 ) : BaseViewModel<ZoneDetailsUiState>(
         ZoneDetailsUiState(currentUser = sessionManager.userSession.value?.userInfo),
     ) {
-    private val currentUser: UserInfo? get() = sessionManager.userSession.value?.userInfo
-
     override fun handleErrorWithMessage(message: String) {
         sendEvent(ZoneDetailsEvent.ShowSnackbar(message))
     }

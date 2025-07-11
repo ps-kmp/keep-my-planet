@@ -15,7 +15,7 @@ import pt.isel.keepmyplanet.mapper.user.toDomain
 import pt.isel.keepmyplanet.mapper.user.toUserCacheInfo
 import pt.isel.keepmyplanet.mapper.user.toUserInfo
 
-class DefaultUserRepository(
+class UserApiRepository(
     private val userApi: UserApi,
     private val userCache: UserCacheRepository?,
     private val userStatsCache: UserStatsCacheRepository?,

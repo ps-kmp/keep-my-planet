@@ -1,6 +1,6 @@
 package pt.isel.keepmyplanet.ui.login
 
-import pt.isel.keepmyplanet.data.repository.DefaultAuthRepository
+import pt.isel.keepmyplanet.data.repository.AuthApiRepository
 import pt.isel.keepmyplanet.domain.user.Email
 import pt.isel.keepmyplanet.domain.user.Password
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
@@ -12,7 +12,7 @@ import pt.isel.keepmyplanet.utils.AppError
 import pt.isel.keepmyplanet.utils.ErrorHandler
 
 class LoginViewModel(
-    private val authRepository: DefaultAuthRepository,
+    private val authRepository: AuthApiRepository,
 ) : BaseViewModel<LoginUiState>(LoginUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(LoginEvent.ShowSnackbar(message))

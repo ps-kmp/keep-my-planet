@@ -1,13 +1,13 @@
 package pt.isel.keepmyplanet.ui.event.history
 
-import pt.isel.keepmyplanet.data.repository.DefaultEventRepository
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.event.history.states.EventStatusHistoryEvent
 import pt.isel.keepmyplanet.ui.event.history.states.EventStatusHistoryUiState
 
 class EventStatusHistoryViewModel(
-    private val eventRepository: DefaultEventRepository,
+    private val eventRepository: EventApiRepository,
 ) : BaseViewModel<EventStatusHistoryUiState>(EventStatusHistoryUiState()) {
     fun loadHistory(eventId: Id) {
         launchWithResult(

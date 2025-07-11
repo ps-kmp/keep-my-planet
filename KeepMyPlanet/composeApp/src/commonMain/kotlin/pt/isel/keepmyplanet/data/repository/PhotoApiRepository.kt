@@ -8,7 +8,7 @@ import pt.isel.keepmyplanet.data.cache.PhotoCacheRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.photo.PhotoResponse
 
-class DefaultPhotoRepository(
+class PhotoApiRepository(
     private val photoApi: PhotoApi,
     private val photoCache: PhotoCacheRepository?,
     private val httpClient: HttpClient,
