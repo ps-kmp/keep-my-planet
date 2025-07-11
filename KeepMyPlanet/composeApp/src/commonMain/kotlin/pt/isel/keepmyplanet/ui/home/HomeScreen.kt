@@ -215,13 +215,19 @@ private fun UserDashboard(
             ) {
                 when {
                     uiState.isLoading -> {
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                        ) {
                             items(3) { EventSummaryCardSkeleton() }
                         }
                     }
 
                     uiState.upcomingEvents.isNotEmpty() -> {
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                        ) {
                             items(uiState.upcomingEvents) { event ->
                                 EventSummaryCard(
                                     event = event,
@@ -234,7 +240,7 @@ private fun UserDashboard(
                     else -> {
                         Text(
                             "You have no upcoming events. Why not join one?",
-                            modifier = Modifier.padding(vertical = 8.dp),
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
                         )
                     }
                 }
@@ -247,36 +253,38 @@ private fun UserDashboard(
                 onActionClick = onNavigateToMap,
                 actionText = "Explore on Map",
             ) {
-                when {
-                    uiState.isFindingZones -> {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            CircularProgressIndicator(Modifier.size(24.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Finding zones near you...")
-                        }
-                    }
-
-                    uiState.zonesFound == true && uiState.nearbyZones.isNotEmpty() -> {
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(uiState.nearbyZones) { zone ->
-                                ZoneSummaryCard(
-                                    zone = zone,
-                                    onClick = { onNavigateToZoneDetails(zone.id) },
-                                )
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    when {
+                        uiState.isFindingZones -> {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(Modifier.size(24.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Finding zones near you...")
                             }
                         }
-                    }
 
-                    uiState.zonesFound == false -> {
-                        Text(
-                            "No polluted zones found nearby. Great!",
-                            modifier = Modifier.padding(vertical = 8.dp),
-                        )
-                    }
+                        uiState.zonesFound == true && uiState.nearbyZones.isNotEmpty() -> {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                items(uiState.nearbyZones) { zone ->
+                                    ZoneSummaryCard(
+                                        zone = zone,
+                                        onClick = { onNavigateToZoneDetails(zone.id) },
+                                    )
+                                }
+                            }
+                        }
 
-                    else -> {
-                        Button(onClick = onFindNearbyZones) {
-                            Text("Find Nearby Zones")
+                        uiState.zonesFound == false -> {
+                            Text(
+                                "No polluted zones found nearby. Great!",
+                                modifier = Modifier.padding(vertical = 8.dp),
+                            )
+                        }
+
+                        else -> {
+                            Button(onClick = onFindNearbyZones) {
+                                Text("Find Nearby Zones")
+                            }
                         }
                     }
                 }
@@ -417,7 +425,7 @@ private fun DashboardSection(
             colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 content = content,
             )

@@ -28,13 +28,10 @@ fun ZoneSummaryCardSkeleton() {
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             SkeletonBox(
                 modifier = Modifier.width(180.dp).height(20.dp).clip(RoundedCornerShape(4.dp)),
-            )
-            SkeletonBox(
-                modifier = Modifier.width(120.dp).height(16.dp).clip(RoundedCornerShape(4.dp)),
             )
             SkeletonBox(
                 modifier = Modifier.width(90.dp).height(28.dp).clip(RoundedCornerShape(50)),

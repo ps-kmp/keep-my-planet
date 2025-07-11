@@ -39,17 +39,23 @@ fun EventSummaryCardSkeleton() {
                 verticalAlignment = Alignment.Top,
             ) {
                 SkeletonBox(
-                    modifier = Modifier.width(120.dp).height(20.dp).clip(RoundedCornerShape(4.dp)),
+                    modifier =
+                        Modifier.weight(1f).height(20.dp).clip(RoundedCornerShape(4.dp)),
                 )
                 SkeletonBox(
-                    modifier = Modifier.width(80.dp).height(28.dp).clip(RoundedCornerShape(50)),
+                    modifier =
+                        Modifier
+                            .padding(start = 16.dp)
+                            .width(80.dp)
+                            .height(28.dp)
+                            .clip(RoundedCornerShape(50)),
                 )
             }
             SkeletonBox(
-                modifier = Modifier.width(150.dp).height(16.dp).clip(RoundedCornerShape(4.dp)),
+                modifier = Modifier.fillMaxWidth(0.6f).height(16.dp).clip(RoundedCornerShape(4.dp)),
             )
             SkeletonBox(
-                modifier = Modifier.fillMaxWidth(0.8f).height(16.dp).clip(RoundedCornerShape(4.dp)),
+                modifier = Modifier.fillMaxWidth(0.9f).height(16.dp).clip(RoundedCornerShape(4.dp)),
             )
         }
     }
