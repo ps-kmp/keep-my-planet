@@ -12,4 +12,7 @@ data class UpdateZoneUiState(
     val isUpdating: Boolean = false,
     val error: String? = null,
     val descriptionError: String? = null,
-) : UiState
+) : UiState {
+    val isFormEnabled: Boolean
+        get() = !isLoading && !isUpdating
+}

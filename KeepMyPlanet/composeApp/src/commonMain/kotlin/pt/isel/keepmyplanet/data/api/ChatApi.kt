@@ -25,12 +25,14 @@ class ChatApi(
 
     suspend fun getMessages(
         eventId: UInt,
-        afterPosition: Int? = null,
+        beforePosition: Int? = null,
+        limit: Int? = null,
     ): Result<List<MessageResponse>> =
         httpClient.executeRequest {
             method = HttpMethod.Get
             url(Endpoints.messages(eventId))
-            afterPosition?.let { parameter("after_position", it) }
+            beforePosition?.let { parameter("before_position", it) }
+            limit?.let { parameter("limit", it) }
         }
 
     suspend fun sendMessage(

@@ -45,8 +45,9 @@ fun SendNotificationDialog(
                 onClick = onConfirm,
                 isLoading = isLoading,
                 enabled = isSendEnabled,
-                text = "Send",
-            )
+            ) {
+                Text("Send")
+            }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )

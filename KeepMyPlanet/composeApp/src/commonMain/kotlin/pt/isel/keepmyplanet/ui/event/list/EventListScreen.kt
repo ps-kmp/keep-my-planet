@@ -14,12 +14,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,13 +27,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.EmptyState
 import pt.isel.keepmyplanet.ui.components.ErrorState
-import pt.isel.keepmyplanet.ui.components.FullScreenLoading
+import pt.isel.keepmyplanet.ui.components.EventItemSkeleton
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
 import pt.isel.keepmyplanet.ui.event.list.components.SearchBarAndFilters
 import pt.isel.keepmyplanet.ui.event.list.states.EventListEvent
@@ -110,18 +108,22 @@ fun EventListScreen(
 
             Box(modifier = Modifier.fillMaxSize()) {
                 if (uiState.isLoading && uiState.events.isEmpty() && uiState.error == null) {
-                    FullScreenLoading()
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(5) {
+                            EventItemSkeleton()
+                        }
+                    }
                 } else if (uiState.error != null) {
                     ErrorState(
                         message = uiState.error!!,
                         onRetry = { viewModel.refreshEvents() },
                     )
                 } else if (uiState.events.isEmpty()) {
-                    Text(
-                        text = "No events found",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleSmall,
-                    )
+                    EmptyState(message = "No events found.")
                 } else {
                     key(uiState.filter) {
                         LazyColumn(

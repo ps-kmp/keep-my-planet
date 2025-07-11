@@ -1,18 +1,19 @@
 package pt.isel.keepmyplanet.ui.chat.states
 
 import pt.isel.keepmyplanet.domain.message.ChatInfo
-import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.ui.base.UiState
 
 data class ChatUiState(
     val user: UserInfo?,
     val chatInfo: ChatInfo,
-    val messages: List<Message> = emptyList(),
+    val messages: List<UiMessage> = emptyList(),
     val messageInput: String = "",
     val messageInputError: String? = null,
     val actionState: ActionState = ActionState.Idle,
     val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val hasMoreMessages: Boolean = true,
     val error: String? = null,
 ) : UiState {
     sealed interface ActionState {

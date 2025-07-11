@@ -15,20 +15,22 @@ class MessageApiRepository(
 ) {
     suspend fun getMessages(
         eventId: Id,
-        afterPosition: Int? = null,
+        beforePosition: Int? = null,
+        limit: Int? = null,
     ): Result<List<Message>> =
         runCatching {
-            val cachedMessages = messageCache?.getMessagesByEventId(eventId) ?: emptyList()
-            val lastPositionInCache = cachedMessages.maxOfOrNull { it.chatPosition }
-            val fetchAfterPosition = afterPosition ?: lastPositionInCache
-
-            val networkResult = chatApi.getMessages(eventId.value, fetchAfterPosition)
+            val networkResult = chatApi.getMessages(eventId.value, beforePosition, limit)
             if (networkResult.isSuccess) {
                 val newMessages = networkResult.getOrThrow().map { it.toMessage() }
                 messageCache?.insertMessages(newMessages)
-                (cachedMessages + newMessages).distinctBy { it.id }.sortedBy { it.chatPosition }
+                newMessages
             } else {
-                cachedMessages.ifEmpty { throw networkResult.exceptionOrNull()!! }
+                if (beforePosition == null) {
+                    messageCache?.getMessagesByEventId(eventId)
+                        ?: throw networkResult.exceptionOrNull()!!
+                } else {
+                    throw networkResult.exceptionOrNull()!!
+                }
             }
         }
 

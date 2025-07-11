@@ -37,8 +37,8 @@ import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
-import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.InfoRow
+import pt.isel.keepmyplanet.ui.components.ProfileScreenSkeleton
 import pt.isel.keepmyplanet.ui.components.rememberPhotoPicker
 import pt.isel.keepmyplanet.ui.profile.components.DeleteAccountSection
 import pt.isel.keepmyplanet.ui.profile.components.PasswordChangeSection
@@ -88,7 +88,7 @@ fun UserProfileScreen(
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when {
-                uiState.isLoading -> FullScreenLoading()
+                uiState.isLoading -> ProfileScreenSkeleton()
                 uiState.error != null ->
                     ErrorState(
                         message = uiState.error!!,

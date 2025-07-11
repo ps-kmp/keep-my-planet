@@ -9,6 +9,7 @@ import pt.isel.keepmyplanet.navigation.AppRoute
 import pt.isel.keepmyplanet.ui.about.AboutScreen
 import pt.isel.keepmyplanet.ui.admin.UserListScreen
 import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceScreen
+import pt.isel.keepmyplanet.ui.attendance.ManageAttendanceViewModel
 import pt.isel.keepmyplanet.ui.attendance.MyQrCodeScreen
 import pt.isel.keepmyplanet.ui.base.koinViewModel
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
@@ -70,15 +71,9 @@ fun App() {
                     onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
                     onLogout = { appViewModel.logout() },
                     onNavigateToAbout = { appViewModel.navigate(AppRoute.About) },
-                    onNavigateToEventDetails = { eventId ->
-                        appViewModel.navigate(AppRoute.EventDetails(eventId))
-                    },
-                    onNavigateToZoneDetails = { zoneId ->
-                        appViewModel.navigate(AppRoute.ZoneDetails(zoneId))
-                    },
-                    onNavigateToUserManagement = {
-                        appViewModel.navigate(AppRoute.UserManagement)
-                    },
+                    onNavigateToEventDetails = { appViewModel.navigate(AppRoute.EventDetails(it)) },
+                    onNavigateToZoneDetails = { appViewModel.navigate(AppRoute.ZoneDetails(it)) },
+                    onNavigateToUserManagement = { appViewModel.navigate(AppRoute.UserManagement) },
                 )
 
             is AppRoute.EventList ->
@@ -95,9 +90,7 @@ fun App() {
                     viewModel = koinViewModel(),
                     onNavigateToHome = { appViewModel.navigateToHome() },
                     zoneId = currentRoute.zoneId,
-                    onEventCreated = {
-                        appViewModel.navigateAndReplace(AppRoute.EventDetails(it))
-                    },
+                    onEventCreated = { appViewModel.navigateAndReplace(AppRoute.EventDetails(it)) },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
@@ -122,12 +115,8 @@ fun App() {
                     onNavigateToParticipantList = {
                         appViewModel.navigate(AppRoute.ParticipantList(it))
                     },
-                    onNavigateToEventStats = {
-                        appViewModel.navigate(AppRoute.EventStats(it))
-                    },
-                    onNavigateToZoneDetails = {
-                        appViewModel.navigate(AppRoute.ZoneDetails(it))
-                    },
+                    onNavigateToEventStats = { appViewModel.navigate(AppRoute.EventStats(it)) },
+                    onNavigateToZoneDetails = { appViewModel.navigate(AppRoute.ZoneDetails(it)) },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
@@ -187,8 +176,7 @@ fun App() {
                 )
 
             is AppRoute.ManageAttendance -> {
-                val viewModel =
-                    koinViewModel<pt.isel.keepmyplanet.ui.attendance.ManageAttendanceViewModel>()
+                val viewModel: ManageAttendanceViewModel = koinViewModel()
                 LaunchedEffect(currentRoute.eventId) {
                     viewModel.loadInitialData(currentRoute.eventId)
                 }
@@ -240,9 +228,7 @@ fun App() {
                 MapScreen(
                     viewModel = koinViewModel(),
                     onNavigateToHome = { appViewModel.navigateToHome() },
-                    onNavigateToZoneDetails = {
-                        appViewModel.navigate(AppRoute.ZoneDetails(it))
-                    },
+                    onNavigateToZoneDetails = { appViewModel.navigate(AppRoute.ZoneDetails(it)) },
                     onNavigateToReportZone = { lat, lon, radius ->
                         appViewModel.navigate(AppRoute.ReportZone(lat, lon, radius))
                     },
@@ -257,12 +243,8 @@ fun App() {
                     onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
                     zoneId = currentRoute.zoneId,
                     onNavigateToUpdateZone = { appViewModel.navigate(AppRoute.UpdateZone(it)) },
-                    onNavigateToCreateEvent = {
-                        appViewModel.navigate(AppRoute.CreateEvent(it))
-                    },
-                    onNavigateToEventDetails = {
-                        appViewModel.navigate(AppRoute.EventDetails(it))
-                    },
+                    onNavigateToCreateEvent = { appViewModel.navigate(AppRoute.CreateEvent(it)) },
+                    onNavigateToEventDetails = { appViewModel.navigate(AppRoute.EventDetails(it)) },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
 
@@ -295,6 +277,7 @@ fun App() {
                     onNavigateToHome = { appViewModel.navigateToHome() },
                     onNavigateBack = { appViewModel.navigateBack() },
                 )
+
             null -> FullScreenLoading()
         }
     }

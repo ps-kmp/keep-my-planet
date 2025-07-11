@@ -19,23 +19,64 @@ class RegisterViewModel(
     }
 
     fun onUsernameChanged(username: String) {
-        setState { copy(username = username, usernameError = null) }
+        val usernameError =
+            try {
+                Name(username)
+                null
+            } catch (e: IllegalArgumentException) {
+                e.message
+            }
+        setState { copy(username = username, usernameError = usernameError) }
     }
 
     fun onEmailChanged(email: String) {
-        setState { copy(email = email, emailError = null) }
+        val emailError =
+            try {
+                Email(email)
+                null
+            } catch (e: IllegalArgumentException) {
+                e.message
+            }
+        setState { copy(email = email, emailError = emailError) }
     }
 
     fun onPasswordChanged(password: String) {
-        setState { copy(password = password, passwordError = null, confirmPasswordError = null) }
+        val passwordError =
+            try {
+                Password(password)
+                null
+            } catch (e: IllegalArgumentException) {
+                e.message
+            }
+        val confirmError =
+            if (currentState.confirmPassword.isNotEmpty() &&
+                password != currentState.confirmPassword
+            ) {
+                "Passwords do not match"
+            } else {
+                null
+            }
+        setState {
+            copy(
+                password = password,
+                passwordError = passwordError,
+                confirmPasswordError = confirmError,
+            )
+        }
     }
 
     fun onConfirmPasswordChanged(confirmPassword: String) {
-        setState { copy(confirmPassword = confirmPassword, confirmPasswordError = null) }
+        val confirmError =
+            if (confirmPassword != currentState.password) {
+                "Passwords do not match"
+            } else {
+                null
+            }
+        setState { copy(confirmPassword = confirmPassword, confirmPasswordError = confirmError) }
     }
 
     fun onRegisterClicked() {
-        if (!validateForm()) return
+        if (!validateForm() || !currentState.canAttemptRegister) return
 
         val request =
             RegisterRequest(
@@ -80,38 +121,10 @@ class RegisterViewModel(
     }
 
     private fun validateForm(): Boolean {
-        val stateWithErrors =
-            currentState.copy(
-                usernameError =
-                    try {
-                        Name(currentState.username)
-                        null
-                    } catch (e: IllegalArgumentException) {
-                        e.message
-                    },
-                emailError =
-                    try {
-                        Email(currentState.email)
-                        null
-                    } catch (e: IllegalArgumentException) {
-                        e.message
-                    },
-                passwordError =
-                    try {
-                        Password(currentState.password)
-                        null
-                    } catch (e: IllegalArgumentException) {
-                        e.message
-                    },
-                confirmPasswordError =
-                    if (currentState.password != currentState.confirmPassword) {
-                        "Passwords do not match"
-                    } else {
-                        null
-                    },
-            )
-
-        setState { stateWithErrors }
-        return !stateWithErrors.hasErrors
+        onUsernameChanged(currentState.username)
+        onEmailChanged(currentState.email)
+        onPasswordChanged(currentState.password)
+        onConfirmPasswordChanged(currentState.confirmPassword)
+        return !currentState.hasErrors
     }
 }

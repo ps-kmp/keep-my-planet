@@ -146,24 +146,30 @@ class EventApiRepository(
             historyCache?.getHistoryByEventId(eventId) ?: throw it
         }
 
+    private suspend fun getEvents(
+        filter: EventFilterType,
+        query: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<EventResponse>> =
+        when (filter) {
+            EventFilterType.ALL -> eventApi.searchAllEvents(query, limit, offset)
+            EventFilterType.ORGANIZED -> eventApi.searchOrganizedEvents(query, limit, offset)
+            EventFilterType.JOINED -> eventApi.searchJoinedEvents(query, limit, offset)
+        }
+
     suspend fun searchEvents(
         filter: EventFilterType,
         query: String?,
         limit: Int,
         offset: Int,
-    ): Result<List<EventListItem>> {
-        val apiCall: suspend () -> Result<List<EventResponse>> = {
-            when (filter) {
-                EventFilterType.ALL -> eventApi.searchAllEvents(query, limit, offset)
-                EventFilterType.ORGANIZED -> eventApi.searchOrganizedEvents(query, limit, offset)
-                EventFilterType.JOINED -> eventApi.searchJoinedEvents(query, limit, offset)
-            }
-        }
-        return runCatching {
-            val result = apiCall()
-            val events = result.getOrThrow().map { it.toListItem() }
+    ): Result<List<EventListItem>> =
+        runCatching {
+            val result = getEvents(filter, query, limit, offset)
+            val eventResponses = result.getOrThrow()
+            val events = eventResponses.map { it.toListItem() }
             if (offset == 0) {
-                eventCache?.insertEvents(result.getOrThrow().map { it.toEvent() })
+                eventCache?.insertEvents(eventResponses.map { it.toEvent() })
             }
             events
         }.recoverCatching {
@@ -173,7 +179,28 @@ class EventApiRepository(
                 emptyList()
             }
         }
-    }
+
+    suspend fun searchFullEvents(
+        filter: EventFilterType,
+        query: String?,
+        limit: Int,
+        offset: Int,
+    ): Result<List<Event>> =
+        runCatching {
+            val result = getEvents(filter, query, limit, offset)
+            val eventResponses = result.getOrThrow()
+            val events = eventResponses.map { it.toEvent() }
+            if (offset == 0) {
+                eventCache?.insertEvents(events)
+            }
+            events
+        }.recoverCatching {
+            if (offset == 0) {
+                eventCache?.getAllEvents() ?: emptyList()
+            } else {
+                emptyList()
+            }
+        }
 
     suspend fun createEvent(request: CreateEventRequest): Result<Event> =
         eventApi.createEvent(request).map {

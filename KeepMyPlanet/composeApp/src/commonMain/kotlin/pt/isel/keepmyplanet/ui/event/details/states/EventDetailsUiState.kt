@@ -10,6 +10,7 @@ data class EventDetailsUiState(
     val event: Event? = null,
     val participants: List<UserInfo> = emptyList(),
     val isLoading: Boolean = false,
+    val isLoadingParticipants: Boolean = false,
     val actionState: ActionState = ActionState.IDLE,
     val error: String? = null,
     val currentUser: UserInfo? = null,

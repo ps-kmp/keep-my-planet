@@ -144,9 +144,10 @@ private fun RegisterContent(
             onClick = onRegisterClicked,
             enabled = uiState.canAttemptRegister,
             isLoading = isActionInProgress,
-            text = "Register",
             modifier = Modifier.fillMaxWidth().height(48.dp).padding(top = 8.dp),
-        )
+        ) {
+            Text("Register")
+        }
 
         TextButton(
             onClick = onNavigateToLogin,

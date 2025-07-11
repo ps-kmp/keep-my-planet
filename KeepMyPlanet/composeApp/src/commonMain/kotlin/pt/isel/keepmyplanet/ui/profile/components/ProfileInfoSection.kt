@@ -67,8 +67,9 @@ fun ProfileInfoSection(
                 onClick = onSaveProfileClicked,
                 enabled = uiState.isSaveProfileEnabled,
                 isLoading = uiState.actionState == UserProfileUiState.ActionState.UPDATING_PROFILE,
-                text = "Save Changes",
-            )
+            ) {
+                Text("Save Changes")
+            }
         }
     }
 }

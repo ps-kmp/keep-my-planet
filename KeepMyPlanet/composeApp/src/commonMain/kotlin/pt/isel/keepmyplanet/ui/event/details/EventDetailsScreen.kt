@@ -3,12 +3,15 @@ package pt.isel.keepmyplanet.ui.event.details
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocationOn
@@ -17,7 +20,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,14 +42,17 @@ import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.message.ChatInfo
+import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ConfirmActionDialog
 import pt.isel.keepmyplanet.ui.components.DetailCard
+import pt.isel.keepmyplanet.ui.components.EmptyState
 import pt.isel.keepmyplanet.ui.components.ErrorState
-import pt.isel.keepmyplanet.ui.components.FullScreenLoading
+import pt.isel.keepmyplanet.ui.components.EventDetailsSkeleton
 import pt.isel.keepmyplanet.ui.components.InfoRow
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
+import pt.isel.keepmyplanet.ui.components.ParticipantRowSkeleton
 import pt.isel.keepmyplanet.ui.components.QrCodeIconButton
 import pt.isel.keepmyplanet.ui.components.isQrScanningAvailable
 import pt.isel.keepmyplanet.ui.event.details.components.CleanlinessConfirmationDialog
@@ -112,7 +118,6 @@ fun EventDetailsScreen(
                     "All associated data, including chat history, will be lost.",
         )
     }
-
     if (showCleanlinessDialog.value) {
         CleanlinessConfirmationDialog(
             onConfirm = {
@@ -126,7 +131,6 @@ fun EventDetailsScreen(
             onDismissRequest = { showCleanlinessDialog.value = false },
         )
     }
-
     if (showNotificationDialog.value) {
         SendNotificationDialog(
             title = uiState.notificationTitle,
@@ -139,7 +143,6 @@ fun EventDetailsScreen(
             isSendEnabled = uiState.isSendNotificationButtonEnabled,
         )
     }
-
     if (showTransferDialog.value) {
         val potentialNominees = uiState.participants.filter { it.id != uiState.event?.organizerId }
         ParticipantSelectionDialog(
@@ -162,24 +165,19 @@ fun EventDetailsScreen(
                     )
                 }
 
-                is EventDetailsEvent.EventDeleted -> {
+                is EventDetailsEvent.EventDeleted, is EventDetailsEvent.NavigateBack ->
                     onNavigateBack()
-                }
 
-                is EventDetailsEvent.NavigateBack -> {
-                    onNavigateBack()
-                }
-
-                is EventDetailsEvent.NavigateToManageAttendance -> {
+                is EventDetailsEvent.NavigateToManageAttendance ->
                     onNavigateToManageAttendance(event.eventId)
-                }
 
-                is EventDetailsEvent.NavigateToMyQrCode -> {
-                    onNavigateToMyQrCode(event.userId, event.organizerName)
-                }
+                is EventDetailsEvent.NavigateToMyQrCode ->
+                    onNavigateToMyQrCode(
+                        event.userId,
+                        event.organizerName,
+                    )
 
                 is EventDetailsEvent.NavigateToUpdateZone -> onNavigateToUpdateZone(event.zoneId)
-
                 is EventDetailsEvent.ShowParticipantSelectionDialog -> {
                     showTransferDialog.value = true
                 }
@@ -208,285 +206,267 @@ fun EventDetailsScreen(
                 },
             )
         },
+        floatingActionButton = {
+            if (uiState.canUserJoin || uiState.canUserLeave || uiState.canUserAccessChat) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (uiState.canUserAccessChat) {
+                        FloatingActionButton(
+                            onClick = { onNavigateToChat(ChatInfo(eventId, event?.title)) },
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "Open Chat")
+                        }
+                    }
+                    if (uiState.canUserJoin) {
+                        FloatingActionButton(onClick = viewModel::joinEvent) {
+                            Icon(Icons.Default.Add, contentDescription = "Join Event")
+                        }
+                    }
+                    if (uiState.canUserLeave) {
+                        FloatingActionButton(
+                            onClick = viewModel::leaveEvent,
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = "Leave Event",
+                            )
+                        }
+                    }
+                }
+            }
+        },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             when {
-                uiState.isLoading -> FullScreenLoading()
-                uiState.error != null -> {
+                uiState.isLoading && event == null ->
+                    EventDetailsSkeleton()
+
+                uiState.error != null && event == null ->
                     ErrorState(message = uiState.error!!) {
                         viewModel.loadEventDetails(eventId)
                     }
-                }
 
                 event != null -> {
-                    val organizer = uiState.participants.find { it.id == event.organizerId }
-                    Column(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState())
-                                .padding(16.dp),
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        if (uiState.isGuest) {
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    Text("You are viewing as a guest.")
-                                    Button(onClick = onNavigateToLogin) {
-                                        Text("Login or Register to Join")
-                                    }
-                                }
+                        if (uiState.isCurrentUserPendingNominee) {
+                            item {
+                                TransferOwnershipBanner(
+                                    isLoading =
+                                        uiState.actionState ==
+                                            EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
+                                    onAccept = { viewModel.respondToTransfer(true) },
+                                    onDecline = { viewModel.respondToTransfer(false) },
+                                )
                             }
                         }
-
-                        if (uiState.isCurrentUserPendingNominee) {
-                            TransferOwnershipBanner(
-                                isLoading =
-                                    uiState.actionState ==
-                                        EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
-                                onAccept = { viewModel.respondToTransfer(true) },
-                                onDecline = { viewModel.respondToTransfer(false) },
-                            )
-                        }
-
-                        DetailCard(title = "Description") {
-                            Text(
-                                text = event.description.value,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        }
-
-                        DetailCard(title = "Associated Zone") {
-                            InfoRow(
-                                icon = Icons.Default.LocationOn,
-                                text = "View the zone where this event takes place.",
-                                isClickable = true,
-                                onClick = { onNavigateToZoneDetails(event.zoneId) },
-                            )
-                        }
-
-                        DetailCard(title = "Information") {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                organizer?.let {
-                                    InfoRow(
-                                        icon = Icons.Default.Person,
-                                        text = "Organizer: ${it.name.value}",
-                                    )
-                                }
-
-                                InfoRow(
-                                    icon = Icons.Default.Schedule,
-                                    text = "Starts: ${event.period.start.toFormattedString()}",
+                        item {
+                            DetailCard(
+                                title = "Description",
+                                isLoading = uiState.isLoading,
+                                skeletonContent = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        ParticipantRowSkeleton()
+                                        ParticipantRowSkeleton()
+                                    }
+                                },
+                            ) {
+                                Text(
+                                    text = event.description.value,
+                                    style = MaterialTheme.typography.bodyMedium,
                                 )
-                                event.period.end?.let {
+                            }
+                        }
+                        item {
+                            DetailCard(title = "Information") {
+                                val organizer =
+                                    uiState.participants.find {
+                                        it.id ==
+                                            event.organizerId
+                                    }
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    InfoRow(
+                                        icon = Icons.Default.LocationOn,
+                                        text = "View the zone where this event takes place.",
+                                        isClickable = true,
+                                        onClick = { onNavigateToZoneDetails(event.zoneId) },
+                                    )
+                                    organizer?.let {
+                                        InfoRow(
+                                            icon = Icons.Default.Person,
+                                            text = "Organizer: ${it.name.value}",
+                                        )
+                                    }
                                     InfoRow(
                                         icon = Icons.Default.Schedule,
-                                        text = "Ends: ${it.toFormattedString()}",
+                                        text = "Starts: ${event.period.start.toFormattedString()}",
                                     )
-                                }
-
-                                InfoRow(
-                                    icon = Icons.Default.Flag,
-                                    text = "Status: ${event.status}",
-                                    onClick = {
-                                        onNavigateToStatusHistory(event.id)
-                                    },
-                                    isClickable = true,
-                                )
-
-                                if (uiState.canSeeStats) {
+                                    event.period.end?.let {
+                                        InfoRow(
+                                            icon = Icons.Default.Schedule,
+                                            text = "Ends: ${it.toFormattedString()}",
+                                        )
+                                    }
                                     InfoRow(
-                                        icon = Icons.Default.BarChart,
-                                        text = "View event statistics",
-                                        onClick = { onNavigateToEventStats(event.id) },
+                                        icon = Icons.Default.Flag,
+                                        text = "Status: ${event.status}",
+                                        onClick = { onNavigateToStatusHistory(event.id) },
                                         isClickable = true,
                                     )
+                                    if (uiState.canSeeStats) {
+                                        InfoRow(
+                                            icon = Icons.Default.BarChart,
+                                            text = "View event statistics",
+                                            onClick = { onNavigateToEventStats(event.id) },
+                                            isClickable = true,
+                                        )
+                                    }
                                 }
-
-                                InfoRow(
-                                    icon = Icons.Default.Schedule,
-                                    text = "Created: ${event.createdAt.toFormattedString()}",
-                                )
-                                InfoRow(
-                                    icon = Icons.Default.Schedule,
-                                    text = "Last update: ${event.updatedAt.toFormattedString()}",
-                                )
                             }
                         }
-                        if (uiState.participants.isNotEmpty()) {
+                        item {
                             val maxParticipantsText = event.maxParticipants?.let { "/$it" } ?: ""
                             DetailCard(
-                                "Participants (${uiState.participants.size}$maxParticipantsText)",
+                                title =
+                                    "Participants " +
+                                        "(${uiState.participants.size}$maxParticipantsText)",
+                                isLoading = uiState.isLoadingParticipants,
+                                skeletonContent = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        repeat(3) { ParticipantRowSkeleton() }
+                                    }
+                                },
                             ) {
-                                Column(modifier = Modifier.fillMaxWidth()) {
-                                    val participantsPreview = uiState.participants.take(5)
-                                    participantsPreview.forEach { participant ->
-                                        ParticipantRow(
-                                            participant = participant,
-                                            isOrganizer = participant.id == event.organizerId,
-                                        )
-                                    }
+                                if (uiState.participants.isNotEmpty()) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        val participantsPreview = uiState.participants.take(5)
+                                        participantsPreview.forEach { participant ->
+                                            ParticipantRow(
+                                                participant = participant,
+                                                isOrganizer = participant.id == event.organizerId,
+                                            )
+                                        }
 
-                                    if (uiState.participants.size > 5) {
-                                        TextButton(
-                                            onClick = { onNavigateToParticipantList(event.id) },
-                                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                                        ) {
-                                            Text("View All (${uiState.participants.size})")
+                                        if (uiState.participants.size > 5) {
+                                            TextButton(
+                                                onClick = { onNavigateToParticipantList(event.id) },
+                                                modifier =
+                                                    Modifier.align(
+                                                        Alignment.CenterHorizontally,
+                                                    ),
+                                            ) {
+                                                Text("View All (${uiState.participants.size})")
+                                            }
                                         }
                                     }
-                                }
-                            }
-                        }
-
-                        if (uiState.canUserJoin ||
-                            uiState.canUserLeave ||
-                            uiState.canUserAccessChat
-                        ) {
-                            DetailCard(title = "Actions") {
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    if (uiState.canUserJoin) {
-                                        LoadingButton(
-                                            onClick = viewModel::joinEvent,
-                                            isLoading =
-                                                uiState.actionState ==
-                                                    EventDetailsUiState.ActionState.JOINING,
-                                            enabled = !uiState.isActionInProgress,
-                                            text = "Join Event",
-                                            modifier = Modifier.fillMaxWidth(),
-                                        )
-                                    }
-                                    if (uiState.canUserLeave) {
-                                        LoadingButton(
-                                            onClick = viewModel::leaveEvent,
-                                            isLoading =
-                                                uiState.actionState ==
-                                                    EventDetailsUiState.ActionState.LEAVING,
-                                            enabled = !uiState.isActionInProgress,
-                                            text = "Leave Event",
-                                            modifier = Modifier.fillMaxWidth(),
-                                        )
-                                    }
-                                    if (uiState.canUserAccessChat) {
-                                        Button(
-                                            onClick = {
-                                                onNavigateToChat(
-                                                    ChatInfo(event.id, event.title),
-                                                )
-                                            },
-                                            enabled = !uiState.isActionInProgress,
-                                            modifier = Modifier.fillMaxWidth(),
-                                        ) {
-                                            val chatButtonText =
-                                                if (uiState.isChatReadOnly) {
-                                                    "View Chat History"
-                                                } else {
-                                                    "Open Chat"
-                                                }
-                                            Text(chatButtonText)
-                                        }
-                                    }
+                                } else {
+                                    EmptyState(
+                                        message = "There are no participants in this event yet.",
+                                    )
                                 }
                             }
                         }
 
                         val isManager =
                             uiState.isCurrentUserOrganizer ||
-                                uiState.currentUser?.role ==
-                                pt.isel.keepmyplanet.domain.user.UserRole.ADMIN
+                                uiState.currentUser?.role == UserRole.ADMIN
                         if (isManager) {
-                            DetailCard(
-                                title =
-                                    if (uiState.isCurrentUserOrganizer) {
-                                        "Organizer Actions"
-                                    } else {
-                                        "Admin Actions"
-                                    },
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                            item {
+                                DetailCard(
+                                    title =
+                                        if (uiState.isCurrentUserOrganizer) {
+                                            "Organizer Actions"
+                                        } else {
+                                            "Admin Actions"
+                                        },
                                 ) {
-                                    if (uiState.canUserEdit) {
-                                        Button(
-                                            onClick = { onNavigateToEditEvent(event.id) },
-                                            enabled = !uiState.isActionInProgress,
-                                            modifier = Modifier.fillMaxWidth(),
-                                        ) { Text("Edit Event Details") }
-                                    }
-                                    if (uiState.canCompleteEvent) {
-                                        LoadingButton(
-                                            onClick = {
-                                                viewModel.changeEventStatus(EventStatus.COMPLETED)
-                                            },
-                                            isLoading =
-                                                uiState.actionState ==
-                                                    EventDetailsUiState.ActionState.COMPLETING,
-                                            enabled = !uiState.isActionInProgress,
-                                            text = "Mark as Completed",
-                                            modifier = Modifier.fillMaxWidth(),
-                                        )
-                                    }
-                                    if (uiState.canCancelEvent) {
-                                        LoadingOutlinedButton(
-                                            onClick = { showCancelDialog.value = true },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            colors =
-                                                ButtonDefaults.outlinedButtonColors(
-                                                    contentColor = MaterialTheme.colorScheme.error,
-                                                ),
-                                            enabled = !uiState.isActionInProgress,
-                                            isLoading =
-                                                uiState.actionState ==
-                                                    EventDetailsUiState.ActionState.CANCELLING,
-                                            text = "Cancel Event",
-                                            loadingIndicatorColor = MaterialTheme.colorScheme.error,
-                                        )
-                                    }
-                                    if (uiState.canEventBeDeleted) {
-                                        LoadingOutlinedButton(
-                                            onClick = { showDeleteDialog.value = true },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            colors =
-                                                ButtonDefaults.outlinedButtonColors(
-                                                    contentColor = MaterialTheme.colorScheme.error,
-                                                ),
-                                            enabled = !uiState.isActionInProgress,
-                                            isLoading =
-                                                uiState.actionState ==
-                                                    EventDetailsUiState.ActionState.DELETING,
-                                            text = "Delete Event",
-                                            loadingIndicatorColor = MaterialTheme.colorScheme.error,
-                                        )
-                                    }
-
-                                    if (uiState.canTransferOwnership) {
-                                        LoadingButton(
-                                            onClick = viewModel::onTransferOwnershipClicked,
-                                            isLoading =
-                                                uiState.actionState ==
-                                                    EventDetailsUiState.ActionState
-                                                        .INITIATING_TRANSFER,
-                                            enabled = !uiState.isActionInProgress,
-                                            text = "Transfer Ownership",
-                                            modifier = Modifier.fillMaxWidth(),
-                                        )
-                                    }
-                                    if (uiState.canOrganizerSendNotification) {
-                                        Button(
-                                            onClick = viewModel::onShowNotificationDialog,
-                                            modifier = Modifier.fillMaxWidth(),
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Notifications,
-                                                contentDescription = "Send Notification",
-                                                modifier = Modifier.padding(end = 8.dp),
-                                            )
-                                            Text("Notify Participants")
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        if (uiState.canUserEdit) {
+                                            Button(
+                                                onClick = { onNavigateToEditEvent(event.id) },
+                                                enabled = !uiState.isActionInProgress,
+                                                modifier = Modifier.fillMaxWidth(),
+                                            ) {
+                                                Text("Edit Event Details")
+                                            }
+                                        }
+                                        if (uiState.canCompleteEvent) {
+                                            LoadingButton(
+                                                onClick = {
+                                                    viewModel.changeEventStatus(
+                                                        EventStatus.COMPLETED,
+                                                    )
+                                                },
+                                                isLoading =
+                                                    uiState.actionState ==
+                                                        EventDetailsUiState.ActionState.COMPLETING,
+                                                enabled = !uiState.isActionInProgress,
+                                                modifier = Modifier.fillMaxWidth(),
+                                            ) { Text("Mark as Completed") }
+                                        }
+                                        if (uiState.canCancelEvent) {
+                                            LoadingOutlinedButton(
+                                                onClick = { showCancelDialog.value = true },
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors =
+                                                    ButtonDefaults.outlinedButtonColors(
+                                                        contentColor =
+                                                            MaterialTheme.colorScheme.error,
+                                                    ),
+                                                enabled = !uiState.isActionInProgress,
+                                                isLoading =
+                                                    uiState.actionState ==
+                                                        EventDetailsUiState.ActionState.CANCELLING,
+                                            ) { Text("Cancel Event") }
+                                        }
+                                        if (uiState.canEventBeDeleted) {
+                                            LoadingOutlinedButton(
+                                                onClick = { showDeleteDialog.value = true },
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors =
+                                                    ButtonDefaults.outlinedButtonColors(
+                                                        contentColor =
+                                                            MaterialTheme.colorScheme.error,
+                                                    ),
+                                                enabled = !uiState.isActionInProgress,
+                                                isLoading =
+                                                    uiState.actionState ==
+                                                        EventDetailsUiState.ActionState.DELETING,
+                                            ) { Text("Delete Event") }
+                                        }
+                                        if (uiState.canTransferOwnership) {
+                                            LoadingButton(
+                                                onClick = viewModel::onTransferOwnershipClicked,
+                                                isLoading =
+                                                    uiState.actionState ==
+                                                        EventDetailsUiState.ActionState
+                                                            .INITIATING_TRANSFER,
+                                                enabled = !uiState.isActionInProgress,
+                                                modifier = Modifier.fillMaxWidth(),
+                                            ) { Text("Transfer Ownership") }
+                                        }
+                                        if (uiState.canOrganizerSendNotification) {
+                                            Button(
+                                                onClick = viewModel::onShowNotificationDialog,
+                                                modifier = Modifier.fillMaxWidth(),
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Notifications,
+                                                    contentDescription = "Send Notification",
+                                                    modifier = Modifier.padding(end = 8.dp),
+                                                )
+                                                Text("Notify Participants")
+                                            }
                                         }
                                     }
                                 }

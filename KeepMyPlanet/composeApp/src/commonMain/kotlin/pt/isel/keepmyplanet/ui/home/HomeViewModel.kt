@@ -2,9 +2,10 @@ package pt.isel.keepmyplanet.ui.home
 
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
-import pt.isel.keepmyplanet.data.cache.ZoneCacheRepository
 import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.event.EventFilterType
@@ -26,7 +27,6 @@ class HomeViewModel(
     private val sessionManager: SessionManager,
     private val settings: Settings,
     private val eventCache: EventCacheRepository?,
-    private val zoneCache: ZoneCacheRepository?,
 ) : BaseViewModel<HomeUiState>(HomeUiState(), sessionManager) {
     init {
         viewModelScope.launch {
@@ -41,7 +41,8 @@ class HomeViewModel(
                 setState { copy(isLoading = false, user = null, isUserAdmin = false) }
             } else {
                 setState { copy(user = user, isUserAdmin = user.role == UserRole.ADMIN) }
-                loadUpcomingEvents()
+                loadDashboardData()
+                onFindNearbyZonesRequested()
             }
         }
     }
@@ -55,30 +56,16 @@ class HomeViewModel(
         sendEvent(HomeEvent.ShowSnackbar(message))
     }
 
+    fun onFindNearbyZonesRequested() {
+        setState { copy(isFindingZones = true, zonesFound = null, nearbyZones = emptyList()) }
+        sendEvent(HomeEvent.RequestLocation)
+    }
+
     fun onLocationAvailable(
         latitude: Double,
         longitude: Double,
     ) {
         viewModelScope.launch {
-            val cachedZones =
-                zoneCache
-                    ?.getZonesInBoundingBox(
-                        min =
-                            pt.isel.keepmyplanet.domain.zone
-                                .Location(latitude - 0.1, longitude - 0.1),
-                        max =
-                            pt.isel.keepmyplanet.domain.zone
-                                .Location(latitude + 0.1, longitude + 0.1),
-                    )?.filter { it.status == ZoneStatus.REPORTED }
-                    ?.sortedBy { it.zoneSeverity.ordinal }
-                    ?.take(5)
-
-            if (cachedZones?.isNotEmpty() == true) {
-                setState { copy(nearbyZones = cachedZones) }
-            } else {
-                setState { copy(isLoadingZones = true) }
-            }
-
             zoneRepository
                 .findZonesByLocation(latitude, longitude, radius = 10000.0)
                 .onSuccess { zones ->
@@ -87,68 +74,106 @@ class HomeViewModel(
                             .filter { it.status == ZoneStatus.REPORTED }
                             .sortedBy { it.zoneSeverity.ordinal }
                             .take(5)
-                    setState { copy(nearbyZones = reportedZones, isLoadingZones = false) }
-                }.onFailure {
-                    setState { copy(isLoadingZones = false) }
-                    if (currentState.nearbyZones.isEmpty()) {
-                        handleErrorWithMessage(getErrorMessage("Could not load nearby zones", it))
+                    setState {
+                        copy(
+                            nearbyZones = reportedZones,
+                            isFindingZones = false,
+                            zonesFound = reportedZones.isNotEmpty(),
+                        )
                     }
+                }.onFailure {
+                    setState { copy(isFindingZones = false, zonesFound = false) }
+                    handleErrorWithMessage(getErrorMessage("Could not load nearby zones", it))
                 }
         }
     }
 
-    private fun loadUpcomingEvents() {
+    fun onLocationError() {
+        setState { copy(isFindingZones = false, zonesFound = false) }
+        handleErrorWithMessage(
+            "Unable to retrieve your location. Please check permissions and try again.",
+        )
+    }
+
+    private fun loadDashboardData() {
         viewModelScope.launch {
             val user = currentState.user ?: return@launch
+            setState { copy(isLoading = true) }
 
             val cachedEvents =
-                eventCache
-                    ?.getAllEvents()
-                    ?.filter { it.organizerId == user.id || user.id in it.participantsIds }
-                    ?.distinctBy { it.id }
-                    ?.filter { it.status == EventStatus.PLANNED && it.period.start > now() }
-                    ?.sortedBy { it.period.start }
-                    ?.take(5)
-                    ?.map { it.toListItem() }
+                eventCache?.getAllEvents()?.filter {
+                    it.organizerId == user.id || user.id in it.participantsIds
+                }
 
-            if (cachedEvents?.isNotEmpty() == true) {
-                setState { copy(upcomingEvents = cachedEvents, isLoading = false) }
-            } else {
-                setState { copy(isLoading = true) }
+            cachedEvents?.let { events ->
+                val upcoming =
+                    events
+                        .filter { event ->
+                            event.status == EventStatus.PLANNED &&
+                                event.period.start > now()
+                        }.sortedBy { event -> event.period.start }
+                        .take(5)
+                        .map { event -> event.toListItem() }
+
+                val pending = events.filter { event -> event.pendingOrganizerId == user.id }
+
+                setState {
+                    copy(upcomingEvents = upcoming, pendingActions = pending)
+                }
             }
 
             try {
-                val organizedResult =
-                    eventRepository.searchEvents(EventFilterType.ORGANIZED, null, 5, 0)
-                val joinedResult = eventRepository.searchEvents(EventFilterType.JOINED, null, 5, 0)
+                coroutineScope {
+                    val organizedDeferred =
+                        async {
+                            eventRepository.searchFullEvents(
+                                EventFilterType.ORGANIZED,
+                                null,
+                                20,
+                                0,
+                            )
+                        }
+                    val joinedDeferred =
+                        async {
+                            eventRepository.searchFullEvents(
+                                EventFilterType.JOINED,
+                                null,
+                                20,
+                                0,
+                            )
+                        }
 
-                val networkEvents =
-                    (organizedResult.getOrNull().orEmpty() + joinedResult.getOrNull().orEmpty())
-                        .distinctBy { it.id }
-                        .filter { it.status == EventStatus.PLANNED && it.period.start > now() }
-                        .sortedBy { it.period.start }
-                        .take(5)
+                    val allUserEvents =
+                        (
+                            organizedDeferred.await().getOrNull().orEmpty() +
+                                joinedDeferred.await().getOrNull().orEmpty()
+                        ).distinctBy { it.id }
 
-                setState { copy(upcomingEvents = networkEvents) }
+                    val networkUpcoming =
+                        allUserEvents
+                            .filter { it.status == EventStatus.PLANNED && it.period.start > now() }
+                            .sortedBy { it.period.start }
+                            .take(5)
+                            .map { it.toListItem() }
+
+                    val networkPending =
+                        allUserEvents
+                            .filter { it.pendingOrganizerId == user.id }
+
+                    setState {
+                        copy(
+                            upcomingEvents = networkUpcoming,
+                            pendingActions = networkPending,
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                if (currentState.upcomingEvents.isEmpty()) {
+                    handleErrorWithMessage(getErrorMessage("Failed to load dashboard data", e))
+                }
             } finally {
                 setState { copy(isLoading = false) }
             }
         }
-    }
-
-    fun requestLocationUpdate() {
-        if (!currentState.isLocating) {
-            setState { copy(isLocating = true, locationError = false) }
-            sendEvent(HomeEvent.RequestLocation)
-        }
-    }
-
-    fun onLocationUpdateReceived() {
-        setState { copy(isLocating = false) }
-    }
-
-    fun onLocationError() {
-        setState { copy(isLocating = false, locationError = true) }
-        handleErrorWithMessage("Unable to retrieve your location.")
     }
 }

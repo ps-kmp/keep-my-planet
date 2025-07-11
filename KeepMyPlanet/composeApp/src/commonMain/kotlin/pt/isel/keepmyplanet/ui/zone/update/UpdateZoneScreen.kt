@@ -28,7 +28,6 @@ import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FormField
-import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.zone.update.states.UpdateZoneEvent
 
@@ -41,7 +40,6 @@ fun UpdateZoneScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val isActionInProgress = uiState.isUpdating
 
     LaunchedEffect(zoneId) {
         viewModel.loadZone(zoneId)
@@ -70,60 +68,59 @@ fun UpdateZoneScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             contentAlignment = Alignment.Center,
         ) {
-            when {
-                uiState.isLoading -> FullScreenLoading()
-                uiState.error != null -> ErrorState(uiState.error!!) { viewModel.loadZone(zoneId) }
-                else -> {
-                    Column(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+            if (uiState.error != null && uiState.zone == null) {
+                ErrorState(uiState.error!!) { viewModel.loadZone(zoneId) }
+            } else {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    FormField(
+                        value = uiState.description,
+                        onValueChange = viewModel::onDescriptionChange,
+                        label = "Description",
+                        minLines = 4,
+                        enabled = uiState.isFormEnabled,
+                        errorText = uiState.descriptionError,
+                    )
+
+                    Text("Severity:", style = MaterialTheme.typography.titleMedium)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        FormField(
-                            value = uiState.description,
-                            onValueChange = viewModel::onDescriptionChange,
-                            label = "Description",
-                            minLines = 4,
-                            enabled = !isActionInProgress,
-                            errorText = uiState.descriptionError,
-                        )
-
-                        Text("Severity:", style = MaterialTheme.typography.titleMedium)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            ZoneSeverity.entries
-                                .filter { it != ZoneSeverity.UNKNOWN }
-                                .forEach { severity ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f),
-                                    ) {
-                                        RadioButton(
-                                            selected = uiState.severity == severity,
-                                            onClick = { viewModel.onSeverityChange(severity) },
-                                            enabled = !isActionInProgress,
-                                        )
-                                        Text(
-                                            text = severity.name,
-                                            modifier = Modifier.padding(start = 4.dp),
-                                        )
-                                    }
+                        ZoneSeverity.entries
+                            .filter { it != ZoneSeverity.UNKNOWN }
+                            .forEach { severity ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    RadioButton(
+                                        selected = uiState.severity == severity,
+                                        onClick = { viewModel.onSeverityChange(severity) },
+                                        enabled = uiState.isFormEnabled,
+                                    )
+                                    Text(
+                                        text = severity.name,
+                                        modifier = Modifier.padding(start = 4.dp),
+                                    )
                                 }
-                        }
+                            }
+                    }
 
-                        Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.weight(1f))
 
-                        LoadingButton(
-                            onClick = viewModel::submitUpdate,
-                            isLoading = isActionInProgress,
-                            enabled = !isActionInProgress,
-                            text = "Save Changes",
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                    LoadingButton(
+                        onClick = viewModel::submitUpdate,
+                        isLoading = uiState.isUpdating,
+                        enabled = uiState.isFormEnabled,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Save Changes")
                     }
                 }
             }

@@ -1,6 +1,8 @@
 package pt.isel.keepmyplanet.ui.chat
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -19,10 +22,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.ui.chat.components.MessageInput
 import pt.isel.keepmyplanet.ui.chat.components.MessageItem
@@ -32,6 +38,7 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel,
@@ -42,6 +49,18 @@ fun ChatScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo
+                .lastOrNull()
+                ?.index
+        }.filter { it != null && it >= uiState.messages.size - 5 }
+            .distinctUntilChanged()
+            .collect {
+                viewModel.loadPreviousMessages()
+            }
+    }
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
@@ -87,7 +106,7 @@ fun ChatScreen(
                         ) {
                             onNavigateBack()
                         } else {
-                            viewModel.loadMessages(uiState.chatInfo.eventId)
+                            viewModel.load(uiState.chatInfo)
                         }
                     },
                 )
@@ -99,8 +118,28 @@ fun ChatScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
-                    items(uiState.messages, key = { it.id.toString() }) { message ->
-                        MessageItem(message = message, currentUserId = user.id.value)
+                    items(
+                        uiState.messages,
+                        key = { it.temporaryId ?: it.message.id.toString() },
+                    ) { uiMessage ->
+                        MessageItem(
+                            modifier = Modifier.animateItem(),
+                            uiMessage = uiMessage,
+                            currentUserId = user.id.value,
+                            onRetry = {
+                                uiMessage.temporaryId?.let { viewModel.retrySendMessage(it) }
+                            },
+                        )
+                    }
+                    if (uiState.isLoadingMore) {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
                     }
                 }
 

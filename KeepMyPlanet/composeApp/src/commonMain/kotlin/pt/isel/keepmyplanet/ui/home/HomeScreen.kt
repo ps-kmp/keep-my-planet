@@ -2,6 +2,7 @@ package pt.isel.keepmyplanet.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,10 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -23,6 +25,8 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,7 +49,9 @@ import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.base.koinViewModel
 import pt.isel.keepmyplanet.ui.components.AppTopBar
+import pt.isel.keepmyplanet.ui.components.EventSummaryCardSkeleton
 import pt.isel.keepmyplanet.ui.components.rememberLocationProvider
+import pt.isel.keepmyplanet.ui.home.components.ActionableEventCard
 import pt.isel.keepmyplanet.ui.home.components.DashboardItem
 import pt.isel.keepmyplanet.ui.home.components.EventSummaryCard
 import pt.isel.keepmyplanet.ui.home.components.OnboardingDialog
@@ -78,7 +85,6 @@ fun HomeScreen(
     val locationProvider =
         rememberLocationProvider(
             onLocationUpdated = { lat, lon ->
-                viewModel.onLocationUpdateReceived()
                 viewModel.onLocationAvailable(lat, lon)
             },
             onLocationError = {
@@ -86,52 +92,46 @@ fun HomeScreen(
             },
         )
 
-    LaunchedEffect(Unit) {
-        viewModel.requestLocationUpdate()
-    }
-
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is HomeEvent.RequestLocation -> locationProvider.requestLocationUpdate()
-                is HomeEvent.ShowSnackbar -> {}
+                is HomeEvent.RequestLocation -> {
+                    if (locationProvider.isPermissionGranted) {
+                        locationProvider.requestLocationUpdate()
+                    } else {
+                        locationProvider.requestPermission()
+                    }
+                }
+
+                is HomeEvent.ShowSnackbar -> {
+                    // Snackbar logic can be handled here if needed
+                }
             }
         }
     }
 
     Scaffold(
-        topBar =
-            {
-                if (user != null) {
-                    AppTopBar(
-                        title = "KeepMyPlanet",
-                        onNavigateToHome = onNavigateToHome,
-                        actions = {
-                            IconButton(onClick = onNavigateToAbout) {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "About Page",
-                                )
-                            }
-                            IconButton(onClick = onNavigateToProfile) {
-                                Icon(Icons.Default.Person, contentDescription = "Profile")
-                            }
-                        },
-                    )
-                } else {
-                    AppTopBar(
-                        title = "KeepMyPlanet",
-                        onNavigateToHome = onNavigateToHome,
-                        actions = {
-                            TextButton(onClick = onNavigateToLogin) { Text("Login") }
-                            TextButton(onClick = onNavigateToRegister) { Text("Register") }
-                        },
-                    )
-                }
-            },
+        topBar = {
+            AppTopBar(
+                title = "KeepMyPlanet",
+                onNavigateToHome = onNavigateToHome,
+                actions = {
+                    if (user != null) {
+                        IconButton(onClick = onNavigateToAbout) {
+                            Icon(Icons.Default.Info, "About")
+                        }
+                        IconButton(onClick = onNavigateToProfile) {
+                            Icon(Icons.Default.Person, "Profile")
+                        }
+                    } else {
+                        TextButton(onClick = onNavigateToLogin) { Text("Login") }
+                        TextButton(onClick = onNavigateToRegister) { Text("Register") }
+                    }
+                },
+            )
+        },
     ) { paddingValues ->
         if (uiState.isLoading && user == null) {
-            // Initial loading state before we know if user is guest or not
             Column(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 verticalArrangement = Arrangement.Center,
@@ -140,133 +140,144 @@ fun HomeScreen(
                 CircularProgressIndicator()
             }
         } else if (user != null) {
-            UserHomeScreen(
-                uiState,
-                paddingValues,
-                onNavigateToEventList,
-                onNavigateToMap,
-                onNavigateToEventDetails,
-                onNavigateToZoneDetails,
-                onNavigateToUserManagement,
-                onLogout,
+            UserDashboard(
+                uiState = uiState,
+                paddingValues = paddingValues,
+                onNavigateToEventList = onNavigateToEventList,
+                onNavigateToEventDetails = onNavigateToEventDetails,
+                onNavigateToZoneDetails = onNavigateToZoneDetails,
+                onNavigateToUserManagement = onNavigateToUserManagement,
+                onLogout = onLogout,
+                onFindNearbyZones = viewModel::onFindNearbyZonesRequested,
+                onNavigateToMap = onNavigateToMap,
             )
         } else {
             GuestHomeScreen(
-                paddingValues,
-                onNavigateToMap,
-                onNavigateToEventList,
-                onNavigateToLogin,
+                paddingValues = paddingValues,
+                onNavigateToMap = onNavigateToMap,
+                onNavigateToEventList = onNavigateToEventList,
+                onNavigateToLogin = onNavigateToLogin,
             )
         }
     }
 }
 
 @Composable
-private fun UserHomeScreen(
+private fun UserDashboard(
     uiState: HomeUiState,
     paddingValues: PaddingValues,
     onNavigateToEventList: () -> Unit,
-    onNavigateToMap: () -> Unit,
     onNavigateToEventDetails: (Id) -> Unit,
     onNavigateToZoneDetails: (Id) -> Unit,
     onNavigateToUserManagement: () -> Unit,
     onLogout: () -> Unit,
+    onFindNearbyZones: () -> Unit,
+    onNavigateToMap: () -> Unit,
 ) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .padding(vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(paddingValues),
+        contentPadding = PaddingValues(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        uiState.user?.let { user ->
-            Text(
-                text = "Welcome, ${user.name.value}!",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
+        item {
+            uiState.user?.let { user ->
+                Text(
+                    text = "Welcome, ${user.name.value}!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+        }
 
+        if (uiState.pendingActions.isNotEmpty()) {
+            item {
+                DashboardSection("Pending Actions") {
+                    uiState.pendingActions.forEach { event ->
+                        ActionableEventCard(
+                            event = event,
+                            onClick = { onNavigateToEventDetails(event.id) },
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
             DashboardSection(
                 title = "Your Upcoming Events",
-                onViewAll = onNavigateToEventList,
+                onActionClick = onNavigateToEventList,
+                actionText = "View All",
             ) {
-                if (uiState.isLoading && uiState.upcomingEvents.isEmpty()) {
-                    CircularProgressIndicator()
-                } else if (uiState.upcomingEvents.isNotEmpty()) {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(uiState.upcomingEvents) { event ->
-                            EventSummaryCard(
-                                event = event,
-                                onClick = { onNavigateToEventDetails(event.id) },
-                            )
+                when {
+                    uiState.isLoading -> {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(3) { EventSummaryCardSkeleton() }
                         }
                     }
-                } else {
-                    Text("No upcoming events.", modifier = Modifier.padding(horizontal = 16.dp))
+                    uiState.upcomingEvents.isNotEmpty() -> {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(uiState.upcomingEvents) { event ->
+                                EventSummaryCard(
+                                    event = event,
+                                    onClick = { onNavigateToEventDetails(event.id) },
+                                )
+                            }
+                        }
+                    }
+                    else -> {
+                        Text(
+                            "You have no upcoming events. Why not join one?",
+                            modifier = Modifier.padding(vertical = 8.dp),
+                        )
+                    }
                 }
             }
+        }
 
+        item {
             DashboardSection(
-                title = "Nearby Polluted Zones",
-                onViewAll = onNavigateToMap,
+                title = "Find Nearby Polluted Zones",
+                onActionClick = onNavigateToMap,
+                actionText = "Explore on Map",
             ) {
-                if (uiState.isLocating ||
-                    (uiState.isLoadingZones && uiState.nearbyZones.isEmpty())
-                ) {
-                    CircularProgressIndicator()
-                } else if (uiState.nearbyZones.isNotEmpty()) {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(uiState.nearbyZones) { zone ->
-                            ZoneSummaryCard(
-                                zone = zone,
-                                onClick = { onNavigateToZoneDetails(zone.id) },
-                            )
+                when {
+                    uiState.isFindingZones -> {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(Modifier.size(24.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Finding zones near you...")
                         }
                     }
-                } else {
-                    if (uiState.locationError) {
-                        Text(
-                            "Could not retrieve location to find nearby zones.",
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        )
-                    } else {
+                    uiState.zonesFound == true && uiState.nearbyZones.isNotEmpty() -> {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(uiState.nearbyZones) { zone ->
+                                ZoneSummaryCard(
+                                    zone = zone,
+                                    onClick = { onNavigateToZoneDetails(zone.id) },
+                                )
+                            }
+                        }
+                    }
+                    uiState.zonesFound == false -> {
                         Text(
                             "No polluted zones found nearby. Great!",
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            modifier = Modifier.padding(vertical = 8.dp),
                         )
+                    }
+                    else -> {
+                        Button(onClick = onFindNearbyZones) {
+                            Text("Find Nearby Zones")
+                        }
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+        item {
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                DashboardItem(
-                    icon = Icons.Default.Map,
-                    title = "Interactive Map",
-                    description = "View all polluted zones or report a new one.",
-                    onClick = onNavigateToMap,
-                )
-
-                DashboardItem(
-                    icon = Icons.AutoMirrored.Filled.ListAlt,
-                    title = "All Cleanup Events",
-                    description = "Find and join events organized by the community.",
-                    onClick = onNavigateToEventList,
-                )
-
                 if (uiState.isUserAdmin) {
                     DashboardItem(
                         icon = Icons.Default.AdminPanelSettings,
@@ -275,24 +286,21 @@ private fun UserHomeScreen(
                         onClick = onNavigateToUserManagement,
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            OutlinedButton(
-                onClick = onLogout,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                colors =
-                    ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ExitToApp,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 8.dp),
-                )
-                Text("Logout")
+                OutlinedButton(
+                    onClick = onLogout,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                    Text("Logout")
+                }
             }
         }
     }
@@ -305,56 +313,65 @@ private fun GuestHomeScreen(
     onNavigateToEventList: () -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .padding(16.dp),
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(paddingValues),
+        contentPadding = PaddingValues(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = "Welcome to KeepMyPlanet",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = "Join a global community dedicated to cleaning our world, one zone at a time.",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = "Welcome to KeepMyPlanet",
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text =
+                        "Join a global community dedicated to cleaning our world, one zone at a time.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
 
-        DashboardItem(
-            icon = Icons.Default.Map,
-            title = "Explore the Map",
-            description = "Discover polluted zones reported by the community.",
-            onClick = onNavigateToMap,
-        )
-
-        DashboardItem(
-            icon = Icons.AutoMirrored.Filled.ListAlt,
-            title = "Find a Cleanup Event",
-            description = "Browse and see details about upcoming events near you.",
-            onClick = onNavigateToEventList,
-        )
-
-        Spacer(modifier = Modifier.weight(1.0f))
-
-        Button(
-            onClick = onNavigateToLogin,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = primaryLight),
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.Login,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 8.dp),
+        item {
+            DashboardItem(
+                icon = Icons.Default.Map,
+                title = "Explore the Map",
+                description = "Discover polluted zones reported by the community.",
+                onClick = onNavigateToMap,
             )
-            Text("Login or Register to Participate")
+        }
+        item {
+            DashboardItem(
+                icon = Icons.AutoMirrored.Filled.ListAlt,
+                title = "Find a Cleanup Event",
+                description = "Browse and see details about upcoming events near you.",
+                onClick = onNavigateToEventList,
+            )
+        }
+
+        item {
+            Column(modifier = Modifier.padding(top = 32.dp)) {
+                Button(
+                    onClick = onNavigateToLogin,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryLight),
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Login,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                    Text("Login or Register to Participate")
+                }
+            }
         }
     }
 }
@@ -362,8 +379,9 @@ private fun GuestHomeScreen(
 @Composable
 private fun DashboardSection(
     title: String,
-    onViewAll: () -> Unit,
-    content: @Composable () -> Unit,
+    actionText: String? = null,
+    onActionClick: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
@@ -376,10 +394,22 @@ private fun DashboardSection(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
             )
-            TextButton(onClick = onViewAll) {
-                Text("View All")
+            if (actionText != null && onActionClick != null) {
+                TextButton(onClick = onActionClick) {
+                    Text(actionText)
+                }
             }
         }
-        content()
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(0.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                content = content,
+            )
+        }
     }
 }

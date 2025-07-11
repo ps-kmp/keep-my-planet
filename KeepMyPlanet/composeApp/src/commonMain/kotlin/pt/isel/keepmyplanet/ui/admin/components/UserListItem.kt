@@ -69,20 +69,21 @@ fun UserListItem(
             LoadingOutlinedButton(
                 onClick = onChangeRoleClicked,
                 isLoading = isUpdatingRole,
-                text = if (user.role == UserRole.USER) "Promote" else "Demote",
                 modifier = Modifier.widthIn(min = 90.dp),
-            )
+            ) {
+                Text(if (user.role == UserRole.USER) "Promote" else "Demote")
+            }
             LoadingOutlinedButton(
                 onClick = onDeleteClicked,
                 isLoading = isDeletingUser,
-                text = "Delete",
                 colors =
                     ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.error,
                     ),
-                loadingIndicatorColor = MaterialTheme.colorScheme.error,
                 modifier = Modifier.widthIn(min = 90.dp),
-            )
+            ) {
+                Text("Delete")
+            }
         }
     }
 }

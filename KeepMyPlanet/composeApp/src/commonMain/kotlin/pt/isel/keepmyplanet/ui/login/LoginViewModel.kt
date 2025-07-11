@@ -19,11 +19,20 @@ class LoginViewModel(
     }
 
     fun onEmailChanged(email: String) {
-        setState { copy(email = email, emailError = null, apiError = null) }
+        val emailError =
+            try {
+                Email(email)
+                null
+            } catch (e: IllegalArgumentException) {
+                e.message
+            }
+        setState { copy(email = email, emailError = emailError, apiError = null) }
     }
 
     fun onPasswordChanged(password: String) {
-        setState { copy(password = password, passwordError = null, apiError = null) }
+        val passwordError =
+            if (password.isNotBlank()) null else "Password cannot be blank."
+        setState { copy(password = password, passwordError = passwordError, apiError = null) }
     }
 
     fun onLoginClicked() {

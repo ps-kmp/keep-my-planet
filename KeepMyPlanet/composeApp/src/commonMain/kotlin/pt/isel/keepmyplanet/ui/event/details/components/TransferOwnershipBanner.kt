@@ -39,8 +39,10 @@ fun TransferOwnershipBanner(
             )
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                LoadingButton(onClick = onAccept, isLoading = isLoading, text = "Accept")
-                LoadingOutlinedButton(onClick = onDecline, isLoading = isLoading, text = "Decline")
+                LoadingButton(onClick = onAccept, isLoading = isLoading) { Text("Accept") }
+                LoadingOutlinedButton(onClick = onDecline, isLoading = isLoading) {
+                    Text("Decline")
+                }
             }
         }
     }

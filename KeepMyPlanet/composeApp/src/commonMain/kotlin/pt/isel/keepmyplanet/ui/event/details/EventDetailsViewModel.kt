@@ -27,57 +27,77 @@ class EventDetailsViewModel(
 
     fun loadEventDetails(eventId: Id) {
         launchWithResult(
-            onStart = { copy(isLoading = true, error = null) },
-            onFinally = { copy(isLoading = false) },
+            onStart = {
+                copy(isLoading = true, error = null, isLoadingParticipants = true)
+            },
+            onFinally = { copy(isLoading = false, isLoadingParticipants = false) },
             block = { eventRepository.getEventDetailsBundle(eventId) },
             onSuccess = { bundle ->
                 setState {
-                    copy(event = bundle.event, participants = bundle.participants, error = null)
+                    copy(
+                        event = bundle.event,
+                        participants = bundle.participants,
+                        isLoading = false,
+                        isLoadingParticipants = false,
+                    )
                 }
             },
             onError = { error ->
                 val message = getErrorMessage("Failed to load event details", error)
-                setState { copy(error = message) }
+                if (currentState.event == null) {
+                    setState { copy(error = message) }
+                } else {
+                    handleErrorWithMessage(message)
+                }
             },
         )
     }
 
-    private fun performAction(
+    private fun performOptimisticEventUpdate(
         actionState: EventDetailsUiState.ActionState,
-        successMessage: String,
         errorMessagePrefix: String,
+        optimisticUpdate: (Event) -> Event,
         apiCall: suspend (Id) -> Result<Event>,
     ) {
-        val eventId = getEventId() ?: return
+        val originalEvent = currentState.event ?: return
+        val optimisticEvent = optimisticUpdate(originalEvent)
+
+        setState { copy(actionState = actionState, event = optimisticEvent) }
+
         launchWithResult(
-            onStart = { copy(actionState = actionState) },
-            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
-            block = { apiCall(eventId) },
-            onSuccess = { eventResponse ->
-                updateEventInState(eventResponse)
-                loadEventDetails(eventId)
+            block = { apiCall(originalEvent.id) },
+            onSuccess = { confirmedEvent ->
+                setState {
+                    copy(actionState = EventDetailsUiState.ActionState.IDLE, event = confirmedEvent)
+                }
             },
-            onError = { handleErrorWithMessage(getErrorMessage(errorMessagePrefix, it)) },
+            onError = {
+                setState { copy(event = originalEvent) }
+                handleErrorWithMessage(getErrorMessage(errorMessagePrefix, it))
+            },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
         )
     }
 
-    fun joinEvent() =
-        performAction(
-            EventDetailsUiState.ActionState.JOINING,
-            "Joined event successfully",
-            "Failed to join event",
-        ) {
-            eventRepository.joinEvent(it)
-        }
+    fun joinEvent() {
+        val user = currentUser ?: return
+        performOptimisticEventUpdate(
+            actionState = EventDetailsUiState.ActionState.JOINING,
+            errorMessagePrefix = "Failed to join event",
+            optimisticUpdate = { it.copy(participantsIds = it.participantsIds + user.id) },
+            apiCall = { eventRepository.joinEvent(it) },
+        )
+    }
 
-    fun leaveEvent() =
-        performAction(
-            EventDetailsUiState.ActionState.LEAVING,
-            "Left event successfully",
-            "Failed to leave event",
-        ) {
-            eventRepository.leaveEvent(it)
-        }
+    fun leaveEvent() {
+        val user = currentUser ?: return
+        performOptimisticEventUpdate(
+            actionState = EventDetailsUiState.ActionState.LEAVING,
+            errorMessagePrefix = "Failed to leave event",
+            optimisticUpdate = { it.copy(participantsIds = it.participantsIds - user.id) },
+            apiCall = { eventRepository.leaveEvent(it) },
+        )
+    }
 
     fun changeEventStatus(newStatus: EventStatus) {
         val eventId = getEventId() ?: return
@@ -88,12 +108,7 @@ class EventDetailsViewModel(
                 EventStatus.COMPLETED -> EventDetailsUiState.ActionState.COMPLETING
                 else -> return
             }
-        val successMessage =
-            when (newStatus) {
-                EventStatus.CANCELLED -> "Event has been cancelled"
-                EventStatus.COMPLETED -> "Event marked as complete"
-                else -> "Event status updated"
-            }
+
         val errorMessagePrefix =
             when (newStatus) {
                 EventStatus.CANCELLED -> "Failed to cancel event"

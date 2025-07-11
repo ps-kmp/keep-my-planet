@@ -56,10 +56,10 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ConfirmActionDialog
 import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
-import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.InfoRow
 import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.StatusBadge
+import pt.isel.keepmyplanet.ui.components.ZoneDetailsSkeleton
 import pt.isel.keepmyplanet.ui.components.getSeverityColor
 import pt.isel.keepmyplanet.ui.components.getStatusColor
 import pt.isel.keepmyplanet.ui.components.rememberPhotoPicker
@@ -136,7 +136,7 @@ fun ZoneDetailsScreen(
             contentAlignment = Alignment.Center,
         ) {
             when {
-                uiState.isLoading && zone == null -> FullScreenLoading()
+                uiState.isLoading && zone == null -> ZoneDetailsSkeleton()
                 uiState.error != null ->
                     ErrorState(
                         message = uiState.error!!,
@@ -330,9 +330,7 @@ fun ZoneDetailsScreen(
                                             ButtonDefaults.outlinedButtonColors(
                                                 contentColor = MaterialTheme.colorScheme.error,
                                             ),
-                                        text = "Delete Zone",
-                                        loadingIndicatorColor = MaterialTheme.colorScheme.error,
-                                    )
+                                    ) { Text("Delete Zone") }
                                 }
                             }
                         }

@@ -158,9 +158,10 @@ fun ReportZoneScreen(
                 onClick = viewModel::submitZoneReport,
                 isLoading = isActionInProgress,
                 enabled = uiState.canSubmit,
-                text = "Submit Report",
                 modifier = Modifier.fillMaxWidth(),
-            )
+            ) {
+                Text("Submit Report")
+            }
         }
     }
 }

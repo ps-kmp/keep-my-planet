@@ -121,9 +121,10 @@ private fun LoginContent(
             onClick = onLoginClicked,
             enabled = uiState.isLoginEnabled,
             isLoading = isActionInProgress,
-            text = "Login",
             modifier = Modifier.fillMaxWidth().height(48.dp),
-        )
+        ) {
+            Text("Login")
+        }
 
         TextButton(onClick = onNavigateToRegister) {
             Text("Don't have an account? Register")
@@ -136,7 +137,8 @@ private fun LoginContent(
             modifier = Modifier.fillMaxWidth().height(48.dp),
             enabled = !isActionInProgress,
             isLoading = false,
-            text = "Continue as Guest",
-        )
+        ) {
+            Text("Continue as Guest")
+        }
     }
 }

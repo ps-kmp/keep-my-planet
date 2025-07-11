@@ -117,7 +117,7 @@ private val viewModelModule =
         single { AppViewModel(get(), get()) }
         factoryOf(::LoginViewModel)
         factoryOf(::RegisterViewModel)
-        factory { HomeViewModel(get(), get(), get(), get(), getOrNull(), getOrNull()) }
+        factory { HomeViewModel(get(), get(), get(), get(), getOrNull()) }
         factory { EventListViewModel(get(), get()) }
         factory { EventDetailsViewModel(get(), get(), get()) }
         factoryOf(::EventStatusHistoryViewModel)

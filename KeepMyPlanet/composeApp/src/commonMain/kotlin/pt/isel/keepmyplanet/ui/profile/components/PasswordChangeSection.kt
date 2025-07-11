@@ -64,9 +64,10 @@ fun PasswordChangeSection(
                 onClick = onChangePasswordClicked,
                 enabled = uiState.isChangePasswordEnabled,
                 isLoading = uiState.actionState == UserProfileUiState.ActionState.CHANGING_PASSWORD,
-                text = "Confirm Password Change",
                 modifier = Modifier.fillMaxWidth(),
-            )
+            ) {
+                Text("Confirm Password Change")
+            }
         }
     }
 }
