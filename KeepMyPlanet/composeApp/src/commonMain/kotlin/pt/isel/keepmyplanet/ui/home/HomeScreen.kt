@@ -33,12 +33,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -76,6 +79,7 @@ fun HomeScreen(
 ) {
     val viewModel: HomeViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val user = uiState.user
 
     if (uiState.showOnboarding) {
@@ -104,7 +108,7 @@ fun HomeScreen(
                 }
 
                 is HomeEvent.ShowSnackbar -> {
-                    // Snackbar logic can be handled here if needed
+                    snackbarHostState.showSnackbar(event.message)
                 }
             }
         }
@@ -130,6 +134,7 @@ fun HomeScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         if (uiState.isLoading && user == null) {
             Column(
@@ -214,6 +219,7 @@ private fun UserDashboard(
                             items(3) { EventSummaryCardSkeleton() }
                         }
                     }
+
                     uiState.upcomingEvents.isNotEmpty() -> {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(uiState.upcomingEvents) { event ->
@@ -224,6 +230,7 @@ private fun UserDashboard(
                             }
                         }
                     }
+
                     else -> {
                         Text(
                             "You have no upcoming events. Why not join one?",
@@ -248,6 +255,7 @@ private fun UserDashboard(
                             Text("Finding zones near you...")
                         }
                     }
+
                     uiState.zonesFound == true && uiState.nearbyZones.isNotEmpty() -> {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(uiState.nearbyZones) { zone ->
@@ -258,12 +266,14 @@ private fun UserDashboard(
                             }
                         }
                     }
+
                     uiState.zonesFound == false -> {
                         Text(
                             "No polluted zones found nearby. Great!",
                             modifier = Modifier.padding(vertical = 8.dp),
                         )
                     }
+
                     else -> {
                         Button(onClick = onFindNearbyZones) {
                             Text("Find Nearby Zones")
@@ -331,7 +341,8 @@ private fun GuestHomeScreen(
                 )
                 Text(
                     text =
-                        "Join a global community dedicated to cleaning our world, one zone at a time.",
+                        "Join a global community dedicated to cleaning our world, " +
+                            "one zone at a time.",
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 16.dp),

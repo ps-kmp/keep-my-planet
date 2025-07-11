@@ -123,7 +123,16 @@ fun EventListScreen(
                         onRetry = { viewModel.refreshEvents() },
                     )
                 } else if (uiState.events.isEmpty()) {
-                    EmptyState(message = "No events found.")
+                    EmptyState(
+                        message =
+                            if (uiState.query.isNotBlank()) {
+                                "No events found for '${uiState.query}'"
+                            } else {
+                                "No events available for this filter."
+                            },
+                        buttonText = if (!uiState.isGuest) "Create New Event" else null,
+                        onActionClick = if (!uiState.isGuest) onCreateEventClick else null,
+                    )
                 } else {
                     key(uiState.filter) {
                         LazyColumn(

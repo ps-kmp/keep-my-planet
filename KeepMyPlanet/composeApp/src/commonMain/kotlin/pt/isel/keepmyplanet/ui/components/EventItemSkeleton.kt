@@ -34,18 +34,25 @@ fun EventItemSkeleton() {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // Title
             SkeletonBox(
-                modifier = Modifier.fillMaxWidth(0.6f).height(20.dp).clip(RoundedCornerShape(4.dp)),
+                modifier = Modifier.fillMaxWidth(0.7f).height(24.dp).clip(RoundedCornerShape(4.dp)),
             )
-            SkeletonBox(
-                modifier = Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(4.dp)),
-            )
-            SkeletonBox(
-                modifier = Modifier.fillMaxWidth(0.8f).height(16.dp).clip(RoundedCornerShape(4.dp)),
-            )
+
+            // Description
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                SkeletonBox(
+                    modifier = Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(4.dp)),
+                )
+                SkeletonBox(
+                    modifier =
+                        Modifier.fillMaxWidth(0.8f).height(16.dp).clip(RoundedCornerShape(4.dp)),
+                )
+            }
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // Bottom row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -54,19 +61,11 @@ fun EventItemSkeleton() {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     SkeletonBox(
                         modifier =
-                            Modifier
-                                .width(
-                                    120.dp,
-                                ).height(14.dp)
-                                .clip(RoundedCornerShape(4.dp)),
+                            Modifier.width(140.dp).height(14.dp).clip(RoundedCornerShape(4.dp)),
                     )
                     SkeletonBox(
                         modifier =
-                            Modifier
-                                .width(
-                                    80.dp,
-                                ).height(14.dp)
-                                .clip(RoundedCornerShape(4.dp)),
+                            Modifier.width(100.dp).height(14.dp).clip(RoundedCornerShape(4.dp)),
                     )
                 }
                 SkeletonBox(

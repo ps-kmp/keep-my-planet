@@ -2,18 +2,18 @@ package pt.isel.keepmyplanet.ui.base
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import org.koin.compose.koinInject
+import androidx.compose.runtime.remember
+import org.koin.compose.getKoin
 import org.koin.core.parameter.ParametersDefinition
 
 @Composable
 inline fun <reified T : BaseViewModel<*>> koinViewModel(
     noinline parameters: ParametersDefinition? = null,
 ): T {
+    val koin = getKoin()
     val vm =
-        if (parameters == null) {
-            koinInject<T>()
-        } else {
-            koinInject<T>(parameters = parameters)
+        remember(parameters) {
+            koin.get<T>(parameters = parameters)
         }
 
     DisposableEffect(vm) {

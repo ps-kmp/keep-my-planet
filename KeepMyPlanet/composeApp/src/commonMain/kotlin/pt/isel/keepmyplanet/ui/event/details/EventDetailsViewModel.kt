@@ -282,6 +282,13 @@ class EventDetailsViewModel(
     fun sendManualNotification() {
         val eventId = getEventId() ?: return
         if (!currentState.isSendNotificationButtonEnabled) return
+        val title = currentState.notificationTitle.trim()
+        val message = currentState.notificationMessage.trim()
+
+        if (title.isBlank() || message.isBlank()) {
+            setState { copy(notificationError = "Title and message cannot be empty.") }
+            return
+        }
 
         launchWithResult<Unit>(
             onStart = { copy(actionState = EventDetailsUiState.ActionState.SENDING_NOTIFICATION) },

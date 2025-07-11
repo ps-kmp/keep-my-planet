@@ -168,9 +168,7 @@ class HomeViewModel(
                     }
                 }
             } catch (e: Exception) {
-                if (currentState.upcomingEvents.isEmpty()) {
-                    handleErrorWithMessage(getErrorMessage("Failed to load dashboard data", e))
-                }
+                handleErrorWithMessage(getErrorMessage("Failed to refresh dashboard data", e))
             } finally {
                 setState { copy(isLoading = false) }
             }

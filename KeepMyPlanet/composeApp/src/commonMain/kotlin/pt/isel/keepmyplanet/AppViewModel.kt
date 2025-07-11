@@ -7,6 +7,7 @@ import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.navigation.AppRoute
+import pt.isel.keepmyplanet.navigation.NavDirection
 import pt.isel.keepmyplanet.navigation.isRoutePublic
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.app.states.AppEvent
@@ -22,6 +23,7 @@ class AppViewModel(
                 userSession = sessionManager.userSession.value,
                 navStack = listOf(AppRoute.Home),
                 currentRoute = AppRoute.Home,
+                navDirection = NavDirection.REPLACE,
             ),
     ) {
     init {
@@ -43,6 +45,7 @@ class AppViewModel(
                                 userSession = null,
                                 navStack = listOf(AppRoute.Home),
                                 currentRoute = AppRoute.Home,
+                                navDirection = NavDirection.REPLACE,
                             )
                         }
                         return@collect
@@ -54,6 +57,7 @@ class AppViewModel(
                                 userSession = newSession,
                                 navStack = listOf(AppRoute.Home),
                                 currentRoute = AppRoute.Home,
+                                navDirection = NavDirection.REPLACE,
                             )
                         }
                         return@collect
@@ -71,7 +75,13 @@ class AppViewModel(
         val resolvedRoute = resolveRoute(route, currentState.userSession)
         if (currentState.navStack.lastOrNull() != resolvedRoute) {
             val newStack = currentState.navStack + resolvedRoute
-            setState { copy(navStack = newStack, currentRoute = newStack.last()) }
+            setState {
+                copy(
+                    navStack = newStack,
+                    currentRoute = newStack.last(),
+                    navDirection = NavDirection.FORWARD,
+                )
+            }
         }
     }
 
@@ -83,6 +93,7 @@ class AppViewModel(
                 copy(
                     navStack = newStack,
                     currentRoute = newStack.last(),
+                    navDirection = NavDirection.REPLACE,
                 )
             }
         }
@@ -91,7 +102,13 @@ class AppViewModel(
     fun navigateBack() {
         if (currentState.navStack.size > 1) {
             val newStack = currentState.navStack.dropLast(1)
-            setState { copy(navStack = newStack, currentRoute = newStack.last()) }
+            setState {
+                copy(
+                    navStack = newStack,
+                    currentRoute = newStack.last(),
+                    navDirection = NavDirection.BACKWARD,
+                )
+            }
         }
     }
 
@@ -99,12 +116,12 @@ class AppViewModel(
         requestedRoute: AppRoute,
         session: UserSession?,
     ): AppRoute =
-        if (session != null) { // Logged in user
+        if (session != null) {
             when (requestedRoute) {
                 is AppRoute.Login, is AppRoute.Register -> AppRoute.Home
                 else -> requestedRoute
             }
-        } else { // Guest user
+        } else {
             if (isRoutePublic(requestedRoute)) requestedRoute else AppRoute.Login
         }
 
@@ -135,14 +152,24 @@ class AppViewModel(
 
     fun registerDeviceToken(token: String) {
         viewModelScope.launch {
-            deviceRepository.registerDevice(token, "ANDROID")
+            deviceRepository.registerDevice(token, "ANDROID").onFailure {
+                handleErrorWithMessage(getErrorMessage("Failed to register for notifications", it))
+            }
         }
     }
 
     fun navigateToHome() {
         val homeRoute = AppRoute.Home
-        if (currentState.navStack.size > 1 || currentState.currentRoute != homeRoute) {
-            setState { copy(navStack = listOf(homeRoute), currentRoute = homeRoute) }
+        if (currentState.currentRoute != homeRoute) {
+            val direction =
+                if (currentState.navStack.size > 1) NavDirection.BACKWARD else NavDirection.REPLACE
+            setState {
+                copy(
+                    navStack = listOf(homeRoute),
+                    currentRoute = homeRoute,
+                    navDirection = direction,
+                )
+            }
         }
     }
 }

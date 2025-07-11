@@ -7,6 +7,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.request
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.isSuccess
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.Json
 import pt.isel.keepmyplanet.dto.error.ErrorResponse
 import pt.isel.keepmyplanet.exception.AppException
@@ -39,6 +40,8 @@ suspend inline fun <reified T> HttpClient.executeRequest(
             val errorResponse = response.body<ErrorResponse>()
             Result.failure(mapErrorResponseToException(errorResponse, response.status.value))
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         println(
             "Request failed with a non-server exception: ${e::class.simpleName} -> ${e.message}",

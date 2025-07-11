@@ -8,6 +8,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlin.coroutines.cancellation.CancellationException
 import pt.isel.keepmyplanet.dto.auth.LoginRequest
 import pt.isel.keepmyplanet.dto.auth.LoginResponse
 import pt.isel.keepmyplanet.dto.error.ErrorResponse
@@ -50,6 +51,8 @@ class AuthApi(
                     }
                 Result.failure(appException)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(
                 InternalServerException("Could not connect or an unexpected error occurred.", e),

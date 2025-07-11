@@ -113,7 +113,7 @@ class UserProfileViewModel(
             photoRepository
                 .getPhotoUrl(photoId)
                 .onSuccess { photoUrl -> setState { copy(photoUrl = photoUrl) } }
-                .onFailure { setState { copy(photoUrl = null) } }
+                .onFailure { handleErrorWithMessage("Could not load profile picture.") }
         }
     }
 
@@ -195,6 +195,7 @@ class UserProfileViewModel(
                     is AppError.GeneralError -> {
                         handleErrorWithMessage(appError.message)
                     }
+
                     is AppError.ApiFormError -> {
                         setState { copy(passwordApiError = appError.message) }
                     }

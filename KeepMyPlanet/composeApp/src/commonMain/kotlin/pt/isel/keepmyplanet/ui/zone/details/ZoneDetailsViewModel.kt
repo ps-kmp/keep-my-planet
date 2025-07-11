@@ -44,15 +44,20 @@ class ZoneDetailsViewModel(
 
     private suspend fun fetchAndCachePhotos(photoIds: Set<Id>) {
         val fetchedPhotoModels = mutableMapOf<Id, Any>()
+        val failures = mutableListOf<Throwable>()
         coroutineScope {
             photoIds
                 .map { photoId ->
                     async {
-                        photoRepository.getPhotoModel(photoId).onSuccess { model ->
-                            fetchedPhotoModels[photoId] = model
-                        }
+                        photoRepository
+                            .getPhotoModel(photoId)
+                            .onSuccess { model -> fetchedPhotoModels[photoId] = model }
+                            .onFailure { failures.add(it) }
                     }
                 }.awaitAll()
+        }
+        if (failures.isNotEmpty()) {
+            handleErrorWithMessage("Could not load some of the zone photos.")
         }
         setState { copy(photoModels = fetchedPhotoModels) }
     }

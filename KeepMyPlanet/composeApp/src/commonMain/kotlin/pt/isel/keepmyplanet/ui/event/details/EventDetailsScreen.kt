@@ -141,6 +141,7 @@ fun EventDetailsScreen(
             onDismiss = viewModel::onDismissNotificationDialog,
             isLoading = uiState.actionState == EventDetailsUiState.ActionState.SENDING_NOTIFICATION,
             isSendEnabled = uiState.isSendNotificationButtonEnabled,
+            errorText = uiState.notificationError,
         )
     }
     if (showTransferDialog.value) {
