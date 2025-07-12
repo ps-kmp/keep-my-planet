@@ -24,8 +24,8 @@ fun Application.module() {
     configureLogging()
     configureAuthentication()
     configureStatusPages()
-    install(SSE)
     configureCors()
+    install(SSE)
     configureRouting()
     configureScheduling()
 }
