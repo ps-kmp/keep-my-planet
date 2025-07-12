@@ -21,7 +21,7 @@ import pt.isel.keepmyplanet.utils.now
 class ChatViewModel(
     private val messageRepository: MessageApiRepository,
     private val eventRepository: EventApiRepository,
-    sessionManager: SessionManager,
+    private val sessionManager: SessionManager,
 ) : BaseViewModel<ChatUiState>(
         ChatUiState(sessionManager.userSession.value?.userInfo, ChatInfo(Id(0U), null)),
     ) {
@@ -259,10 +259,11 @@ class ChatViewModel(
 
     private fun startListeningToMessages(eventId: Id) {
         if (currentState.user == null) return
+        val token = sessionManager.userSession.value?.token ?: return
 
         viewModelScope.launch {
             messageRepository
-                .listenToMessages(eventId)
+                .listenToMessages(eventId, token)
                 .catch { handleErrorWithMessage(getErrorMessage("Chat connection error", it)) }
                 .collect { messageResult ->
                     messageResult

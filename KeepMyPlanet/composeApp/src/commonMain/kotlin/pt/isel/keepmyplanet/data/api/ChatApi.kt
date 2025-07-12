@@ -47,16 +47,22 @@ class ChatApi(
             setBody(CreateMessageRequest(content))
         }
 
-    fun listenToMessages(eventId: UInt): Flow<Result<MessageResponse>> =
+    fun listenToMessages(
+        eventId: UInt,
+        token: String,
+    ): Flow<Result<MessageResponse>> =
         flow {
-            httpClient.sse(Endpoints.messagesSse(eventId)) {
+            httpClient.sse(
+                {
+                    url(Endpoints.messagesSse(eventId))
+                    parameter("token", token)
+                },
+            ) {
                 incoming.collect { event ->
                     val jsonString = event.data
                     if (!jsonString.isNullOrBlank()) {
                         val parseResult =
-                            runCatching {
-                                Json.decodeFromString<MessageResponse>(jsonString)
-                            }
+                            runCatching { Json.decodeFromString<MessageResponse>(jsonString) }
                         emit(parseResult)
                     }
                 }

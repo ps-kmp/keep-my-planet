@@ -18,6 +18,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.message.CreateMessageRequest
 import pt.isel.keepmyplanet.mapper.message.toResponse
 import pt.isel.keepmyplanet.service.ChatSseService
+import pt.isel.keepmyplanet.service.JwtService
 import pt.isel.keepmyplanet.service.MessageService
 import pt.isel.keepmyplanet.utils.getCurrentUserId
 import pt.isel.keepmyplanet.utils.getPathIntParameter
@@ -27,6 +28,7 @@ import pt.isel.keepmyplanet.utils.getQueryIntParameter
 fun Route.messageWebApi(
     messageService: MessageService,
     chatSseService: ChatSseService,
+    jwtService: JwtService,
 ) {
     route("/events/{eventId}/chat") {
         fun ApplicationCall.getEventId(): Id = getPathUIntId("eventId", "Event ID")
@@ -54,24 +56,6 @@ fun Route.messageWebApi(
                     .onSuccess { msg ->
                         call.respond(HttpStatusCode.OK, msg.map { it.toResponse() }.toList())
                     }.onFailure { throw it }
-            }
-
-            route("/stream") {
-                sse {
-                    val eventId = call.getEventId()
-
-                    chatSseService.messages
-                        .filter { it.eventId == eventId }
-                        .collect { message ->
-                            send(
-                                ServerSentEvent(
-                                    data = Json.encodeToString(message.toResponse()),
-                                    id = message.chatPosition.toString(),
-                                    event = "new-message",
-                                ),
-                            )
-                        }
-                }
             }
 
             route("/{seq}") {
@@ -104,6 +88,28 @@ fun Route.messageWebApi(
                         .onFailure { throw it }
                 }
             }
+        }
+    }
+    route("/events/{eventId}/chat/stream") {
+        sse {
+            val eventId = call.getPathUIntId("eventId", "Event ID")
+            val token = call.request.queryParameters["token"]
+            if (token == null || jwtService.verifyToken(token) == null) {
+                close()
+                return@sse
+            }
+
+            chatSseService.messages
+                .filter { it.eventId == eventId }
+                .collect { message ->
+                    send(
+                        ServerSentEvent(
+                            data = Json.encodeToString(message.toResponse()),
+                            id = message.chatPosition.toString(),
+                            event = "new-message",
+                        ),
+                    )
+                }
         }
     }
 }

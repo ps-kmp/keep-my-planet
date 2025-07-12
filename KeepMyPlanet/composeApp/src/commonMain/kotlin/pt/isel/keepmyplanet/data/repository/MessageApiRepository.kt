@@ -39,9 +39,12 @@ class MessageApiRepository(
         content: String,
     ): Result<Unit> = chatApi.sendMessage(eventId.value, content)
 
-    fun listenToMessages(eventId: Id): Flow<Result<Message>> =
+    fun listenToMessages(
+        eventId: Id,
+        token: String,
+    ): Flow<Result<Message>> =
         chatApi
-            .listenToMessages(eventId.value)
+            .listenToMessages(eventId.value, token)
             .map { result -> result.map { it.toMessage() } }
             .onEach { result ->
                 result.onSuccess { message -> messageCache?.insertMessages(listOf(message)) }
