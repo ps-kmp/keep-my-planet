@@ -18,6 +18,14 @@ fun Application.configureCors() {
         allowHeader(HttpHeaders.ContentType)
         allowCredentials = true
         allowNonSimpleContentTypes = true
-        anyHost()
+        try {
+            val frontendUrl =
+                this@configureCors.environment.config.property("cors.frontendUrl").getString()
+            val (scheme, host) = frontendUrl.split("://")
+            allowHost(host, schemes = listOf(scheme))
+        } catch (_: Exception) {
+        }
+        allowHost("localhost", schemes = listOf("http", "https"))
+        allowHost("127.0.0.1", schemes = listOf("http", "https"))
     }
 }
