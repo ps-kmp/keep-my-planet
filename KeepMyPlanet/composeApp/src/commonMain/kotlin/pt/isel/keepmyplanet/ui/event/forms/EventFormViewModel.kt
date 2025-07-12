@@ -160,7 +160,12 @@ class EventFormViewModel(
         val stateWithErrors =
             state.copy(
                 titleError = if (state.title.isBlank()) "Title cannot be empty" else null,
-                descriptionError = if (state.description.isBlank()) "Description cannot be empty" else null,
+                descriptionError =
+                    if (state.description.isBlank()) {
+                        "Description cannot be empty"
+                    } else {
+                        null
+                    },
                 startDateError =
                     if (state.startDate == null) {
                         "Start date cannot be empty"

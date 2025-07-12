@@ -81,7 +81,7 @@ actual fun DateTimePicker(
                     }
                 },
                 readOnly = true,
-                enabled = false, // Visually disabled
+                enabled = false,
                 isError = errorText != null,
                 colors =
                     OutlinedTextFieldDefaults.colors(

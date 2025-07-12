@@ -108,7 +108,8 @@ class HomeViewModel(
                 }.onFailure {
                     setState { copy(isFindingZones = false, zonesFound = false) }
                     handleErrorWithMessage(
-                        "Unable to retrieve your location. Please check permissions or network and try again.",
+                        "Unable to retrieve your location. " +
+                            "Please check permissions or network and try again.",
                     )
                 }
         }
