@@ -1,14 +1,16 @@
 FROM gradle:8.13-jdk17-focal AS builder
 WORKDIR /home/gradle/project
-COPY gradle/ /home/gradle/project/gradle/
-COPY gradlew build.gradle.kts settings.gradle.kts gradle.properties /home/gradle/project/
-COPY . .
-RUN chmod +x ./gradlew
-RUN ./gradlew :server:installDist
+COPY build.gradle.kts settings.gradle.kts gradle.properties gradlew ./
+COPY gradle ./gradle/
+COPY server/build.gradle.kts ./server/
+COPY shared/build.gradle.kts ./shared/
+RUN ./gradlew :server:dependencies --no-daemon
+COPY server/src ./server/src
+COPY shared/src ./shared/src
+RUN ./gradlew :server:installDist --no-daemon
 
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=builder /home/gradle/project/server/build/install/server/ /app/
-COPY --from=builder /home/gradle/project/server/build/resources/main/static /app/static
 EXPOSE 10000
 CMD ["./bin/server"]
