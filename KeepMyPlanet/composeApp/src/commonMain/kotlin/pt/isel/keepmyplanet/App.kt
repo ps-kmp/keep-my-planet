@@ -27,6 +27,7 @@ import pt.isel.keepmyplanet.ui.base.koinViewModel
 import pt.isel.keepmyplanet.ui.chat.ChatScreen
 import pt.isel.keepmyplanet.ui.chat.ChatViewModel
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
+import pt.isel.keepmyplanet.ui.downloads.DownloadsScreen
 import pt.isel.keepmyplanet.ui.event.details.EventDetailsScreen
 import pt.isel.keepmyplanet.ui.event.forms.CreateEventScreen
 import pt.isel.keepmyplanet.ui.event.forms.UpdateEventScreen
@@ -119,6 +120,9 @@ fun App() {
                             },
                             onNavigateToUserManagement = {
                                 appViewModel.navigate(AppRoute.UserManagement)
+                            },
+                            onNavigateToDownloads = {
+                                appViewModel.navigate(AppRoute.Downloads)
                             },
                         )
 
@@ -354,6 +358,12 @@ fun App() {
 
                     is AppRoute.About ->
                         AboutScreen(
+                            onNavigateToHome = { appViewModel.navigateToHome() },
+                            onNavigateBack = { appViewModel.navigateBack() },
+                        )
+
+                    is AppRoute.Downloads ->
+                        DownloadsScreen(
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onNavigateBack = { appViewModel.navigateBack() },
                         )

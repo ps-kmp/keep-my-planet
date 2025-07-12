@@ -74,6 +74,8 @@ sealed class AppRoute {
     data object About : AppRoute()
 
     data object UserManagement : AppRoute()
+
+    data object Downloads : AppRoute()
 }
 
 fun isRoutePublic(route: AppRoute): Boolean =
@@ -85,6 +87,7 @@ fun isRoutePublic(route: AppRoute): Boolean =
         is AppRoute.ZoneDetails,
         is AppRoute.About,
         is AppRoute.Login,
+        is AppRoute.Downloads,
         is AppRoute.Register,
         is AppRoute.EventStatusHistory,
         is AppRoute.ParticipantList,

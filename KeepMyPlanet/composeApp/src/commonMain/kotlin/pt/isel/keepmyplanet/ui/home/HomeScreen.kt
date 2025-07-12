@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
@@ -73,6 +74,7 @@ fun HomeScreen(
     onNavigateToZoneDetails: (Id) -> Unit,
     onLogout: () -> Unit,
     onNavigateToUserManagement: () -> Unit,
+    onNavigateToDownloads: () -> Unit,
     onNavigateToAbout: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit,
@@ -155,6 +157,7 @@ fun HomeScreen(
                 onLogout = onLogout,
                 onFindNearbyZones = viewModel::requestLocation,
                 onNavigateToMap = onNavigateToMap,
+                onNavigateToDownloads = onNavigateToDownloads,
             )
         } else {
             GuestHomeScreen(
@@ -162,6 +165,7 @@ fun HomeScreen(
                 onNavigateToMap = onNavigateToMap,
                 onNavigateToEventList = onNavigateToEventList,
                 onNavigateToLogin = onNavigateToLogin,
+                onNavigateToDownloads = onNavigateToDownloads,
             )
         }
     }
@@ -178,6 +182,7 @@ private fun UserDashboard(
     onLogout: () -> Unit,
     onFindNearbyZones: () -> Unit,
     onNavigateToMap: () -> Unit,
+    onNavigateToDownloads: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(paddingValues),
@@ -304,6 +309,12 @@ private fun UserDashboard(
                         onClick = onNavigateToUserManagement,
                     )
                 }
+                DashboardItem(
+                    icon = Icons.Default.Download,
+                    title = "Download the App",
+                    description = "Get the native app for other platforms.",
+                    onClick = onNavigateToDownloads,
+                )
                 OutlinedButton(
                     onClick = onLogout,
                     modifier = Modifier.fillMaxWidth(),
@@ -330,6 +341,7 @@ private fun GuestHomeScreen(
     onNavigateToMap: () -> Unit,
     onNavigateToEventList: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onNavigateToDownloads: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(paddingValues),
@@ -373,6 +385,15 @@ private fun GuestHomeScreen(
                 title = "Find a Cleanup Event",
                 description = "Browse and see details about upcoming events near you.",
                 onClick = onNavigateToEventList,
+            )
+        }
+
+        item {
+            DashboardItem(
+                icon = Icons.Default.Download,
+                title = "Download the App",
+                description = "Get the native app for Android or Desktop.",
+                onClick = onNavigateToDownloads,
             )
         }
 
