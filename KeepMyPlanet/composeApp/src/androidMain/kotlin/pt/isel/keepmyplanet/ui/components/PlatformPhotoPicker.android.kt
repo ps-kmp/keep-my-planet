@@ -12,9 +12,7 @@ actual fun rememberPhotoPicker(
 ): () -> Unit {
     val context = LocalContext.current
     val launcher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent(),
-        ) { uri ->
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
             uri?.let {
                 val contentResolver = context.contentResolver
                 val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() }

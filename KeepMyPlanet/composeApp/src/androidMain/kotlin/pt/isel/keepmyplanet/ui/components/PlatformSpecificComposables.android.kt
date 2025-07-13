@@ -1,7 +1,6 @@
 package pt.isel.keepmyplanet.ui.components
 
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.util.Log
 import android.view.ViewGroup
 import androidx.camera.core.CameraSelector
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -26,6 +26,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
@@ -69,7 +70,7 @@ actual fun QrCodeScannerView(
     if (cameraPermissionState.status.isGranted) {
         // AndroidView hosts a PreviewView of CameraX
         AndroidView(
-            modifier = modifier.background(androidx.compose.ui.graphics.Color.Cyan),
+            modifier = modifier,
             factory = { ctx ->
                 val previewView =
                     PreviewView(ctx).apply {
@@ -162,7 +163,9 @@ actual fun QrCodeDisplay(
     data: String,
     modifier: Modifier,
 ) {
-    val qrBitmap by produceState<Bitmap?>(initialValue = null, key1 = data) {
+    val qrColor = MaterialTheme.colorScheme.onSurface
+    val qrBackgroundColor = MaterialTheme.colorScheme.surface
+    val qrBitmap by produceState<Bitmap?>(initialValue = null, data, qrColor, qrBackgroundColor) {
         value =
             withContext(Dispatchers.Default) {
                 try {
@@ -173,7 +176,12 @@ actual fun QrCodeDisplay(
                     val bmp = createBitmap(width, height, Bitmap.Config.RGB_565)
                     for (x in 0 until width) {
                         for (y in 0 until height) {
-                            bmp[x, y] = if (bitMatrix[x, y]) Color.BLACK else Color.WHITE
+                            bmp[x, y] =
+                                if (bitMatrix[x, y]) {
+                                    qrColor.toArgb()
+                                } else {
+                                    qrBackgroundColor.toArgb()
+                                }
                         }
                     }
                     bmp
@@ -192,8 +200,7 @@ actual fun QrCodeDisplay(
         )
     } else {
         // Change to CircularProgressIndicator or any placeholder
-        // Box(modifier)
-        Box(modifier.background(androidx.compose.ui.graphics.Color.Magenta)) {
+        Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
             Text("Error generating QR code.")
         }
     }

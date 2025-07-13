@@ -82,7 +82,6 @@ import pt.isel.keepmyplanet.ui.components.rememberLocationProvider
 import pt.isel.keepmyplanet.ui.map.components.GuestPromptBanner
 import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
-import pt.isel.keepmyplanet.ui.theme.backgroundLight
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
 import pt.isel.keepmyplanet.utils.toDegrees
@@ -261,7 +260,7 @@ fun MapScreen(
                     if (!uiState.isGuest && !uiState.isReportingMode) {
                         FloatingActionButton(
                             onClick = { viewModel.enterReportingMode() },
-                            containerColor = backgroundLight,
+                            containerColor = MaterialTheme.colorScheme.surface,
                         ) {
                             Icon(
                                 Icons.Default.Add,

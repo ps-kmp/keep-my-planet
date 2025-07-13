@@ -9,9 +9,9 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.ktor.client.HttpClient
@@ -57,7 +57,7 @@ import pt.isel.keepmyplanet.ui.map.MapConfiguration.ZONE_CLUSTER_ID
 import pt.isel.keepmyplanet.ui.map.components.UserLocationMarker
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.map.states.MapUiState
-import pt.isel.keepmyplanet.ui.theme.primaryLight
+import pt.isel.keepmyplanet.ui.theme.customColors
 import pt.isel.keepmyplanet.utils.createOfflineFirstTileStreamProvider
 import pt.isel.keepmyplanet.utils.haversineDistance
 import pt.isel.keepmyplanet.utils.latToY
@@ -164,23 +164,39 @@ class MapViewModel(
     @OptIn(ExperimentalClusteringApi::class)
     private fun setupClusterer() {
         mapState.addClusterer(ZONE_CLUSTER_ID) { clusterIds ->
-            {
+            @Composable {
                 val clusterSize = clusterIds.size
-                val (bgColor, size) =
+                val (bgColor, textColor, size) =
                     when {
-                        clusterSize > 25 -> MaterialTheme.colorScheme.errorContainer to 50.dp
-                        clusterSize > 10 -> Color(0xFFFFA000) to 45.dp
-                        else -> primaryLight to 40.dp
+                        clusterSize > 25 ->
+                            Triple(
+                                MaterialTheme.colorScheme.errorContainer,
+                                MaterialTheme.colorScheme.onErrorContainer,
+                                50.dp,
+                            )
+
+                        clusterSize > 10 ->
+                            Triple(
+                                customColors.warningContainer,
+                                customColors.onWarningContainer,
+                                45.dp,
+                            )
+
+                        else ->
+                            Triple(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.onPrimaryContainer,
+                                40.dp,
+                            )
                     }
 
                 Box(
-                    modifier =
-                        Modifier.size(size).background(bgColor, CircleShape),
+                    modifier = Modifier.size(size).background(bgColor, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = clusterSize.toString(),
-                        color = Color.White,
+                        color = textColor,
                         fontWeight = FontWeight.Bold,
                     )
                 }

@@ -65,9 +65,11 @@ fun getStatusColorPair(status: ZoneStatus): Pair<Color, Color> =
         ZoneStatus.REPORTED ->
             customColors.warningContainer to
                 customColors.onWarningContainer
+
         ZoneStatus.CLEANING_SCHEDULED ->
             MaterialTheme.colorScheme.primaryContainer to
                 MaterialTheme.colorScheme.onPrimaryContainer
+
         ZoneStatus.CLEANED ->
             customColors.successContainer to
                 customColors.onSuccessContainer
@@ -79,15 +81,19 @@ fun getStatusColorPair(status: EventStatus): Pair<Color, Color> =
         EventStatus.PLANNED ->
             MaterialTheme.colorScheme.tertiaryContainer to
                 MaterialTheme.colorScheme.onTertiaryContainer
+
         EventStatus.IN_PROGRESS ->
             customColors.warningContainer to
                 customColors.onWarningContainer
+
         EventStatus.COMPLETED ->
             customColors.successContainer to
                 customColors.onSuccessContainer
+
         EventStatus.CANCELLED ->
             MaterialTheme.colorScheme.errorContainer to
                 MaterialTheme.colorScheme.onErrorContainer
+
         EventStatus.UNKNOWN ->
             MaterialTheme.colorScheme.surfaceVariant to
                 MaterialTheme.colorScheme.onSurfaceVariant
@@ -99,12 +105,15 @@ fun getSeverityColorPair(severity: ZoneSeverity): Pair<Color, Color> =
         ZoneSeverity.LOW ->
             customColors.successContainer to
                 customColors.onSuccessContainer
+
         ZoneSeverity.MEDIUM ->
             customColors.warningContainer to
                 customColors.onWarningContainer
+
         ZoneSeverity.HIGH ->
             MaterialTheme.colorScheme.errorContainer to
                 MaterialTheme.colorScheme.onErrorContainer
+
         ZoneSeverity.UNKNOWN ->
             MaterialTheme.colorScheme.surfaceVariant to
                 MaterialTheme.colorScheme.onSurfaceVariant
