@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.theme.tertiaryLight
 
 @Composable
 fun GuestPromptBanner(
@@ -52,7 +51,7 @@ fun GuestPromptBanner(
                     modifier = Modifier.weight(1f),
                 )
                 TextButton(onClick = onLoginClick) {
-                    Text("Login / Register", color = tertiaryLight)
+                    Text("Login / Register", color = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Default.Close, contentDescription = "Dismiss")

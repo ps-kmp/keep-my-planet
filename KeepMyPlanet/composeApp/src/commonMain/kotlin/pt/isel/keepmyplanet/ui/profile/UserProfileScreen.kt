@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -47,7 +46,6 @@ import pt.isel.keepmyplanet.ui.profile.components.ProfileInfoDisplay
 import pt.isel.keepmyplanet.ui.profile.components.ProfileInfoSection
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileEvent
 import pt.isel.keepmyplanet.ui.profile.states.UserProfileUiState
-import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 @Composable
 fun UserProfileScreen(
@@ -182,7 +180,6 @@ private fun UserProfileDetails(
             Button(
                 onClick = onNavigateToStats,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryLight),
             ) {
                 Text("View My Stats")
             }
@@ -193,7 +190,6 @@ private fun UserProfileDetails(
                 Button(
                     onClick = onPasswordChangeToggled,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryLight),
                 ) {
                     Text(if (uiState.showPasswordChangeSection) "Cancel" else "Change Password")
                 }

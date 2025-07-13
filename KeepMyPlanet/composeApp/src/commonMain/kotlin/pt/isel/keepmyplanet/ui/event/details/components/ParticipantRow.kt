@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.user.UserInfo
-import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 @Composable
 fun ParticipantRow(
@@ -37,7 +36,7 @@ fun ParticipantRow(
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = "Participant",
-                tint = primaryLight,
+                tint = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = participant.name.value,

@@ -19,8 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.theme.errorLight
-import pt.isel.keepmyplanet.ui.theme.onErrorLight
 
 @Composable
 fun FormApiError(
@@ -37,8 +35,8 @@ fun FormApiError(
             Card(
                 colors =
                     CardDefaults.cardColors(
-                        containerColor = errorLight,
-                        contentColor = onErrorLight,
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
                     ),
             ) {
                 Row(

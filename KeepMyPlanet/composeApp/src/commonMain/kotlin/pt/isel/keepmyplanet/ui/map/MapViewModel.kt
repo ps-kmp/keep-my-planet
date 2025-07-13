@@ -26,15 +26,12 @@ import ovh.plrapps.mapcompose.api.ExperimentalClusteringApi
 import ovh.plrapps.mapcompose.api.addClusterer
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
-import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.hasMarker
 import ovh.plrapps.mapcompose.api.idleStateFlow
-import ovh.plrapps.mapcompose.api.makePathDataBuilder
 import ovh.plrapps.mapcompose.api.moveMarker
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.removeMarker
-import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.api.visibleBoundingBox
 import ovh.plrapps.mapcompose.ui.layout.Forced
@@ -48,7 +45,7 @@ import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
-import pt.isel.keepmyplanet.ui.components.getSeverityColor
+import pt.isel.keepmyplanet.ui.components.getSeverityColorPair
 import pt.isel.keepmyplanet.ui.components.shouldShowUserLocationMarker
 import pt.isel.keepmyplanet.ui.map.MapConfiguration.DEFAULT_LAT
 import pt.isel.keepmyplanet.ui.map.MapConfiguration.DEFAULT_LON
@@ -61,7 +58,6 @@ import pt.isel.keepmyplanet.ui.map.components.UserLocationMarker
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.map.states.MapUiState
 import pt.isel.keepmyplanet.ui.theme.primaryLight
-import pt.isel.keepmyplanet.utils.addCircle
 import pt.isel.keepmyplanet.utils.createOfflineFirstTileStreamProvider
 import pt.isel.keepmyplanet.utils.haversineDistance
 import pt.isel.keepmyplanet.utils.latToY
@@ -232,14 +228,12 @@ class MapViewModel(
         val newZonesMap = zones.associateBy { it.id.value.toString() }
         val newZoneIds = newZonesMap.keys
         val currentZoneIds = displayedZoneIds.value
-        val zIndex = -1f
 
         val zoneIdsToRemove = currentZoneIds - newZoneIds
         val zoneIdsToAdd = newZoneIds - currentZoneIds
 
         zoneIdsToRemove.forEach {
             mapState.removeMarker(it)
-            mapState.removePath("zone_circle_$it")
         }
 
         zoneIdsToAdd.forEach { id ->
@@ -250,32 +244,12 @@ class MapViewModel(
                 y = latToY(zone.location.latitude),
                 renderingStrategy = RenderingStrategy.Clustering(ZONE_CLUSTER_ID),
             ) {
+                val (color, _) = getSeverityColorPair(zone.zoneSeverity)
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = "Zone: ${zone.description.value}",
-                    tint = getSeverityColor(zone.zoneSeverity),
+                    tint = color,
                     modifier = Modifier.size(36.dp),
-                )
-            }
-            val circlePathData =
-                mapState
-                    .makePathDataBuilder()
-                    .apply {
-                        addCircle(
-                            zone.location.latitude,
-                            zone.location.longitude,
-                            zone.radius.value,
-                        )
-                    }.build()
-
-            if (circlePathData != null) {
-                mapState.addPath(
-                    id = "zone_circle_${zone.id.value}",
-                    pathData = circlePathData,
-                    color = getSeverityColor(zone.zoneSeverity).copy(alpha = 0.5f),
-                    width = 2.dp,
-                    fillColor = getSeverityColor(zone.zoneSeverity).copy(alpha = 0.2f),
-                    zIndex = zIndex,
                 )
             }
         }

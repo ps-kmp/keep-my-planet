@@ -14,12 +14,20 @@ private val LightColors =
     lightColorScheme(
         primary = primaryLight,
         onPrimary = onPrimaryLight,
+        primaryContainer = primaryContainerLight,
+        onPrimaryContainer = onPrimaryContainerLight,
         secondary = secondaryLight,
         onSecondary = onSecondaryLight,
+        secondaryContainer = secondaryContainerLight,
+        onSecondaryContainer = onSecondaryContainerLight,
         tertiary = tertiaryLight,
         onTertiary = onTertiaryLight,
+        tertiaryContainer = tertiaryContainerLight,
+        onTertiaryContainer = onTertiaryContainerLight,
         error = errorLight,
         onError = onErrorLight,
+        errorContainer = errorContainerLight,
+        onErrorContainer = onErrorContainerLight,
         background = backgroundLight,
         onBackground = onBackgroundLight,
         surface = surfaceLight,
@@ -33,12 +41,20 @@ private val DarkColors =
     darkColorScheme(
         primary = primaryDark,
         onPrimary = onPrimaryDark,
+        primaryContainer = primaryContainerDark,
+        onPrimaryContainer = onPrimaryContainerDark,
         secondary = secondaryDark,
         onSecondary = onSecondaryDark,
+        secondaryContainer = secondaryContainerDark,
+        onSecondaryContainer = onSecondaryContainerDark,
         tertiary = tertiaryDark,
         onTertiary = onTertiaryDark,
+        tertiaryContainer = tertiaryContainerDark,
+        onTertiaryContainer = onTertiaryContainerDark,
         error = errorDark,
         onError = onErrorDark,
+        errorContainer = errorContainerDark,
+        onErrorContainer = onErrorContainerDark,
         background = backgroundDark,
         onBackground = onBackgroundDark,
         surface = surfaceDark,
@@ -50,41 +66,38 @@ private val DarkColors =
 
 @Immutable
 data class CustomColors(
-    val statusReported: Color,
-    val statusCleaningScheduled: Color,
-    val statusCleaned: Color,
-    val statusCancelled: Color,
-    val statusUnknown: Color,
-    val severityLow: Color,
-    val severityMedium: Color,
-    val severityHigh: Color,
-    val severityUnknown: Color,
+    val success: Color,
+    val onSuccess: Color,
+    val successContainer: Color,
+    val onSuccessContainer: Color,
+    val warning: Color,
+    val onWarning: Color,
+    val warningContainer: Color,
+    val onWarningContainer: Color,
 )
 
 private val LightCustomColors =
     CustomColors(
-        statusReported = statusReportedLight,
-        statusCleaningScheduled = statusCleaningScheduledLight,
-        statusCleaned = statusCleanedLight,
-        statusCancelled = statusCancelledLight,
-        statusUnknown = statusUnknownLight,
-        severityLow = severityLowLight,
-        severityMedium = severityMediumLight,
-        severityHigh = severityHighLight,
-        severityUnknown = severityUnknownLight,
+        success = successLight,
+        onSuccess = onSuccessLight,
+        successContainer = successContainerLight,
+        onSuccessContainer = onSuccessContainerLight,
+        warning = warningLight,
+        onWarning = onWarningLight,
+        warningContainer = warningContainerLight,
+        onWarningContainer = onWarningContainerLight,
     )
 
 private val DarkCustomColors =
     CustomColors(
-        statusReported = statusReportedDark,
-        statusCleaningScheduled = statusCleaningScheduledDark,
-        statusCleaned = statusCleanedDark,
-        statusCancelled = statusCancelledDark,
-        statusUnknown = statusUnknownDark,
-        severityLow = severityLowDark,
-        severityMedium = severityMediumDark,
-        severityHigh = severityHighDark,
-        severityUnknown = severityUnknownDark,
+        success = successDark,
+        onSuccess = onSuccessDark,
+        successContainer = successContainerDark,
+        onSuccessContainer = onSuccessContainerDark,
+        warning = warningDark,
+        onWarning = onWarningDark,
+        warningContainer = warningContainerDark,
+        onWarningContainer = onWarningContainerDark,
     )
 
 private val LocalCustomColors = staticCompositionLocalOf { LightCustomColors }
@@ -104,3 +117,7 @@ fun KeepMyPlanetTheme(
         )
     }
 }
+
+val customColors: CustomColors
+    @Composable
+    get() = LocalCustomColors.current

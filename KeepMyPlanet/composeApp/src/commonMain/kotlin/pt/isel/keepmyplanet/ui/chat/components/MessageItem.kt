@@ -27,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.chat.states.SendStatus
 import pt.isel.keepmyplanet.ui.chat.states.UiMessage
-import pt.isel.keepmyplanet.ui.theme.primaryLight
 import pt.isel.keepmyplanet.utils.formatTimestamp
 
 @Composable
@@ -41,12 +40,17 @@ fun MessageItem(
     val isCurrentUser = message.senderId.value == currentUserId
 
     val alignment = if (isCurrentUser) Alignment.CenterEnd else Alignment.CenterStart
-    val backgroundColor = if (isCurrentUser) primaryLight else MaterialTheme.colorScheme.surface
+    val backgroundColor =
+        if (isCurrentUser) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant
+        }
     val textColor =
         if (isCurrentUser) {
-            MaterialTheme.colorScheme.onPrimary
+            MaterialTheme.colorScheme.onPrimaryContainer
         } else {
-            MaterialTheme.colorScheme.onSurface
+            MaterialTheme.colorScheme.onSurfaceVariant
         }
     val startPadding = if (isCurrentUser) 48.dp else 8.dp
     val endPadding = if (isCurrentUser) 8.dp else 48.dp
@@ -66,7 +70,7 @@ fun MessageItem(
                         text = message.senderName.value,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = textColor.copy(alpha = 0.8f),
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 2.dp),
                     )
                 }

@@ -12,8 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
-import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
-import pt.isel.keepmyplanet.ui.theme.surfaceLight
 
 @Composable
 fun StatusHistoryItem(item: EventStateChangeResponse) {
@@ -22,8 +20,8 @@ fun StatusHistoryItem(item: EventStateChangeResponse) {
         elevation = CardDefaults.cardElevation(2.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = surfaceLight,
-                contentColor = onSurfaceLight,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
     ) {
         Column(

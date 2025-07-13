@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,10 +21,16 @@ fun UserLocationMarker() {
                 .size(24.dp)
                 .shadow(elevation = 4.dp, shape = CircleShape)
                 .clip(CircleShape)
-                .background(Color(0xFF4285F4)),
+                .background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center,
     ) {
         Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(Color.White))
-        Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(Color(0xFF4285F4)))
+        Box(
+            modifier =
+                Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+        )
     }
 }

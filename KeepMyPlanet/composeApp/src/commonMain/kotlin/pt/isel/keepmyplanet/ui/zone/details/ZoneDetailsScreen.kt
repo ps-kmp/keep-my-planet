@@ -60,10 +60,9 @@ import pt.isel.keepmyplanet.ui.components.InfoRow
 import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.ZoneDetailsSkeleton
-import pt.isel.keepmyplanet.ui.components.getSeverityColor
-import pt.isel.keepmyplanet.ui.components.getStatusColor
+import pt.isel.keepmyplanet.ui.components.getSeverityColorPair
+import pt.isel.keepmyplanet.ui.components.getStatusColorPair
 import pt.isel.keepmyplanet.ui.components.rememberPhotoPicker
-import pt.isel.keepmyplanet.ui.theme.primaryLight
 import pt.isel.keepmyplanet.ui.zone.details.components.FullScreenPhotoViewer
 import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsEvent
 import pt.isel.keepmyplanet.ui.zone.details.states.ZoneDetailsUiState
@@ -179,11 +178,13 @@ fun ZoneDetailsScreen(
                                         imageVector = Icons.Default.Flag,
                                         contentDescription = "Status",
                                         modifier = Modifier.padding(end = 16.dp),
-                                        tint = primaryLight,
+                                        tint = MaterialTheme.colorScheme.primary,
                                     )
+                                    val (statusBg, statusContent) = getStatusColorPair(zone.status)
                                     StatusBadge(
                                         text = zone.status.name.replace('_', ' '),
-                                        backgroundColor = getStatusColor(zone.status),
+                                        backgroundColor = statusBg,
+                                        contentColor = statusContent,
                                     )
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -191,11 +192,16 @@ fun ZoneDetailsScreen(
                                         imageVector = Icons.Default.Warning,
                                         contentDescription = "Severity",
                                         modifier = Modifier.padding(end = 16.dp),
-                                        tint = primaryLight,
+                                        tint = MaterialTheme.colorScheme.primary,
                                     )
+                                    val (severityBg, severityContent) =
+                                        getSeverityColorPair(
+                                            zone.zoneSeverity,
+                                        )
                                     StatusBadge(
                                         text = zone.zoneSeverity.name,
-                                        backgroundColor = getSeverityColor(zone.zoneSeverity),
+                                        backgroundColor = severityBg,
+                                        contentColor = severityContent,
                                         icon = Icons.Default.Warning,
                                     )
                                 }

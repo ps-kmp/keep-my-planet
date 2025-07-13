@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.Event
-import pt.isel.keepmyplanet.ui.theme.tertiaryLight
 
 @Composable
 fun ActionableEventCard(
@@ -31,8 +30,8 @@ fun ActionableEventCard(
         elevation = CardDefaults.cardElevation(4.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
     ) {
         Row(
@@ -43,7 +42,7 @@ fun ActionableEventCard(
             Icon(
                 imageVector = Icons.Default.NotificationsActive,
                 contentDescription = "Pending Action",
-                tint = tertiaryLight,
+                tint = MaterialTheme.colorScheme.primary,
             )
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),

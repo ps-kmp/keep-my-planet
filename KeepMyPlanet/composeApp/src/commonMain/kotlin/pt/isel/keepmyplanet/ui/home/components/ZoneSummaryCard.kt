@@ -16,9 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.zone.Zone
 import pt.isel.keepmyplanet.ui.components.StatusBadge
-import pt.isel.keepmyplanet.ui.components.getSeverityColor
-import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
-import pt.isel.keepmyplanet.ui.theme.surfaceLight
+import pt.isel.keepmyplanet.ui.components.getSeverityColorPair
 
 @Composable
 fun ZoneSummaryCard(
@@ -30,8 +28,8 @@ fun ZoneSummaryCard(
         elevation = CardDefaults.cardElevation(2.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = surfaceLight,
-                contentColor = onSurfaceLight,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
     ) {
         Column(
@@ -45,9 +43,11 @@ fun ZoneSummaryCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            val (bgColor, contentColor) = getSeverityColorPair(zone.zoneSeverity)
             StatusBadge(
                 text = zone.zoneSeverity.name,
-                backgroundColor = getSeverityColor(zone.zoneSeverity),
+                backgroundColor = bgColor,
+                contentColor = contentColor,
             )
         }
     }

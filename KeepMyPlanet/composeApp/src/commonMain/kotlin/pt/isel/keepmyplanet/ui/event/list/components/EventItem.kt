@@ -24,9 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.StatusBadge
-import pt.isel.keepmyplanet.ui.components.getStatusColor
-import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
-import pt.isel.keepmyplanet.ui.theme.surfaceLight
+import pt.isel.keepmyplanet.ui.components.getStatusColorPair
 import pt.isel.keepmyplanet.utils.toFormattedString
 
 @Composable
@@ -39,8 +37,8 @@ fun EventItem(
         elevation = CardDefaults.cardElevation(4.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = surfaceLight,
-                contentColor = onSurfaceLight,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
     ) {
         Column(
@@ -84,9 +82,11 @@ fun EventItem(
                     }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
+                val (bgColor, contentColor) = getStatusColorPair(event.status)
                 StatusBadge(
                     text = event.status.name,
-                    backgroundColor = getStatusColor(event.status),
+                    backgroundColor = bgColor,
+                    contentColor = contentColor,
                     modifier = Modifier.align(Alignment.Bottom),
                 )
             }

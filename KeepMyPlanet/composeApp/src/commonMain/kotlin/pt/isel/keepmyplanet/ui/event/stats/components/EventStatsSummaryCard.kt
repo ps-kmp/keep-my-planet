@@ -30,9 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import pt.isel.keepmyplanet.domain.event.EventStats
-import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
-import pt.isel.keepmyplanet.ui.theme.primaryLight
-import pt.isel.keepmyplanet.ui.theme.surfaceLight
 
 @Composable
 fun EventStatsSummaryCard(stats: EventStats) {
@@ -41,8 +38,8 @@ fun EventStatsSummaryCard(stats: EventStats) {
         elevation = CardDefaults.cardElevation(4.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = surfaceLight,
-                contentColor = onSurfaceLight,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -108,7 +105,7 @@ private fun StatItem(
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = primaryLight,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(32.dp),
         )
         Text(

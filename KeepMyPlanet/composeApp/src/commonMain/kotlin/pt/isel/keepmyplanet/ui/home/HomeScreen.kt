@@ -62,7 +62,6 @@ import pt.isel.keepmyplanet.ui.home.components.OnboardingDialog
 import pt.isel.keepmyplanet.ui.home.components.ZoneSummaryCard
 import pt.isel.keepmyplanet.ui.home.states.HomeEvent
 import pt.isel.keepmyplanet.ui.home.states.HomeUiState
-import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 @Composable
 fun HomeScreen(
@@ -402,7 +401,6 @@ private fun GuestHomeScreen(
                 Button(
                     onClick = onNavigateToLogin,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryLight),
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.Login,

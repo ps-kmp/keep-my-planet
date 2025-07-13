@@ -37,7 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.AppTopBar
-import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 private const val GITHUB_RELEASES_URL =
     "https://github.com/ps-kmp/keep-my-planet/releases/latest"
@@ -159,7 +158,7 @@ private fun DownloadCard(
                 imageVector = icon,
                 contentDescription = platformName,
                 modifier = Modifier.size(40.dp),
-                tint = primaryLight,
+                tint = MaterialTheme.colorScheme.primary,
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {

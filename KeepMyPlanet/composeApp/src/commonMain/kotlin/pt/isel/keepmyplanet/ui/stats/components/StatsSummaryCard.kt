@@ -26,9 +26,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pt.isel.keepmyplanet.domain.user.UserStats
-import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
-import pt.isel.keepmyplanet.ui.theme.primaryLight
-import pt.isel.keepmyplanet.ui.theme.surfaceLight
 
 @Composable
 fun StatsSummaryCard(stats: UserStats) {
@@ -37,8 +34,8 @@ fun StatsSummaryCard(stats: UserStats) {
         elevation = CardDefaults.cardElevation(4.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = surfaceLight,
-                contentColor = onSurfaceLight,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
     ) {
         Row(
@@ -78,7 +75,7 @@ private fun StatItem(
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = primaryLight,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(32.dp),
         )
         Text(

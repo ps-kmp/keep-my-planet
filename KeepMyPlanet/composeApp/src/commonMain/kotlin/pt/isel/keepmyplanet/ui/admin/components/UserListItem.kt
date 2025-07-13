@@ -20,7 +20,6 @@ import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserRole
 import pt.isel.keepmyplanet.ui.components.LoadingOutlinedButton
 import pt.isel.keepmyplanet.ui.profile.components.Avatar
-import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 @Composable
 fun UserListItem(
@@ -55,10 +54,8 @@ fun UserListItem(
                     "Role: ${user.role}",
                     style = MaterialTheme.typography.bodySmall,
                     color =
-                        if (user.role ==
-                            UserRole.ADMIN
-                        ) {
-                            primaryLight
+                        if (user.role == UserRole.ADMIN) {
+                            MaterialTheme.colorScheme.primary
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         },

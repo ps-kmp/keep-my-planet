@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.LoadingIconButton
-import pt.isel.keepmyplanet.ui.theme.primaryLight
 
 @Composable
 fun MessageInput(
@@ -50,13 +49,6 @@ fun MessageInput(
                     enabled = !isSending,
                     isError = isError,
                     maxLines = 5,
-/*                    colors =
-                        TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor =
-                                MaterialTheme.colors.primary.copy(ContentAlpha.high),
-                            unfocusedBorderColor =
-                                MaterialTheme.colors.onSurface.copy(ContentAlpha.disabled),
-                        ),*/
                     shape = MaterialTheme.shapes.medium,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -70,7 +62,7 @@ fun MessageInput(
                         contentDescription = "Send Message",
                         tint =
                             if (sendEnabled) {
-                                primaryLight
+                                MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurface.copy(0.38f)
                             },

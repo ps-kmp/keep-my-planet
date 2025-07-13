@@ -43,7 +43,6 @@ import keepmyplanet.composeapp.generated.resources.Res
 import keepmyplanet.composeapp.generated.resources.ic_app_logo
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
-import pt.isel.keepmyplanet.ui.theme.secondaryLight
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
@@ -67,7 +66,7 @@ fun AppTopBar(
         },
         colors =
             TopAppBarDefaults.topAppBarColors(
-                containerColor = secondaryLight,
+                containerColor = MaterialTheme.colorScheme.primary,
                 titleContentColor = MaterialTheme.colorScheme.onPrimary,
                 actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
                 navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -100,8 +99,8 @@ fun DetailCard(
         elevation = CardDefaults.cardElevation(2.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
     ) {
         Column(

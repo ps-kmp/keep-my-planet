@@ -77,15 +77,12 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.StatusBadge
-import pt.isel.keepmyplanet.ui.components.getSeverityColor
+import pt.isel.keepmyplanet.ui.components.getSeverityColorPair
 import pt.isel.keepmyplanet.ui.components.rememberLocationProvider
 import pt.isel.keepmyplanet.ui.map.components.GuestPromptBanner
 import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.theme.backgroundLight
-import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
-import pt.isel.keepmyplanet.ui.theme.primaryLight
-import pt.isel.keepmyplanet.ui.theme.surfaceLight
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
 import pt.isel.keepmyplanet.utils.toDegrees
@@ -119,6 +116,8 @@ fun MapScreen(
                 viewModel.onLocationError()
             },
         )
+
+    val primaryColor = MaterialTheme.colorScheme.primary
 
     LaunchedEffect(Unit) {
         viewModel.requestLocationPermissionOrUpdate()
@@ -172,21 +171,30 @@ fun MapScreen(
                         shape = RoundedCornerShape(8.dp),
                         colors =
                             CardDefaults.cardColors(
-                                containerColor = surfaceLight,
-                                contentColor = onSurfaceLight,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             ),
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
+                            val (radiusBg, radiusContent) =
+                                MaterialTheme.colorScheme.secondaryContainer to
+                                    MaterialTheme.colorScheme.onSecondaryContainer
                             StatusBadge(
                                 text = "Radius: ${zone.radius.value}m",
-                                backgroundColor = MaterialTheme.colorScheme.secondary,
+                                backgroundColor = radiusBg,
+                                contentColor = radiusContent,
                             )
+                            val (severityBg, severityContent) =
+                                getSeverityColorPair(
+                                    zone.zoneSeverity,
+                                )
                             StatusBadge(
                                 text = zone.zoneSeverity.name,
-                                backgroundColor = getSeverityColor(zone.zoneSeverity),
+                                backgroundColor = severityBg,
+                                contentColor = severityContent,
                             )
                             Text(
                                 text = zone.description.value,
@@ -202,11 +210,13 @@ fun MapScreen(
                                     onClick = { onNavigateToZoneDetails(zone.id) },
                                     colors =
                                         ButtonDefaults.textButtonColors(
-                                            containerColor = surfaceLight,
-                                            contentColor = onSurfaceLight,
+                                            containerColor =
+                                                MaterialTheme.colorScheme.surfaceVariant,
+                                            contentColor =
+                                                MaterialTheme.colorScheme.onSurfaceVariant,
                                         ),
                                 ) {
-                                    Text("VIEW DETAILS", color = primaryLight)
+                                    Text("VIEW DETAILS", color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         }
@@ -248,7 +258,7 @@ fun MapScreen(
                             )
                         }
                     }
-                    if (!uiState.isGuest) {
+                    if (!uiState.isGuest && !uiState.isReportingMode) {
                         FloatingActionButton(
                             onClick = { viewModel.enterReportingMode() },
                             containerColor = backgroundLight,
@@ -256,7 +266,7 @@ fun MapScreen(
                             Icon(
                                 Icons.Default.Add,
                                 contentDescription = "Report Zone",
-                                tint = primaryLight,
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
@@ -306,6 +316,54 @@ fun MapScreen(
         ) {
             MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
 
+            DefaultCanvas(modifier = Modifier.fillMaxSize(), mapState = mapState) {
+                if (uiState.isReportingMode) {
+                    val radius = uiState.reportingRadius
+                    val xNorm = mapState.centroidX
+                    val yNorm = mapState.centroidY
+                    val lat = yToLat(yNorm)
+                    val lon = xToLon(xNorm)
+
+                    val path = Path()
+                    val earthRadiusMeters = 6371000.0
+                    val d = radius / earthRadiusMeters
+                    val lat1 = lat.toRadians()
+                    val lon1 = lon.toRadians()
+
+                    for (i in 0..360 step 5) {
+                        val brng = i.toDouble().toRadians()
+                        val lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng))
+                        val lon2 =
+                            lon1 +
+                                atan2(
+                                    sin(brng) * sin(d) * cos(lat1),
+                                    cos(d) - sin(lat1) * sin(lat2),
+                                )
+
+                        val x = lonToX(lon2.toDegrees()) * mapState.fullSize.width
+                        val y = latToY(lat2.toDegrees()) * mapState.fullSize.height
+
+                        if (i == 0) {
+                            path.moveTo(x.toFloat(), y.toFloat())
+                        } else {
+                            path.lineTo(x.toFloat(), y.toFloat())
+                        }
+                    }
+                    path.close()
+
+                    drawPath(
+                        path = path,
+                        color = primaryColor.copy(alpha = 0.3f),
+                        style = Fill,
+                    )
+                    drawPath(
+                        path = path,
+                        color = primaryColor.copy(alpha = 0.8f),
+                        style = Stroke(width = 2.dp.toPx() / mapState.scale.toFloat()),
+                    )
+                }
+            }
+
             MapSearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChanged,
@@ -352,54 +410,8 @@ fun MapScreen(
                         imageVector = Icons.Default.GpsFixed,
                         contentDescription = "Reporting Pin",
                         modifier = Modifier.size(40.dp),
-                        tint = primaryLight,
+                        tint = MaterialTheme.colorScheme.primary,
                     )
-
-                    DefaultCanvas(modifier = Modifier.fillMaxSize(), mapState = mapState) {
-                        val radius = uiState.reportingRadius
-                        val xNorm = mapState.centroidX
-                        val yNorm = mapState.centroidY
-                        val lat = yToLat(yNorm)
-                        val lon = xToLon(xNorm)
-
-                        val path = Path()
-                        val earthRadiusMeters = 6371000.0
-                        val d = radius / earthRadiusMeters
-                        val lat1 = lat.toRadians()
-                        val lon1 = lon.toRadians()
-
-                        for (i in 0..360 step 5) {
-                            val brng = i.toDouble().toRadians()
-                            val lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng))
-                            val lon2 =
-                                lon1 +
-                                    atan2(
-                                        sin(brng) * sin(d) * cos(lat1),
-                                        cos(d) - sin(lat1) * sin(lat2),
-                                    )
-
-                            val x = lonToX(lon2.toDegrees()) * mapState.fullSize.width
-                            val y = latToY(lat2.toDegrees()) * mapState.fullSize.height
-
-                            if (i == 0) {
-                                path.moveTo(x.toFloat(), y.toFloat())
-                            } else {
-                                path.lineTo(x.toFloat(), y.toFloat())
-                            }
-                        }
-                        path.close()
-
-                        drawPath(
-                            path = path,
-                            color = primaryLight.copy(alpha = 0.3f),
-                            style = Fill,
-                        )
-                        drawPath(
-                            path = path,
-                            color = primaryLight.copy(alpha = 0.8f),
-                            style = Stroke(width = 2.dp.toPx() / mapState.scale.toFloat()),
-                        )
-                    }
 
                     Surface(
                         modifier =

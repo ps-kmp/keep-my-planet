@@ -22,12 +22,13 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
-import pt.isel.keepmyplanet.ui.theme.primaryLight
+import pt.isel.keepmyplanet.ui.theme.customColors
 
 @Composable
 fun StatusBadge(
     text: String,
     backgroundColor: Color,
+    contentColor: Color,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
 ) {
@@ -43,14 +44,14 @@ fun StatusBadge(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = contentColor,
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
             }
             Text(
                 text = text,
-                color = Color.White,
+                color = contentColor,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -58,26 +59,53 @@ fun StatusBadge(
     }
 }
 
-fun getStatusColor(status: ZoneStatus): Color =
+@Composable
+fun getStatusColorPair(status: ZoneStatus): Pair<Color, Color> =
     when (status) {
-        ZoneStatus.REPORTED -> Color(0xFFFFA000)
-        ZoneStatus.CLEANING_SCHEDULED -> primaryLight
-        ZoneStatus.CLEANED -> Color(0xFF388E3C)
+        ZoneStatus.REPORTED ->
+            customColors.warningContainer to
+                customColors.onWarningContainer
+        ZoneStatus.CLEANING_SCHEDULED ->
+            MaterialTheme.colorScheme.primaryContainer to
+                MaterialTheme.colorScheme.onPrimaryContainer
+        ZoneStatus.CLEANED ->
+            customColors.successContainer to
+                customColors.onSuccessContainer
     }
 
-fun getStatusColor(status: EventStatus): Color =
+@Composable
+fun getStatusColorPair(status: EventStatus): Pair<Color, Color> =
     when (status) {
-        EventStatus.PLANNED -> primaryLight
-        EventStatus.IN_PROGRESS -> Color(0xFFFFA000)
-        EventStatus.COMPLETED -> Color(0xFF388E3C)
-        EventStatus.CANCELLED -> Color(0xFFEA4335)
-        EventStatus.UNKNOWN -> Color.Gray
+        EventStatus.PLANNED ->
+            MaterialTheme.colorScheme.tertiaryContainer to
+                MaterialTheme.colorScheme.onTertiaryContainer
+        EventStatus.IN_PROGRESS ->
+            customColors.warningContainer to
+                customColors.onWarningContainer
+        EventStatus.COMPLETED ->
+            customColors.successContainer to
+                customColors.onSuccessContainer
+        EventStatus.CANCELLED ->
+            MaterialTheme.colorScheme.errorContainer to
+                MaterialTheme.colorScheme.onErrorContainer
+        EventStatus.UNKNOWN ->
+            MaterialTheme.colorScheme.surfaceVariant to
+                MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-fun getSeverityColor(severity: ZoneSeverity): Color =
+@Composable
+fun getSeverityColorPair(severity: ZoneSeverity): Pair<Color, Color> =
     when (severity) {
-        ZoneSeverity.LOW -> Color(0xFF34A853)
-        ZoneSeverity.MEDIUM -> Color(0xFFFBBC05)
-        ZoneSeverity.HIGH -> Color(0xFFEA4335)
-        ZoneSeverity.UNKNOWN -> Color.Gray
+        ZoneSeverity.LOW ->
+            customColors.successContainer to
+                customColors.onSuccessContainer
+        ZoneSeverity.MEDIUM ->
+            customColors.warningContainer to
+                customColors.onWarningContainer
+        ZoneSeverity.HIGH ->
+            MaterialTheme.colorScheme.errorContainer to
+                MaterialTheme.colorScheme.onErrorContainer
+        ZoneSeverity.UNKNOWN ->
+            MaterialTheme.colorScheme.surfaceVariant to
+                MaterialTheme.colorScheme.onSurfaceVariant
     }

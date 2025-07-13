@@ -18,8 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import pt.isel.keepmyplanet.ui.theme.primaryLight
-import pt.isel.keepmyplanet.ui.theme.surfaceLight
 
 @Composable
 fun DashboardItem(
@@ -31,7 +29,7 @@ fun DashboardItem(
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = surfaceLight),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -42,7 +40,7 @@ fun DashboardItem(
                 imageVector = icon,
                 contentDescription = title,
                 modifier = Modifier.size(48.dp),
-                tint = primaryLight,
+                tint = MaterialTheme.colorScheme.primary,
             )
             Column {
                 Text(

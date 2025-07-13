@@ -28,16 +28,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.ui.components.AppTopBar
-import pt.isel.keepmyplanet.ui.theme.onSurfaceLight
-import pt.isel.keepmyplanet.ui.theme.primaryLight
-import pt.isel.keepmyplanet.ui.theme.surfaceLight
-import pt.isel.keepmyplanet.ui.theme.tertiaryLight
 
 private const val ABOUT_TEXT =
     "A multiplatform system developed with Kotlin Multiplatform (KMP) that allows the " +
@@ -73,14 +68,14 @@ fun AboutScreen(
         ) {
             Surface(
                 shape = CircleShape,
-                color = surfaceLight.copy(alpha = 0.1f),
+                color = MaterialTheme.colorScheme.tertiaryContainer,
                 modifier = Modifier.size(96.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = "About Icon",
                     modifier = Modifier.padding(20.dp),
-                    tint = tertiaryLight,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
             }
 
@@ -130,7 +125,7 @@ fun AboutScreen(
             Text(
                 text = "Thank You!",
                 style = MaterialTheme.typography.bodyMedium,
-                color = primaryLight,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 32.dp, bottom = 16.dp),
             )
 
@@ -154,8 +149,8 @@ private fun FeatureCard(
         elevation = CardDefaults.cardElevation(2.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = surfaceLight,
-                contentColor = onSurfaceLight,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
     ) {
         Row(
@@ -166,7 +161,7 @@ private fun FeatureCard(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = tertiaryLight,
+                tint = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.size(40.dp),
             )
             Column {
@@ -174,7 +169,7 @@ private fun FeatureCard(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
