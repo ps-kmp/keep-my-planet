@@ -43,15 +43,15 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
         include:
           - os: windows-latest
-            task: packageMsi
+            task: ':composeApp:packageMsi' # Adicionar nome do módulo para clareza
             artifact_name: keepmyplanet.msi
             asset_path: composeApp/build/compose/binaries/main/native/pt.isel.keepmyplanet-1.0.0.msi
           - os: ubuntu-latest
-            task: packageDeb
+            task: ':composeApp:packageDeb' # Adicionar nome do módulo para clareza
             artifact_name: keepmyplanet.deb
             asset_path: composeApp/build/compose/binaries/main/native/pt.isel.keepmyplanet-1.0.0.deb
           - os: macos-latest
-            task: packageDmg
+            task: ':composeApp:packageDmg' # Adicionar nome do módulo para clareza
             artifact_name: keepmyplanet.dmg
             asset_path: composeApp/build/compose/binaries/main/native/pt.isel.keepmyplanet-1.0.0.dmg
 
@@ -66,7 +66,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Windows: Installs WiX Toolset
       - name: Setup WiX Toolset
         if: runner.os == 'Windows'
         uses: wixtoolset/wix-actions/heat-light-candle@v1
@@ -75,7 +74,14 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x gradlew
 
-      - name: Build Desktop Package
+      # Executa o comando de build para Windows
+      - name: Build Desktop Package (Windows)
+        if: runner.os == 'Windows'
+        run: gradlew.bat ${{ matrix.task }}
+
+      # Executa o comando de build para Linux/macOS
+      - name: Build Desktop Package (Unix)
+        if: runner.os != 'Windows'
         run: ./gradlew ${{ matrix.task }}
 
       - name: Rename Artifact
