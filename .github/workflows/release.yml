@@ -6,111 +6,22 @@ on:
       - 'v*.*.*'
 
 jobs:
-  # --- JOB 1: Build Android APK ---
-  build_android:
-    name: Build Android APK
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Grant execute permission to gradlew
-        run: chmod +x gradlew
-
-      - name: Build Android APK
-        run: ./gradlew :composeApp:assembleRelease
-
-      - name: Rename APK
-        run: mv composeApp/build/outputs/apk/release/composeApp-release.apk keepmyplanet.apk
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apk
-          path: keepmyplanet.apk
-
-  # --- JOB 2: Build Desktop Installers (Windows, Linux, macOS) ---
+  # --- JOB 2: ---
   build_desktop:
     name: Build Desktop Installer (${{ matrix.os }})
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        include:
-          - os: windows-latest
-            task: ':composeApp:packageMsi' # Adicionar nome do módulo para clareza
-            artifact_name: keepmyplanet.msi
-            asset_path: composeApp/build/compose/binaries/main/native/pt.isel.keepmyplanet-1.0.0.msi
-          - os: ubuntu-latest
-            task: ':composeApp:packageDeb' # Adicionar nome do módulo para clareza
-            artifact_name: keepmyplanet.deb
-            asset_path: composeApp/build/compose/binaries/main/native/pt.isel.keepmyplanet-1.0.0.deb
-          - os: macos-latest
-            task: ':composeApp:packageDmg' # Adicionar nome do módulo para clareza
-            artifact_name: keepmyplanet.dmg
-            asset_path: composeApp/build/compose/binaries/main/native/pt.isel.keepmyplanet-1.0.0.dmg
-
+    
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Print OS
+        run: echo "Hello from ${{ runner.os }}"
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup WiX Toolset
+      - name: Windows Specific Step
         if: runner.os == 'Windows'
-        uses: wixtoolset/wix-actions/heat-light-candle@v1
+        run: echo "This is a Windows-only step."
 
-      - name: Grant execute permission to gradlew
+      - name: Unix Specific Step
         if: runner.os != 'Windows'
-        run: chmod +x gradlew
-
-      # Executa o comando de build para Windows
-      - name: Build Desktop Package (Windows)
-        if: runner.os == 'Windows'
-        run: gradlew.bat ${{ matrix.task }}
-
-      # Executa o comando de build para Linux/macOS
-      - name: Build Desktop Package (Unix)
-        if: runner.os != 'Windows'
-        run: ./gradlew ${{ matrix.task }}
-
-      - name: Rename Artifact
-        run: mv ${{ matrix.asset_path }} ${{ matrix.artifact_name }}
-        shell: bash
-
-      - name: Upload Desktop artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-${{ matrix.os }}
-          path: ${{ matrix.artifact_name }}
-
-  # --- JOB 3: Create GitHub Release ---
-  create_release:
-    name: Create GitHub Release
-    needs: [build_android, build_desktop]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create Release and Upload Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          files: |
-            artifacts/android-apk/keepmyplanet.apk
-            artifacts/desktop-windows-latest/keepmyplanet.msi
-            artifacts/desktop-ubuntu-latest/keepmyplanet.deb
-            artifacts/desktop-macos-latest/keepmyplanet.dmg
+        run: echo "This is a Unix-only step."
