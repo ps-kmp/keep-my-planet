@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet
 
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import org.koin.core.context.GlobalContext.get
@@ -15,6 +16,7 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
             title = "KeepMyPlanet",
+            icon = painterResource("logo.png")
         ) {
             App()
         }

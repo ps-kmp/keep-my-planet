@@ -42,7 +42,6 @@ private const val GITHUB_RELEASES_URL =
     "https://github.com/ps-kmp/keep-my-planet/releases/download/0.0.1"
 private const val ANDROID_APK_URL = "$GITHUB_RELEASES_URL/keepmyplanet.apk"
 private const val WINDOWS_MSI_URL = "$GITHUB_RELEASES_URL/keepmyplanet.msi"
-private const val MACOS_DMG_URL = "$GITHUB_RELEASES_URL/keepmyplanet.dmg"
 private const val LINUX_DEB_URL = "$GITHUB_RELEASES_URL/keepmyplanet.deb"
 
 @Composable
@@ -98,12 +97,6 @@ fun DownloadsScreen(
                     description = "Installer for Windows (.msi)",
                     downloadUrl = WINDOWS_MSI_URL,
                     icon = Icons.Default.DesktopWindows,
-                )
-                DownloadCard(
-                    platformName = "macOS",
-                    description = "Disk image for macOS (.dmg)",
-                    downloadUrl = MACOS_DMG_URL,
-                    icon = Icons.Default.DesktopMac,
                 )
                 DownloadCard(
                     platformName = "Linux",
