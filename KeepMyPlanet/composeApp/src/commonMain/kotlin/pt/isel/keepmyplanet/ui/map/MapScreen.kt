@@ -78,10 +78,12 @@ import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColorPair
+import pt.isel.keepmyplanet.ui.components.getSeverityColorPairNonComposable
 import pt.isel.keepmyplanet.ui.components.rememberLocationProvider
 import pt.isel.keepmyplanet.ui.map.components.GuestPromptBanner
 import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
+import pt.isel.keepmyplanet.ui.theme.customColors
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
 import pt.isel.keepmyplanet.utils.toDegrees
@@ -117,6 +119,8 @@ fun MapScreen(
         )
 
     val primaryColor = MaterialTheme.colorScheme.primary
+    val customColors = customColors
+    val colorScheme = MaterialTheme.colorScheme
 
     LaunchedEffect(Unit) {
         viewModel.requestLocationPermissionOrUpdate()
@@ -316,6 +320,57 @@ fun MapScreen(
             MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
 
             DefaultCanvas(modifier = Modifier.fillMaxSize(), mapState = mapState) {
+                uiState.zones.forEach { zone ->
+                    val (severityColor, _) =
+                        getSeverityColorPairNonComposable(
+                            zone.zoneSeverity,
+                            customColors,
+                            colorScheme,
+                        )
+
+                    val radius = zone.radius.value
+                    val lat = zone.location.latitude
+                    val lon = zone.location.longitude
+
+                    val path = Path()
+                    val earthRadiusMeters = 6371000.0
+                    val d = radius / earthRadiusMeters
+                    val lat1 = lat.toRadians()
+                    val lon1 = lon.toRadians()
+
+                    for (i in 0..360 step 5) {
+                        val brng = i.toDouble().toRadians()
+                        val lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng))
+                        val lon2 =
+                            lon1 +
+                                atan2(
+                                    sin(brng) * sin(d) * cos(lat1),
+                                    cos(d) - sin(lat1) * sin(lat2),
+                                )
+
+                        val x = lonToX(lon2.toDegrees()) * mapState.fullSize.width
+                        val y = latToY(lat2.toDegrees()) * mapState.fullSize.height
+
+                        if (i == 0) {
+                            path.moveTo(x.toFloat(), y.toFloat())
+                        } else {
+                            path.lineTo(x.toFloat(), y.toFloat())
+                        }
+                    }
+                    path.close()
+
+                    drawPath(
+                        path = path,
+                        color = severityColor.copy(alpha = 0.2f),
+                        style = Fill,
+                    )
+                    drawPath(
+                        path = path,
+                        color = severityColor.copy(alpha = 0.5f),
+                        style = Stroke(width = 1.dp.toPx() / mapState.scale.toFloat()),
+                    )
+                }
+
                 if (uiState.isReportingMode) {
                     val radius = uiState.reportingRadius
                     val xNorm = mapState.centroidX

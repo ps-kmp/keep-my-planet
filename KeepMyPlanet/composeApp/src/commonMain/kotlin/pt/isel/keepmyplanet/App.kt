@@ -131,12 +131,9 @@ fun App() {
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onEventSelected = {
-                                appViewModel.navigate(
-                                    AppRoute.EventDetails(it.id),
-                                )
+                                appViewModel.navigate(AppRoute.EventDetails(it.id))
                             },
                             onNavigateBack = { appViewModel.navigateBack() },
-                            onCreateEventClick = { appViewModel.navigate(AppRoute.CreateEvent()) },
                         )
 
                     is AppRoute.CreateEvent ->
@@ -158,14 +155,10 @@ fun App() {
                             eventId = targetRoute.eventId,
                             onNavigateToChat = { appViewModel.navigate(AppRoute.Chat(it)) },
                             onNavigateToEditEvent = {
-                                appViewModel.navigate(
-                                    AppRoute.EditEvent(it),
-                                )
+                                appViewModel.navigate(AppRoute.EditEvent(it))
                             },
                             onNavigateToUpdateZone = {
-                                appViewModel.navigate(
-                                    AppRoute.UpdateZone(it),
-                                )
+                                appViewModel.navigate(AppRoute.UpdateZone(it))
                             },
                             onNavigateToManageAttendance = {
                                 appViewModel.navigate(AppRoute.ManageAttendance(it))
@@ -180,9 +173,7 @@ fun App() {
                                 appViewModel.navigate(AppRoute.ParticipantList(it))
                             },
                             onNavigateToEventStats = {
-                                appViewModel.navigate(
-                                    AppRoute.EventStats(it),
-                                )
+                                appViewModel.navigate(AppRoute.EventStats(it))
                             },
                             onNavigateToZoneDetails = {
                                 appViewModel.navigate(AppRoute.ZoneDetails(it))
@@ -277,9 +268,7 @@ fun App() {
                             userName = userSession?.userInfo?.name?.value ?: "User",
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onEventSelected = {
-                                appViewModel.navigate(
-                                    AppRoute.EventDetails(it.id),
-                                )
+                                appViewModel.navigate(AppRoute.EventDetails(it.id))
                             },
                             onNavigateBack = { appViewModel.navigateBack() },
                         )
@@ -319,9 +308,7 @@ fun App() {
                             onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
                             zoneId = targetRoute.zoneId,
                             onNavigateToUpdateZone = {
-                                appViewModel.navigate(
-                                    AppRoute.UpdateZone(it),
-                                )
+                                appViewModel.navigate(AppRoute.UpdateZone(it))
                             },
                             onNavigateToCreateEvent = {
                                 appViewModel.navigate(AppRoute.CreateEvent(it))

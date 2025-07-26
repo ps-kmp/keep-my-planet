@@ -91,6 +91,7 @@ class MapViewModel(
         }
 
     private var isInitialLocationSet = false
+    private var hasAttemptedInitialLocation = false
 
     init {
         initializeMap()
@@ -311,13 +312,17 @@ class MapViewModel(
         latitude: Double,
         longitude: Double,
     ) {
+        hasAttemptedInitialLocation = true
         _userLocation.value = Location(latitude, longitude)
         setState { copy(isLocatingUser = false) }
     }
 
     fun onLocationError() {
         setState { copy(isLocatingUser = false) }
-        handleErrorWithMessage("Unable to retrieve your location.")
+        if (hasAttemptedInitialLocation) {
+            handleErrorWithMessage("Unable to retrieve your location.")
+        }
+        hasAttemptedInitialLocation = true
     }
 
     fun requestLocationPermissionOrUpdate() {

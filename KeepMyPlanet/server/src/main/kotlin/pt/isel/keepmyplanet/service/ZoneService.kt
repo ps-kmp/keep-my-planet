@@ -252,7 +252,8 @@ class ZoneService(
                             changedBy = organizerId,
                             triggeredByEventId = eventId,
                         )
-                    zoneStateChangeService.archiveZone(updatedZone)
+                    val archivedZone = zoneStateChangeService.archiveZone(updatedZone)
+                    zoneRepository.update(archivedZone.copy(eventId = null))
                 } else {
                     zone
                 }

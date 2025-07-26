@@ -72,6 +72,7 @@ class AppViewModel(
     }
 
     fun navigate(route: AppRoute) {
+        if (route is AppRoute.Downloads && !isWasmPlatform) return
         val resolvedRoute = resolveRoute(route, currentState.userSession)
         if (currentState.navStack.lastOrNull() != resolvedRoute) {
             val newStack = currentState.navStack + resolvedRoute
@@ -86,6 +87,7 @@ class AppViewModel(
     }
 
     fun navigateAndReplace(route: AppRoute) {
+        if (route is AppRoute.Downloads && !isWasmPlatform) return
         val resolvedRoute = resolveRoute(route, currentState.userSession)
         if (currentState.navStack.lastOrNull() != resolvedRoute) {
             val newStack = currentState.navStack.dropLast(1) + resolvedRoute

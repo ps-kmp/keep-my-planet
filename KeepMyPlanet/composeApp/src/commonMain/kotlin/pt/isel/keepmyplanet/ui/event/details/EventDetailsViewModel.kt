@@ -163,12 +163,10 @@ class EventDetailsViewModel(
                     sendEvent(
                         EventDetailsEvent.ShowSnackbar("Zone status confirmed successfully!"),
                     )
-                    sendEvent(EventDetailsEvent.NavigateBack)
+                    loadEventDetails(event.id)
                 },
                 onError = {
-                    handleErrorWithMessage(
-                        getErrorMessage("Failed to confirm zone status", it),
-                    )
+                    handleErrorWithMessage(getErrorMessage("Failed to confirm zone status", it))
                 },
             )
         } else {
@@ -213,9 +211,7 @@ class EventDetailsViewModel(
                 sendEvent(EventDetailsEvent.ShowSnackbar("Transfer request sent successfully."))
             },
             onError = {
-                handleErrorWithMessage(
-                    getErrorMessage("Failed to initiate transfer", it),
-                )
+                handleErrorWithMessage(getErrorMessage("Failed to initiate transfer", it))
             },
         )
     }
@@ -224,9 +220,7 @@ class EventDetailsViewModel(
         val eventId = getEventId() ?: return
         launchWithResult(
             onStart = {
-                copy(
-                    actionState = EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
-                )
+                copy(actionState = EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER)
             },
             onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
             block = { eventRepository.respondToTransfer(eventId, accepted) },
@@ -238,9 +232,7 @@ class EventDetailsViewModel(
                 loadEventDetails(eventId)
             },
             onError = {
-                handleErrorWithMessage(
-                    getErrorMessage("Failed to respond to transfer", it),
-                )
+                handleErrorWithMessage(getErrorMessage("Failed to respond to transfer", it))
             },
         )
     }

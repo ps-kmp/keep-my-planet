@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.ui.theme.CustomColors
 import pt.isel.keepmyplanet.ui.theme.customColors
 
 @Composable
@@ -117,4 +119,27 @@ fun getSeverityColorPair(severity: ZoneSeverity): Pair<Color, Color> =
         ZoneSeverity.UNKNOWN ->
             MaterialTheme.colorScheme.surfaceVariant to
                 MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+fun getSeverityColorPairNonComposable(
+    severity: ZoneSeverity,
+    customColors: CustomColors,
+    colorScheme: ColorScheme,
+): Pair<Color, Color> =
+    when (severity) {
+        ZoneSeverity.LOW ->
+            customColors.successContainer to
+                customColors.onSuccessContainer
+
+        ZoneSeverity.MEDIUM ->
+            customColors.warningContainer to
+                customColors.onWarningContainer
+
+        ZoneSeverity.HIGH ->
+            colorScheme.errorContainer to
+                colorScheme.onErrorContainer
+
+        ZoneSeverity.UNKNOWN ->
+            colorScheme.surfaceVariant to
+                colorScheme.onSurfaceVariant
     }

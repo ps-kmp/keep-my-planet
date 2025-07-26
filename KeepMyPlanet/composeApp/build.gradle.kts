@@ -155,6 +155,27 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+    signingConfigs {
+        create("release") {
+            val keystoreFile = project.file("my-release-key.jks")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword =
+                    System.getenv("MY_RELEASE_STORE_PASSWORD")
+                        ?: extra["MY_RELEASE_STORE_PASSWORD"] as? String
+                keyAlias =
+                    System.getenv("MY_RELEASE_KEY_ALIAS")
+                        ?: extra["MY_RELEASE_KEY_ALIAS"] as? String
+                keyPassword =
+                    System.getenv("MY_RELEASE_KEY_PASSWORD")
+                        ?: extra["MY_RELEASE_KEY_PASSWORD"] as? String
+            } else {
+                println(
+                    "Warning: 'my-release-key.keystore' not found in composeApp/. Release build will be signed with the debug key as a fallback.",
+                )
+            }
+        }
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -163,6 +184,13 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            val keystoreFile = project.file("my-release-key.keystore")
+            signingConfig =
+                if (keystoreFile.exists()) {
+                    signingConfigs.getByName("release")
+                } else {
+                    signingConfigs.getByName("debug")
+                }
         }
     }
     compileOptions {

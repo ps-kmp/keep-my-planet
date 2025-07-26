@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.DesktopMac
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Terminal
@@ -42,8 +41,8 @@ private const val GITHUB_RELEASES_URL =
     "https://github.com/ps-kmp/keep-my-planet/releases/download/0.0.1"
 private const val ANDROID_APK_URL = "$GITHUB_RELEASES_URL/keepmyplanet.apk"
 private const val WINDOWS_MSI_URL = "$GITHUB_RELEASES_URL/keepmyplanet.msi"
-private const val MACOS_DMG_URL = "$GITHUB_RELEASES_URL/keepmyplanet.dmg"
 private const val LINUX_DEB_URL = "$GITHUB_RELEASES_URL/keepmyplanet.deb"
+// private const val MACOS_DMG_URL = "$GITHUB_RELEASES_URL/keepmyplanet.dmg"
 
 @Composable
 fun DownloadsScreen(
@@ -99,12 +98,14 @@ fun DownloadsScreen(
                     downloadUrl = WINDOWS_MSI_URL,
                     icon = Icons.Default.DesktopWindows,
                 )
+                /*
                 DownloadCard(
                     platformName = "macOS",
                     description = "Disk image for macOS (.dmg)",
                     downloadUrl = MACOS_DMG_URL,
                     icon = Icons.Default.DesktopMac,
                 )
+                 */
                 DownloadCard(
                     platformName = "Linux",
                     description = "Debian package for Linux (.deb)",

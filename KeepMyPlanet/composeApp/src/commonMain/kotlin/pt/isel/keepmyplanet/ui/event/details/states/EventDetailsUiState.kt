@@ -60,7 +60,8 @@ data class EventDetailsUiState(
 
     val canUserJoin: Boolean
         get() =
-            event != null &&
+            !isGuest &&
+                event != null &&
                 event.status == EventStatus.PLANNED &&
                 !event.isFull &&
                 !isCurrentUserOrganizer &&

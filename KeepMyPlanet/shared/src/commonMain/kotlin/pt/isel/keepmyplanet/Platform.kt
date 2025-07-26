@@ -6,6 +6,8 @@ interface Platform {
 
 expect fun getPlatform(): Platform
 
+expect val isWasmPlatform: Boolean
+
 class Greeting {
     private val platform = getPlatform()
 

@@ -34,17 +34,36 @@ class HomeViewModel(
     init {
         viewModelScope.launch {
             val onboardingCompleted = settings.getBoolean(ONBOARDING_COMPLETED_KEY, false)
-            val user = sessionManager.userSession.value?.userInfo
-
             if (!onboardingCompleted) {
                 setState { copy(showOnboarding = true) }
             }
+        }
 
-            if (user == null) {
-                setState { copy(isLoading = false, user = null, isUserAdmin = false) }
-            } else {
-                setState { copy(user = user, isUserAdmin = user.role == UserRole.ADMIN) }
-                loadDashboardData()
+        viewModelScope.launch {
+            sessionManager.userSession.collect { session ->
+                val user = session?.userInfo
+                if (user != null) {
+                    setState {
+                        copy(
+                            user = user,
+                            isUserAdmin = user.role == UserRole.ADMIN,
+                            isLoading = true,
+                        )
+                    }
+                    loadDashboardData()
+                } else {
+                    setState {
+                        copy(
+                            user = null,
+                            isUserAdmin = false,
+                            isLoading = false,
+                            upcomingEvents = emptyList(),
+                            pendingActions = emptyList(),
+                            nearbyZones = emptyList(),
+                            zonesFound = null,
+                        )
+                    }
+                }
             }
         }
     }

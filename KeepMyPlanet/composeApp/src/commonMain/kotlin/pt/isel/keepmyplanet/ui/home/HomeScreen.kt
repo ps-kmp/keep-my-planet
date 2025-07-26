@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.isWasmPlatform
 import pt.isel.keepmyplanet.ui.base.koinViewModel
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.EventSummaryCardSkeleton
@@ -308,12 +309,14 @@ private fun UserDashboard(
                         onClick = onNavigateToUserManagement,
                     )
                 }
-                DashboardItem(
-                    icon = Icons.Default.Download,
-                    title = "Download the App",
-                    description = "Get the native app for other platforms.",
-                    onClick = onNavigateToDownloads,
-                )
+                if (isWasmPlatform) {
+                    DashboardItem(
+                        icon = Icons.Default.Download,
+                        title = "Download the App",
+                        description = "Get the native app for other platforms.",
+                        onClick = onNavigateToDownloads,
+                    )
+                }
                 OutlinedButton(
                     onClick = onLogout,
                     modifier = Modifier.fillMaxWidth(),
@@ -387,13 +390,15 @@ private fun GuestHomeScreen(
             )
         }
 
-        item {
-            DashboardItem(
-                icon = Icons.Default.Download,
-                title = "Download the App",
-                description = "Get the native app for Android or Desktop.",
-                onClick = onNavigateToDownloads,
-            )
+        if (isWasmPlatform) {
+            item {
+                DashboardItem(
+                    icon = Icons.Default.Download,
+                    title = "Download the App",
+                    description = "Get the native app for Android or Desktop.",
+                    onClick = onNavigateToDownloads,
+                )
+            }
         }
 
         item {
