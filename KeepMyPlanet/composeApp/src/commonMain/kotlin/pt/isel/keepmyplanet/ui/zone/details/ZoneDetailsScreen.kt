@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Warning
@@ -76,6 +77,7 @@ fun ZoneDetailsScreen(
     onNavigateToCreateEvent: (zoneId: Id) -> Unit,
     onNavigateToEventDetails: (eventId: Id) -> Unit,
     onNavigateToUpdateZone: (zoneId: Id) -> Unit,
+    onNavigateToMap: (latitude: Double, longitude: Double) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -205,6 +207,17 @@ fun ZoneDetailsScreen(
                                         icon = Icons.Default.Warning,
                                     )
                                 }
+                                InfoRow(
+                                    icon = Icons.Default.Map,
+                                    text = "View on Map",
+                                    isClickable = true,
+                                    onClick = {
+                                        onNavigateToMap(
+                                            zone.location.latitude,
+                                            zone.location.longitude,
+                                        )
+                                    },
+                                )
                             }
                         }
 

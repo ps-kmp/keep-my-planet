@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.Icon
@@ -81,78 +84,82 @@ fun ReportZoneScreen(
     ) { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                "Reporting for location:\nLat: ${uiState.latitude}, Lon: ${uiState.longitude}",
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Text(
-                "Radius: ${uiState.radius.roundToInt()} meters",
-                style = MaterialTheme.typography.bodySmall,
-            )
-
-            FormField(
-                value = uiState.description,
-                onValueChange = viewModel::onReportDescriptionChange,
-                label = "Description of the issue",
-                minLines = 4,
-                enabled = !isActionInProgress,
-                errorText = uiState.descriptionError,
-            )
-
-            Text("Severity:", style = MaterialTheme.typography.bodySmall)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                ZoneSeverity.entries.filter { it != ZoneSeverity.UNKNOWN }.forEach { severity ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        RadioButton(
-                            selected = uiState.severity == severity,
-                            onClick = { viewModel.onReportSeverityChange(severity) },
-                            enabled = !isActionInProgress,
-                        )
-                        Text(
-                            text = severity.name,
-                            modifier = Modifier.padding(start = 4.dp),
-                        )
-                    }
-                }
-            }
-
-            OutlinedButton(
-                onClick = launchPhotoPicker,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isActionInProgress && uiState.photos.size < 5,
-            ) {
-                Icon(
-                    Icons.Default.AddAPhoto,
-                    contentDescription = "Add Photo",
-                    modifier = Modifier.padding(end = 8.dp),
+                Text(
+                    "Reporting for location:\nLat: ${uiState.latitude}, Lon: ${uiState.longitude}",
+                    style = MaterialTheme.typography.bodySmall,
                 )
-                Text("Add Photo (${uiState.photos.size}/5)")
-            }
+                Text(
+                    "Radius: ${uiState.radius.roundToInt()} meters",
+                    style = MaterialTheme.typography.bodySmall,
+                )
 
-            if (uiState.photos.isNotEmpty()) {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                FormField(
+                    value = uiState.description,
+                    onValueChange = viewModel::onReportDescriptionChange,
+                    label = "Description of the issue",
+                    minLines = 4,
+                    enabled = !isActionInProgress,
+                    errorText = uiState.descriptionError,
+                )
+
+                Text("Severity:", style = MaterialTheme.typography.bodySmall)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    items(uiState.photos, key = { it.hashCode() }) { image ->
-                        ImageThumbnail(
-                            image,
-                            { viewModel.onRemovePhoto(image) },
-                            !isActionInProgress,
-                        )
+                    ZoneSeverity.entries.filter { it != ZoneSeverity.UNKNOWN }.forEach { severity ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            RadioButton(
+                                selected = uiState.severity == severity,
+                                onClick = { viewModel.onReportSeverityChange(severity) },
+                                enabled = !isActionInProgress,
+                            )
+                            Text(
+                                text = severity.name,
+                                modifier = Modifier.padding(start = 4.dp),
+                            )
+                        }
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = launchPhotoPicker,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isActionInProgress && uiState.photos.size < 5,
+                ) {
+                    Icon(
+                        Icons.Default.AddAPhoto,
+                        contentDescription = "Add Photo",
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                    Text("Add Photo (${uiState.photos.size}/5)")
+                }
+
+                if (uiState.photos.isNotEmpty()) {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(uiState.photos, key = { it.hashCode() }) { image ->
+                            ImageThumbnail(
+                                image,
+                                { viewModel.onRemovePhoto(image) },
+                                !isActionInProgress,
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
 
             LoadingButton(
                 onClick = viewModel::submitZoneReport,

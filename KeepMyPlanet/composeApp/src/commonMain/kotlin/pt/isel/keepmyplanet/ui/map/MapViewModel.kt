@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.ktor.client.HttpClient
@@ -26,12 +27,14 @@ import ovh.plrapps.mapcompose.api.ExperimentalClusteringApi
 import ovh.plrapps.mapcompose.api.addClusterer
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.hasMarker
 import ovh.plrapps.mapcompose.api.idleStateFlow
 import ovh.plrapps.mapcompose.api.moveMarker
 import ovh.plrapps.mapcompose.api.onMarkerClick
 import ovh.plrapps.mapcompose.api.onTap
 import ovh.plrapps.mapcompose.api.removeMarker
+import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.api.visibleBoundingBox
 import ovh.plrapps.mapcompose.ui.layout.Forced
@@ -43,6 +46,7 @@ import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Place
 import pt.isel.keepmyplanet.domain.zone.Location
 import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.session.SessionManager
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 import pt.isel.keepmyplanet.ui.components.getSeverityColorPair
@@ -58,6 +62,7 @@ import pt.isel.keepmyplanet.ui.map.components.UserLocationMarker
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.map.states.MapUiState
 import pt.isel.keepmyplanet.ui.theme.customColors
+import pt.isel.keepmyplanet.utils.addCircle
 import pt.isel.keepmyplanet.utils.createOfflineFirstTileStreamProvider
 import pt.isel.keepmyplanet.utils.haversineDistance
 import pt.isel.keepmyplanet.utils.latToY
@@ -80,6 +85,7 @@ class MapViewModel(
     val userLocation = _userLocation.asStateFlow()
 
     private val displayedZoneIds = MutableStateFlow<Set<String>>(emptySet())
+    private val displayedPathIds = MutableStateFlow<Set<String>>(emptySet())
     private val searchQueryFlow = MutableStateFlow("")
 
     val mapState: MapState =
@@ -273,6 +279,34 @@ class MapViewModel(
         displayedZoneIds.value = newZoneIds
     }
 
+    fun updateZonePathsOnMap(
+        zones: List<Zone>,
+        getColors: (ZoneSeverity) -> Pair<Color, Color>,
+    ) {
+        val newPathIds = zones.map { "path_${it.id.value}" }.toSet()
+        val currentPathIds = displayedPathIds.value
+        val pathIdsToRemove = currentPathIds - newPathIds
+        val zonesToAddPathFor = zones.filter { "path_${it.id.value}" !in currentPathIds }
+
+        pathIdsToRemove.forEach { mapState.removePath(it) }
+
+        zonesToAddPathFor.forEach { zone ->
+            val (strokeColor, _) = getColors(zone.zoneSeverity)
+            val fillColor = strokeColor.copy(alpha = 0.2f)
+
+            mapState.addPath(
+                id = "path_${zone.id.value}",
+                width = 1.dp,
+                color = strokeColor.copy(alpha = 0.5f),
+                fillColor = fillColor,
+                clickable = false,
+            ) {
+                addCircle(zone.location.latitude, zone.location.longitude, zone.radius.value)
+            }
+        }
+        displayedPathIds.value = newPathIds
+    }
+
     fun onReportingRadiusChange(radius: Double) {
         if (radius > 0) {
             setState { copy(reportingRadius = radius) }
@@ -364,5 +398,14 @@ class MapViewModel(
     fun clearSearch() {
         setState { copy(searchQuery = "", searchResults = emptyList(), isSearching = false) }
         searchQueryFlow.value = ""
+    }
+
+    fun centerOnLocation(
+        latitude: Double,
+        longitude: Double,
+    ) {
+        viewModelScope.launch {
+            mapState.scrollTo(lonToX(longitude), latToY(latitude), 17.0)
+        }
     }
 }

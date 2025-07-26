@@ -129,6 +129,16 @@ class ZoneApiRepository(
             zone
         }
 
+    suspend fun removePhotoFromZone(
+        zoneId: Id,
+        photoId: Id,
+    ): Result<Zone> =
+        zoneApi.removePhotoFromZone(zoneId.value, photoId.value).map {
+            val zone = it.toZone()
+            zoneCache?.insertZones(listOf(zone))
+            zone
+        }
+
     suspend fun deleteZone(zoneId: Id): Result<Unit> = zoneApi.deleteZone(zoneId.value)
 
     suspend fun confirmCleanliness(

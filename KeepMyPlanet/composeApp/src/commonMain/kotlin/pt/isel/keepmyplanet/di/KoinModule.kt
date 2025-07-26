@@ -123,8 +123,8 @@ private val viewModelModule =
         factoryOf(::EventStatusHistoryViewModel)
         factory { EventFormViewModel(get(), get()) }
         factory { MapViewModel(get(), get(), get(), get(), get()) }
-        factoryOf(::ZoneDetailsViewModel)
-        factoryOf(::UpdateZoneViewModel)
+        factory { ZoneDetailsViewModel(get(), get(), get()) }
+        factory { UpdateZoneViewModel(get(), get()) }
         factoryOf(::ReportZoneViewModel)
         factoryOf(::UserProfileViewModel)
         factoryOf(::ChatViewModel)

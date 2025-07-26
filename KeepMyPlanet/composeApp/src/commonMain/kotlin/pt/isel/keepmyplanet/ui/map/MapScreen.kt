@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -15,15 +14,17 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -95,6 +96,8 @@ import pt.isel.keepmyplanet.utils.yToLat
 fun MapScreen(
     viewModel: MapViewModel,
     onNavigateToHome: () -> Unit,
+    initialLatitude: Double? = null,
+    initialLongitude: Double? = null,
     onNavigateToZoneDetails: (zoneId: Id) -> Unit,
     onNavigateToReportZone: (latitude: Double, longitude: Double, radius: Double) -> Unit,
     onNavigateBack: () -> Unit,
@@ -147,6 +150,12 @@ fun MapScreen(
 
                 is MapEvent.CenterOnUserLocation -> {}
             }
+        }
+    }
+
+    LaunchedEffect(initialLatitude, initialLongitude) {
+        if (initialLatitude != null && initialLongitude != null) {
+            viewModel.centerOnLocation(initialLatitude, initialLongitude)
         }
     }
 
@@ -228,6 +237,12 @@ fun MapScreen(
             }
         }
         setCurrentCalloutId(newCalloutId)
+    }
+
+    LaunchedEffect(uiState.zones, customColors, colorScheme) {
+        viewModel.updateZonePathsOnMap(uiState.zones) { severity ->
+            getSeverityColorPairNonComposable(severity, customColors, colorScheme)
+        }
     }
 
     Scaffold(
@@ -319,102 +334,53 @@ fun MapScreen(
         ) {
             MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
 
-            DefaultCanvas(modifier = Modifier.fillMaxSize(), mapState = mapState) {
-                uiState.zones.forEach { zone ->
-                    val (severityColor, _) =
-                        getSeverityColorPairNonComposable(
-                            zone.zoneSeverity,
-                            customColors,
-                            colorScheme,
+            if (uiState.isReportingMode) {
+                DefaultCanvas(modifier = Modifier.fillMaxSize(), mapState = mapState) {
+                    if (uiState.isReportingMode) {
+                        val radius = uiState.reportingRadius
+                        val xNorm = mapState.centroidX
+                        val yNorm = mapState.centroidY
+                        val lat = yToLat(yNorm)
+                        val lon = xToLon(xNorm)
+
+                        val path = Path()
+                        val earthRadiusMeters = 6371000.0
+                        val d = radius / earthRadiusMeters
+                        val lat1 = lat.toRadians()
+                        val lon1 = lon.toRadians()
+
+                        for (i in 0..360 step 5) {
+                            val brng = i.toDouble().toRadians()
+                            val lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng))
+                            val lon2 =
+                                lon1 +
+                                    atan2(
+                                        sin(brng) * sin(d) * cos(lat1),
+                                        cos(d) - sin(lat1) * sin(lat2),
+                                    )
+
+                            val x = lonToX(lon2.toDegrees()) * mapState.fullSize.width
+                            val y = latToY(lon2.toDegrees()) * mapState.fullSize.height
+
+                            if (i == 0) {
+                                path.moveTo(x.toFloat(), y.toFloat())
+                            } else {
+                                path.lineTo(x.toFloat(), y.toFloat())
+                            }
+                        }
+                        path.close()
+
+                        drawPath(
+                            path = path,
+                            color = primaryColor.copy(alpha = 0.3f),
+                            style = Fill,
                         )
-
-                    val radius = zone.radius.value
-                    val lat = zone.location.latitude
-                    val lon = zone.location.longitude
-
-                    val path = Path()
-                    val earthRadiusMeters = 6371000.0
-                    val d = radius / earthRadiusMeters
-                    val lat1 = lat.toRadians()
-                    val lon1 = lon.toRadians()
-
-                    for (i in 0..360 step 5) {
-                        val brng = i.toDouble().toRadians()
-                        val lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng))
-                        val lon2 =
-                            lon1 +
-                                atan2(
-                                    sin(brng) * sin(d) * cos(lat1),
-                                    cos(d) - sin(lat1) * sin(lat2),
-                                )
-
-                        val x = lonToX(lon2.toDegrees()) * mapState.fullSize.width
-                        val y = latToY(lat2.toDegrees()) * mapState.fullSize.height
-
-                        if (i == 0) {
-                            path.moveTo(x.toFloat(), y.toFloat())
-                        } else {
-                            path.lineTo(x.toFloat(), y.toFloat())
-                        }
+                        drawPath(
+                            path = path,
+                            color = primaryColor.copy(alpha = 0.8f),
+                            style = Stroke(width = 2.dp.toPx() / mapState.scale.toFloat()),
+                        )
                     }
-                    path.close()
-
-                    drawPath(
-                        path = path,
-                        color = severityColor.copy(alpha = 0.2f),
-                        style = Fill,
-                    )
-                    drawPath(
-                        path = path,
-                        color = severityColor.copy(alpha = 0.5f),
-                        style = Stroke(width = 1.dp.toPx() / mapState.scale.toFloat()),
-                    )
-                }
-
-                if (uiState.isReportingMode) {
-                    val radius = uiState.reportingRadius
-                    val xNorm = mapState.centroidX
-                    val yNorm = mapState.centroidY
-                    val lat = yToLat(yNorm)
-                    val lon = xToLon(xNorm)
-
-                    val path = Path()
-                    val earthRadiusMeters = 6371000.0
-                    val d = radius / earthRadiusMeters
-                    val lat1 = lat.toRadians()
-                    val lon1 = lon.toRadians()
-
-                    for (i in 0..360 step 5) {
-                        val brng = i.toDouble().toRadians()
-                        val lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng))
-                        val lon2 =
-                            lon1 +
-                                atan2(
-                                    sin(brng) * sin(d) * cos(lat1),
-                                    cos(d) - sin(lat1) * sin(lat2),
-                                )
-
-                        val x = lonToX(lon2.toDegrees()) * mapState.fullSize.width
-                        val y = latToY(lat2.toDegrees()) * mapState.fullSize.height
-
-                        if (i == 0) {
-                            path.moveTo(x.toFloat(), y.toFloat())
-                        } else {
-                            path.lineTo(x.toFloat(), y.toFloat())
-                        }
-                    }
-                    path.close()
-
-                    drawPath(
-                        path = path,
-                        color = primaryColor.copy(alpha = 0.3f),
-                        style = Fill,
-                    )
-                    drawPath(
-                        path = path,
-                        color = primaryColor.copy(alpha = 0.8f),
-                        style = Stroke(width = 2.dp.toPx() / mapState.scale.toFloat()),
-                    )
                 }
             }
 
@@ -440,8 +406,7 @@ fun MapScreen(
             } else {
                 if (uiState.isLoading) {
                     Surface(
-                        modifier =
-                            Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp),
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp),
                         shape = RoundedCornerShape(16.dp),
                         shadowElevation = 4.dp,
                     ) {
@@ -471,61 +436,52 @@ fun MapScreen(
                         modifier =
                             Modifier
                                 .align(Alignment.BottomCenter)
-                                .padding(horizontal = 16.dp, vertical = 24.dp)
-                                .shadow(8.dp, RoundedCornerShape(16.dp)),
+                                .fillMaxWidth()
+                                .padding(16.dp),
                         shape = RoundedCornerShape(16.dp),
+                        shadowElevation = 8.dp,
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text(
-                                "Report Polluted Zone",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                "Move the map to position the pin on the polluted area.",
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            )
-
-                            Text(
-                                "Radius: ${uiState.reportingRadius.roundToInt()} meters",
+                                text = "Move map to position pin and adjust radius",
                                 style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
                             )
-                            Slider(
-                                value = uiState.reportingRadius.toFloat(),
-                                onValueChange = {
-                                    viewModel.onReportingRadiusChange(
-                                        it.toDouble(),
-                                    )
-                                },
-                                valueRange = 10f..500f,
-                                steps = 48,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                TextButton(onClick = { viewModel.exitReportingMode() }) {
-                                    Text("CANCEL")
+                                IconButton(onClick = { viewModel.exitReportingMode() }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Cancel Report")
                                 }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Button(
+                                Slider(
+                                    value = uiState.reportingRadius.toFloat(),
+                                    onValueChange = {
+                                        viewModel.onReportingRadiusChange(it.toDouble())
+                                    },
+                                    valueRange = 10f..500f,
+                                    steps = 48,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                IconButton(
                                     onClick = {
                                         val lon = xToLon(mapState.centroidX)
                                         val lat = yToLat(mapState.centroidY)
                                         onNavigateToReportZone(lat, lon, uiState.reportingRadius)
                                         viewModel.exitReportingMode()
                                     },
-                                ) { Text("CONFIRM") }
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = "Confirm Report")
+                                }
+                                Text(
+                                    text = "${uiState.reportingRadius.roundToInt()}m",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                )
                             }
                         }
                     }

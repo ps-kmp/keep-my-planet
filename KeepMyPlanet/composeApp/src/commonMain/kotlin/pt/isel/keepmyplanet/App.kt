@@ -109,7 +109,7 @@ fun App() {
                             onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
                             onNavigateToEventList = { appViewModel.navigate(AppRoute.EventList) },
                             onNavigateToProfile = { appViewModel.navigate(AppRoute.UserProfile) },
-                            onNavigateToMap = { appViewModel.navigate(AppRoute.Map) },
+                            onNavigateToMap = { appViewModel.navigate(AppRoute.Map()) },
                             onLogout = { appViewModel.logout() },
                             onNavigateToAbout = { appViewModel.navigate(AppRoute.About) },
                             onNavigateToEventDetails = {
@@ -297,6 +297,8 @@ fun App() {
                             onNavigateToReportZone = { lat, lon, radius ->
                                 appViewModel.navigate(AppRoute.ReportZone(lat, lon, radius))
                             },
+                            initialLatitude = targetRoute.latitude,
+                            initialLongitude = targetRoute.longitude,
                             onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
                             onNavigateBack = { appViewModel.navigateBack() },
                         )
@@ -315,6 +317,9 @@ fun App() {
                             },
                             onNavigateToEventDetails = {
                                 appViewModel.navigate(AppRoute.EventDetails(it))
+                            },
+                            onNavigateToMap = { lat, lon ->
+                                appViewModel.navigate(AppRoute.Map(lat, lon))
                             },
                             onNavigateBack = { appViewModel.navigateBack() },
                         )

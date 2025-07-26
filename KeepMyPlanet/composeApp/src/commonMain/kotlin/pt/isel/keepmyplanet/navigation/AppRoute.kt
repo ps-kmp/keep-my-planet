@@ -50,7 +50,10 @@ sealed class AppRoute {
         val zoneId: Id,
     ) : AppRoute()
 
-    data object Map : AppRoute()
+    data class Map(
+        val latitude: Double? = null,
+        val longitude: Double? = null,
+    ) : AppRoute()
 
     data object UserProfile : AppRoute()
 
