@@ -146,9 +146,11 @@ fun ChatScreen(
                     onMessageChange = viewModel::onMessageChanged,
                     onSendClick = viewModel::sendMessage,
                     isSending = uiState.actionState is ChatUiState.ActionState.Sending,
+                    inputEnabled = uiState.isInputEnabled,
                     sendEnabled = uiState.isSendEnabled,
                     errorText = uiState.messageInputError,
                     maxLength = ChatViewModel.MAX_MESSAGE_LENGTH,
+                    disabledInfoText = uiState.chatDisabledReason,
                 )
             } else {
                 ErrorState(

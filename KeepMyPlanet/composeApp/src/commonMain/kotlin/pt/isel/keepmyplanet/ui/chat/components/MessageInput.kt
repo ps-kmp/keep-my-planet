@@ -28,9 +28,11 @@ fun MessageInput(
     onMessageChange: (String) -> Unit,
     onSendClick: () -> Unit,
     isSending: Boolean,
+    inputEnabled: Boolean,
     sendEnabled: Boolean,
     maxLength: Int,
     errorText: String? = null,
+    disabledInfoText: String? = null,
 ) {
     val isError = errorText != null
     Surface(
@@ -45,8 +47,16 @@ fun MessageInput(
                     value = message,
                     onValueChange = { if (it.length <= maxLength) onMessageChange(it) },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Type a message...") },
-                    enabled = !isSending,
+                    placeholder = {
+                        Text(
+                            if (!sendEnabled && disabledInfoText != null) {
+                                disabledInfoText
+                            } else {
+                                "Type a message..."
+                            },
+                        )
+                    },
+                    enabled = inputEnabled && !isSending,
                     isError = isError,
                     maxLines = 5,
                     shape = MaterialTheme.shapes.medium,

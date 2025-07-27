@@ -13,10 +13,11 @@ fun main() {
     koin.get<CacheCleanupService>().performCleanup()
 
     application {
+        @Suppress("DEPRECATION")
         Window(
             onCloseRequest = ::exitApplication,
             title = "KeepMyPlanet",
-            icon = painterResource("logo.png")
+            icon = painterResource("logo.png"),
         ) {
             App()
         }

@@ -213,7 +213,7 @@ class MapViewModel(
 
     private fun setupMapListeners() {
         mapState.onMarkerClick { id, _, _ -> onMarkerTapped(id) }
-        mapState.onTap { _, _ -> hideCallout() }
+        mapState.onTap { _, _ -> if (!currentState.isReportingMode) hideCallout() }
     }
 
     suspend fun onMapIdle() {
@@ -333,8 +333,7 @@ class MapViewModel(
             return
         }
         setState {
-            hideCallout()
-            copy(isReportingMode = true)
+            copy(isReportingMode = true, selectedZoneId = null)
         }
     }
 

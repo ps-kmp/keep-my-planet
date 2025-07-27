@@ -7,6 +7,7 @@ import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.data.repository.MessageApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.message.Message
 import pt.isel.keepmyplanet.domain.message.MessageContent
@@ -64,6 +65,7 @@ class ChatViewModel(
                     setState {
                         copy(
                             chatInfo = currentState.chatInfo.copy(eventTitle = event.title),
+                            eventStatus = event.status,
                         )
                     }
                 }.onFailure {
@@ -97,8 +99,6 @@ class ChatViewModel(
             messageRepository
                 .sendMessage(eventId, messageContent)
                 .onSuccess {
-                    // Message sent is confirmed by the SSE stream,
-                    // which will replace the temporary message.
                 }.onFailure { error ->
                     setState {
                         copy(
@@ -120,40 +120,68 @@ class ChatViewModel(
     fun sendMessage() {
         if (!currentState.isSendEnabled || currentState.user == null) return
 
+        val eventId = currentState.chatInfo.eventId
         val messageContent = currentState.messageInput.trim()
-        val tempId = Id(Random.nextUInt())
 
-        val optimisticMessage =
-            UiMessage(
-                message =
-                    Message(
-                        id = Id(0u),
-                        eventId = currentState.chatInfo.eventId,
-                        senderId = currentState.user!!.id,
-                        senderName = currentState.user!!.name,
-                        content = MessageContent(messageContent),
-                        timestamp = now(),
-                        chatPosition =
-                            (
-                                currentState.messages
-                                    .firstOrNull()
-                                    ?.message
-                                    ?.chatPosition ?: 0
-                            ) + 1,
-                    ),
-                status = SendStatus.SENDING,
-                temporaryId = tempId,
-            )
+        setState { copy(actionState = ChatUiState.ActionState.Sending) }
 
-        setState {
-            copy(
-                messages = listOf(optimisticMessage) + messages,
-                messageInput = "",
-                messageInputError = null,
-            )
+        viewModelScope.launch {
+            eventRepository
+                .getEventDetails(eventId)
+                .onSuccess { freshEvent ->
+                    setState { copy(eventStatus = freshEvent.status) }
+                    if (freshEvent.status in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)) {
+                        setState {
+                            copy(
+                                actionState = ChatUiState.ActionState.Idle,
+                                messageInput = "",
+                            )
+                        }
+                        handleErrorWithMessage(
+                            "Cannot send message: ${currentState.chatDisabledReason}",
+                        )
+                        return@onSuccess
+                    }
+
+                    val tempId = Id(Random.nextUInt())
+                    val optimisticMessage =
+                        UiMessage(
+                            message =
+                                Message(
+                                    id = Id(0u),
+                                    eventId = eventId,
+                                    senderId = currentState.user!!.id,
+                                    senderName = currentState.user!!.name,
+                                    content = MessageContent(messageContent),
+                                    timestamp = now(),
+                                    chatPosition =
+                                        (
+                                            currentState.messages
+                                                .firstOrNull()
+                                                ?.message
+                                                ?.chatPosition ?: -1
+                                        ) + 1,
+                                ),
+                            status = SendStatus.SENDING,
+                            temporaryId = tempId,
+                        )
+
+                    setState {
+                        copy(
+                            messages = listOf(optimisticMessage) + messages,
+                            messageInput = "",
+                            messageInputError = null,
+                        )
+                    }
+                    sendEvent(ChatEvent.ScrollToBottom)
+
+                    performSend(messageContent, tempId)
+                    setState { copy(actionState = ChatUiState.ActionState.Idle) }
+                }.onFailure { error ->
+                    setState { copy(actionState = ChatUiState.ActionState.Idle) }
+                    handleErrorWithMessage(getErrorMessage("Failed to send message", error))
+                }
         }
-        sendEvent(ChatEvent.ScrollToBottom)
-        performSend(messageContent, tempId)
     }
 
     fun retrySendMessage(temporaryId: Id) {
@@ -264,8 +292,10 @@ class ChatViewModel(
         viewModelScope.launch {
             messageRepository
                 .listenToMessages(eventId, token)
-                .catch { handleErrorWithMessage(getErrorMessage("Chat connection error", it)) }
-                .collect { messageResult ->
+                .catch {
+                    fetchEventDetails(eventId)
+                    handleErrorWithMessage(getErrorMessage("Chat connection lost", it))
+                }.collect { messageResult ->
                     messageResult
                         .onSuccess { newMessageResponse ->
                             val messageAdded = addNewMessage(newMessageResponse)

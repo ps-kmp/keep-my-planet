@@ -309,6 +309,18 @@ class EventService(
 
             eventRepository.update(updatedEvent)
 
+            val nominee = findUserOrFail(nomineeId)
+            val notificationData =
+                mapOf(
+                    "title" to "Ownership Transfer Request",
+                    "body" to
+                        "You have been nominated to be the new organizer for " +
+                        "'${event.title.value}'.",
+                    "eventId" to eventId.value.toString(),
+                    "type" to "OWNERSHIP_TRANSFER",
+                )
+            notificationService.sendNotificationToUser(nominee.id, notificationData)
+
             updatedEvent
         }
 

@@ -3,7 +3,6 @@ package pt.isel.keepmyplanet
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.DeviceApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserSession
 import pt.isel.keepmyplanet.navigation.AppRoute
@@ -145,10 +144,14 @@ class AppViewModel(
     fun handleNotificationNavigation(eventId: String) {
         val eventIdAsUInt = eventId.toUIntOrNull() ?: return
         val eventIdDomain = Id(eventIdAsUInt)
-        val chatInfo = ChatInfo(eventIdDomain, null)
+        val newStack = listOf(AppRoute.Home, AppRoute.EventDetails(eventIdDomain))
 
-        if (currentState.userSession != null) {
-            navigate(AppRoute.Chat(chatInfo))
+        setState {
+            copy(
+                navStack = newStack,
+                currentRoute = newStack.last(),
+                navDirection = NavDirection.REPLACE,
+            )
         }
     }
 

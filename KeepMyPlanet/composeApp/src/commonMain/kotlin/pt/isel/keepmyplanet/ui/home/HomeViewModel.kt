@@ -111,6 +111,9 @@ class HomeViewModel(
     }
 
     fun onLocationError() {
+        sendEvent(
+            HomeEvent.ShowSnackbar("Could not get precise location. Trying approximate area..."),
+        )
         viewModelScope.launch {
             geocodingRepository
                 .getIpLocation()

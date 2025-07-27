@@ -171,7 +171,8 @@ android {
                         ?: extra["MY_RELEASE_KEY_PASSWORD"] as? String
             } else {
                 println(
-                    "Warning: 'my-release-key.keystore' not found in composeApp/. Release build will be signed with the debug key as a fallback.",
+                    "Warning: 'my-release-key.keystore' not found in composeApp/. " +
+                        "Release build will be signed with the debug key as a fallback.",
                 )
             }
         }

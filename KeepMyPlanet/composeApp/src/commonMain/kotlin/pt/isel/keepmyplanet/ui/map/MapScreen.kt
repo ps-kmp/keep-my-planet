@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.ui.map
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -44,24 +47,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlin.math.asin
-import kotlin.math.atan2
-import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.math.sin
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import ovh.plrapps.mapcompose.api.DefaultCanvas
 import ovh.plrapps.mapcompose.api.addCallout
 import ovh.plrapps.mapcompose.api.centroidX
 import ovh.plrapps.mapcompose.api.centroidY
@@ -85,10 +80,9 @@ import pt.isel.keepmyplanet.ui.map.components.GuestPromptBanner
 import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.theme.customColors
+import pt.isel.keepmyplanet.utils.haversineDistance
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
-import pt.isel.keepmyplanet.utils.toDegrees
-import pt.isel.keepmyplanet.utils.toRadians
 import pt.isel.keepmyplanet.utils.xToLon
 import pt.isel.keepmyplanet.utils.yToLat
 
@@ -335,53 +329,35 @@ fun MapScreen(
             MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
 
             if (uiState.isReportingMode) {
-                DefaultCanvas(modifier = Modifier.fillMaxSize(), mapState = mapState) {
-                    if (uiState.isReportingMode) {
-                        val radius = uiState.reportingRadius
-                        val xNorm = mapState.centroidX
-                        val yNorm = mapState.centroidY
-                        val lat = yToLat(yNorm)
-                        val lon = xToLon(xNorm)
+                val radiusInMeters = uiState.reportingRadius
+                val centerX = mapState.centroidX
+                val centerY = mapState.centroidY
 
-                        val path = Path()
-                        val earthRadiusMeters = 6371000.0
-                        val d = radius / earthRadiusMeters
-                        val lat1 = lat.toRadians()
-                        val lon1 = lon.toRadians()
+                val centerLon = xToLon(centerX)
+                val centerLat = yToLat(centerY)
+                val pointOnRadiusLon =
+                    xToLon((centerX * mapState.fullSize.height + 1) / mapState.fullSize.width)
+                val metersPerPixel =
+                    haversineDistance(centerLat, centerLon, centerLat, pointOnRadiusLon)
+                val radiusInDp =
+                    if (metersPerPixel > 0) (radiusInMeters / metersPerPixel).dp else 0.dp
 
-                        for (i in 0..360 step 5) {
-                            val brng = i.toDouble().toRadians()
-                            val lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng))
-                            val lon2 =
-                                lon1 +
-                                    atan2(
-                                        sin(brng) * sin(d) * cos(lat1),
-                                        cos(d) - sin(lat1) * sin(lat2),
-                                    )
+                Box(
+                    modifier =
+                        Modifier
+                            .align(Alignment.Center)
+                            .size(radiusInDp * 2)
+                            .background(primaryColor.copy(alpha = 0.2f), CircleShape)
+                            .border(2.dp, primaryColor, CircleShape)
+                            .pointerInput(Unit) {},
+                )
 
-                            val x = lonToX(lon2.toDegrees()) * mapState.fullSize.width
-                            val y = latToY(lon2.toDegrees()) * mapState.fullSize.height
-
-                            if (i == 0) {
-                                path.moveTo(x.toFloat(), y.toFloat())
-                            } else {
-                                path.lineTo(x.toFloat(), y.toFloat())
-                            }
-                        }
-                        path.close()
-
-                        drawPath(
-                            path = path,
-                            color = primaryColor.copy(alpha = 0.3f),
-                            style = Fill,
-                        )
-                        drawPath(
-                            path = path,
-                            color = primaryColor.copy(alpha = 0.8f),
-                            style = Stroke(width = 2.dp.toPx() / mapState.scale.toFloat()),
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = Icons.Default.GpsFixed,
+                    contentDescription = "Reporting Pin",
+                    modifier = Modifier.align(Alignment.Center).size(40.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
             }
 
             MapSearchBar(
@@ -425,13 +401,6 @@ fun MapScreen(
                 }
 
                 if (uiState.isReportingMode) {
-                    Icon(
-                        imageVector = Icons.Default.GpsFixed,
-                        contentDescription = "Reporting Pin",
-                        modifier = Modifier.size(40.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-
                     Surface(
                         modifier =
                             Modifier

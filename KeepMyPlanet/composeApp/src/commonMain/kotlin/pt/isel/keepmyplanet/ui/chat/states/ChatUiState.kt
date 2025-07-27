@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.ui.chat.states
 
+import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.ui.base.UiState
@@ -7,6 +8,7 @@ import pt.isel.keepmyplanet.ui.base.UiState
 data class ChatUiState(
     val user: UserInfo?,
     val chatInfo: ChatInfo,
+    val eventStatus: EventStatus? = null,
     val messages: List<UiMessage> = emptyList(),
     val messageInput: String = "",
     val messageInputError: String? = null,
@@ -22,10 +24,23 @@ data class ChatUiState(
         data object Sending : ActionState
     }
 
-    val isSendEnabled: Boolean
+    val isInputEnabled: Boolean
         get() =
             user != null &&
-                messageInput.isNotBlank() &&
                 actionState == ActionState.Idle &&
+                eventStatus !in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
+
+    val isSendEnabled: Boolean
+        get() =
+            isInputEnabled &&
+                messageInput.isNotBlank() &&
                 messageInputError == null
+
+    val chatDisabledReason: String?
+        get() =
+            when (eventStatus) {
+                EventStatus.COMPLETED -> "Chat is closed because the event has ended."
+                EventStatus.CANCELLED -> "Chat is disabled for cancelled events."
+                else -> null
+            }
 }
