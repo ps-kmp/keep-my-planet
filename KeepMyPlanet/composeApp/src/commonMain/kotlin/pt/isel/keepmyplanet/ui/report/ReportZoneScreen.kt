@@ -148,7 +148,7 @@ fun ReportZoneScreen(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        items(uiState.photos, key = { it.hashCode() }) { image ->
+                        items(uiState.photos, key = { it.hashCode().toString() }) { image ->
                             ImageThumbnail(
                                 image,
                                 { viewModel.onRemovePhoto(image) },

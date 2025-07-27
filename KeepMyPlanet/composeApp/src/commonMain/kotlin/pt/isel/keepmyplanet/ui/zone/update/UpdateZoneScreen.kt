@@ -103,16 +103,10 @@ fun UpdateZoneScreen(
                 ErrorState(uiState.error!!) { viewModel.loadZone(zoneId) }
             } else {
                 Column(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
                 ) {
                     Column(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .verticalScroll(rememberScrollState()),
+                        modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         FormField(
@@ -157,7 +151,7 @@ fun UpdateZoneScreen(
                             ) {
                                 items(
                                     uiState.beforePhotos,
-                                    key = { it.first.value },
+                                    key = { it.first.value.toString() },
                                 ) { (photoId, model) ->
                                     ImageThumbnail(
                                         model = model,
@@ -193,7 +187,7 @@ fun UpdateZoneScreen(
                             ) {
                                 items(
                                     uiState.afterPhotos,
-                                    key = { it.first.value },
+                                    key = { it.first.value.toString() },
                                 ) { (photoId, model) ->
                                     ImageThumbnail(
                                         model = model,

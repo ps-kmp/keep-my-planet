@@ -38,8 +38,7 @@ class CloudinaryStorageService(
 
             val uploadResult = cloudinary.uploader().upload(imageData, options)
 
-            @Suppress("CAST_NEVER_SUCCEEDS")
-            uploadResult["secure_url"] as? String
+            uploadResult["secure_url"]?.toString()
                 ?: throw InternalServerException("Cloudinary did not return a secure URL.")
         }
 }

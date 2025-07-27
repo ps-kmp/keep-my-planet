@@ -31,11 +31,18 @@ class PhotoApi(
             setBody(
                 MultiPartFormDataContent(
                     formData {
+                        val contentType =
+                            when (filename.substringAfterLast('.').lowercase()) {
+                                "png" -> "image/png"
+                                "webp" -> "image/webp"
+                                "jpg", "jpeg" -> "image/jpeg"
+                                else -> "application/octet-stream"
+                            }
                         append(
                             "image",
                             imageData,
                             Headers.build {
-                                append(HttpHeaders.ContentType, "image/jpeg")
+                                append(HttpHeaders.ContentType, contentType)
                                 append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
                             },
                         )

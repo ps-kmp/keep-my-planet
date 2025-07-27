@@ -228,7 +228,7 @@ fun ZoneDetailsScreen(
                                 ) {
                                     itemsIndexed(
                                         uiState.beforePhotos,
-                                        key = { _, item -> item.first.value },
+                                        key = { _, item -> item.first.value.toString() },
                                     ) { _, model ->
                                         Card(
                                             modifier =
