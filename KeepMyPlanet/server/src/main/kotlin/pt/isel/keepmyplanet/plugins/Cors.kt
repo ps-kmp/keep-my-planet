@@ -5,11 +5,9 @@ import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.cors.routing.CORS
-import java.net.URI
 
 fun Application.configureCors() {
-    val frontendUrl = environment.config.property("cors.frontendUrl").getString()
-    val frontendHost = URI(frontendUrl).host
+    // val frontendUrl = environment.config.propertyOrNull("cors.frontendUrl")?.getString()
 
     install(CORS) {
         allowMethod(HttpMethod.Options)
@@ -20,8 +18,15 @@ fun Application.configureCors() {
         allowMethod(HttpMethod.Post)
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Accept)
+        allowHeader(HttpHeaders.CacheControl)
+        allowHeader("X-Requested-With")
         allowCredentials = true
         allowNonSimpleContentTypes = true
-        allowHost(frontendHost, schemes = listOf("http", "https"))
+        anyHost()
+//        frontendUrl?.let {
+//            val uri = URI(it)
+//            allowHost(uri.host, schemes = listOf(uri.scheme))
+//        }
     }
 }
