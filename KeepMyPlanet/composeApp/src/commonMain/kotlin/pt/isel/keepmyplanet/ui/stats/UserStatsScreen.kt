@@ -32,7 +32,7 @@ import pt.isel.keepmyplanet.domain.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.EmptyState
 import pt.isel.keepmyplanet.ui.components.ErrorState
-import pt.isel.keepmyplanet.ui.components.FullScreenLoading
+import pt.isel.keepmyplanet.ui.components.UserStatsSkeleton
 import pt.isel.keepmyplanet.ui.event.list.components.EventItem
 import pt.isel.keepmyplanet.ui.stats.components.StatsSummaryCard
 import pt.isel.keepmyplanet.ui.stats.states.UserStatsEvent
@@ -90,9 +90,9 @@ fun UserStatsScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (uiState.isLoading) {
-                FullScreenLoading()
-            } else if (uiState.error != null) {
+            if (uiState.isLoading && uiState.stats == null) {
+                UserStatsSkeleton()
+            } else if (uiState.error != null && uiState.stats == null) {
                 ErrorState(
                     message = uiState.error!!,
                     onRetry = { viewModel.loadInitialData(userId) },
@@ -113,8 +113,8 @@ fun UserStatsScreen(
                     if (uiState.attendedEvents.isNotEmpty()) {
                         item {
                             Text(
-                                text = "Attended Events History",
-                                style = MaterialTheme.typography.titleSmall,
+                                text = "Event History",
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(top = 8.dp),
                             )
@@ -135,9 +135,13 @@ fun UserStatsScreen(
                                 }
                             }
                         }
-                    } else {
+                    } else if (!uiState.isLoading) {
                         item {
-                            EmptyState(message = "You have not attended any events yet.")
+                            EmptyState(
+                                message =
+                                    "You haven't attended any events yet. " +
+                                        "Join one to start making a difference!",
+                            )
                         }
                     }
                 }

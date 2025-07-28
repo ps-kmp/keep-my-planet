@@ -24,7 +24,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
@@ -37,7 +39,9 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import java.util.concurrent.Executors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -68,7 +72,6 @@ actual fun QrCodeScannerView(
     }
 
     if (cameraPermissionState.status.isGranted) {
-        // AndroidView hosts a PreviewView of CameraX
         AndroidView(
             modifier = modifier,
             factory = { ctx ->
@@ -86,13 +89,11 @@ actual fun QrCodeScannerView(
                     {
                         val cameraProvider = cameraProviderFuture.get()
 
-                        // Configure preview
                         val preview =
                             Preview.Builder().build().also {
                                 it.surfaceProvider = previewView.surfaceProvider
                             }
 
-                        // Configure ImageAnalysis to ML Kit
                         val imageAnalyzer =
                             ImageAnalysis
                                 .Builder()
@@ -134,7 +135,7 @@ actual fun QrCodeScannerView(
                                 }
 
                         try {
-                            cameraProvider.unbindAll() // No previous bindings
+                            cameraProvider.unbindAll()
                             cameraProvider.bindToLifecycle(
                                 lifecycleOwner,
                                 CameraSelector.DEFAULT_BACK_CAMERA,
@@ -158,6 +159,36 @@ actual fun QrCodeScannerView(
     }
 }
 
+private suspend fun generateQrBitmap(
+    data: String,
+    width: Int,
+    height: Int,
+    foregroundColor: Color,
+    backgroundColor: Color,
+): Bitmap? =
+    withContext(Dispatchers.Default) {
+        try {
+            val hints =
+                mapOf(
+                    EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.Q,
+                    EncodeHintType.MARGIN to 2,
+                )
+            val writer = QRCodeWriter()
+            val bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, width, height, hints)
+            val bmp = createBitmap(width, height, Bitmap.Config.RGB_565)
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bmp[x, y] =
+                        if (bitMatrix[x, y]) foregroundColor.toArgb() else backgroundColor.toArgb()
+                }
+            }
+            bmp
+        } catch (e: Exception) {
+            Log.e("QrCodeDisplay", "Error generating QR code", e)
+            null
+        }
+    }
+
 @Composable
 actual fun QrCodeDisplay(
     data: String,
@@ -167,29 +198,13 @@ actual fun QrCodeDisplay(
     val qrBackgroundColor = MaterialTheme.colorScheme.surface
     val qrBitmap by produceState<Bitmap?>(initialValue = null, data, qrColor, qrBackgroundColor) {
         value =
-            withContext(Dispatchers.Default) {
-                try {
-                    val writer = QRCodeWriter()
-                    val bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, 512, 512)
-                    val width = bitMatrix.width
-                    val height = bitMatrix.height
-                    val bmp = createBitmap(width, height, Bitmap.Config.RGB_565)
-                    for (x in 0 until width) {
-                        for (y in 0 until height) {
-                            bmp[x, y] =
-                                if (bitMatrix[x, y]) {
-                                    qrColor.toArgb()
-                                } else {
-                                    qrBackgroundColor.toArgb()
-                                }
-                        }
-                    }
-                    bmp
-                } catch (e: Exception) {
-                    Log.e("QrCodeDisplay", "Error generating QR code", e)
-                    null
-                }
-            }
+            generateQrBitmap(
+                data = data,
+                width = 512,
+                height = 512,
+                foregroundColor = qrColor,
+                backgroundColor = qrBackgroundColor,
+            )
     }
 
     if (qrBitmap != null) {
@@ -199,9 +214,11 @@ actual fun QrCodeDisplay(
             modifier = modifier,
         )
     } else {
-        // Change to CircularProgressIndicator or any placeholder
-        Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
-            Text("Error generating QR code.")
+        Box(
+            modifier.background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("Generating QR code...")
         }
     }
 }

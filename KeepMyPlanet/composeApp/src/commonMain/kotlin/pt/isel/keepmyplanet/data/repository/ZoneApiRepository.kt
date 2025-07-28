@@ -60,7 +60,12 @@ class ZoneApiRepository(
             }
         }
 
-    suspend fun findZonesByLocation(
+    suspend fun getAllZonesFromCache(): Result<List<Zone>> =
+        runCatching {
+            zoneCache?.getAllZones() ?: emptyList()
+        }
+
+    suspend fun findZonesByLocationFromCache(
         latitude: Double,
         longitude: Double,
         radius: Double,
@@ -77,13 +82,18 @@ class ZoneApiRepository(
                         it.location.longitude,
                         latitude,
                         longitude,
-                    ) <=
-                        radius
+                    ) <= radius
                 }
-            if (!cachedZones.isNullOrEmpty()) {
-                return@runCatching cachedZones
-            }
+            cachedZones ?: emptyList()
+        }
 
+    suspend fun findZonesByLocation(
+        latitude: Double,
+        longitude: Double,
+        radius: Double,
+    ): Result<List<Zone>> =
+        runCatching {
+            val radiusInKm = radius / 1000.0
             val networkResult = zoneApi.findZonesByLocation(latitude, longitude, radiusInKm)
             val zones = networkResult.getOrThrow().map { it.toZone() }
             zoneCache?.insertZones(zones)

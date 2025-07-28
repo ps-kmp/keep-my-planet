@@ -1,7 +1,5 @@
 package pt.isel.keepmyplanet.service
 
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import pt.isel.keepmyplanet.domain.common.Description
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.Event
@@ -405,6 +403,12 @@ class EventService(
         runCatching {
             val event = findEventOrFail(eventId)
 
+            if (event.status != EventStatus.COMPLETED) {
+                throw AuthorizationException(
+                    "Event statistics are only available for completed events.",
+                )
+            }
+
             val totalParticipants = event.participantsIds.size
             val totalAttendees = eventRepository.getAttendeesIds(eventId).size
 
@@ -416,22 +420,7 @@ class EventService(
                 }
 
             val totalSecondsVolunteered =
-                when (event.status) {
-                    EventStatus.COMPLETED ->
-                        eventRepository.calculateTotalHoursVolunteeredForEvent(eventId)
-
-                    EventStatus.IN_PROGRESS -> {
-                        val durationSeconds =
-                            (
-                                now().toInstant(TimeZone.UTC) -
-                                    event.period.start.toInstant(TimeZone.UTC)
-                            ).inWholeSeconds
-                        (durationSeconds * totalAttendees).toDouble()
-                    }
-
-                    else -> 0.0
-                }
-
+                eventRepository.calculateTotalHoursVolunteeredForEvent(eventId)
             EventStatsResponse(
                 totalParticipants = totalParticipants,
                 totalAttendees = totalAttendees,

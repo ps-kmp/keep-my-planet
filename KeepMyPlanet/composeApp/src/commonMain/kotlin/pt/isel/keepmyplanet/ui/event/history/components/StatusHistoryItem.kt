@@ -23,7 +23,7 @@ import pt.isel.keepmyplanet.dto.event.EventStateChangeResponse
 import pt.isel.keepmyplanet.ui.components.InfoRow
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getStatusColorPair
-import pt.isel.keepmyplanet.utils.toFormattedString
+import pt.isel.keepmyplanet.utils.toLocalFormattedString
 
 @Composable
 fun StatusHistoryItem(item: EventStateChangeResponse) {
@@ -64,7 +64,7 @@ fun StatusHistoryItem(item: EventStateChangeResponse) {
             )
             InfoRow(
                 icon = Icons.Default.Schedule,
-                text = "On: ${LocalDateTime.parse(item.changeTime).toFormattedString()}",
+                text = "On: ${LocalDateTime.parse(item.changeTime).toLocalFormattedString()}",
             )
         }
     }

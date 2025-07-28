@@ -53,21 +53,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlin.math.pow
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addCallout
 import ovh.plrapps.mapcompose.api.centroidX
 import ovh.plrapps.mapcompose.api.centroidY
 import ovh.plrapps.mapcompose.api.fullSize
-import ovh.plrapps.mapcompose.api.maxScale
-import ovh.plrapps.mapcompose.api.minScale
+import ovh.plrapps.mapcompose.api.getLayoutSize
 import ovh.plrapps.mapcompose.api.removeCallout
+import ovh.plrapps.mapcompose.api.rotation
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.api.scroll
 import ovh.plrapps.mapcompose.api.setScroll
 import ovh.plrapps.mapcompose.ui.MapUI
+import ovh.plrapps.mapcompose.utils.toRad
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
@@ -86,6 +89,7 @@ import pt.isel.keepmyplanet.utils.lonToX
 import pt.isel.keepmyplanet.utils.xToLon
 import pt.isel.keepmyplanet.utils.yToLat
 
+@OptIn(FlowPreview::class)
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
@@ -287,46 +291,72 @@ fun MapScreen(
         },
     ) { paddingValues ->
         Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .pointerInput(Unit) {
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            contentAlignment = Alignment.Center,
+        ) {
+            MapUI(
+                modifier =
+                    Modifier.fillMaxSize().pointerInput(Unit) {
                         awaitPointerEventScope {
                             while (true) {
                                 val event = awaitPointerEvent()
                                 if (event.type == PointerEventType.Scroll) {
+                                    event.changes.forEach { it.consume() }
                                     val scrollDelta =
                                         event.changes
                                             .first()
                                             .scrollDelta.y
                                     val centroid = event.changes.first().position
-                                    val zoomFactor = 1.1f
-                                    val scaleMultiplier = zoomFactor.pow(-scrollDelta)
 
                                     coroutineScope.launch {
-                                        val newScale =
-                                            (mapState.scale * scaleMultiplier).coerceIn(
-                                                mapState.minScale,
-                                                mapState.maxScale,
-                                            )
-                                        val scaleRatio = newScale / mapState.scale
-                                        val scroll = mapState.scroll
-                                        val newScrollX =
-                                            (scroll.x + centroid.x) * scaleRatio - centroid.x
-                                        val newScrollY =
-                                            (scroll.y + centroid.y) * scaleRatio - centroid.y
-                                        mapState.scale = newScale
-                                        mapState.setScroll(newScrollX, newScrollY)
+                                        val zoomFactor = 1.2f
+                                        val scaleRatio =
+                                            if (scrollDelta < 0) {
+                                                zoomFactor.toDouble()
+                                            } else {
+                                                1.0 / zoomFactor.toDouble()
+                                            }
+
+                                        val formerScale = mapState.scale
+                                        mapState.scale *= scaleRatio
+                                        val newScale = mapState.scale
+
+                                        val effectiveScaleRatio = newScale / formerScale
+
+                                        if (effectiveScaleRatio != 1.0) {
+                                            val layoutSize = mapState.getLayoutSize()
+
+                                            val angleRad = -mapState.rotation.toRad().toDouble()
+
+                                            val cx = layoutSize.width / 2.0
+                                            val cy = layoutSize.height / 2.0
+
+                                            val centroidX = centroid.x.toDouble()
+                                            val centroidY = centroid.y.toDouble()
+
+                                            val rotatedCentroidX =
+                                                cx + (centroidX - cx) * cos(angleRad) -
+                                                    (centroidY - cy) * sin(angleRad)
+                                            val rotatedCentroidY =
+                                                cy + (centroidX - cx) * sin(angleRad) +
+                                                    (centroidY - cy) * cos(angleRad)
+
+                                            val newScrollX =
+                                                (mapState.scroll.x + rotatedCentroidX) *
+                                                    effectiveScaleRatio - rotatedCentroidX
+                                            val newScrollY =
+                                                (mapState.scroll.y + rotatedCentroidY) *
+                                                    effectiveScaleRatio - rotatedCentroidY
+
+                                            mapState.setScroll(newScrollX, newScrollY)
+                                        }
                                     }
-                                    event.changes.first().consume()
                                 }
                             }
                         }
                     },
-            contentAlignment = Alignment.Center,
-        ) {
-            MapUI(modifier = Modifier.fillMaxSize(), state = mapState)
+                state = mapState,
+            )
 
             if (uiState.isReportingMode) {
                 val radiusInMeters = uiState.reportingRadius
@@ -440,11 +470,18 @@ fun MapScreen(
                                     onClick = {
                                         val lon = xToLon(mapState.centroidX)
                                         val lat = yToLat(mapState.centroidY)
-                                        onNavigateToReportZone(lat, lon, uiState.reportingRadius)
+                                        onNavigateToReportZone(
+                                            lat,
+                                            lon,
+                                            uiState.reportingRadius,
+                                        )
                                         viewModel.exitReportingMode()
                                     },
                                 ) {
-                                    Icon(Icons.Default.Check, contentDescription = "Confirm Report")
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = "Confirm Report",
+                                    )
                                 }
                                 Text(
                                     text = "${uiState.reportingRadius.roundToInt()}m",

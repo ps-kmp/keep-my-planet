@@ -55,8 +55,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import pt.isel.keepmyplanet.utils.toFormattedString
+import pt.isel.keepmyplanet.utils.toLocalFormattedString
 
 @Composable
 actual fun DateTimePicker(
@@ -71,7 +72,7 @@ actual fun DateTimePicker(
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
-    val displayValue = remember(value) { value?.toFormattedString() ?: "" }
+    val displayValue = remember(value) { value?.toLocalFormattedString() ?: "" }
 
     Column(modifier = modifier) {
         Box {
@@ -185,15 +186,19 @@ private fun DateTimePickerDialog(
                     if (isPickingDate) {
                         isPickingDate = false
                     } else {
-                        onConfirm(
+                        val localDateTime =
                             LocalDateTime(
                                 year = selectedDate.year,
                                 monthNumber = selectedDate.monthNumber,
                                 dayOfMonth = selectedDate.dayOfMonth,
                                 hour = selectedHour,
                                 minute = selectedMinute,
-                            ),
-                        )
+                            )
+                        val utcDateTime =
+                            localDateTime
+                                .toInstant(TimeZone.currentSystemDefault())
+                                .toLocalDateTime(TimeZone.UTC)
+                        onConfirm(utcDateTime)
                     }
                 },
             ) {

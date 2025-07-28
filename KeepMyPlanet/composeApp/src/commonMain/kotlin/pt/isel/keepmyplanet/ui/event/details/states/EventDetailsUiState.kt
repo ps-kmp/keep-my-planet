@@ -4,10 +4,13 @@ import pt.isel.keepmyplanet.domain.event.Event
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.user.UserInfo
 import pt.isel.keepmyplanet.domain.user.UserRole
+import pt.isel.keepmyplanet.domain.zone.Zone
+import pt.isel.keepmyplanet.domain.zone.ZoneStatus
 import pt.isel.keepmyplanet.ui.base.UiState
 
 data class EventDetailsUiState(
     val event: Event? = null,
+    val zone: Zone? = null,
     val participants: List<UserInfo> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingParticipants: Boolean = false,
@@ -55,8 +58,7 @@ data class EventDetailsUiState(
 
     val canSeeStats: Boolean
         get() =
-            event != null &&
-                event.status in listOf(EventStatus.IN_PROGRESS, EventStatus.COMPLETED)
+            event?.status == EventStatus.COMPLETED
 
     val canUserJoin: Boolean
         get() =
@@ -80,10 +82,11 @@ data class EventDetailsUiState(
     val isChatReadOnly: Boolean
         get() = event?.status in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
 
-    val canUserEdit: Boolean get() =
-        event != null &&
-            (isCurrentUserOrganizer || currentUser?.role == UserRole.ADMIN) &&
-            event.status == EventStatus.PLANNED
+    val canUserEdit: Boolean
+        get() =
+            event != null &&
+                (isCurrentUserOrganizer || currentUser?.role == UserRole.ADMIN) &&
+                event.status == EventStatus.PLANNED
 
     val canCompleteEvent: Boolean
         get() =
@@ -104,7 +107,10 @@ data class EventDetailsUiState(
                 event.status in listOf(EventStatus.PLANNED, EventStatus.CANCELLED)
 
     val showCleanlinessConfirmation: Boolean
-        get() = event?.status == EventStatus.COMPLETED && isCurrentUserOrganizer
+        get() =
+            event?.status == EventStatus.COMPLETED &&
+                isCurrentUserOrganizer &&
+                zone?.status == ZoneStatus.CLEANING_SCHEDULED
 
     val canTransferOwnership: Boolean
         get() =

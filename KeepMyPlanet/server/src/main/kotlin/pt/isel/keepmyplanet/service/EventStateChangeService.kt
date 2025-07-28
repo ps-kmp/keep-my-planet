@@ -100,15 +100,10 @@ class EventStateChangeService(
             }
 
             EventStatus.COMPLETED -> {
-                val cleanedZone =
-                    zoneStateChangeService.changeZoneStatus(
-                        zone = zone,
-                        newStatus = ZoneStatus.CLEANED,
-                        changedBy = requestingUserId,
-                        triggeredByEventId = event.id,
-                    )
-                val finalZone = cleanedZone.copy(eventId = null)
-                zoneRepository.update(finalZone)
+                if (zone.status == ZoneStatus.CLEANING_SCHEDULED) {
+                    val updatedZone = zone.copy(eventId = null, updatedAt = now())
+                    zoneRepository.update(updatedZone)
+                }
             }
 
             else -> {
@@ -120,7 +115,8 @@ class EventStateChangeService(
     suspend fun getEventStateChanges(eventId: Id): Result<List<EventStateChangeResponse>> =
         runCatching {
             findEventOrFail(eventId)
-            val changesWithDetails = eventStateChangeRepository.findByEventIdWithDetails(eventId)
+            val changesWithDetails =
+                eventStateChangeRepository.findByEventIdWithDetails(eventId)
 
             changesWithDetails.map { details ->
                 EventStateChangeResponse(
@@ -143,7 +139,13 @@ class EventStateChangeService(
     ): Boolean =
         when (from) {
             EventStatus.PLANNED -> to in listOf(EventStatus.IN_PROGRESS, EventStatus.CANCELLED)
-            EventStatus.IN_PROGRESS -> to in listOf(EventStatus.COMPLETED, EventStatus.CANCELLED)
+            EventStatus.IN_PROGRESS ->
+                to in
+                    listOf(
+                        EventStatus.COMPLETED,
+                        EventStatus.CANCELLED,
+                    )
+
             EventStatus.COMPLETED, EventStatus.CANCELLED, EventStatus.UNKNOWN -> false
         }
 
@@ -164,7 +166,10 @@ class EventStateChangeService(
             changeEventStatus(
                 event.id,
                 EventStatus.IN_PROGRESS,
-                AuthPrincipal(event.organizerId, pt.isel.keepmyplanet.domain.user.UserRole.USER),
+                AuthPrincipal(
+                    event.organizerId,
+                    pt.isel.keepmyplanet.domain.user.UserRole.USER,
+                ),
             ).onSuccess {
                 runCatching {
                     if (!eventRepository.hasAttended(event.id, event.organizerId)) {

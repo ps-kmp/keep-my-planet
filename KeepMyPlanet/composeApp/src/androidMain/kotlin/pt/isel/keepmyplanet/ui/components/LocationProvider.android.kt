@@ -11,6 +11,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
@@ -39,8 +41,12 @@ actual fun rememberLocationProvider(
 
             override fun requestLocationUpdate() {
                 if (permissionState.status.isGranted) {
-                    locationClient.lastLocation
-                        .addOnSuccessListener { location ->
+                    val cancellationTokenSource = CancellationTokenSource()
+                    locationClient
+                        .getCurrentLocation(
+                            Priority.PRIORITY_HIGH_ACCURACY,
+                            cancellationTokenSource.token,
+                        ).addOnSuccessListener { location ->
                             location?.let { onLocationUpdatedState(it.latitude, it.longitude) }
                                 ?: onLocationErrorState()
                         }.addOnFailureListener {

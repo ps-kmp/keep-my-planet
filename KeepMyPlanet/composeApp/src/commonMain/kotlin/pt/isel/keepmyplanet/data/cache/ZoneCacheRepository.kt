@@ -26,6 +26,7 @@ class ZoneCacheRepository(
                     eventId = zone.eventId?.value?.toLong(),
                     status = zone.status.name,
                     zoneSeverity = zone.zoneSeverity.name,
+                    isActive = zone.isActive,
                     createdAt = zone.createdAt.toString(),
                     updatedAt = zone.updatedAt.toString(),
                     timestamp = Clock.System.now().epochSeconds,
@@ -61,6 +62,26 @@ class ZoneCacheRepository(
     ): List<Zone> =
         queries
             .getZonesInBoundingBox(min.latitude, max.latitude, min.longitude, max.longitude)
+            .executeAsList()
+            .map { dbZone ->
+                val beforePhotoIds =
+                    photoQueries
+                        .getBeforePhotosByZoneId(dbZone.id)
+                        .executeAsList()
+                        .map { Id(it.toUInt()) }
+                        .toSet()
+                val afterPhotoIds =
+                    photoQueries
+                        .getAfterPhotosByZoneId(dbZone.id)
+                        .executeAsList()
+                        .map { Id(it.toUInt()) }
+                        .toSet()
+                dbZone.toZone(beforePhotoIds, afterPhotoIds)
+            }
+
+    suspend fun getAllZones(): List<Zone> =
+        queries
+            .getAllActiveZones()
             .executeAsList()
             .map { dbZone ->
                 val beforePhotoIds =

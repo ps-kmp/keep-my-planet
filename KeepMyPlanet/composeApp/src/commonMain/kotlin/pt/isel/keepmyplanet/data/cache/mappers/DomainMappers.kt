@@ -84,6 +84,7 @@ fun ZoneCache.toZone(
         eventId = eventId?.let { Id(it.toUInt()) },
         status = safeValueOf<ZoneStatus>(status) ?: ZoneStatus.REPORTED,
         zoneSeverity = safeValueOf<ZoneSeverity>(zoneSeverity) ?: ZoneSeverity.UNKNOWN,
+        isActive = isActive,
         beforePhotosIds = beforePhotosIds,
         afterPhotosIds = afterPhotosIds,
         createdAt = LocalDateTime.parse(createdAt),

@@ -59,11 +59,14 @@ class ReportZoneViewModel(
                 onStart = { copy(actionState = ReportZoneUiState.ActionState.Submitting) },
                 onFinally = { copy(actionState = ReportZoneUiState.ActionState.Idle) },
                 block = {
-                    val photoIds =
-                        currentState.photos
-                            .map {
-                                photoRepository.createPhoto(it.data, it.filename).getOrThrow().id
-                            }.toSet()
+                    val photoIds = mutableSetOf<UInt>()
+                    for (photo in currentState.photos) {
+                        val result = photoRepository.createPhoto(photo.data, photo.filename)
+                        if (result.isFailure) {
+                            return@launchWithResult Result.failure(result.exceptionOrNull()!!)
+                        }
+                        photoIds.add(result.getOrThrow().id)
+                    }
 
                     val request =
                         ReportZoneRequest(

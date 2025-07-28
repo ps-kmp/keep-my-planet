@@ -13,6 +13,7 @@ data class ZoneResponse(
     val eventId: UInt?,
     val status: String,
     val severity: String,
+    val isActive: Boolean,
     val beforePhotosIds: Set<UInt>,
     val afterPhotosIds: Set<UInt>,
     val createdAt: String,

@@ -18,3 +18,4 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 composeApp/src/google-services.json
 gradle.properties
+/server/src/main/resources/fcm_service_account.json

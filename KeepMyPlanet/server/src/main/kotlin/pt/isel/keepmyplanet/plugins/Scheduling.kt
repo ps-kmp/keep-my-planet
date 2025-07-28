@@ -34,6 +34,6 @@ fun Application.configureScheduling() {
         },
         0,
         1,
-        TimeUnit.HOURS,
+        TimeUnit.MINUTES,
     )
 }

@@ -5,6 +5,7 @@ import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.dto.event.CheckInRequest
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceEvent
+import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceTab
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceUiState
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
 
@@ -13,6 +14,10 @@ class ManageAttendanceViewModel(
 ) : BaseViewModel<ManageAttendanceUiState>(ManageAttendanceUiState()) {
     override fun handleErrorWithMessage(message: String) {
         sendEvent(ManageAttendanceEvent.ShowSnackbar(message))
+    }
+
+    fun onTabSelected(tab: ManageAttendanceTab) {
+        setState { copy(selectedTab = tab) }
     }
 
     fun loadInitialData(eventId: Id) {
@@ -56,6 +61,10 @@ class ManageAttendanceViewModel(
 
     private fun checkInUser(scannedUserId: Id) {
         if (currentState.isCheckingIn) return
+        if (currentState.attendees.any { it.id == scannedUserId }) {
+            sendEvent(ManageAttendanceEvent.ShowSnackbar("User has already been checked in."))
+            return
+        }
         val eventId = currentState.event?.id ?: return
         val participantInfo = currentState.participants.find { it.id == scannedUserId }
         if (participantInfo == null) {
@@ -73,21 +82,16 @@ class ManageAttendanceViewModel(
                         "User ${participantInfo.name.value} checked in successfully!",
                     ),
                 )
-                refreshAttendees(eventId)
+                // Directly update the local state instead of re-fetching
+                setState {
+                    copy(attendees = (attendees + participantInfo).distinctBy { it.id })
+                }
             },
             onError = { handleErrorWithMessage(getErrorMessage("Check-in failed", it)) },
         )
     }
 
-    private fun refreshAttendees(eventId: Id) {
-        launchWithResult(
-            block = { eventRepository.getEventAttendees(eventId) },
-            onSuccess = { setState { copy(attendees = it) } },
-            onError = {
-                handleErrorWithMessage(
-                    getErrorMessage("Failed to refresh attendee list", it),
-                )
-            },
-        )
+    fun manualCheckInUser(userId: Id) {
+        checkInUser(userId)
     }
 }

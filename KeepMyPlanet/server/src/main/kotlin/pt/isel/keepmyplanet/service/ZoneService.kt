@@ -195,8 +195,7 @@ class ZoneService(
             val updatedZone =
                 zone.copy(
                     beforePhotosIds = zone.beforePhotosIds - photoId,
-                    afterPhotosIds =
-                        zone.afterPhotosIds - photoId,
+                    afterPhotosIds = zone.afterPhotosIds - photoId,
                 )
             zoneRepository.update(updatedZone)
         }
@@ -253,7 +252,7 @@ class ZoneService(
                             triggeredByEventId = eventId,
                         )
                     val archivedZone = zoneStateChangeService.archiveZone(updatedZone)
-                    zoneRepository.update(archivedZone.copy(eventId = null))
+                    zoneRepository.update(archivedZone)
                 } else {
                     zone
                 }
@@ -270,7 +269,7 @@ class ZoneService(
                         zoneToUpdate = zoneToUpdate.copy(zoneSeverity = it)
                     }
                 }
-                zoneRepository.update(zoneToUpdate)
+                zoneRepository.update(zoneToUpdate.copy(eventId = null))
             }
         }
 

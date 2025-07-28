@@ -62,7 +62,7 @@ import pt.isel.keepmyplanet.ui.event.details.components.SendNotificationDialog
 import pt.isel.keepmyplanet.ui.event.details.components.TransferOwnershipBanner
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsEvent
 import pt.isel.keepmyplanet.ui.event.details.states.EventDetailsUiState
-import pt.isel.keepmyplanet.utils.toFormattedString
+import pt.isel.keepmyplanet.utils.toLocalFormattedString
 
 @Composable
 fun EventDetailsScreen(
@@ -307,12 +307,14 @@ fun EventDetailsScreen(
                                     }
                                     InfoRow(
                                         icon = Icons.Default.Schedule,
-                                        text = "Starts: ${event.period.start.toFormattedString()}",
+                                        text =
+                                            "Starts: " +
+                                                event.period.start.toLocalFormattedString(),
                                     )
                                     event.period.end?.let {
                                         InfoRow(
                                             icon = Icons.Default.Schedule,
-                                            text = "Ends: ${it.toFormattedString()}",
+                                            text = "Ends: ${it.toLocalFormattedString()}",
                                         )
                                     }
                                     InfoRow(

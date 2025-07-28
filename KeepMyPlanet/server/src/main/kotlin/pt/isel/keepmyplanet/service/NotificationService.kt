@@ -5,63 +5,56 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingException
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
+import com.google.firebase.messaging.MessagingErrorCode
 import io.ktor.server.config.ApplicationConfig
+import java.io.File
 import java.io.FileInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import pt.isel.keepmyplanet.domain.common.Id
-import pt.isel.keepmyplanet.dto.notification.FcmErrorResponse
 import pt.isel.keepmyplanet.dto.notification.FcmMessage
-import pt.isel.keepmyplanet.dto.notification.FcmRequest
 import pt.isel.keepmyplanet.repository.UserDeviceRepository
 
 class NotificationService(
     private val userDeviceRepository: UserDeviceRepository,
     config: ApplicationConfig,
 ) {
-    private val httpClient =
-        HttpClient {
-            install(ContentNegotiation) {
-                json(
-                    Json {
-                        prettyPrint = true
-                        isLenient = true
-                        ignoreUnknownKeys = true
-                    },
-                )
-            }
-        }
-    private val fcmProjectId = config.property("fcm.projectId").getString()
-    private val fcmUrl = "https://fcm.googleapis.com/v1/projects/$fcmProjectId/messages:send"
     private val log = LoggerFactory.getLogger(NotificationService::class.java)
 
     private val serviceAccountPath =
         System.getenv("FCM_SERVICE_ACCOUNT_PATH") ?: "/etc/secrets/fcm_service_account.json"
 
-    private val firebaseMessaging: FirebaseMessaging by lazy {
-        if (FirebaseApp.getApps().isEmpty()) {
-            val serviceAccountStream = FileInputStream(serviceAccountPath)
+    private val firebaseMessaging: FirebaseMessaging? = initializeFirebase()
+
+    private fun initializeFirebase(): FirebaseMessaging? {
+        return try {
+            if (FirebaseApp.getApps().isNotEmpty()) {
+                return FirebaseMessaging.getInstance()
+            }
+
+            val serviceAccountFile = File(serviceAccountPath)
+            if (!serviceAccountFile.exists()) {
+                log.warn(
+                    "FCM service account file not found at '$serviceAccountPath'. " +
+                        "Push notifications are disabled.",
+                )
+                return null
+            }
+
+            val serviceAccountStream = FileInputStream(serviceAccountFile)
             val credentials = GoogleCredentials.fromStream(serviceAccountStream)
-            val options =
-                FirebaseOptions
-                    .builder()
-                    .setCredentials(credentials)
-                    .build()
+            val options = FirebaseOptions.builder().setCredentials(credentials).build()
             FirebaseApp.initializeApp(options)
+            log.info("Firebase Admin SDK initialized successfully.")
+            FirebaseMessaging.getInstance()
+        } catch (e: Exception) {
+            log.error(
+                "Failed to initialize Firebase Admin SDK. Push notifications will be disabled.",
+                e,
+            )
+            null
         }
-        FirebaseMessaging.getInstance()
     }
 
     suspend fun registerDevice(
@@ -88,46 +81,47 @@ class NotificationService(
     }
 
     private suspend fun sendNotification(message: FcmMessage) {
-        try {
-            val accessToken = getAccessToken()
-            val request = FcmRequest(message = message)
-            val response =
-                httpClient.post(fcmUrl) {
-                    bearerAuth(accessToken)
-                    contentType(ContentType.Application.Json)
-                    setBody(request)
-                }
-
-            if (!response.status.isSuccess()) {
-                handleFcmError(response.body(), message.token)
+        val fbMessaging =
+            firebaseMessaging ?: run {
+                log.warn("Firebase not initialized, skipping notification.")
+                return
             }
-        } catch (e: Exception) {
-            log.error("Exception sending FCM notification", e)
-        }
-    }
 
-    private suspend fun handleFcmError(
-        errorBody: String,
-        token: String?,
-    ) {
-        log.error("Failed to send notification: $errorBody")
-        if (token == null) return
+        val fcmMessageBuilder =
+            com.google.firebase.messaging.Message
+                .builder()
+        message.data?.let { fcmMessageBuilder.putAllData(it) }
+
+        if (message.token != null) {
+            fcmMessageBuilder.setToken(message.token)
+        } else if (message.topic != null) {
+            fcmMessageBuilder.setTopic(message.topic)
+        } else {
+            return // Should not happen due to FcmMessage's init block
+        }
 
         try {
-            val fcmError = Json.decodeFromString<FcmErrorResponse>(errorBody)
-            val errorCode =
-                fcmError.error.details
-                    ?.firstOrNull()
-                    ?.errorCode
-            if (errorCode == "UNREGISTERED" || fcmError.error.status == "INVALID_ARGUMENT") {
+            val response =
+                withContext(Dispatchers.IO) {
+                    fbMessaging.send(fcmMessageBuilder.build())
+                }
+            log.info("Successfully sent message: $response")
+        } catch (e: FirebaseMessagingException) {
+            log.error("Failed to send FCM message. Error code: ${e.messagingErrorCode}", e)
+            if (message.token != null &&
+                (
+                    e.messagingErrorCode == MessagingErrorCode.UNREGISTERED ||
+                        e.messagingErrorCode == MessagingErrorCode.INVALID_ARGUMENT
+                )
+            ) {
                 log.warn(
-                    "Token $token is invalid (reason: ${errorCode ?: fcmError.error.status}). " +
+                    "Token ${message.token} is invalid (${e.messagingErrorCode}). " +
                         "Removing from database.",
                 )
-                userDeviceRepository.removeDevice(token)
+                userDeviceRepository.removeDevice(message.token.toString())
             }
         } catch (e: Exception) {
-            log.error("Failed to parse FCM error response: $errorBody", e)
+            log.error("Exception sending FCM notification via Admin SDK", e)
         }
     }
 
@@ -135,6 +129,7 @@ class NotificationService(
         tokens: List<String>,
         topic: String,
     ) {
+        firebaseMessaging ?: return
         if (tokens.isEmpty()) return
         try {
             val response = firebaseMessaging.subscribeToTopic(tokens, topic)
@@ -154,6 +149,7 @@ class NotificationService(
         tokens: List<String>,
         topic: String,
     ) {
+        firebaseMessaging ?: return
         if (tokens.isEmpty()) return
         try {
             firebaseMessaging.unsubscribeFromTopic(tokens, topic)
@@ -161,15 +157,4 @@ class NotificationService(
             log.error("Failed to unsubscribe from topic '$topic'", e)
         }
     }
-
-    private suspend fun getAccessToken(): String =
-        withContext(Dispatchers.IO) {
-            val serviceAccountStream = FileInputStream(serviceAccountPath)
-            val credentials =
-                GoogleCredentials
-                    .fromStream(serviceAccountStream)
-                    .createScoped(listOf("https://www.googleapis.com/auth/firebase.messaging"))
-            credentials.refreshIfExpired()
-            credentials.accessToken.tokenValue
-        }
 }

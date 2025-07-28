@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getStatusColorPair
-import pt.isel.keepmyplanet.utils.toFormattedString
+import pt.isel.keepmyplanet.utils.toLocalFormattedString
 
 @Composable
 fun EventItem(
@@ -64,7 +64,7 @@ fun EventItem(
             ) {
                 Column {
                     Text(
-                        text = "Starts: ${event.period.start.toFormattedString()}",
+                        text = "Starts: ${event.period.start.toLocalFormattedString()}",
                         style = MaterialTheme.typography.bodySmall,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {

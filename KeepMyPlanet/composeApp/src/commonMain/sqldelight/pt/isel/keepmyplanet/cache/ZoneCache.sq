@@ -1,3 +1,5 @@
+import kotlin.Boolean;
+
 CREATE TABLE ZoneCache (
     id INTEGER NOT NULL PRIMARY KEY,
     latitude REAL NOT NULL,
@@ -8,18 +10,22 @@ CREATE TABLE ZoneCache (
     eventId INTEGER,
     status TEXT NOT NULL,
     zoneSeverity TEXT NOT NULL,
+    isActive INTEGER AS Boolean NOT NULL,
     createdAt TEXT NOT NULL,
     updatedAt TEXT NOT NULL,
     timestamp INTEGER NOT NULL
 );
 
 insertZone:
-INSERT OR REPLACE INTO ZoneCache(id, latitude, longitude, radius, description, reporterId, eventId, status, zoneSeverity, createdAt, updatedAt, timestamp)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO ZoneCache(id, latitude, longitude, radius, description, reporterId, eventId, status, zoneSeverity, isActive, createdAt, updatedAt, timestamp)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 getZonesInBoundingBox:
 SELECT * FROM ZoneCache
-WHERE latitude BETWEEN :minLat AND :maxLat AND longitude BETWEEN :minLon AND :maxLon;
+WHERE latitude BETWEEN :minLat AND :maxLat AND longitude BETWEEN :minLon AND :maxLon AND isActive = 1;
+
+getAllActiveZones:
+SELECT * FROM ZoneCache WHERE isActive = 1;
 
 getById:
 SELECT * FROM ZoneCache WHERE id = ?;

@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.ui.event.details
 
+import kotlinx.coroutines.coroutineScope
 import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
@@ -27,16 +28,26 @@ class EventDetailsViewModel(
 
     fun loadEventDetails(eventId: Id) {
         launchWithResult(
-            onStart = {
-                copy(isLoading = true, error = null, isLoadingParticipants = true)
-            },
+            onStart = { copy(isLoading = true, error = null, isLoadingParticipants = true) },
             onFinally = { copy(isLoading = false, isLoadingParticipants = false) },
-            block = { eventRepository.getEventDetailsBundle(eventId) },
-            onSuccess = { bundle ->
+            block = {
+                runCatching {
+                    coroutineScope {
+                        val bundle = eventRepository.getEventDetailsBundle(eventId).getOrThrow()
+                        val zone =
+                            zoneRepository
+                                .getZoneDetails(bundle.event.zoneId, forceNetwork = true)
+                                .getOrThrow()
+                        Triple(bundle.event, bundle.participants, zone)
+                    }
+                }
+            },
+            onSuccess = { (event, participants, zone) ->
                 setState {
                     copy(
-                        event = bundle.event,
-                        participants = bundle.participants,
+                        event = event,
+                        participants = participants,
+                        zone = zone,
                         isLoading = false,
                         isLoadingParticipants = false,
                     )
@@ -53,49 +64,67 @@ class EventDetailsViewModel(
         )
     }
 
-    private fun performOptimisticEventUpdate(
-        actionState: EventDetailsUiState.ActionState,
-        errorMessagePrefix: String,
-        optimisticUpdate: (Event) -> Event,
-        apiCall: suspend (Id) -> Result<Event>,
-    ) {
+    fun joinEvent() {
+        val user = currentUser ?: return
         val originalEvent = currentState.event ?: return
-        val optimisticEvent = optimisticUpdate(originalEvent)
+        val originalParticipants = currentState.participants
 
-        setState { copy(actionState = actionState, event = optimisticEvent) }
+        val optimisticEvent =
+            originalEvent.copy(
+                participantsIds =
+                    originalEvent.participantsIds + user.id,
+            )
+        val optimisticParticipants = (originalParticipants + user).distinctBy { it.id }
+        setState {
+            copy(
+                actionState = EventDetailsUiState.ActionState.JOINING,
+                event = optimisticEvent,
+                participants = optimisticParticipants,
+            )
+        }
 
         launchWithResult(
-            block = { apiCall(originalEvent.id) },
-            onSuccess = { confirmedEvent ->
-                setState {
-                    copy(actionState = EventDetailsUiState.ActionState.IDLE, event = confirmedEvent)
-                }
+            block = { eventRepository.joinEvent(originalEvent.id) },
+            onSuccess = {
+                loadEventDetails(originalEvent.id)
             },
             onError = {
-                setState { copy(event = originalEvent) }
-                handleErrorWithMessage(getErrorMessage(errorMessagePrefix, it))
+                setState { copy(event = originalEvent, participants = originalParticipants) }
+                handleErrorWithMessage(getErrorMessage("Failed to join event", it))
             },
             onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
         )
     }
 
-    fun joinEvent() {
-        val user = currentUser ?: return
-        performOptimisticEventUpdate(
-            actionState = EventDetailsUiState.ActionState.JOINING,
-            errorMessagePrefix = "Failed to join event",
-            optimisticUpdate = { it.copy(participantsIds = it.participantsIds + user.id) },
-            apiCall = { eventRepository.joinEvent(it) },
-        )
-    }
-
     fun leaveEvent() {
         val user = currentUser ?: return
-        performOptimisticEventUpdate(
-            actionState = EventDetailsUiState.ActionState.LEAVING,
-            errorMessagePrefix = "Failed to leave event",
-            optimisticUpdate = { it.copy(participantsIds = it.participantsIds - user.id) },
-            apiCall = { eventRepository.leaveEvent(it) },
+        val originalEvent = currentState.event ?: return
+        val originalParticipants = currentState.participants
+
+        val optimisticEvent =
+            originalEvent.copy(
+                participantsIds =
+                    originalEvent.participantsIds - user.id,
+            )
+        val optimisticParticipants = originalParticipants.filter { it.id != user.id }
+        setState {
+            copy(
+                actionState = EventDetailsUiState.ActionState.LEAVING,
+                event = optimisticEvent,
+                participants = optimisticParticipants,
+            )
+        }
+
+        launchWithResult(
+            block = { eventRepository.leaveEvent(originalEvent.id) },
+            onSuccess = {
+                loadEventDetails(originalEvent.id)
+            },
+            onError = {
+                setState { copy(event = originalEvent, participants = originalParticipants) }
+                handleErrorWithMessage(getErrorMessage("Failed to leave event", it))
+            },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
         )
     }
 
@@ -148,30 +177,33 @@ class EventDetailsViewModel(
     fun confirmZoneCleanliness(wasCleaned: Boolean) {
         val event = currentState.event ?: return
 
-        if (wasCleaned) {
-            launchWithResult(
-                onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
-                onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
-                block = {
-                    zoneRepository.confirmCleanliness(
-                        zoneId = event.zoneId,
-                        eventId = event.id,
-                        wasCleaned = true,
-                    )
-                },
-                onSuccess = { _ ->
-                    sendEvent(
-                        EventDetailsEvent.ShowSnackbar("Zone status confirmed successfully!"),
-                    )
-                    loadEventDetails(event.id)
-                },
-                onError = {
-                    handleErrorWithMessage(getErrorMessage("Failed to confirm zone status", it))
-                },
-            )
-        } else {
-            sendEvent(EventDetailsEvent.NavigateToUpdateZone(event.zoneId))
-        }
+        launchWithResult(
+            onStart = { copy(actionState = EventDetailsUiState.ActionState.COMPLETING) },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
+            block = {
+                zoneRepository.confirmCleanliness(
+                    zoneId = event.zoneId,
+                    eventId = event.id,
+                    wasCleaned = wasCleaned,
+                )
+            },
+            onSuccess = { _ ->
+                val message =
+                    if (wasCleaned) {
+                        "Zone status confirmed successfully!"
+                    } else {
+                        "Zone marked as not cleaned. You can now update its details."
+                    }
+                sendEvent(EventDetailsEvent.ShowSnackbar(message))
+                loadEventDetails(event.id)
+                if (!wasCleaned) {
+                    sendEvent(EventDetailsEvent.NavigateToUpdateZone(event.zoneId))
+                }
+            },
+            onError = {
+                handleErrorWithMessage(getErrorMessage("Failed to confirm zone status", it))
+            },
+        )
     }
 
     fun onQrCodeIconClicked() {
@@ -247,7 +279,8 @@ class EventDetailsViewModel(
         setState {
             copy(
                 showNotificationDialog = true,
-                notificationTitle = "Update about '${event?.title?.value ?: "the event"}'",
+                notificationTitle =
+                    "Update about '${currentState.event?.title?.value ?: "the event"}'",
             )
         }
     }

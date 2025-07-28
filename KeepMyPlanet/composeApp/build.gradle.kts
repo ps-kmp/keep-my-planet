@@ -185,7 +185,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            val keystoreFile = project.file("my-release-key.keystore")
+            val keystoreFile = project.file("my-release-key.jks")
             signingConfig =
                 if (keystoreFile.exists()) {
                     signingConfigs.getByName("release")

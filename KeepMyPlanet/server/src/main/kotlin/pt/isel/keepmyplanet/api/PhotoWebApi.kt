@@ -2,7 +2,6 @@ package pt.isel.keepmyplanet.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
@@ -36,7 +35,8 @@ fun Route.photoWebApi(photoService: PhotoService) {
                 var filename: String? = null
 
                 val multipart = call.receiveMultipart()
-                multipart.forEachPart { part ->
+                while (true) {
+                    val part = multipart.readPart() ?: break
                     if (part is PartData.FileItem && part.name == "image") {
                         filename = part.originalFileName
                         val contentType = part.contentType?.toString()
@@ -46,7 +46,6 @@ fun Route.photoWebApi(photoService: PhotoService) {
                                     "Only JPEG, PNG, and WebP are allowed.",
                             )
                         }
-
                         imageData = part.provider().readRemaining().readByteArray()
                     }
                     part.dispose()
@@ -59,7 +58,7 @@ fun Route.photoWebApi(photoService: PhotoService) {
                 }
 
                 photoService
-                    .createPhoto(imageData, filename!!, uploaderId)
+                    .createPhoto(imageData, filename, uploaderId)
                     .onSuccess { photo -> call.respond(HttpStatusCode.Created, photo.toResponse()) }
                     .onFailure { throw it }
             }

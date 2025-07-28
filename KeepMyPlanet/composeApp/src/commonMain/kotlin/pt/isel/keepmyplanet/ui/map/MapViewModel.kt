@@ -37,7 +37,7 @@ import ovh.plrapps.mapcompose.api.removeMarker
 import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.api.visibleBoundingBox
-import ovh.plrapps.mapcompose.ui.layout.Forced
+import ovh.plrapps.mapcompose.ui.layout.Fit
 import ovh.plrapps.mapcompose.ui.state.MapState
 import ovh.plrapps.mapcompose.ui.state.markers.model.RenderingStrategy
 import pt.isel.keepmyplanet.data.cache.MapTileCacheRepository
@@ -92,7 +92,8 @@ class MapViewModel(
         MapState(MAX_ZOOM, MAP_DIMENSION, MAP_DIMENSION) {
             scale(INITIAL_SCALE)
             scroll(lonToX(DEFAULT_LON), latToY(DEFAULT_LAT))
-            minimumScaleMode(Forced(0.2))
+            minimumScaleMode(Fit)
+            maxScale(2.0)
             preloadingPadding(128)
         }
 
@@ -107,6 +108,20 @@ class MapViewModel(
         mapState.shutdown()
     }
 
+    private fun loadAllCachedZones() {
+        viewModelScope.launch {
+            zoneRepository
+                .getAllZonesFromCache()
+                .onSuccess { cachedZones ->
+                    if (cachedZones.isNotEmpty()) {
+                        setState { copy(zones = cachedZones, error = null) }
+                    }
+                }.onFailure {
+                    handleErrorWithMessage("Failed to load cached zones.")
+                }
+        }
+    }
+
     private fun initializeMap() {
         viewModelScope.launch {
             mapState.addLayer(
@@ -114,6 +129,7 @@ class MapViewModel(
             )
             setupClusterer()
             setupMapListeners()
+            loadAllCachedZones()
 
             mapState
                 .idleStateFlow()
@@ -154,7 +170,7 @@ class MapViewModel(
                         }
                     }
                     if (!isInitialLocationSet) {
-                        mapState.scrollTo(x, y, 16.0)
+                        mapState.scrollTo(x, y, INITIAL_SCALE)
                         isInitialLocationSet = true
                     }
                 }
@@ -404,7 +420,7 @@ class MapViewModel(
         longitude: Double,
     ) {
         viewModelScope.launch {
-            mapState.scrollTo(lonToX(longitude), latToY(latitude), 17.0)
+            mapState.scrollTo(lonToX(longitude), latToY(latitude), INITIAL_SCALE)
         }
     }
 }

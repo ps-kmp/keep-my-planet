@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -60,17 +61,22 @@ class FirebasePushNotificationService : FirebaseMessagingService() {
             )
 
         val notificationManager = NotificationManagerCompat.from(this)
+        val largeIcon = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
 
-        val notification =
+        val notificationBuilder =
             NotificationCompat
                 .Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
+                .setColor(0xFF006E2C.toInt())
                 .setContentText(messageBody)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
-                .build()
+
+        largeIcon?.let { notificationBuilder.setLargeIcon(it) }
+
+        val notification = notificationBuilder.build()
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED

@@ -21,12 +21,15 @@ fun LocalDateTime.minus(duration: Duration): LocalDateTime {
     return newInstant.toLocalDateTime(TimeZone.UTC)
 }
 
-fun LocalDateTime.toFormattedString(): String {
-    val day = dayOfMonth.toString().padStart(2, '0')
-    val month = monthNumber.toString().padStart(2, '0')
-    val year = year
-    val hour = hour.toString().padStart(2, '0')
-    val minute = minute.toString().padStart(2, '0')
+fun LocalDateTime.toLocalFormattedString(): String {
+    val utcInstant = this.toInstant(TimeZone.UTC)
+    val localDateTime = utcInstant.toLocalDateTime(TimeZone.currentSystemDefault())
+
+    val day = localDateTime.dayOfMonth.toString().padStart(2, '0')
+    val month = localDateTime.monthNumber.toString().padStart(2, '0')
+    val year = localDateTime.year
+    val hour = localDateTime.hour.toString().padStart(2, '0')
+    val minute = localDateTime.minute.toString().padStart(2, '0')
 
     return "$day/$month/$year $hour:$minute"
 }

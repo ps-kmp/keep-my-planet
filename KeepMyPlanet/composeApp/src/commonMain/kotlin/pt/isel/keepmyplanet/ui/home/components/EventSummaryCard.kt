@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.event.EventListItem
 import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getStatusColorPair
-import pt.isel.keepmyplanet.utils.toFormattedString
+import pt.isel.keepmyplanet.utils.toLocalFormattedString
 
 @Composable
 fun EventSummaryCard(
@@ -60,7 +60,7 @@ fun EventSummaryCard(
                 )
             }
             Text(
-                text = "Starts: ${event.period.start.toFormattedString()}",
+                text = "Starts: ${event.period.start.toLocalFormattedString()}",
                 style = MaterialTheme.typography.bodyMedium,
             )
             Text(

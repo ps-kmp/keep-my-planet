@@ -9,7 +9,7 @@ object MapConfiguration {
 
     const val DEFAULT_LAT = 38.7223
     const val DEFAULT_LON = -9.1393
-    const val INITIAL_SCALE = 12.5
+    const val INITIAL_SCALE = 1.0
 
     const val USER_LOCATION_MARKER_ID = "user_location_marker"
     const val ZONE_CLUSTER_ID = "zone-clusterer"

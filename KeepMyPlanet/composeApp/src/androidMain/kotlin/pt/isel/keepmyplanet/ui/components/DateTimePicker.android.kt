@@ -44,7 +44,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import pt.isel.keepmyplanet.utils.toFormattedString
+import pt.isel.keepmyplanet.utils.toLocalFormattedString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +61,7 @@ actual fun DateTimePicker(
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val displayValue = remember(value) { value?.toFormattedString() ?: "" }
+    val displayValue = remember(value) { value?.toLocalFormattedString() ?: "" }
 
     Column(modifier = modifier) {
         Box {
@@ -173,20 +173,27 @@ actual fun DateTimePicker(
                             isPickingDate = false
                         } else {
                             val selectedInstant =
-                                Instant.fromEpochMilliseconds(
-                                    datePickerState.selectedDateMillis!!,
-                                )
-                            val selectedDate = selectedInstant.toLocalDateTime(TimeZone.UTC)
+                                Instant.fromEpochMilliseconds(datePickerState.selectedDateMillis!!)
+                            val localDate =
+                                selectedInstant
+                                    .toLocalDateTime(
+                                        TimeZone.currentSystemDefault(),
+                                    ).date
 
-                            val newDateTime =
+                            val localDateTime =
                                 LocalDateTime(
-                                    year = selectedDate.year,
-                                    monthNumber = selectedDate.monthNumber,
-                                    dayOfMonth = selectedDate.dayOfMonth,
+                                    year = localDate.year,
+                                    monthNumber = localDate.monthNumber,
+                                    dayOfMonth = localDate.dayOfMonth,
                                     hour = timePickerState.hour,
                                     minute = timePickerState.minute,
                                 )
-                            onValueChange(newDateTime)
+                            val utcDateTime =
+                                localDateTime
+                                    .toInstant(
+                                        TimeZone.currentSystemDefault(),
+                                    ).toLocalDateTime(TimeZone.UTC)
+                            onValueChange(utcDateTime)
                             showDialog = false
                         }
                     },
