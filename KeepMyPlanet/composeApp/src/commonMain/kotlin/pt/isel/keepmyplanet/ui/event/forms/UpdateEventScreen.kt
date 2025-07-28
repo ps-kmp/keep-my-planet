@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.navigation.rememberSavableScrollState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
 import pt.isel.keepmyplanet.ui.components.LoadingButton
@@ -33,8 +35,10 @@ fun UpdateEventScreen(
     eventId: Id,
     onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberSavableScrollState(key = routeKey)
     val snackbarHostState = remember { SnackbarHostState() }
     val isActionInProgress = uiState.actionState is EventFormUiState.ActionState.Submitting
 
@@ -66,21 +70,22 @@ fun UpdateEventScreen(
         if (uiState.isLoading) {
             FullScreenLoading(modifier = Modifier.padding(paddingValues))
         } else {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                EventForm(
-                    formUiState = uiState,
-                    onTitleChanged = viewModel::onTitleChanged,
-                    onDescriptionChanged = viewModel::onDescriptionChanged,
-                    onStartDateChanged = viewModel::onStartDateChanged,
-                    onEndDateChanged = viewModel::onEndDateChanged,
-                    onEndDateCleared = viewModel::onEndDateCleared,
-                    onMaxParticipantsChanged = viewModel::onMaxParticipantsChanged,
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
+            Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
+                Column(
+                    modifier = Modifier.weight(1f).verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    EventForm(
+                        formUiState = uiState,
+                        onTitleChanged = viewModel::onTitleChanged,
+                        onDescriptionChanged = viewModel::onDescriptionChanged,
+                        onStartDateChanged = viewModel::onStartDateChanged,
+                        onEndDateChanged = viewModel::onEndDateChanged,
+                        onEndDateCleared = viewModel::onEndDateCleared,
+                        onMaxParticipantsChanged = viewModel::onMaxParticipantsChanged,
+                    )
+                }
+                Spacer(modifier = Modifier.weight(0.1f, fill = false))
 
                 LoadingButton(
                     onClick = viewModel::submit,

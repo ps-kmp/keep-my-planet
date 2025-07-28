@@ -104,6 +104,7 @@ fun App() {
 
                     is AppRoute.Home ->
                         HomeScreen(
+                            routeKey = targetRoute.toString(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
                             onNavigateToRegister = { appViewModel.navigate(AppRoute.Register) },
@@ -128,6 +129,7 @@ fun App() {
 
                     is AppRoute.EventList ->
                         EventListScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onEventSelected = {
@@ -138,6 +140,7 @@ fun App() {
 
                     is AppRoute.CreateEvent ->
                         CreateEventScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             zoneId = targetRoute.zoneId,
@@ -149,6 +152,7 @@ fun App() {
 
                     is AppRoute.EventDetails ->
                         EventDetailsScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
@@ -187,6 +191,7 @@ fun App() {
                             viewModel.loadParticipants(targetRoute.eventId)
                         }
                         ParticipantListScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = viewModel,
                             eventId = targetRoute.eventId,
                             onNavigateToHome = { appViewModel.navigateToHome() },
@@ -196,6 +201,7 @@ fun App() {
 
                     is AppRoute.EventStatusHistory ->
                         EventStatusHistoryScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             eventId = targetRoute.eventId,
                             onNavigateToHome = { appViewModel.navigateToHome() },
@@ -204,6 +210,7 @@ fun App() {
 
                     is AppRoute.EditEvent ->
                         UpdateEventScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             eventId = targetRoute.eventId,
                             onNavigateToHome = { appViewModel.navigateToHome() },
@@ -224,6 +231,7 @@ fun App() {
 
                     is AppRoute.UserProfile ->
                         UserProfileScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onAccountDeleted = { appViewModel.logout() },
@@ -242,6 +250,7 @@ fun App() {
                             viewModel.loadInitialData(targetRoute.eventId)
                         }
                         ManageAttendanceScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = viewModel,
                             eventId = targetRoute.eventId,
                             onNavigateToHome = { appViewModel.navigateToHome() },
@@ -263,6 +272,7 @@ fun App() {
                             viewModel.loadInitialData(targetRoute.userId)
                         }
                         UserStatsScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = viewModel,
                             userId = targetRoute.userId,
                             userName = userSession?.userInfo?.name?.value ?: "User",
@@ -289,6 +299,7 @@ fun App() {
 
                     is AppRoute.Map ->
                         MapScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onNavigateToZoneDetails = {
@@ -305,6 +316,7 @@ fun App() {
 
                     is AppRoute.ZoneDetails ->
                         ZoneDetailsScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onNavigateToLogin = { appViewModel.navigate(AppRoute.Login) },
@@ -326,6 +338,7 @@ fun App() {
 
                     is AppRoute.UpdateZone ->
                         UpdateZoneScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             zoneId = targetRoute.zoneId,
@@ -334,6 +347,7 @@ fun App() {
 
                     is AppRoute.ReportZone ->
                         ReportZoneScreen(
+                            routeKey = targetRoute.toString(),
                             viewModel = koinViewModel(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             latitude = targetRoute.latitude,
@@ -344,18 +358,21 @@ fun App() {
 
                     is AppRoute.UserManagement ->
                         UserListScreen(
+                            routeKey = targetRoute.toString(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onNavigateBack = { appViewModel.navigateBack() },
                         )
 
                     is AppRoute.About ->
                         AboutScreen(
+                            routeKey = targetRoute.toString(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onNavigateBack = { appViewModel.navigateBack() },
                         )
 
                     is AppRoute.Downloads ->
                         DownloadsScreen(
+                            routeKey = targetRoute.toString(),
                             onNavigateToHome = { appViewModel.navigateToHome() },
                             onNavigateBack = { appViewModel.navigateBack() },
                         )

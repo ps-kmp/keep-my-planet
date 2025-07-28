@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.navigation.rememberSavableLazyListState
 import pt.isel.keepmyplanet.ui.attendance.components.AttendanceListItem
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceEvent
 import pt.isel.keepmyplanet.ui.attendance.states.ManageAttendanceTab
@@ -45,9 +46,12 @@ fun ManageAttendanceScreen(
     eventId: Id,
     onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val attendeesListState = rememberSavableLazyListState("$routeKey-attendees")
+    val remainingListState = rememberSavableLazyListState("$routeKey-remaining")
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
@@ -141,7 +145,10 @@ fun ManageAttendanceScreen(
                                 if (uiState.attendees.isEmpty()) {
                                     EmptyState(message = "No one has checked in yet.")
                                 } else {
-                                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                    LazyColumn(
+                                        state = attendeesListState,
+                                        modifier = Modifier.fillMaxSize(),
+                                    ) {
                                         items(
                                             uiState.attendees,
                                             key = { it.id.value.toString() },
@@ -157,7 +164,10 @@ fun ManageAttendanceScreen(
                                 if (uiState.remainingParticipants.isEmpty()) {
                                     EmptyState(message = "Everyone has checked in!")
                                 } else {
-                                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                    LazyColumn(
+                                        state = remainingListState,
+                                        modifier = Modifier.fillMaxSize(),
+                                    ) {
                                         items(
                                             uiState.remainingParticipants,
                                             key = { it.id.value.toString() },

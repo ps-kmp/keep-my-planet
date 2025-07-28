@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -47,6 +46,7 @@ import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.navigation.rememberSavableScrollState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FormField
@@ -60,8 +60,10 @@ fun UpdateZoneScreen(
     onNavigateToHome: () -> Unit,
     zoneId: Id,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberSavableScrollState(key = routeKey)
     val snackbarHostState = remember { SnackbarHostState() }
 
     val beforePhotoPicker =
@@ -106,7 +108,7 @@ fun UpdateZoneScreen(
                     modifier = Modifier.fillMaxSize().padding(16.dp),
                 ) {
                     Column(
-                        modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        modifier = Modifier.weight(1f).verticalScroll(scrollState),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         FormField(

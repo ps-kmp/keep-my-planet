@@ -253,5 +253,5 @@ fun appModule(application: Application) =
         single { MessageService(get(), get(), get(), get(), get()) }
         single { PhotoService(get(), get(), get()) }
         single { NotificationService(get(), get()) }
-        single { IpGeocodingService(get()) }
+        single { IpGeocodingService(get(), get()) }
     }

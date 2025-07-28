@@ -43,6 +43,7 @@ import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.event.EventStatus
 import pt.isel.keepmyplanet.domain.message.ChatInfo
 import pt.isel.keepmyplanet.domain.user.UserRole
+import pt.isel.keepmyplanet.navigation.rememberSavableLazyListState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ConfirmActionDialog
 import pt.isel.keepmyplanet.ui.components.DetailCard
@@ -80,8 +81,10 @@ fun EventDetailsScreen(
     onNavigateToParticipantList: (Id) -> Unit,
     onNavigateToZoneDetails: (Id) -> Unit,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberSavableLazyListState(key = routeKey)
     val event = uiState.event
     val snackbarHostState = remember { SnackbarHostState() }
     val showCancelDialog = remember { mutableStateOf(false) }
@@ -253,6 +256,7 @@ fun EventDetailsScreen(
 
                 event != null -> {
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),

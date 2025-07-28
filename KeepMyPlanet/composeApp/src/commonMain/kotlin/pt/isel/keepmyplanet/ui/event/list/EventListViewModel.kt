@@ -1,6 +1,5 @@
 package pt.isel.keepmyplanet.ui.event.list
 
-import androidx.compose.foundation.lazy.LazyListState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -21,8 +20,6 @@ class EventListViewModel(
         sessionManager,
     ) {
     private var loadEventsJob: Job? = null
-
-    val listStates = EventFilterType.entries.associateWith { LazyListState() }
 
     init {
         refreshEvents()

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.isWasmPlatform
+import pt.isel.keepmyplanet.navigation.rememberSavableLazyListState
 import pt.isel.keepmyplanet.ui.base.koinViewModel
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.EventSummaryCardSkeleton
@@ -78,9 +80,11 @@ fun HomeScreen(
     onNavigateToAbout: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    routeKey: String,
 ) {
     val viewModel: HomeViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberSavableLazyListState(key = routeKey)
     val snackbarHostState = remember { SnackbarHostState() }
     val user = uiState.user
 
@@ -149,6 +153,7 @@ fun HomeScreen(
         } else if (user != null) {
             UserDashboard(
                 uiState = uiState,
+                listState = listState,
                 paddingValues = paddingValues,
                 onNavigateToEventList = onNavigateToEventList,
                 onNavigateToEventDetails = onNavigateToEventDetails,
@@ -161,6 +166,7 @@ fun HomeScreen(
             )
         } else {
             GuestHomeScreen(
+                listState = listState,
                 paddingValues = paddingValues,
                 onNavigateToMap = onNavigateToMap,
                 onNavigateToEventList = onNavigateToEventList,
@@ -174,6 +180,7 @@ fun HomeScreen(
 @Composable
 private fun UserDashboard(
     uiState: HomeUiState,
+    listState: LazyListState,
     paddingValues: PaddingValues,
     onNavigateToEventList: () -> Unit,
     onNavigateToEventDetails: (Id) -> Unit,
@@ -185,6 +192,7 @@ private fun UserDashboard(
     onNavigateToDownloads: () -> Unit,
 ) {
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize().padding(paddingValues),
         contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -339,6 +347,7 @@ private fun UserDashboard(
 
 @Composable
 private fun GuestHomeScreen(
+    listState: LazyListState,
     paddingValues: PaddingValues,
     onNavigateToMap: () -> Unit,
     onNavigateToEventList: () -> Unit,
@@ -346,6 +355,7 @@ private fun GuestHomeScreen(
     onNavigateToDownloads: () -> Unit,
 ) {
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize().padding(paddingValues),
         contentPadding = PaddingValues(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

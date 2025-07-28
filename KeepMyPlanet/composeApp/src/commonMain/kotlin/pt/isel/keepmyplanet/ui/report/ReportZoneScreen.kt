@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.zone.ZoneSeverity
+import pt.isel.keepmyplanet.navigation.rememberSavableScrollState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.FormField
 import pt.isel.keepmyplanet.ui.components.LoadingButton
@@ -49,8 +49,10 @@ fun ReportZoneScreen(
     longitude: Double,
     radius: Double,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberSavableScrollState(key = routeKey)
     val snackbarHostState = remember { SnackbarHostState() }
     val isActionInProgress = uiState.actionState is ReportZoneUiState.ActionState.Submitting
 
@@ -86,7 +88,7 @@ fun ReportZoneScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
         ) {
             Column(
-                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                modifier = Modifier.weight(1f).verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(

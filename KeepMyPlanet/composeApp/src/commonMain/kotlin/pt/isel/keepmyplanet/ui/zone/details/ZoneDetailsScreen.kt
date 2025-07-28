@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -53,6 +52,7 @@ import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.domain.zone.ZoneStatus
+import pt.isel.keepmyplanet.navigation.rememberSavableScrollState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ConfirmActionDialog
 import pt.isel.keepmyplanet.ui.components.DetailCard
@@ -79,8 +79,10 @@ fun ZoneDetailsScreen(
     onNavigateToUpdateZone: (zoneId: Id) -> Unit,
     onNavigateToMap: (latitude: Double, longitude: Double) -> Unit,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberSavableScrollState(key = routeKey)
     val zone = uiState.zone
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -149,7 +151,7 @@ fun ZoneDetailsScreen(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .verticalScroll(rememberScrollState())
+                                .verticalScroll(scrollState)
                                 .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {

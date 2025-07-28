@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,6 +31,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.navigation.rememberSavableScrollState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 
 private const val ABOUT_TEXT =
@@ -47,7 +47,10 @@ private const val ABOUT_TEXT =
 fun AboutScreen(
     onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
+    val scrollState = rememberSavableScrollState(key = routeKey)
+
     Scaffold(
         topBar = {
             AppTopBar(
@@ -61,7 +64,7 @@ fun AboutScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(paddingValues)
                     .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

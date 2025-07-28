@@ -3,18 +3,27 @@ package pt.isel.keepmyplanet.service
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.server.config.ApplicationConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import pt.isel.keepmyplanet.dto.geocoding.IpLocationResponse
+import pt.isel.keepmyplanet.exception.InternalServerException
 import pt.isel.keepmyplanet.exception.NotFoundException
 
 class IpGeocodingService(
     private val httpClient: HttpClient,
+    config: ApplicationConfig,
 ) {
+    private val ipInfoToken = config.propertyOrNull("ipinfo.token")?.getString()
+
     suspend fun getIpBasedLocation(): Result<IpLocationResponse> =
         runCatching {
-            val responseString: String = httpClient.get("https://ipinfo.io/json").body()
+            if (ipInfoToken.isNullOrBlank()) {
+                throw InternalServerException("IPINFO_TOKEN is not configured on the server.")
+            }
+            val url = "https://ipinfo.io/json?token=$ipInfoToken"
+            val responseString: String = httpClient.get(url).body()
             val jsonElement = Json.parseToJsonElement(responseString)
             val loc = jsonElement.jsonObject["loc"]?.jsonPrimitive?.content
 

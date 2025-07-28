@@ -13,4 +13,5 @@ object MapConfiguration {
 
     const val USER_LOCATION_MARKER_ID = "user_location_marker"
     const val ZONE_CLUSTER_ID = "zone-clusterer"
+    const val REPORTING_CIRCLE_ID = "reporting_circle"
 }

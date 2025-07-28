@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.event.EventListItem
+import pt.isel.keepmyplanet.navigation.rememberSavableLazyListState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.EmptyState
 import pt.isel.keepmyplanet.ui.components.ErrorState
@@ -42,11 +43,12 @@ fun EventListScreen(
     onNavigateToHome: () -> Unit,
     onEventSelected: (event: EventListItem) -> Unit,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val listStates = viewModel.listStates
-    val currentListState = listStates[uiState.filter]!!
+    val cacheKey = remember(routeKey, uiState.filter) { "$routeKey-${uiState.filter}" }
+    val listState = rememberSavableLazyListState(key = cacheKey)
 
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
@@ -59,9 +61,9 @@ fun EventListScreen(
         }
     }
 
-    LaunchedEffect(currentListState) {
+    LaunchedEffect(listState) {
         snapshotFlow {
-            currentListState.layoutInfo.visibleItemsInfo
+            listState.layoutInfo.visibleItemsInfo
                 .lastOrNull()
                 ?.index
         }.collect { lastVisibleItemIndex ->
@@ -121,7 +123,7 @@ fun EventListScreen(
                 } else {
                     key(uiState.filter) {
                         LazyColumn(
-                            state = currentListState,
+                            state = listState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),

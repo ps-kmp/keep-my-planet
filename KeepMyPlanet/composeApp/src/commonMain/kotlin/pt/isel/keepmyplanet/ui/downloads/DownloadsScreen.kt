@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
@@ -35,6 +34,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import pt.isel.keepmyplanet.navigation.rememberSavableScrollState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 
 private const val GITHUB_RELEASES_URL =
@@ -48,7 +48,10 @@ private const val LINUX_DEB_URL = "$GITHUB_RELEASES_URL/keepmyplanet.deb"
 fun DownloadsScreen(
     onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
+    val scrollState = rememberSavableScrollState(key = routeKey)
+
     Scaffold(
         topBar = {
             AppTopBar(
@@ -64,7 +67,7 @@ fun DownloadsScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {

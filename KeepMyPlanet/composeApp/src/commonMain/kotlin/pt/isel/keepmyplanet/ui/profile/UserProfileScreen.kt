@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
@@ -33,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import pt.isel.keepmyplanet.domain.user.UserInfo
+import pt.isel.keepmyplanet.navigation.rememberSavableScrollState
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.DetailCard
 import pt.isel.keepmyplanet.ui.components.ErrorState
@@ -55,8 +55,10 @@ fun UserProfileScreen(
     onNavigateBack: () -> Unit,
     onNavigateToStats: () -> Unit,
     onProfileUpdated: (UserInfo) -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberSavableScrollState(key = routeKey)
     val snackbarHostState = remember { SnackbarHostState() }
 
     val launchPhotoPicker =
@@ -96,6 +98,7 @@ fun UserProfileScreen(
                 uiState.userDetails != null -> {
                     UserProfileDetails(
                         uiState = uiState,
+                        scrollState = scrollState,
                         onNameChanged = viewModel::onNameChanged,
                         onEmailChanged = viewModel::onEmailChanged,
                         onOldPasswordChanged = viewModel::onOldPasswordChanged,
@@ -118,6 +121,7 @@ fun UserProfileScreen(
 @Composable
 private fun UserProfileDetails(
     uiState: UserProfileUiState,
+    scrollState: androidx.compose.foundation.ScrollState,
     onNameChanged: (String) -> Unit,
     onEmailChanged: (String) -> Unit,
     onOldPasswordChanged: (String) -> Unit,
@@ -135,7 +139,7 @@ private fun UserProfileDetails(
         modifier =
             Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp),

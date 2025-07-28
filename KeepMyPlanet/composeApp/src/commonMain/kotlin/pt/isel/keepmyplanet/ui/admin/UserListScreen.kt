@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
+import pt.isel.keepmyplanet.navigation.rememberSavableLazyListState
 import pt.isel.keepmyplanet.ui.admin.components.RoleChangeDialog
 import pt.isel.keepmyplanet.ui.admin.components.UserListItem
 import pt.isel.keepmyplanet.ui.admin.states.UserListEvent
@@ -39,8 +40,10 @@ fun UserListScreen(
     viewModel: UserListViewModel = koinViewModel(),
     onNavigateToHome: () -> Unit,
     onNavigateBack: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberSavableLazyListState(key = routeKey)
     val snackbarHostState = remember { SnackbarHostState() }
     val showRoleChangeDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf(false) }
@@ -114,6 +117,7 @@ fun UserListScreen(
 
                 else -> {
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),

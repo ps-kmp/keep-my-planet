@@ -1,7 +1,5 @@
 package pt.isel.keepmyplanet.ui.map
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -37,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,11 +57,12 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addCallout
+import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.centroidX
 import ovh.plrapps.mapcompose.api.centroidY
-import ovh.plrapps.mapcompose.api.fullSize
 import ovh.plrapps.mapcompose.api.getLayoutSize
 import ovh.plrapps.mapcompose.api.removeCallout
+import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.rotation
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.api.scroll
@@ -72,6 +70,7 @@ import ovh.plrapps.mapcompose.api.setScroll
 import ovh.plrapps.mapcompose.ui.MapUI
 import ovh.plrapps.mapcompose.utils.toRad
 import pt.isel.keepmyplanet.domain.common.Id
+import pt.isel.keepmyplanet.navigation.NavigationStateHolder
 import pt.isel.keepmyplanet.ui.components.AppTopBar
 import pt.isel.keepmyplanet.ui.components.ErrorState
 import pt.isel.keepmyplanet.ui.components.FullScreenLoading
@@ -79,11 +78,12 @@ import pt.isel.keepmyplanet.ui.components.StatusBadge
 import pt.isel.keepmyplanet.ui.components.getSeverityColorPair
 import pt.isel.keepmyplanet.ui.components.getSeverityColorPairNonComposable
 import pt.isel.keepmyplanet.ui.components.rememberLocationProvider
+import pt.isel.keepmyplanet.ui.map.MapConfiguration.REPORTING_CIRCLE_ID
 import pt.isel.keepmyplanet.ui.map.components.GuestPromptBanner
 import pt.isel.keepmyplanet.ui.map.components.MapSearchBar
 import pt.isel.keepmyplanet.ui.map.states.MapEvent
 import pt.isel.keepmyplanet.ui.theme.customColors
-import pt.isel.keepmyplanet.utils.haversineDistance
+import pt.isel.keepmyplanet.utils.addCircle
 import pt.isel.keepmyplanet.utils.latToY
 import pt.isel.keepmyplanet.utils.lonToX
 import pt.isel.keepmyplanet.utils.xToLon
@@ -100,6 +100,7 @@ fun MapScreen(
     onNavigateToReportZone: (latitude: Double, longitude: Double, radius: Double) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    routeKey: String,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -151,6 +152,16 @@ fun MapScreen(
         }
     }
 
+    LaunchedEffect(routeKey) {
+        NavigationStateHolder.restoreMapState(routeKey, mapState, coroutineScope)
+    }
+
+    DisposableEffect(routeKey) {
+        onDispose {
+            NavigationStateHolder.saveMapState(routeKey, mapState)
+        }
+    }
+
     LaunchedEffect(initialLatitude, initialLongitude) {
         if (initialLatitude != null && initialLongitude != null) {
             viewModel.centerOnLocation(initialLatitude, initialLongitude)
@@ -176,9 +187,9 @@ fun MapScreen(
                         modifier =
                             Modifier
                                 .padding(10.dp)
-                                .shadow(4.dp, RoundedCornerShape(8.dp))
+                                .shadow(4.dp, MaterialTheme.shapes.medium)
                                 .widthIn(max = 240.dp),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = MaterialTheme.shapes.medium,
                         colors =
                             CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -198,9 +209,7 @@ fun MapScreen(
                                 contentColor = radiusContent,
                             )
                             val (severityBg, severityContent) =
-                                getSeverityColorPair(
-                                    zone.zoneSeverity,
-                                )
+                                getSeverityColorPair(zone.zoneSeverity)
                             StatusBadge(
                                 text = zone.zoneSeverity.name,
                                 backgroundColor = severityBg,
@@ -235,6 +244,30 @@ fun MapScreen(
             }
         }
         setCurrentCalloutId(newCalloutId)
+    }
+
+    LaunchedEffect(
+        uiState.isReportingMode,
+        mapState.scroll.x,
+        mapState.scroll.y,
+        uiState.reportingRadius,
+    ) {
+        mapState.removePath(REPORTING_CIRCLE_ID)
+
+        if (uiState.isReportingMode) {
+            val centerLon = xToLon(mapState.centroidX)
+            val centerLat = yToLat(mapState.centroidY)
+
+            mapState.addPath(
+                id = REPORTING_CIRCLE_ID,
+                width = 2.dp,
+                color = primaryColor,
+                fillColor = primaryColor.copy(alpha = 0.2f),
+                clickable = false,
+            ) {
+                addCircle(centerLat, centerLon, uiState.reportingRadius)
+            }
+        }
     }
 
     LaunchedEffect(uiState.zones, customColors, colorScheme) {
@@ -359,29 +392,6 @@ fun MapScreen(
             )
 
             if (uiState.isReportingMode) {
-                val radiusInMeters = uiState.reportingRadius
-                val centerX = mapState.centroidX
-                val centerY = mapState.centroidY
-
-                val centerLon = xToLon(centerX)
-                val centerLat = yToLat(centerY)
-                val pointOnRadiusLon =
-                    xToLon((centerX * mapState.fullSize.height + 1) / mapState.fullSize.width)
-                val metersPerPixel =
-                    haversineDistance(centerLat, centerLon, centerLat, pointOnRadiusLon)
-                val radiusInDp =
-                    if (metersPerPixel > 0) (radiusInMeters / metersPerPixel).dp else 0.dp
-
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.Center)
-                            .size(radiusInDp * 2)
-                            .background(primaryColor.copy(alpha = 0.2f), CircleShape)
-                            .border(2.dp, primaryColor, CircleShape)
-                            .pointerInput(Unit) {},
-                )
-
                 Icon(
                     imageVector = Icons.Default.GpsFixed,
                     contentDescription = "Reporting Pin",
@@ -412,8 +422,8 @@ fun MapScreen(
             } else {
                 if (uiState.isLoading) {
                     Surface(
-                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 160.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp),
+                        shape = MaterialTheme.shapes.medium,
                         shadowElevation = 4.dp,
                     ) {
                         Row(
@@ -437,7 +447,7 @@ fun MapScreen(
                                 .align(Alignment.BottomCenter)
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = MaterialTheme.shapes.large,
                         shadowElevation = 8.dp,
                     ) {
                         Column(
@@ -462,8 +472,8 @@ fun MapScreen(
                                     onValueChange = {
                                         viewModel.onReportingRadiusChange(it.toDouble())
                                     },
-                                    valueRange = 10f..500f,
-                                    steps = 48,
+                                    valueRange = 5f..150f,
+                                    steps = 28,
                                     modifier = Modifier.weight(1f),
                                 )
                                 IconButton(
