@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ApplicationKt" type="JetRunConfigurationType" nameIsGenerated="true">
+    <envs>
+      <env name="CLOUDINARY_URL" value="cloudinary://546194716554283:Lq6drkfLMj6o3Ba5HUUyaEzWCL4@derofx3rl" />
+      <env name="CORS_FRONTEND_URL" value="https://kmp-app.onrender.com" />
+      <env name="FCM_SERVICE_ACCOUNT_JSON" value="{   &quot;type&quot;: &quot;service_account&quot;,   &quot;project_id&quot;: &quot;keepmyplanet-app&quot;,   &quot;private_key_id&quot;: &quot;b474e33b35df4cafe0102c516d85e04a6afbc5bf&quot;,   &quot;private_key&quot;: &quot;-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCWNbRQEd3HAGaz\nO9RFnIe5AcGMqFQH/DcdFK+P2W8T+ven9GQY7PPPkzchcNt/OjEr6xogdEsWhIo+\nRveB2uXv3o7Ji7tCzcg/1dB/RG7ta+MDkksb7+D1c8EPS47TiFRwg/bC/WcYWJYG\nSpFSKu3ERc/vmLgAswbB/I6T1gdskXK8fMd9kkvmUOHgcAc76EaOJarFkMXOwq1e\nNUJUhOJlFUj20iGiM2MdOl398/DtGeosLRIL31aoilvPNTIS7C6lWG+rUkmIG+YL\nprHWtSooL4celoRPP36TqcBDTUd/BDYd32Bz/gWXIv6oOu24EdsNQ2+q6mE0KMzU\nwBuGdNwvAgMBAAECggEACj/v5ebSM1obp+9VNMrRmBY+ltKFqWXUfO+Ea1Ry9/IQ\nJC3RBsJkgK2S/X0t/SiDYnPQfJZy6T5yEH3XNc0yE4QkSix2wsA4AeMdLxIEX78U\n5pF8/pMHzrfvXJPTUyviVysqE3QnLMoesp8z+19iihoZbkgFhkaxF1ucfwoDx6yq\nT23gEckfcIkOXUs/yAq4mgO3RU8OLpbNwkidUO6P9ObhG5edxxRjV++WeSMtYr2p\nzwGevee5de3Pw3B4SSUP3uUqfyWASv9LjLl8/to5GaMlaR94yla8XJVsX4Tccyi1\nyu3j+wIFycz9Lkz66xTr1a0m6r2nHylt3QyMQ69CwQKBgQDQmee+ZAQFviaiCWs2\nxB/jt2pCfB+WbhIAWKeItQaRPsx2KsL6ej/a36c0yfRpcimyeQfF+hdBWBncYd69\n3jstVd4jOiHqE9sAcGC7etaFf7S8MXyRiEmNu224iKmXv6PyyMd93XGsf3KYioMV\nFVm1dsFYKOITrPeVIn57lr0bEwKBgQC4VzythvCqWvhlB3hjSO1xri8ypZaJuxS4\naJD0J0kkh3BSbThKfmHDEeaZ0eZtCaXEe/5/2J/Rq52Cj6vhG6fJq7KMT0zMa5Np\nuiBPpEWv4tsE18Fz0YVbXAZk3r9lGUyEJ4tahbfPBwsiJkuynxCYYyj8CVPCfYsl\n7EeAyCGh9QKBgQClYG7GlVpPBzpvmhICwCgcC4xVmzwbsbXZym8/xWyod+X3BN3B\nYGwBZPCVvEpl0plWIffUr/oB1wvhmUHSuz2lKn9K5EqA3i7wwScfWzp5ag5qaL0+\nT5Mop2BMPSRe5xLeZukpUwdM31mFr8JOU7fkUnrkHr1lJeq+tDMcXhwcOwKBgQCo\n68//l7L7+Ka8Na89E/v5+0rm11RuW8/t+Gw0P7fH0JC+B7XYlZ1SWxn8hJrp+jg8\nJ/+b+c7iHKgWlz9C5cvIgxz3dEeE32NTNCsdsAPn3DMlaeytDCdvA5IcZv3uT9ON\nGouZZQV9og+yuHMPeLGFYwCQjJ+DjvWux6jyOvKO7QKBgGCBdEJoqjGrKG1GzMV1\nSc31ygc3n08V1LQI5NgDRczNNUE69RnXd8fu9yvd0b5ff2yzM4mi3tZXg39DdcdE\nWivzFHgUFnyDBdW+nsQgSLjew8E7drRbpIJYrxxvr8KsaIu4p9I8sasyC46GJYSQ\nyTZoK8MbY7jkNaLSOa6vHgrX\n-----END PRIVATE KEY-----\n&quot;,   &quot;client_email&quot;: &quot;firebase-adminsdk-fbsvc@keepmyplanet-app.iam.gserviceaccount.com&quot;,   &quot;client_id&quot;: &quot;107799005685231661638&quot;,   &quot;auth_uri&quot;: &quot;https://accounts.google.com/o/oauth2/auth&quot;,   &quot;token_uri&quot;: &quot;https://oauth2.googleapis.com/token&quot;,   &quot;auth_provider_x509_cert_url&quot;: &quot;https://www.googleapis.com/oauth2/v1/certs&quot;,   &quot;client_x509_cert_url&quot;: &quot;https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40keepmyplanet-app.iam.gserviceaccount.com&quot;,   &quot;universe_domain&quot;: &quot;googleapis.com&quot; }" />
+      <env name="FCM_SERVICE_ACCOUNT_PATH" value="$PROJECT_DIR$/../../keep-my-planet/KeepMyPlanet/server/src/main/resources/fcm_service_account.json" />
+      <env name="IPINFO_TOKEN" value="885708dcf8755d" />
+      <env name="JWT_SECRET" value="2yMjz2dg+wrPYQDb/AhYxFI8wKtFL3ZdXp9SdTvLgMBhaPGoWXSuVEc3V47GAXan pXAhaKFQ4Wn8tvI8ffJgZg== " />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="pt.isel.keepmyplanet.ApplicationKt" />
+    <module name="KeepMyPlanet.server.main" />
+    <shortenClasspath name="NONE" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

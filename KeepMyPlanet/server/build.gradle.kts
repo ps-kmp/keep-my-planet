@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.client.cio.jvm)
     implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.server.forwarded.header)
 
     // database
     implementation(libs.sqldelight.runtime)

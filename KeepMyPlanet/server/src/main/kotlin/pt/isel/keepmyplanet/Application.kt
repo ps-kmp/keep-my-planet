@@ -3,6 +3,7 @@ package pt.isel.keepmyplanet
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
+import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.sse.SSE
 import org.koin.ktor.plugin.Koin
 import pt.isel.keepmyplanet.di.appModule
@@ -17,6 +18,7 @@ import pt.isel.keepmyplanet.plugins.configureStatusPages
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 fun Application.module() {
+    install(XForwardedHeaders)
     install(Koin) {
         modules(appModule(this@module))
     }
