@@ -1,6 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.details
 
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.data.repository.ZoneApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
@@ -27,41 +28,42 @@ class EventDetailsViewModel(
     }
 
     fun loadEventDetails(eventId: Id) {
-        launchWithResult(
-            onStart = { copy(isLoading = true, error = null, isLoadingParticipants = true) },
-            onFinally = { copy(isLoading = false, isLoadingParticipants = false) },
-            block = {
-                runCatching {
-                    coroutineScope {
-                        val bundle = eventRepository.getEventDetailsBundle(eventId).getOrThrow()
-                        val zone =
-                            zoneRepository
-                                .getZoneDetails(bundle.event.zoneId, forceNetwork = true)
-                                .getOrThrow()
-                        Triple(bundle.event, bundle.participants, zone)
+        viewModelScope.launch {
+            setState { copy(isLoading = true, error = null, isLoadingParticipants = true) }
+            eventRepository.getEventDetailsBundle(eventId).collectLatest { result ->
+                result
+                    .onSuccess { bundle ->
+                        val zoneResult =
+                            zoneRepository.getZoneDetails(
+                                bundle.event.zoneId,
+                                forceNetwork = true,
+                            )
+                        setState {
+                            copy(
+                                event = bundle.event,
+                                participants = bundle.participants,
+                                zone = zoneResult.getOrNull(),
+                                isLoading = false,
+                                isLoadingParticipants = false,
+                            )
+                        }
+                    }.onFailure { error ->
+                        val message = getErrorMessage("Failed to load event details", error)
+                        if (currentState.event == null) {
+                            setState {
+                                copy(
+                                    error = message,
+                                    isLoading = false,
+                                    isLoadingParticipants = false,
+                                )
+                            }
+                        } else {
+                            handleErrorWithMessage(message)
+                            setState { copy(isLoading = false, isLoadingParticipants = false) }
+                        }
                     }
-                }
-            },
-            onSuccess = { (event, participants, zone) ->
-                setState {
-                    copy(
-                        event = event,
-                        participants = participants,
-                        zone = zone,
-                        isLoading = false,
-                        isLoadingParticipants = false,
-                    )
-                }
-            },
-            onError = { error ->
-                val message = getErrorMessage("Failed to load event details", error)
-                if (currentState.event == null) {
-                    setState { copy(error = message) }
-                } else {
-                    handleErrorWithMessage(message)
-                }
-            },
-        )
+            }
+        }
     }
 
     fun joinEvent() {
@@ -85,10 +87,17 @@ class EventDetailsViewModel(
 
         launchWithResult(
             block = { eventRepository.joinEvent(originalEvent.id) },
-            onSuccess = {
-                loadEventDetails(originalEvent.id)
+            onSuccess = { updatedEvent ->
+                setState {
+                    copy(
+                        event = updatedEvent,
+                        participants = participants + user,
+                    )
+                }
+                sendEvent(EventDetailsEvent.ShowSnackbar("Successfully joined event!"))
             },
             onError = {
+                // 3b. On Failure, revert optimistic change
                 setState { copy(event = originalEvent, participants = originalParticipants) }
                 handleErrorWithMessage(getErrorMessage("Failed to join event", it))
             },
@@ -117,8 +126,14 @@ class EventDetailsViewModel(
 
         launchWithResult(
             block = { eventRepository.leaveEvent(originalEvent.id) },
-            onSuccess = {
-                loadEventDetails(originalEvent.id)
+            onSuccess = { updatedEvent ->
+                setState {
+                    copy(
+                        event = updatedEvent,
+                        participants = participants.filter { it.id != user.id },
+                    )
+                }
+                sendEvent(EventDetailsEvent.ShowSnackbar("You have left the event."))
             },
             onError = {
                 setState { copy(event = originalEvent, participants = originalParticipants) }
@@ -130,6 +145,7 @@ class EventDetailsViewModel(
 
     fun changeEventStatus(newStatus: EventStatus) {
         val eventId = getEventId() ?: return
+        val originalEvent = currentState.event ?: return
 
         val actionState =
             when (newStatus) {
@@ -138,25 +154,36 @@ class EventDetailsViewModel(
                 else -> return
             }
 
+        val optimisticEvent = originalEvent.copy(status = newStatus)
+        setState { copy(actionState = actionState, event = optimisticEvent) }
+
         val errorMessagePrefix =
-            when (newStatus) {
-                EventStatus.CANCELLED -> "Failed to cancel event"
-                EventStatus.COMPLETED -> "Failed to complete event"
-                else -> "Failed to update event status"
+            if (newStatus ==
+                EventStatus.CANCELLED
+            ) {
+                "Failed to cancel event"
+            } else {
+                "Failed to complete event"
             }
 
         launchWithResult(
-            onStart = { copy(actionState = actionState) },
-            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
             block = {
-                val request = ChangeEventStatusRequest(newStatus)
-                eventRepository.changeEventStatus(eventId, request)
+                eventRepository.changeEventStatus(
+                    eventId,
+                    ChangeEventStatusRequest(newStatus),
+                )
             },
-            onSuccess = { eventResponse ->
-                updateEventInState(eventResponse)
-                loadEventDetails(eventId)
+            onSuccess = { updatedEvent ->
+                updateEventInState(updatedEvent)
+                sendEvent(
+                    EventDetailsEvent.ShowSnackbar("Event status updated to ${newStatus.name}."),
+                )
             },
-            onError = { handleErrorWithMessage(getErrorMessage(errorMessagePrefix, it)) },
+            onError = {
+                setState { copy(event = originalEvent) }
+                handleErrorWithMessage(getErrorMessage(errorMessagePrefix, it))
+            },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
         )
     }
 
@@ -195,6 +222,7 @@ class EventDetailsViewModel(
                         "Zone marked as not cleaned. You can now update its details."
                     }
                 sendEvent(EventDetailsEvent.ShowSnackbar(message))
+                eventRepository.invalidateEventCache(event.id)
                 loadEventDetails(event.id)
                 if (!wasCleaned) {
                     sendEvent(EventDetailsEvent.NavigateToUpdateZone(event.zoneId))
@@ -250,22 +278,37 @@ class EventDetailsViewModel(
 
     fun respondToTransfer(accepted: Boolean) {
         val eventId = getEventId() ?: return
+        val originalEvent = currentState.event ?: return
+
+        val optimisticEvent =
+            originalEvent.copy(
+                pendingOrganizerId = null,
+                transferRequestTime = null,
+            )
+        setState {
+            copy(
+                actionState = EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER,
+                event = optimisticEvent,
+            )
+        }
+
         launchWithResult(
-            onStart = {
-                copy(actionState = EventDetailsUiState.ActionState.RESPONDING_TO_TRANSFER)
-            },
-            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
             block = { eventRepository.respondToTransfer(eventId, accepted) },
             onSuccess = { updatedEvent ->
                 updateEventInState(updatedEvent)
                 val message =
-                    if (accepted) "You are now the new organizer!" else "Transfer request declined."
+                    if (accepted) {
+                        "You are now the new organizer!"
+                    } else {
+                        "Transfer request declined."
+                    }
                 sendEvent(EventDetailsEvent.ShowSnackbar(message))
-                loadEventDetails(eventId)
             },
             onError = {
+                setState { copy(event = originalEvent) }
                 handleErrorWithMessage(getErrorMessage("Failed to respond to transfer", it))
             },
+            onFinally = { copy(actionState = EventDetailsUiState.ActionState.IDLE) },
         )
     }
 
@@ -315,7 +358,7 @@ class EventDetailsViewModel(
             return
         }
 
-        launchWithResult<Unit>(
+        launchWithResult(
             onStart = { copy(actionState = EventDetailsUiState.ActionState.SENDING_NOTIFICATION) },
             onFinally = {
                 copy(

@@ -2,6 +2,8 @@ package pt.isel.keepmyplanet.data.repository
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import pt.isel.keepmyplanet.data.api.EventApi
 import pt.isel.keepmyplanet.data.cache.EventCacheRepository
 import pt.isel.keepmyplanet.data.cache.EventStatsCacheRepository
@@ -49,56 +51,49 @@ class EventApiRepository(
             eventCache?.getEventById(eventId) ?: throw it
         }
 
-    suspend fun getEventDetailsBundle(eventId: Id): Result<EventDetailsBundle> =
-        runCatching {
+    fun getEventDetailsBundle(eventId: Id): Flow<Result<EventDetailsBundle>> =
+        flow {
             val cachedEvent = eventCache?.getEventById(eventId)
             if (cachedEvent != null) {
                 val cachedParticipants =
-                    userCache?.getUsersByIds(cachedEvent.participantsIds.toList())
+                    userCache?.getUsersByIds(
+                        cachedEvent.participantsIds.toList(),
+                    )
                 if (cachedParticipants != null &&
                     cachedParticipants.size == cachedEvent.participantsIds.size
                 ) {
-                    return@runCatching EventDetailsBundle(
-                        cachedEvent,
-                        cachedParticipants.map { it.toUserInfo() },
+                    emit(
+                        Result.success(
+                            EventDetailsBundle(
+                                cachedEvent,
+                                cachedParticipants.map { it.toUserInfo() },
+                            ),
+                        ),
                     )
                 }
             }
 
-            coroutineScope {
-                val detailsDeferred = async { eventApi.getEventDetails(eventId.value) }
-                val participantsDeferred = async { eventApi.getEventParticipants(eventId.value) }
+            val networkResult =
+                runCatching {
+                    coroutineScope {
+                        val detailsDeferred = async { eventApi.getEventDetails(eventId.value) }
+                        val participantsDeferred =
+                            async { eventApi.getEventParticipants(eventId.value) }
 
-                val eventDetailsResult = detailsDeferred.await()
-                val eventResponse = eventDetailsResult.getOrThrow()
+                        val eventResponse = detailsDeferred.await().getOrThrow()
+                        val participantsResponse = participantsDeferred.await().getOrThrow()
 
-                val participantsResult = participantsDeferred.await()
-                val participantsResponse = participantsResult.getOrThrow()
+                        val event = eventResponse.toEvent()
+                        val participants = participantsResponse.map { it.toUserInfo() }
 
-                val event = eventResponse.toEvent()
-                val participants = participantsResponse.map { it.toUserInfo() }
+                        eventCache?.insertEvents(listOf(event))
+                        userCache?.insertUsers(participants.map { it.toUserCacheInfo() })
 
-                eventCache?.insertEvents(listOf(event))
-                userCache?.insertUsers(participants.map { it.toUserCacheInfo() })
-
-                EventDetailsBundle(event, participants)
-            }
-        }.recoverCatching { throwable ->
-            val cachedEvent = eventCache?.getEventById(eventId)
-
-            if (cachedEvent != null) {
-                val cachedParticipants =
-                    userCache?.getUsersByIds(cachedEvent.participantsIds.toList())
-                if (cachedParticipants != null &&
-                    cachedParticipants.size == cachedEvent.participantsIds.size
-                ) {
-                    EventDetailsBundle(cachedEvent, cachedParticipants.map { it.toUserInfo() })
-                } else {
-                    throw throwable
+                        EventDetailsBundle(event, participants)
+                    }
                 }
-            } else {
-                throw throwable
-            }
+
+            emit(networkResult)
         }
 
     suspend fun invalidateEventCache(eventId: Id) {

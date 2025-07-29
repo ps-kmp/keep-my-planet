@@ -22,6 +22,6 @@ fun UserCacheInfo.toUserInfo(): UserInfo =
         id = this.id,
         name = this.name,
         email = this.email,
-        profilePictureId = null,
+        profilePictureId = this.profilePictureId,
         role = UserRole.USER,
     )

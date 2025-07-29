@@ -1,6 +1,7 @@
 package pt.isel.keepmyplanet.ui.map
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -98,10 +99,10 @@ class MapViewModel(
         }
 
     private var isInitialLocationSet = false
-    private var hasAttemptedInitialLocation = false
 
     init {
         initializeMap()
+        performInitialIpCenter()
     }
 
     override fun onViewModelCleared() {
@@ -189,26 +190,35 @@ class MapViewModel(
         mapState.addClusterer(ZONE_CLUSTER_ID) { clusterIds ->
             @Composable {
                 val clusterSize = clusterIds.size
+                val isDark = isSystemInDarkTheme()
                 val (bgColor, textColor, size) =
                     when {
                         clusterSize > 25 ->
                             Triple(
-                                MaterialTheme.colorScheme.errorContainer,
-                                MaterialTheme.colorScheme.onErrorContainer,
+                                if (isDark) {
+                                    MaterialTheme.colorScheme.errorContainer
+                                } else {
+                                    MaterialTheme.colorScheme.error
+                                },
+                                MaterialTheme.colorScheme.onError,
                                 50.dp,
                             )
 
                         clusterSize > 10 ->
                             Triple(
-                                customColors.warningContainer,
+                                if (isDark) customColors.warningContainer else customColors.warning,
                                 customColors.onWarningContainer,
                                 45.dp,
                             )
 
                         else ->
                             Triple(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                MaterialTheme.colorScheme.onPrimaryContainer,
+                                if (isDark) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                },
+                                MaterialTheme.colorScheme.onPrimary,
                                 40.dp,
                             )
                     }
@@ -357,21 +367,40 @@ class MapViewModel(
         setState { copy(isReportingMode = false) }
     }
 
+    private fun performInitialIpCenter() {
+        if (MapSessionManager.hasPerformedInitialCentering) return
+        MapSessionManager.hasPerformedInitialCentering = true
+
+        setState { copy(isLocatingUser = true) }
+        viewModelScope.launch {
+            geocodingRepository
+                .getIpLocation()
+                .onSuccess { response ->
+                    val (latStr, lonStr) = response.loc.split(',')
+                    val lat = latStr.toDoubleOrNull()
+                    val lon = lonStr.toDoubleOrNull()
+                    if (lat != null && lon != null) {
+                        onLocationUpdateReceived(lat, lon)
+                    } else {
+                        setState { copy(isLocatingUser = false) }
+                    }
+                }.onFailure {
+                    setState { copy(isLocatingUser = false) }
+                }
+        }
+    }
+
     fun onLocationUpdateReceived(
         latitude: Double,
         longitude: Double,
     ) {
-        hasAttemptedInitialLocation = true
         _userLocation.value = Location(latitude, longitude)
         setState { copy(isLocatingUser = false) }
     }
 
     fun onLocationError() {
         setState { copy(isLocatingUser = false) }
-        if (hasAttemptedInitialLocation) {
-            handleErrorWithMessage("Unable to retrieve your location.")
-        }
-        hasAttemptedInitialLocation = true
+        handleErrorWithMessage("Unable to retrieve your location.")
     }
 
     fun requestLocationPermissionOrUpdate() {

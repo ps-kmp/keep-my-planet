@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +27,6 @@ fun TransferOwnershipBanner(
     onDecline: () -> Unit,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary),
         elevation = CardDefaults.cardElevation(4.dp),
     ) {
@@ -38,9 +38,27 @@ fun TransferOwnershipBanner(
                 color = MaterialTheme.colorScheme.onSecondary,
             )
             Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                LoadingButton(onClick = onAccept, isLoading = isLoading) { Text("Accept") }
-                LoadingOutlinedButton(onClick = onDecline, isLoading = isLoading) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                LoadingButton(
+                    onClick = onAccept,
+                    isLoading = isLoading,
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onSecondary,
+                            contentColor = MaterialTheme.colorScheme.secondary,
+                        ),
+                ) { Text("Accept") }
+                LoadingOutlinedButton(
+                    onClick = onDecline,
+                    isLoading = isLoading,
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSecondary,
+                        ),
+                ) {
                     Text("Decline")
                 }
             }

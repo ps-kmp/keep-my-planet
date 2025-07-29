@@ -8,5 +8,5 @@ fun UserInfo.toUserCacheInfo(): UserCacheInfo =
         id = this.id,
         name = this.name,
         email = this.email,
-        profilePictureUrl = null,
+        profilePictureId = this.profilePictureId,
     )

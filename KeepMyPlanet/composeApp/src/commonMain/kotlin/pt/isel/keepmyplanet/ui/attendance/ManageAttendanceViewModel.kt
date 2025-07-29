@@ -1,5 +1,8 @@
 package pt.isel.keepmyplanet.ui.attendance
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
@@ -23,25 +26,37 @@ class ManageAttendanceViewModel(
     fun loadInitialData(eventId: Id) {
         viewModelScope.launch {
             setState { copy(isLoading = true, error = null) }
-            val result =
-                runCatching {
-                    val bundle = eventRepository.getEventDetailsBundle(eventId).getOrThrow()
-                    val attendees = eventRepository.getEventAttendees(eventId).getOrThrow()
-                    Pair(bundle, attendees)
+            runCatching {
+                coroutineScope {
+                    val bundleJob =
+                        async {
+                            eventRepository
+                                .getEventDetailsBundle(
+                                    eventId,
+                                ).first { it.isSuccess }
+                                .getOrThrow()
+                        }
+                    val attendeesJob =
+                        async { eventRepository.getEventAttendees(eventId).getOrThrow() }
+                    Pair(bundleJob.await(), attendeesJob.await())
                 }
-            result
-                .onSuccess { (bundle, attendees) ->
-                    setState {
-                        copy(
-                            event = bundle.event,
-                            participants = bundle.participants,
-                            attendees = attendees,
-                        )
-                    }
-                }.onFailure { e ->
-                    setState { copy(error = getErrorMessage("Failed to load attendance data", e)) }
+            }.onSuccess { (bundle, attendees) ->
+                setState {
+                    copy(
+                        event = bundle.event,
+                        participants = bundle.participants,
+                        attendees = attendees,
+                        isLoading = false,
+                    )
                 }
-            setState { copy(isLoading = false) }
+            }.onFailure { e ->
+                setState {
+                    copy(
+                        isLoading = false,
+                        error = getErrorMessage("Failed to load attendance data", e),
+                    )
+                }
+            }
         }
     }
 
@@ -82,7 +97,6 @@ class ManageAttendanceViewModel(
                         "User ${participantInfo.name.value} checked in successfully!",
                     ),
                 )
-                // Directly update the local state instead of re-fetching
                 setState {
                     copy(attendees = (attendees + participantInfo).distinctBy { it.id })
                 }

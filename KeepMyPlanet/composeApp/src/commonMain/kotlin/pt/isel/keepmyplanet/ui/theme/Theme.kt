@@ -76,19 +76,7 @@ data class CustomColors(
     val onWarningContainer: Color,
 )
 
-private val LightCustomColors =
-    CustomColors(
-        success = successLight,
-        onSuccess = onSuccessLight,
-        successContainer = successContainerLight,
-        onSuccessContainer = onSuccessContainerLight,
-        warning = warningLight,
-        onWarning = onWarningLight,
-        warningContainer = warningContainerLight,
-        onWarningContainer = onWarningContainerLight,
-    )
-
-private val DarkCustomColors =
+private val UniversalCustomColors =
     CustomColors(
         success = successDark,
         onSuccess = onSuccessDark,
@@ -100,7 +88,7 @@ private val DarkCustomColors =
         onWarningContainer = onWarningContainerDark,
     )
 
-private val LocalCustomColors = staticCompositionLocalOf { LightCustomColors }
+private val LocalCustomColors = staticCompositionLocalOf { UniversalCustomColors }
 
 @Composable
 fun KeepMyPlanetTheme(
@@ -108,9 +96,8 @@ fun KeepMyPlanetTheme(
     content: @Composable () -> Unit,
 ) {
     val colors = if (!useDarkTheme) LightColors else DarkColors
-    val customColors = if (!useDarkTheme) LightCustomColors else DarkCustomColors
 
-    CompositionLocalProvider(LocalCustomColors provides customColors) {
+    CompositionLocalProvider(LocalCustomColors provides UniversalCustomColors) {
         MaterialTheme(
             colorScheme = colors,
             content = content,

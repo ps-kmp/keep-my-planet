@@ -6,5 +6,5 @@ data class UserCacheInfo(
     val id: Id,
     val name: Name,
     val email: Email,
-    val profilePictureUrl: String?,
+    val profilePictureId: Id?,
 )

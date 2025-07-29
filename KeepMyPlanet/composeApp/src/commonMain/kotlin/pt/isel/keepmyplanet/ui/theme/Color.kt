@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 // Light Theme Palette
 val primaryLight = Color(0xFF006E2C)
 val onPrimaryLight = Color(0xFFFFFFFF)
-val primaryContainerLight = Color(0xFF8CF8A4)
+val primaryContainerLight = Color(0xFFB8EFC3)
 val onPrimaryContainerLight = Color(0xFF002208)
 
 val secondaryLight = Color(0xFF005AC1)
@@ -15,12 +15,12 @@ val onSecondaryContainerLight = Color(0xFF001A41)
 
 val tertiaryLight = Color(0xFF775938)
 val onTertiaryLight = Color(0xFFFFFFFF)
-val tertiaryContainerLight = Color(0xFFFFDDBE)
+val tertiaryContainerLight = Color(0xFFF5D6B6)
 val onTertiaryContainerLight = Color(0xFF2A1800)
 
 val errorLight = Color(0xFFBA1A1A)
 val onErrorLight = Color(0xFFFFFFFF)
-val errorContainerLight = Color(0xFFFFDAD6)
+val errorContainerLight = Color(0xFFFFCBC6)
 val onErrorContainerLight = Color(0xFF410002)
 
 val backgroundLight = Color(0xFFF8FDFF)
@@ -64,7 +64,7 @@ val outlineDark = Color(0xFF8B938A)
 // Success
 val successLight = Color(0xFF386A20)
 val onSuccessLight = Color(0xFFFFFFFF)
-val successContainerLight = Color(0xFFB7F397)
+val successContainerLight = Color(0xFFC8EEA7)
 val onSuccessContainerLight = Color(0xFF052100)
 val successDark = Color(0xFF9CD67D)
 val onSuccessDark = Color(0xFF0A3900)
@@ -74,7 +74,7 @@ val onSuccessContainerDark = Color(0xFFB7F397)
 // Warning
 val warningLight = Color(0xFF815600)
 val onWarningLight = Color(0xFFFFFFFF)
-val warningContainerLight = Color(0xFFFFDDB1)
+val warningContainerLight = Color(0xFFFDDDA7)
 val onWarningContainerLight = Color(0xFF291800)
 val warningDark = Color(0xFFFFB951)
 val onWarningDark = Color(0xFF442C00)

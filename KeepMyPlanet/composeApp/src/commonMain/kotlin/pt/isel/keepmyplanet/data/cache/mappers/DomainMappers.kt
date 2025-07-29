@@ -68,7 +68,7 @@ fun UserCache.toUserCacheInfo(): UserCacheInfo =
         id = Id(id.toUInt()),
         name = Name(name),
         email = Email(email),
-        profilePictureUrl = profilePictureUrl,
+        profilePictureId = profilePictureId?.let { Id(it.toUInt()) },
     )
 
 fun ZoneCache.toZone(

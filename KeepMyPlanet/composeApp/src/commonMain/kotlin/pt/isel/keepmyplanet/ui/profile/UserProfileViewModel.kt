@@ -1,5 +1,6 @@
 package pt.isel.keepmyplanet.ui.profile
 
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.PhotoApiRepository
 import pt.isel.keepmyplanet.data.repository.UserApiRepository
@@ -30,6 +31,15 @@ class UserProfileViewModel(
     init {
         setState { copy(userDetails = user) }
         loadUserProfile()
+        viewModelScope.launch {
+            sessionManager.userSession.collectLatest { session ->
+                val sessionUser = session?.userInfo
+                if (sessionUser != null && sessionUser != currentState.userDetails) {
+                    setState { copy(userDetails = sessionUser) }
+                    sessionUser.profilePictureId?.let { fetchPhotoUrl(it) }
+                }
+            }
+        }
     }
 
     override fun handleErrorWithMessage(message: String) {
@@ -131,7 +141,6 @@ class UserProfileViewModel(
                     val photoId = Id(photoResponse.id)
                     val request = UpdateProfileRequest(profilePictureId = photoId.value)
                     performProfileUpdate(request, isPhotoUpdate = true)
-                    setState { copy(photoUrl = photoResponse.url) }
                 }.onFailure {
                     handleErrorWithMessage(getErrorMessage("Failed to upload photo", it))
                     setState { copy(actionState = UserProfileUiState.ActionState.IDLE) }
@@ -238,14 +247,6 @@ class UserProfileViewModel(
             block = { userRepository.updateUserProfile(user.id, request) },
             onSuccess = { updatedUser ->
                 sendEvent(UserProfileEvent.ProfileUpdated(updatedUser))
-                setState {
-                    copy(
-                        isEditingProfile = false,
-                        userDetails = updatedUser,
-                        nameInput = updatedUser.name.value,
-                        emailInput = updatedUser.email.value,
-                    )
-                }
                 sendEvent(UserProfileEvent.ShowSnackbar("Profile updated successfully"))
             },
             onError = { error ->

@@ -18,7 +18,7 @@ class UserCacheRepository(
                     id = user.id.value.toLong(),
                     name = user.name.value,
                     email = user.email.value,
-                    profilePictureUrl = user.profilePictureUrl,
+                    profilePictureId = user.profilePictureId?.value?.toLong(),
                     timestamp = Clock.System.now().epochSeconds,
                 )
             }

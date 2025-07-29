@@ -65,16 +65,14 @@ fun StatusBadge(
 fun getStatusColorPair(status: ZoneStatus): Pair<Color, Color> =
     when (status) {
         ZoneStatus.REPORTED ->
-            customColors.warningContainer to
-                customColors.onWarningContainer
+            customColors.warningContainer to customColors.onWarningContainer
 
         ZoneStatus.CLEANING_SCHEDULED ->
             MaterialTheme.colorScheme.primaryContainer to
                 MaterialTheme.colorScheme.onPrimaryContainer
 
         ZoneStatus.CLEANED ->
-            customColors.successContainer to
-                customColors.onSuccessContainer
+            customColors.successContainer to customColors.onSuccessContainer
     }
 
 @Composable
@@ -85,40 +83,32 @@ fun getStatusColorPair(status: EventStatus): Pair<Color, Color> =
                 MaterialTheme.colorScheme.onTertiaryContainer
 
         EventStatus.IN_PROGRESS ->
-            customColors.warningContainer to
-                customColors.onWarningContainer
+            customColors.warningContainer to customColors.onWarningContainer
 
         EventStatus.COMPLETED ->
-            customColors.successContainer to
-                customColors.onSuccessContainer
+            customColors.successContainer to customColors.onSuccessContainer
 
         EventStatus.CANCELLED ->
-            MaterialTheme.colorScheme.errorContainer to
-                MaterialTheme.colorScheme.onErrorContainer
+            MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
 
         EventStatus.UNKNOWN ->
-            MaterialTheme.colorScheme.surfaceVariant to
-                MaterialTheme.colorScheme.onSurfaceVariant
+            MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
 @Composable
 fun getSeverityColorPair(severity: ZoneSeverity): Pair<Color, Color> =
     when (severity) {
         ZoneSeverity.LOW ->
-            customColors.successContainer to
-                customColors.onSuccessContainer
+            customColors.successContainer to customColors.onSuccessContainer
 
         ZoneSeverity.MEDIUM ->
-            customColors.warningContainer to
-                customColors.onWarningContainer
+            customColors.warningContainer to customColors.onWarningContainer
 
         ZoneSeverity.HIGH ->
-            MaterialTheme.colorScheme.errorContainer to
-                MaterialTheme.colorScheme.onErrorContainer
+            MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
 
         ZoneSeverity.UNKNOWN ->
-            MaterialTheme.colorScheme.surfaceVariant to
-                MaterialTheme.colorScheme.onSurfaceVariant
+            MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
 fun getSeverityColorPairNonComposable(
@@ -128,18 +118,14 @@ fun getSeverityColorPairNonComposable(
 ): Pair<Color, Color> =
     when (severity) {
         ZoneSeverity.LOW ->
-            customColors.successContainer to
-                customColors.onSuccessContainer
+            customColors.successContainer to customColors.onSuccessContainer
 
         ZoneSeverity.MEDIUM ->
-            customColors.warningContainer to
-                customColors.onWarningContainer
+            customColors.warningContainer to customColors.onWarningContainer
 
         ZoneSeverity.HIGH ->
-            colorScheme.errorContainer to
-                colorScheme.onErrorContainer
+            colorScheme.errorContainer to colorScheme.onErrorContainer
 
         ZoneSeverity.UNKNOWN ->
-            colorScheme.surfaceVariant to
-                colorScheme.onSurfaceVariant
+            colorScheme.surfaceVariant to colorScheme.onSurfaceVariant
     }

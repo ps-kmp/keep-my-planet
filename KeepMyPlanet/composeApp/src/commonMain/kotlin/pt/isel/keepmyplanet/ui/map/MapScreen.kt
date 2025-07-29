@@ -124,10 +124,6 @@ fun MapScreen(
     val customColors = customColors
     val colorScheme = MaterialTheme.colorScheme
 
-    LaunchedEffect(Unit) {
-        viewModel.requestLocationPermissionOrUpdate()
-    }
-
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {

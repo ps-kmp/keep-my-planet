@@ -460,6 +460,10 @@ fun EventDetailsScreen(
                                                             .INITIATING_TRANSFER,
                                                 enabled = !uiState.isActionInProgress,
                                                 modifier = Modifier.fillMaxWidth(),
+                                                colors =
+                                                    ButtonDefaults.buttonColors(
+                                                        MaterialTheme.colorScheme.primary,
+                                                    ),
                                             ) { Text("Transfer Ownership") }
                                         }
                                         if (uiState.canOrganizerSendNotification) {

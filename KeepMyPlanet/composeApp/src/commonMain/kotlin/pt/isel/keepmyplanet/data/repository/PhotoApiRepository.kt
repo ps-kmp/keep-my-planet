@@ -16,7 +16,13 @@ class PhotoApiRepository(
     suspend fun createPhoto(
         imageData: ByteArray,
         filename: String,
-    ): Result<PhotoResponse> = photoApi.createPhoto(imageData, filename)
+    ): Result<PhotoResponse> {
+        val networkResult = photoApi.createPhoto(imageData, filename)
+        networkResult.onSuccess { photoResponse ->
+            photoCache?.insertPhotoUrl(Id(photoResponse.id), photoResponse.url)
+        }
+        return networkResult
+    }
 
     suspend fun getPhotoUrl(photoId: Id): Result<String> =
         runCatching {

@@ -1,5 +1,7 @@
 package pt.isel.keepmyplanet.ui.event.participants
 
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.domain.common.Id
 import pt.isel.keepmyplanet.ui.base.BaseViewModel
@@ -10,17 +12,29 @@ class ParticipantListViewModel(
     private val eventRepository: EventApiRepository,
 ) : BaseViewModel<ParticipantListUiState>(ParticipantListUiState()) {
     fun loadParticipants(eventId: Id) {
-        launchWithResult(
-            onStart = { copy(isLoading = true, error = null) },
-            onFinally = { copy(isLoading = false) },
-            block = { eventRepository.getEventDetailsBundle(eventId) },
-            onSuccess = { setState { copy(event = it.event, participants = it.participants) } },
-            onError = { error ->
-                val message = getErrorMessage("Failed to load participants", error)
-                handleErrorWithMessage(message)
-                setState { copy(error = message) }
-            },
-        )
+        viewModelScope.launch {
+            setState { copy(isLoading = true, error = null) }
+            eventRepository.getEventDetailsBundle(eventId).collectLatest { result ->
+                result
+                    .onSuccess { bundle ->
+                        setState {
+                            copy(
+                                isLoading = false,
+                                event = bundle.event,
+                                participants = bundle.participants,
+                            )
+                        }
+                    }.onFailure { error ->
+                        val message = getErrorMessage("Failed to load participants", error)
+                        handleErrorWithMessage(message)
+                        if (currentState.event == null) {
+                            setState { copy(isLoading = false, error = message) }
+                        } else {
+                            setState { copy(isLoading = false) }
+                        }
+                    }
+            }
+        }
     }
 
     override fun handleErrorWithMessage(message: String) {

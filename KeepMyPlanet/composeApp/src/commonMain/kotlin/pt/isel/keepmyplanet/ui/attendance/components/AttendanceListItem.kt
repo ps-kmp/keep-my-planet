@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pt.isel.keepmyplanet.domain.user.UserInfo
-import pt.isel.keepmyplanet.ui.components.LoadingButton
 import pt.isel.keepmyplanet.ui.profile.components.Avatar
 
 @Composable
@@ -47,16 +46,6 @@ fun AttendanceListItem(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
-        }
-        if (showCheckInButton) {
-            Spacer(Modifier.width(8.dp))
-            LoadingButton(
-                onClick = onCheckInClick,
-                isLoading = isProcessing,
-                enabled = !isProcessing,
-            ) {
-                Text("Check In")
             }
         }
     }

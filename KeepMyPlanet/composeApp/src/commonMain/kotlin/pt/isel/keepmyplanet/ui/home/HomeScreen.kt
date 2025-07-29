@@ -210,11 +210,16 @@ private fun UserDashboard(
         if (uiState.pendingActions.isNotEmpty()) {
             item {
                 DashboardSection("Pending Actions") {
-                    uiState.pendingActions.forEach { event ->
-                        ActionableEventCard(
-                            event = event,
-                            onClick = { onNavigateToEventDetails(event.id) },
-                        )
+                    Column(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        uiState.pendingActions.forEach { event ->
+                            ActionableEventCard(
+                                event = event,
+                                onClick = { onNavigateToEventDetails(event.id) },
+                            )
+                        }
                     }
                 }
             }

@@ -13,17 +13,21 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.lifecycleScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import pt.isel.keepmyplanet.data.repository.EventApiRepository
 import pt.isel.keepmyplanet.data.service.CacheCleanupService
 import pt.isel.keepmyplanet.di.appModule
 import pt.isel.keepmyplanet.di.cacheModule
+import pt.isel.keepmyplanet.domain.common.Id
 
 class KeepMyPlanetApplication : Application() {
     private val cacheCleanupService: CacheCleanupService by inject()
@@ -57,6 +61,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private val appViewModel: AppViewModel by inject()
+    private val eventApiRepository: EventApiRepository by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,8 +103,13 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         intent?.getStringExtra(EXTRA_EVENT_ID)?.let { eventId ->
-            Log.d("NAV_FROM_NOTIF", "Received eventId: $eventId, navigating...")
-            appViewModel.handleNotificationNavigation(eventId)
+            Log.d("NAV_FROM_NOTIF", "Received eventId: $eventId, invalidating cache...")
+            lifecycleScope.launch {
+                eventId.toUIntOrNull()?.let {
+                    eventApiRepository.invalidateEventCache(Id(it))
+                }
+                appViewModel.handleNotificationNavigation(eventId)
+            }
         }
     }
 
