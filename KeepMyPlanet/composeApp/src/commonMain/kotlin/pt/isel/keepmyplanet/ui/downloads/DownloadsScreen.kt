@@ -40,8 +40,8 @@ import pt.isel.keepmyplanet.ui.components.AppTopBar
 private const val GITHUB_RELEASES_URL =
     "https://github.com/ps-kmp/keep-my-planet/releases/download/0.0.1"
 private const val ANDROID_APK_URL = "$GITHUB_RELEASES_URL/keepmyplanet.apk"
-private const val WINDOWS_MSI_URL = "$GITHUB_RELEASES_URL/keepmyplanet.msi"
-private const val LINUX_DEB_URL = "$GITHUB_RELEASES_URL/keepmyplanet.deb"
+private const val WINDOWS_MSI_URL = "$GITHUB_RELEASES_URL/mysetup.exe"
+private const val LINUX_DEB_URL = "$GITHUB_RELEASES_URL/keepmyplanet.AppImage"
 // private const val MACOS_DMG_URL = "$GITHUB_RELEASES_URL/keepmyplanet.dmg"
 
 @Composable

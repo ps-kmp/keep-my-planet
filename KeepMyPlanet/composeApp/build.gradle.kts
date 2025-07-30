@@ -217,7 +217,8 @@ compose.desktop {
         }
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.AppImage)
+            modules("java.sql", "java.net.http")
             packageName = "pt.isel.keepmyplanet"
             packageVersion = "1.0.0"
         }
